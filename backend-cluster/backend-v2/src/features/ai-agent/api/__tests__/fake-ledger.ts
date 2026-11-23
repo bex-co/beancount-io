@@ -18,7 +18,7 @@ export type Snapshot = Record<string, string>;
 
 /** The blob sha the fake gives a file: equal content, equal sha, as in git. */
 export function blobSha(content: string): string {
-  return `blob-${createHash("sha1").update(content).digest("hex").slice(0, 12)}`;
+  return createHash("sha1").update(content).digest("hex");
 }
 
 const decode = (content: string) =>

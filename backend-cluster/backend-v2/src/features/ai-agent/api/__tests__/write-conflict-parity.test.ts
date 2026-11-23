@@ -30,6 +30,7 @@ const identity: Identity = {
   scopes: new Set(["ledger.read", "ledger.write"]),
   ledgerScope: "alice/main",
 };
+const OLD_SHA = "a".repeat(40);
 const STALE =
   "the ledger changed under a concurrent write; re-read it and retry";
 const TAKEN =
@@ -96,7 +97,7 @@ async function fixture(answer: string, { present = false } = {}) {
             success: true,
             data:
               answer === STALE || present
-                ? [{ path: "qa.bean", type: "file", sha: "old", content: "" }]
+                ? [{ path: "qa.bean", type: "file", sha: OLD_SHA, content: "" }]
                 : [],
           },
         }),
@@ -208,7 +209,7 @@ describe("a write the ledger answers with 409", () => {
   it("is 409 CONFLICT on a REST PUT with a stale sha", async () => {
     const f = await fixture(STALE);
     try {
-      const response = await f.put({ content: "; qa\n", sha: "old" });
+      const response = await f.put({ content: "; qa\n", sha: OLD_SHA });
       expect(response.status).toBe(409);
       expect(await response.json()).toMatchObject({
         error: { code: "CONFLICT", message: expect.stringContaining(STALE) },
@@ -225,7 +226,7 @@ describe("a write the ledger answers with 409", () => {
         f.workflow.updateLedgerFile({
           identity,
           ledgerId: "alice/main",
-          input: { path: "qa.bean", content: "OyBxYQo=", sha: "old" },
+          input: { path: "qa.bean", content: "OyBxYQo=", sha: OLD_SHA },
           platform: "web",
         }),
       ).rejects.toMatchObject({ category: "CONFLICT" });
@@ -245,7 +246,7 @@ describe("a write the ledger answers with 409", () => {
         f.workflow.deleteLedgerFile({
           identity,
           ledgerId: "alice/main",
-          input: { path: "qa.bean", sha: "old", message: "delete qa" },
+          input: { path: "qa.bean", sha: OLD_SHA, message: "delete qa" },
         }),
       ).rejects.toMatchObject({ category: "CONFLICT" });
     } finally {

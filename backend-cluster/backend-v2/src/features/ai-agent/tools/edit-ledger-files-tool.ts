@@ -22,6 +22,7 @@ import {
   unloadedNotice,
 } from "@/features/ledger/utils/file-write-gate";
 import { staleFileConflict } from "@/features/ledger/utils/stale-file-conflict";
+import { assertBlobShaFormat } from "@/features/ledger/utils/blob-sha";
 import { normalizeAgentRepoPath } from "./agent-repo-path";
 import {
   readBeanCheckErrors,
@@ -366,11 +367,19 @@ export async function executeEditLedgerFiles(
       });
       // Only the new text is checked: an untouched long literal already in
       // the file is the projection's to report, not this edit's (w23/081).
+      // Explicit blob SHAs are validated here too, after write authorization
+      // and before any repository read (w31/066).
       for (const file of normalizedFiles) {
         if (file.operation === "create" || file.operation === "replace") {
           assertAmountsFitEngineDecimal(file.content);
         } else if (file.operation === "update") {
           assertAmountsFitEngineDecimal(file.new_string);
+        }
+        if (
+          (file.operation === "replace" || file.operation === "delete") &&
+          file.sha !== undefined
+        ) {
+          assertBlobShaFormat(file.sha);
         }
       }
       if (options.removeIncludes) {

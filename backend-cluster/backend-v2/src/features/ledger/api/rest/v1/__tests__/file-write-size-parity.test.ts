@@ -5,6 +5,7 @@ jest.mock("@/server/api/identity", () => ({
   resolveIdentity: (...args: unknown[]) => resolveIdentityMock(...args),
 }));
 import http from "node:http";
+import { createHash } from "node:crypto";
 import Koa from "koa";
 import Router from "@koa/router";
 import { ApolloServer } from "@apollo/server";
@@ -77,10 +78,11 @@ beforeAll(async () => {
  */
 async function fixture(initial: Record<string, string> = {}) {
   let caller = identity;
+  const shaOf = (seed: string) => createHash("sha1").update(seed).digest("hex");
   const files = new Map<string, File>(
     Object.entries(initial).map(([path, content]) => [
       path,
-      { content, sha: `initial-${path}` },
+      { content, sha: shaOf(`initial-${path}`) },
     ]),
   );
   const state = { writable: true, clients: 0, reads: 0, projected: 0 };
@@ -108,7 +110,7 @@ async function fixture(initial: Record<string, string> = {}) {
     }
     files.set(path, {
       content: Buffer.from(content, "base64").toString("utf8"),
-      sha: `written-${commits.length}-${path}`,
+      sha: shaOf(`written-${commits.length}-${path}`),
     });
   };
   const fava = {
@@ -537,7 +539,7 @@ describe.each<Surface>(["rest", "gql", "mcp"])(
         ).toMatchObject({ ok: false, code: "BAD_USER_INPUT" });
         expect(f.files.get("existing.bean")).toEqual({
           content: original,
-          sha: "initial-existing.bean",
+          sha: createHash("sha1").update("initial-existing.bean").digest("hex"),
         });
         expect(f.commits).toHaveLength(0);
         // MCP must read the source/SHA before constructing a replacement.
@@ -823,7 +825,7 @@ describe.each<Surface>(["rest", "gql", "mcp"])(
         });
         expect(f.files.get("existing.bean")).toEqual({
           content: original,
-          sha: "initial-existing.bean",
+          sha: createHash("sha1").update("initial-existing.bean").digest("hex"),
         });
         expect(f.commits).toHaveLength(0);
       } finally {

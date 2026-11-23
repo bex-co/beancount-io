@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { createHash } from "node:crypto";
 import { posix } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
@@ -60,10 +61,11 @@ async function fixture(
   }[][] = [[], []],
 ) {
   const errorCalls = { count: 0 };
+  const shaOf = (seed: string) => createHash("sha1").update(seed).digest("hex");
   const files: FixtureFiles = new Map(
     Object.entries(initial).map(([path, content], index) => [
       path,
-      { content, sha: `sha-${index}-${path}` },
+      { content, sha: shaOf(`sha-${index}-${path}`) },
     ]),
   );
   const state = { writable: true, exists: true, visible: true };
@@ -119,14 +121,14 @@ async function fixture(
               "utf-8",
             )
           : "";
-        files.set(op.path, { content, sha: `sha-new-${op.path}` });
+        files.set(op.path, { content, sha: shaOf(`sha-new-${op.path}`) });
       } else if (op.operation === "update") {
         const content = op.content
           ? Buffer.from(op.content.replace(/\s/g, ""), "base64").toString(
               "utf-8",
             )
           : "";
-        files.set(op.path, { content, sha: `sha-upd-${op.path}` });
+        files.set(op.path, { content, sha: shaOf(`sha-upd-${op.path}`) });
       } else if (op.operation === "delete") {
         files.delete(op.path);
       }
@@ -384,7 +386,7 @@ async function fixture(
           source: `mutation($path:String!,$sha:String!,$remove:Boolean) { deleteLedgerFile(ledgerId:"alice/main",path:$path,sha:$sha,removeIncludes:$remove) { path } }`,
           variableValues: {
             path,
-            sha: files.get(path)?.sha ?? "sha-x",
+            sha: files.get(path)?.sha ?? "0".repeat(40),
             remove: removeIncludes,
           },
           contextValue: { identity: caller, getCurrentIdentity: () => caller },

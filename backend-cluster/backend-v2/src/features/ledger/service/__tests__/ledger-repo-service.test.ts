@@ -543,6 +543,9 @@ describe("LedgerRepoService", () => {
   });
 
   describe("changeFiles", () => {
+    const BLOB_SHA_1 = "a".repeat(40);
+    const BLOB_SHA_2 = "b".repeat(40);
+
     it("authorizes as write, not read", async () => {
       mockChangeLedgerFiles.mockResolvedValue({ data: { success: true } });
       await service.changeFiles({
@@ -645,14 +648,16 @@ describe("LedgerRepoService", () => {
       mockGetLedgerFilesContent.mockResolvedValue({
         data: {
           success: true,
-          data: [{ path: "main.bean", type: "file", sha: "s1", content: "" }],
+          data: [
+            { path: "main.bean", type: "file", sha: BLOB_SHA_1, content: "" },
+          ],
         },
       });
       await service.changeFiles({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
         operations: [
-          { operation: "delete", path: "main.bean", sha: "s1" },
+          { operation: "delete", path: "main.bean", sha: BLOB_SHA_1 },
           { operation: "create", path: "main.bean", content: "Zm9v" },
         ],
         message: "recreate",
@@ -685,7 +690,9 @@ describe("LedgerRepoService", () => {
         mockGetLedgerFilesContent.mockResolvedValue({
           data: {
             success: true,
-            data: [{ path: "sub.bean", type: "file", sha: "s2", content: "" }],
+            data: [
+              { path: "sub.bean", type: "file", sha: BLOB_SHA_2, content: "" },
+            ],
           },
         });
         await expect(
@@ -696,7 +703,7 @@ describe("LedgerRepoService", () => {
               {
                 operation,
                 path: "sub.bean",
-                sha: "s1",
+                sha: BLOB_SHA_1,
                 ...(operation === "update" ? { content: "Zm9v" } : {}),
               },
             ],
@@ -723,13 +730,55 @@ describe("LedgerRepoService", () => {
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
           operations: [
-            { operation: "update", path: "gone.bean", sha: "s1", content: "x" },
+            {
+              operation: "update",
+              path: "gone.bean",
+              sha: BLOB_SHA_1,
+              content: "x",
+            },
           ],
           message: "gone",
           dryRun: true,
         }),
       ).rejects.toMatchObject({ category: "NOT_FOUND" });
     });
+
+    // w31/066: malformed blob SHAs must fail upfront with BAD_USER_INPUT
+    // without calling Gitea, on both dry-run and commit.
+    it.each(["", "   ", "not-a-sha", "A".repeat(40), "a".repeat(39)])(
+      "refuses malformed sha=%j on update and delete without calling Gitea",
+      async (badSha) => {
+        for (const operation of ["update", "delete"] as const) {
+          for (const dryRun of [true, false]) {
+            await expect(
+              service.changeFiles({
+                ledgerId: LEDGER_ID,
+                identity: IDENTITY,
+                operations: [
+                  {
+                    operation,
+                    path: "sub.bean",
+                    sha: badSha,
+                    ...(operation === "update" ? { content: "; x\n" } : {}),
+                  },
+                ],
+                message: "bad sha",
+                dryRun,
+              }),
+            ).rejects.toMatchObject({
+              category: "BAD_USER_INPUT",
+              metadata: {
+                field: "sha",
+                hint: expect.stringContaining("readLedgerFiles"),
+              },
+            });
+          }
+        }
+        expect(mockFavaClientFactory.getPublicApiClient).not.toHaveBeenCalled();
+        expect(mockGetLedgerFilesContent).not.toHaveBeenCalled();
+        expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+      },
+    );
 
     it("lists a folder once however many new files share it (w23/206)", async () => {
       mockGetLedgerDirContent.mockResolvedValue({
@@ -775,7 +824,7 @@ describe("LedgerRepoService", () => {
             operation: "update" as const,
             path: "main.bean",
             content: '2026-06-01 * "Caf\u00e9" "\u2014 caf\u00e9 au lait"\n',
-            sha: "sha1",
+            sha: BLOB_SHA_1,
           },
         ],
         message: "reconcile",
@@ -792,7 +841,7 @@ describe("LedgerRepoService", () => {
                 '2026-06-01 * "Caf\u00e9" "\u2014 caf\u00e9 au lait"\n',
                 "utf8",
               ).toString("base64"),
-              sha: "sha1",
+              sha: BLOB_SHA_1,
             },
           ],
           message: "reconcile",
@@ -808,14 +857,16 @@ describe("LedgerRepoService", () => {
       await service.changeFiles({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
-        operations: [{ operation: "delete", path: "gone.bean", sha: "sha1" }],
+        operations: [
+          { operation: "delete", path: "gone.bean", sha: BLOB_SHA_1 },
+        ],
         message: "delete file",
       });
       expect(mockChangeLedgerFiles).toHaveBeenCalledWith(
         "testowner",
         "testledger",
         {
-          files: [{ operation: "delete", path: "gone.bean", sha: "sha1" }],
+          files: [{ operation: "delete", path: "gone.bean", sha: BLOB_SHA_1 }],
           message: "delete file",
         },
       );
@@ -907,7 +958,7 @@ describe("LedgerRepoService", () => {
               operation: "update",
               path: "main.bean",
               content: "; no more include\n",
-              sha: "s1",
+              sha: BLOB_SHA_1,
             },
             { operation: "delete", path: "second.bean" },
           ],
@@ -1013,7 +1064,7 @@ describe("LedgerRepoService", () => {
               operation: "update",
               path: "main.bean",
               content: "; no more include\n",
-              sha: "s1",
+              sha: BLOB_SHA_1,
             },
           ],
           message: "drop include",
@@ -1079,7 +1130,7 @@ describe("LedgerRepoService", () => {
                 operation: "update",
                 path: "qa/list.txt",
                 content: "",
-                sha: "s1",
+                sha: BLOB_SHA_1,
               },
               { operation: "delete", path: "qa/y.bean" },
             ],
@@ -1141,7 +1192,7 @@ describe("LedgerRepoService", () => {
               path: "main.bean",
               content: Buffer.from(text, "utf8").toString("base64"),
               encoding: "base64",
-              sha: "sha1",
+              sha: BLOB_SHA_1,
             },
           ],
         },

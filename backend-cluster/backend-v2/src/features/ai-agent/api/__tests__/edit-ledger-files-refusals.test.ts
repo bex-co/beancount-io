@@ -21,6 +21,8 @@ const LATIN1 = Buffer.concat([
   Buffer.from([0xe9]),
   Buffer.from(" latin-1 comment\nqa-tail\n"),
 ]);
+const SHA_CURRENT = "a".repeat(40);
+const SHA_STALE = "b".repeat(40);
 const identity: Identity = {
   userId: "usr_alice",
   method: "oauth",
@@ -57,7 +59,7 @@ async function fixture() {
                   path,
                   name: path,
                   type: "file",
-                  sha: "s1",
+                  sha: SHA_CURRENT,
                   encoding: "base64",
                   content: LATIN1.toString("base64"),
                 }
@@ -65,7 +67,7 @@ async function fixture() {
                   path,
                   name: path,
                   type: "file",
-                  sha: "s1",
+                  sha: SHA_CURRENT,
                   content:
                     path === "legacy.bean"
                       ? LEGACY_BEAN
@@ -450,7 +452,7 @@ describe("several changes to one file in one call", () => {
       expect(body.files[0]).toMatchObject({
         operation: "update",
         path: "main.bean",
-        sha: "s1",
+        sha: SHA_CURRENT,
       });
       expect(Buffer.from(body.files[0]!.content!, "base64").toString()).toBe(
         final,
@@ -631,7 +633,12 @@ describe("a whole-file write or delete with the sha the caller read", () => {
     const f = await fixture();
     try {
       for (const dryRun of [true, false]) {
-        const result = await write(f, name, { ...file, sha: "old" }, dryRun);
+        const result = await write(
+          f,
+          name,
+          { ...file, sha: SHA_STALE },
+          dryRun,
+        );
         expect(result.isError).toBe(true);
         expect(result.structuredContent).toMatchObject({
           error: {
@@ -649,7 +656,7 @@ describe("a whole-file write or delete with the sha the caller read", () => {
   });
 
   it.each([
-    ["the current sha", { sha: "s1" }],
+    ["the current sha", { sha: SHA_CURRENT }],
     ["no sha", {}],
   ])("commits a content rewrite with %s", async (_case, base) => {
     const f = await fixture();
@@ -668,7 +675,7 @@ describe("a whole-file write or delete with the sha the caller read", () => {
         { files: { operation: string; sha?: string }[] },
       ];
       expect(body.files).toEqual([
-        expect.objectContaining({ operation: "update", sha: "s1" }),
+        expect.objectContaining({ operation: "update", sha: SHA_CURRENT }),
       ]);
     } finally {
       await f.close();

@@ -7,6 +7,7 @@ import {
   repoServiceFileAccess,
 } from "@/features/ledger/utils/include-references";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
+import { assertBlobShaFormat } from "@/features/ledger/utils/blob-sha";
 import {
   ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
@@ -244,22 +245,23 @@ export const FILE_ROUTES = [
         { primary: body.dry_run, legacy: body.dryRun },
         DRY_RUN_NAMES,
       );
+      const hasSha = body.sha !== undefined;
       const write = {
         ledgerId: ledgerIdOf(params),
         identity,
         operations: [
           {
-            operation: body.sha ? ("update" as const) : ("create" as const),
+            operation: hasSha ? ("update" as const) : ("create" as const),
             path: params.path,
             content: body.content,
-            ...(body.sha ? { sha: body.sha } : {}),
+            ...(hasSha ? { sha: body.sha } : {}),
           },
         ],
         // An empty message is an omitted one, as the ledger service reads it
         // (w21/553); a write with no sha creates the file.
         message:
           resolveCommitMessage(body, { required: false }) ||
-          `${body.sha ? "Update" : "Create"} ${params.path}`,
+          `${hasSha ? "Update" : "Create"} ${params.path}`,
       };
       // The service's dry run first: authorization, path, size and create
       // conflicts refuse before the gate, and a preview ends here (below).
@@ -320,10 +322,21 @@ export const FILE_ROUTES = [
         DRY_RUN_NAMES,
       );
       const ledgerId = ledgerIdOf(params);
-      const removals = resolveFlagAlias(
+      const removeIncludes = resolveFlagAlias(
         { primary: body.remove_includes, legacy: body.removeIncludes },
         REMOVE_INCLUDES_NAMES,
-      )
+      );
+      if (removeIncludes && body.sha !== undefined) {
+        await layers.services.ledgerRepo.changeFiles({
+          ledgerId,
+          identity,
+          operations: [],
+          message: "",
+          dryRun: true,
+        });
+        assertBlobShaFormat(body.sha);
+      }
+      const removals = removeIncludes
         ? await planIncludeRemovals({
             ...repoServiceFileAccess(layers.services, ledgerId, identity),
             deletedPaths: [params.path],
@@ -336,7 +349,7 @@ export const FILE_ROUTES = [
           {
             operation: "delete" as const,
             path: params.path,
-            ...(body.sha ? { sha: body.sha } : {}),
+            ...(body.sha !== undefined ? { sha: body.sha } : {}),
           },
           ...removals.map(({ path, content, sha }) => ({
             operation: "update" as const,

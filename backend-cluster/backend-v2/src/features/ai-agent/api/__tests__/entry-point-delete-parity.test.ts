@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { createHash } from "node:crypto";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { LedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
@@ -15,6 +16,8 @@ import type { McpRequestContext } from "../mcp-context";
  * until it was recreated. REST and MCP delete through the repo service; the
  * GraphQL mutation's refusal is in `rename-parity.test.ts`.
  */
+const shaOf = (path: string) =>
+  createHash("sha1").update(`sha-${path}`).digest("hex");
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const identity: Identity = {
   userId: "usr_alice",
@@ -32,7 +35,7 @@ async function fixture() {
           path,
           name: path,
           type: "file",
-          sha: `sha-${path}`,
+          sha: shaOf(path),
           content: "; content\n",
         })),
       },
@@ -87,7 +90,7 @@ async function fixture() {
       fetch(`${rest.url}/api-gateway/v1/ledgers/alice/main/files/${path}`, {
         method: "DELETE",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sha: `sha-${path}` }),
+        body: JSON.stringify({ sha: shaOf(path) }),
       }),
     mcp: (path: string, dry_run: boolean) =>
       client.callTool({

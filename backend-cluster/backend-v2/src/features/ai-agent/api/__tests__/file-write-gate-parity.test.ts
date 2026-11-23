@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { createHash } from "node:crypto";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { LedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
@@ -24,6 +25,9 @@ const writer: Identity = {
   scopes: new Set(["ledger.read", "ledger.write"]),
   ledgerScope: "alice/main",
 };
+const shaOf = (path: string) =>
+  createHash("sha1").update(`sha-${path}`).digest("hex");
+const STALE_SHA = "b".repeat(40);
 const NEW_ERROR = {
   message: "Account Assets:Chekcing was never opened",
   source: { filename: "main.bean", lineno: 3 },
@@ -65,7 +69,7 @@ async function fixture(opts: {
                     path,
                     name: path,
                     type: "file",
-                    sha: `sha-${path}`,
+                    sha: shaOf(path),
                     content: "; content\n",
                   })),
               },
@@ -110,7 +114,7 @@ async function fixture(opts: {
       send("PUT", "new.bean", { content: "; x\n", message: "m", ...body }),
     del: (body: object) =>
       send("DELETE", "old.bean", {
-        sha: "sha-old.bean",
+        sha: shaOf("old.bean"),
         message: "m",
         ...body,
       }),
@@ -168,9 +172,12 @@ describe("file writes refuse new bean-check errors on every surface", () => {
     ["createLedgerFiles", { files: [{ path: "n.bean", content: "x" }] }],
     [
       "updateLedgerFiles",
-      { files: [{ path: "a.bean", content: "x", sha: "sha-a.bean" }] },
+      { files: [{ path: "a.bean", content: "x", sha: shaOf("a.bean") }] },
     ],
-    ["deleteLedgerFiles", { files: [{ path: "a.bean", sha: "sha-a.bean" }] }],
+    [
+      "deleteLedgerFiles",
+      { files: [{ path: "a.bean", sha: shaOf("a.bean") }] },
+    ],
   ] as const;
 
   it("refuses the MCP create, update and delete tools on commit", () =>
@@ -264,10 +271,12 @@ describe("a read-only credential is refused FORBIDDEN before any file lookup", (
 
 // w1/219: REST previewed an update or delete from a stale read as valid,
 // and only the commit was refused; MCP refused the preview.
+// w31/066: malformed SHAs are refused upfront as BAD_USER_INPUT instead of
+// round-tripping to Gitea and answering CONFLICT.
 describe("a stale sha is refused as CONFLICT on preview and commit", () => {
   it.each([
-    ["a stale", "sha-stale"],
-    ["a malformed", "not-a-sha"],
+    ["a stale 40-hex", STALE_SHA],
+    ["a stale 64-hex", "c".repeat(64)],
   ])("refuses %s sha on a REST PUT and DELETE, dryRun or not", (_k, sha) =>
     withFixture({ projected: [] }, async (f) => {
       for (const dryRun of [true, false]) {
@@ -287,17 +296,36 @@ describe("a stale sha is refused as CONFLICT on preview and commit", () => {
     }),
   );
 
+  it.each(["", "   ", "not-a-sha", "A".repeat(40)])(
+    "refuses malformed sha=%j as 400 BAD_USER_INPUT on REST PUT and DELETE, dryRun or not",
+    (sha) =>
+      withFixture({ projected: [] }, async (f) => {
+        for (const dryRun of [true, false]) {
+          for (const response of [
+            await f.send("PUT", "a.bean", { content: "; x\n", sha, dryRun }),
+            await f.send("DELETE", "a.bean", { sha, dryRun }),
+          ]) {
+            expect(response.status).toBe(400);
+            const body = (await response.json()) as any;
+            expect(body.error.code).toBe("BAD_USER_INPUT");
+            expect(body.error.metadata?.field).toBe("sha");
+          }
+        }
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      }),
+  );
+
   it("refuses the same on the MCP update and delete tools", () =>
     withFixture({ projected: [] }, async (f) => {
       for (const dry_run of [true, false]) {
         for (const [name, args] of [
           [
             "updateLedgerFiles",
-            { files: [{ path: "a.bean", content: "x", sha: "sha-stale" }] },
+            { files: [{ path: "a.bean", content: "x", sha: STALE_SHA }] },
           ],
           [
             "deleteLedgerFiles",
-            { files: [{ path: "a.bean", sha: "sha-stale" }] },
+            { files: [{ path: "a.bean", sha: STALE_SHA }] },
           ],
         ] as const) {
           const result = await f.mcp(name, { ...args, dry_run });
@@ -319,7 +347,7 @@ describe("a stale sha is refused as CONFLICT on preview and commit", () => {
     withFixture({ projected: [] }, async (f) => {
       const response = await f.send("PUT", "a.bean", {
         content: "; x\n",
-        sha: "sha-a.bean",
+        sha: shaOf("a.bean"),
         dryRun: true,
       });
       expect(response.status).toBe(200);

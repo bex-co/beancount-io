@@ -1952,6 +1952,8 @@ describe("LedgerWorkflow", () => {
 
   describe("updateLedgerFile", () => {
     const ledgerId = "testuser/test-ledger";
+    const BLOB_SHA_1 = "a".repeat(40);
+    const BLOB_SHA_2 = "b".repeat(40);
 
     it("should update an existing ledger file", async () => {
       mockFavaApiClient.ledgers.updateLedgerFile.mockResolvedValue({
@@ -1960,7 +1962,7 @@ describe("LedgerWorkflow", () => {
           data: {
             path: "accounts.bean",
             content: "; Updated accounts file\n",
-            sha: "def456",
+            sha: BLOB_SHA_2,
             encoding: "base64",
           },
         },
@@ -1972,7 +1974,7 @@ describe("LedgerWorkflow", () => {
         input: {
           path: "accounts.bean",
           content: "; Updated accounts file\n",
-          sha: "abc123",
+          sha: BLOB_SHA_1,
           message: "Update accounts",
         },
         platform: "web",
@@ -1984,13 +1986,13 @@ describe("LedgerWorkflow", () => {
         {
           path: "accounts.bean",
           content: "; Updated accounts file\n",
-          sha: "abc123",
+          sha: BLOB_SHA_1,
           message: "Update accounts",
         },
         {},
       );
       expect(result.path).toBe("accounts.bean");
-      expect(result.sha).toBe("def456");
+      expect(result.sha).toBe(BLOB_SHA_2);
     });
 
     it("should throw error when update file fails", async () => {
@@ -2002,11 +2004,37 @@ describe("LedgerWorkflow", () => {
         workflow.updateLedgerFile({
           identity: IDENTITY,
           ledgerId,
-          input: { path: "test.bean", content: "test", sha: "abc123" },
+          input: { path: "test.bean", content: "test", sha: BLOB_SHA_1 },
           platform: "web",
         }),
       ).rejects.toThrow(OperationNotAllowedError);
     });
+
+    // w31/066: malformed blob SHAs refuse upfront without calling Gitea.
+    it.each(["", "   ", "not-a-sha", "A".repeat(40)])(
+      "refuses malformed sha=%j as BadUserInputError without calling Fava",
+      async (badSha) => {
+        await expect(
+          workflow.updateLedgerFile({
+            identity: IDENTITY,
+            ledgerId,
+            input: {
+              path: "accounts.bean",
+              content: Buffer.from("; x\n").toString("base64"),
+              sha: badSha,
+            },
+            platform: "web",
+          }),
+        ).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "sha" },
+        });
+        expect(favaClientFactory.getPublicApiClient).not.toHaveBeenCalled();
+        expect(
+          mockFavaApiClient.ledgers.updateLedgerFile,
+        ).not.toHaveBeenCalled();
+      },
+    );
 
     // w23/081: a replacement is all new text.
     it("refuses a replacement holding an amount past 28 digits", async () => {
@@ -2023,7 +2051,7 @@ describe("LedgerWorkflow", () => {
           input: {
             path: "raw.bean",
             content: Buffer.from(text, "utf8").toString("base64"),
-            sha: "abc123",
+            sha: BLOB_SHA_1,
           },
           platform: "web",
         }),
@@ -2037,6 +2065,7 @@ describe("LedgerWorkflow", () => {
 
   describe("deleteLedgerFile", () => {
     const ledgerId = "testuser/test-ledger";
+    const BLOB_SHA_1 = "a".repeat(40);
 
     it("should delete a ledger file", async () => {
       mockFavaApiClient.ledgers.deleteLedgerFile.mockResolvedValue({
@@ -2051,7 +2080,7 @@ describe("LedgerWorkflow", () => {
         ledgerId,
         input: {
           path: "accounts.bean",
-          sha: "abc123",
+          sha: BLOB_SHA_1,
           message: "Delete accounts",
         },
       });
@@ -2059,7 +2088,7 @@ describe("LedgerWorkflow", () => {
       expect(mockFavaApiClient.ledgers.deleteLedgerFile).toHaveBeenCalledWith(
         "testuser",
         "test-ledger",
-        { path: "accounts.bean", sha: "abc123", message: "Delete accounts" },
+        { path: "accounts.bean", sha: BLOB_SHA_1, message: "Delete accounts" },
       );
       expect(result.path).toBe("accounts.bean");
     });
@@ -2075,11 +2104,32 @@ describe("LedgerWorkflow", () => {
       const result = await workflow.deleteLedgerFile({
         identity: IDENTITY,
         ledgerId,
-        input: { path: "accounts.bean", sha: "abc123" },
+        input: { path: "accounts.bean", sha: BLOB_SHA_1 },
       });
 
       expect(result).toEqual({ path: "accounts.bean", commit: "c0mm1t5ha" });
     });
+
+    // w31/066: malformed blob SHAs refuse upfront without calling Gitea.
+    it.each(["", "   ", "not-a-sha", "A".repeat(40)])(
+      "refuses malformed sha=%j as BadUserInputError without calling Fava",
+      async (badSha) => {
+        await expect(
+          workflow.deleteLedgerFile({
+            identity: IDENTITY,
+            ledgerId,
+            input: { path: "accounts.bean", sha: badSha },
+          }),
+        ).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "sha" },
+        });
+        expect(favaClientFactory.getPublicApiClient).not.toHaveBeenCalled();
+        expect(
+          mockFavaApiClient.ledgers.deleteLedgerFile,
+        ).not.toHaveBeenCalled();
+      },
+    );
 
     // w23/m4/t002: the workflow path guards includes exactly like the
     // repo-service path — same scan, same message.
@@ -2099,7 +2149,7 @@ describe("LedgerWorkflow", () => {
           data: [
             {
               path: "main.bean",
-              sha: "s1",
+              sha: BLOB_SHA_1,
               content: 'include "second.bean"\n',
               encoding: null,
             },
@@ -2111,7 +2161,7 @@ describe("LedgerWorkflow", () => {
         workflow.deleteLedgerFile({
           identity: IDENTITY,
           ledgerId,
-          input: { path: "second.bean", sha: "abc123" },
+          input: { path: "second.bean", sha: BLOB_SHA_1 },
         }),
       ).rejects.toThrow(/second\.bean is still included by main\.bean/);
       expect(mockFavaApiClient.ledgers.deleteLedgerFile).not.toHaveBeenCalled();
@@ -2122,7 +2172,7 @@ describe("LedgerWorkflow", () => {
         workflow.deleteLedgerFile({
           identity: IDENTITY,
           ledgerId,
-          input: { path: "", sha: "abc123" },
+          input: { path: "", sha: BLOB_SHA_1 },
         }),
       ).rejects.toThrow(BadUserInputError);
     });
@@ -2132,7 +2182,7 @@ describe("LedgerWorkflow", () => {
         workflow.deleteLedgerFile({
           identity: IDENTITY,
           ledgerId,
-          input: { path: "main.bean", sha: "abc123" },
+          input: { path: "main.bean", sha: BLOB_SHA_1 },
         }),
       ).rejects.toThrow(BadUserInputError);
     });
@@ -2149,7 +2199,7 @@ describe("LedgerWorkflow", () => {
         workflow.deleteLedgerFile({
           identity: IDENTITY,
           ledgerId,
-          input: { path: "test.bean", sha: "abc123" },
+          input: { path: "test.bean", sha: BLOB_SHA_1 },
         }),
       ).rejects.toThrow(OperationNotAllowedError);
     });

@@ -25,6 +25,7 @@ const identity: Identity = {
   scopes: new Set(["ledger.read", "ledger.write"]),
   ledgerScope: "alice/main",
 };
+const OLD_SHA = "a".repeat(40);
 const GONE = "File qa.bean does not exist";
 const missing = () =>
   new FavaApiError(GONE, 404, {
@@ -60,7 +61,7 @@ async function fixture() {
                 path: "qa.bean",
                 name: "qa.bean",
                 type: "file",
-                sha: "old",
+                sha: OLD_SHA,
                 content: "; qa\n",
               },
             ],
@@ -131,7 +132,7 @@ describe("an update of a file the ledger no longer has", () => {
   it("is 404 NOT_FOUND on a REST PUT", async () => {
     const f = await fixture();
     try {
-      const response = await f.put({ content: "; qa\n", sha: "old" });
+      const response = await f.put({ content: "; qa\n", sha: OLD_SHA });
       expect(response.status).toBe(404);
       expect(await response.json()).toMatchObject({
         error: { code: "NOT_FOUND" },
@@ -161,7 +162,7 @@ describe("an update of a file the ledger no longer has", () => {
         f.workflow.updateLedgerFile({
           identity,
           ledgerId: "alice/main",
-          input: { path: "qa.bean", content: "OyBxYQo=", sha: "old" },
+          input: { path: "qa.bean", content: "OyBxYQo=", sha: OLD_SHA },
           platform: "web",
         }),
       ).rejects.toMatchObject({ category: "NOT_FOUND" });

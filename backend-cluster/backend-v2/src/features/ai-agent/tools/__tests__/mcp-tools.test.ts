@@ -585,7 +585,7 @@ describe("executeEditLedgerFiles", () => {
     it("hints the file re-read on a stale sha", async () => {
       const ledgerRepo = {
         getFilesContent: jest.fn(async () => [
-          { path: "main.bean", content: "; a\n", sha: "sha-new" },
+          { path: "main.bean", content: "; a\n", sha: "a".repeat(40) },
         ]),
         changeFiles: jest.fn(),
       };
@@ -598,7 +598,7 @@ describe("executeEditLedgerFiles", () => {
           operation: "replace",
           path: "main.bean",
           content: "; z\n",
-          sha: "sha-stale",
+          sha: "b".repeat(40),
         },
       );
       expect(result).toMatchObject({

@@ -5,6 +5,7 @@ import type { Identity } from "@/server/api/identity";
 import { BadUserInputError } from "@/shared/errors";
 import { DirectiveAppendWorkflow } from "../directive-append-workflow";
 
+const BEFORE_SHA = "a".repeat(40);
 const LIMIT = 1024 * 1024;
 const LEDGER_ID = "synthetic/size-check";
 const IDENTITY: Identity = {
@@ -29,7 +30,7 @@ function fixture(before: string) {
         {
           path: "main.bean",
           type: "file",
-          sha: "synthetic-before-sha",
+          sha: BEFORE_SHA,
           encoding: "base64",
           content: Buffer.from(before).toString("base64"),
         },
@@ -88,7 +89,7 @@ describe("explicit file-write size versus generated directive append", () => {
             {
               operation: "update",
               path: "main.bean",
-              sha: "synthetic-before-sha",
+              sha: BEFORE_SHA,
               content,
             },
           ],
@@ -110,7 +111,7 @@ describe("explicit file-write size versus generated directive append", () => {
         {
           operation: "update",
           path: "main.bean",
-          sha: "synthetic-before-sha",
+          sha: BEFORE_SHA,
           content,
         },
       ],
@@ -147,7 +148,7 @@ describe("explicit file-write size versus generated directive append", () => {
     expect(committed.files[0]).toMatchObject({
       operation: "update",
       path: "main.bean",
-      sha: "synthetic-before-sha",
+      sha: BEFORE_SHA,
     });
     const merged = Buffer.from(committed.files[0].content, "base64").toString(
       "utf8",

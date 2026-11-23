@@ -12,6 +12,7 @@ import type {
 } from "./ledger-workflow.types";
 import { resolveLegacyLedgerId } from "@/features/ledger/utils/resolve-legacy-ledger";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
+import { assertBlobShaFormat } from "@/features/ledger/utils/blob-sha";
 import type { BeancountOptionsPublic } from "@/foundation/fava";
 import { type AppConfig } from "@/config/config";
 import { type DbExecutor } from "@/drizzle/drizzle";
@@ -1212,6 +1213,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     });
     const userId = identity.userId;
     assertSafeRepoPath(input.path);
+    assertBlobShaFormat(input.sha);
     assertExplicitFileContentSize(input.content, "base64");
     assertFileTextFitsEngineDecimal(input.content);
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
@@ -1307,6 +1309,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     assertSafeRepoPath(input.path);
     assertKeepsEntryPoint(input.path, "deleted");
+    assertBlobShaFormat(input.sha);
 
     const fileOptions: LedgerDeleteFileOptions = {
       path: input.path,

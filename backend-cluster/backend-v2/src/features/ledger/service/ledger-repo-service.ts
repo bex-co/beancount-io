@@ -30,6 +30,7 @@ import {
 } from "@/features/ledger/utils/safe-repo-path";
 import { assertKeepsEntryPoint } from "@/features/ledger/utils/ledger-entry-point";
 import { assertExplicitFileContentSize } from "@/features/ledger/utils/explicit-file-size";
+import { assertBlobShaFormat } from "@/features/ledger/utils/blob-sha";
 import {
   BadUserInputError,
   InternalServerError,
@@ -340,6 +341,9 @@ export class LedgerRepoService
   async changeFiles(params: FileChangesParams): Promise<FileChangesResult> {
     await this.authorizeFileChanges(params);
     params.operations.forEach((operation, index) => {
+      if (operation.sha !== undefined && operation.sha !== null) {
+        assertBlobShaFormat(operation.sha);
+      }
       if (operation.content !== null && operation.content !== undefined) {
         assertExplicitFileContentSize(
           operation.content,
@@ -528,7 +532,8 @@ export class LedgerRepoService
           created.has(operation.path) || freed.has(operation.path);
         if (
           operation.operation !== "create" &&
-          operation.sha &&
+          operation.sha !== undefined &&
+          operation.sha !== null &&
           !touched &&
           !versioned.has(operation.path)
         )
