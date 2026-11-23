@@ -772,6 +772,66 @@ describe("PlaidItemService", () => {
       expect(result).toBe(true);
     });
 
+    it.each([
+      "Assets:Bank:Checking",
+      "Liabilities:CreditCard:Visa",
+      "Assets:Bank:日本",
+      "Assets:2026:Checking",
+    ])(
+      "accepts valid Beancount account name %j",
+      async (validLedgerAccount) => {
+        mockAccountAndItem({ userId: "user_owner", ledgerRepoId: 42 });
+        mockPlaidAccountModel.update.mockResolvedValue(undefined);
+
+        const result = await service.updateAccountMapping(
+          systemIdentity("user_owner"),
+          "pacc_1",
+          validLedgerAccount,
+          "owner/ledger",
+        );
+
+        expect(result).toBe(true);
+        expect(mockPlaidAccountModel.update).toHaveBeenCalledWith(
+          expect.anything(),
+          "pacc_1",
+          { ledgerAccount: validLedgerAccount },
+        );
+      },
+    );
+
+    it.each([
+      "",
+      "   ",
+      "not-an-account",
+      "Assets",
+      "Assets:Bad Account",
+      "assets:checking",
+      "Assets:Bank\n",
+      "Assets:Bank\x00",
+    ])(
+      "refuses invalid ledgerAccount %j before authorization or lookup",
+      async (invalidLedgerAccount) => {
+        await expect(
+          service.updateAccountMapping(
+            systemIdentity("user_owner"),
+            "pacc_nonexistent",
+            invalidLedgerAccount,
+            "owner/ledger",
+          ),
+        ).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: expect.objectContaining({
+            field: "ledgerAccount",
+            hint: expect.stringContaining("Assets:Bank:Checking"),
+          }),
+        });
+        expect(mockAuthorization.authorizeOrThrow).not.toHaveBeenCalled();
+        expect(mockGetLedger).not.toHaveBeenCalled();
+        expect(mockPlaidAccountModel.getById).not.toHaveBeenCalled();
+        expect(mockPlaidAccountModel.update).not.toHaveBeenCalled();
+      },
+    );
+
     it("rejects when the caller only has read access", async () => {
       mockAccountAndItem({ userId: "user_owner", ledgerRepoId: 42 });
       mockAssertLedgerAccess.mockResolvedValue({
@@ -838,6 +898,72 @@ describe("PlaidItemService", () => {
         { currency: "EUR" },
       );
     });
+
+    it.each([
+      "USD",
+      "EUR",
+      "CAD",
+      "USDC",
+      "MUSD",
+      "VBTLX",
+      "A1B",
+      "V",
+      "BRK.B",
+      "A".repeat(24),
+    ])("accepts valid Beancount currency %j", async (validCurrency) => {
+      mockAccountAndItem({ userId: "user_owner", ledgerRepoId: 42 });
+      mockPlaidAccountModel.update.mockResolvedValue(undefined);
+
+      const result = await service.updateAccountCurrency(
+        systemIdentity("user_owner"),
+        "pacc_1",
+        validCurrency,
+        "owner/ledger",
+      );
+
+      expect(result).toBe(true);
+      expect(mockPlaidAccountModel.update).toHaveBeenCalledWith(
+        expect.anything(),
+        "pacc_1",
+        { currency: validCurrency },
+      );
+    });
+
+    it.each([
+      "",
+      "   ",
+      "usd",
+      "123",
+      "not a currency",
+      "USD ",
+      " USD",
+      "US-",
+      "USD\n",
+      "USD\x00",
+      "A".repeat(25),
+    ])(
+      "refuses invalid currency %j before authorization or lookup",
+      async (invalidCurrency) => {
+        await expect(
+          service.updateAccountCurrency(
+            systemIdentity("user_owner"),
+            "pacc_nonexistent",
+            invalidCurrency,
+            "owner/ledger",
+          ),
+        ).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: expect.objectContaining({
+            field: "currency",
+            hint: expect.stringContaining("USD"),
+          }),
+        });
+        expect(mockAuthorization.authorizeOrThrow).not.toHaveBeenCalled();
+        expect(mockGetLedger).not.toHaveBeenCalled();
+        expect(mockPlaidAccountModel.getById).not.toHaveBeenCalled();
+        expect(mockPlaidAccountModel.update).not.toHaveBeenCalled();
+      },
+    );
 
     it("rejects when the caller only has read access", async () => {
       mockAccountAndItem({ userId: "user_owner", ledgerRepoId: 42 });

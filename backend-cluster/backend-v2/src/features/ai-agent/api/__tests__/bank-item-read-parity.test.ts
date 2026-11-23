@@ -77,12 +77,13 @@ async function fixture(identity: Identity) {
   const getById = jest.fn(async (_db: unknown, id: string) =>
     id in ITEMS ? stored(id as keyof typeof ITEMS) : null,
   );
+  const getLedger = jest.fn(async (owner: string, name: string) => ({
+    data: { success: true, data: { id: REPOS[`${owner}/${name}`] } },
+  }));
   const fava = {
     getAdminClient: () => ({
       ledgers: {
-        getLedger: async (owner: string, name: string) => ({
-          data: { success: true, data: { id: REPOS[`${owner}/${name}`] } },
-        }),
+        getLedger,
       },
       admin: {
         getLedgerByRepoId: async (repoId: number) => ({
@@ -127,6 +128,7 @@ async function fixture(identity: Identity) {
     ),
     jest.fn(),
   );
+  const authorizeOrThrow = jest.spyOn(authorization, "authorizeOrThrow");
   const service = new PlaidItemService(
     {} as never,
     fava as never,
@@ -152,44 +154,126 @@ async function fixture(identity: Identity) {
   const [a, b] = InMemoryTransport.createLinkedPair();
   await Promise.all([client.connect(a), server.connect(b)]);
   return {
+    authorizeOrThrow,
+    getLedger,
     getById,
     getAccountById,
     updateForItem,
     /** Map a bank account on each surface; each result's code, or `ok`. */
-    map: async (accountId: string) => {
+    map: async (accountId: string, ledgerAccount = "Assets:Bank") => {
       const response = await fetch(
         `${rest.url}/api-gateway/v1/ledgers/alice/main/bank-accounts/${accountId}/mapping`,
         {
           method: "PUT",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ ledgerAccount: "Assets:Bank" }),
+          body: JSON.stringify({ ledgerAccount }),
         },
       );
-      const restCode =
+      const restBody =
         response.status === 200
-          ? "ok"
-          : ((await response.json()) as { error: { code: string } }).error.code;
+          ? undefined
+          : ((await response.json()) as {
+              error: {
+                code: string;
+                message?: string;
+                metadata?: { field?: string; hint?: string };
+              };
+            });
+      const restCode = response.status === 200 ? "ok" : restBody!.error.code;
       const tool = await client.callTool({
         name: "mapBankAccount",
         arguments: {
           ledger: "alice/main",
           account_id: accountId,
-          ledger_account: "Assets:Bank",
+          ledger_account: ledgerAccount,
         },
       });
-      const mcpCode = tool.isError
-        ? (tool.structuredContent as { error: { code: string } }).error.code
-        : "ok";
+      const mcpError = tool.isError
+        ? (
+            tool.structuredContent as {
+              error: { code: string; message?: string; hint?: string };
+            }
+          ).error
+        : undefined;
+      const mcpCode = mcpError ? mcpError.code : "ok";
       const gql = await graphql({
         schema,
-        source: `mutation { updatePlaidAccountMapping(accountId: ${JSON.stringify(accountId)}, ledgerAccount: "Assets:Bank", ledgerId: "alice/main") }`,
+        source: `mutation($accountId: String!, $ledgerAccount: String!) { updatePlaidAccountMapping(accountId: $accountId, ledgerAccount: $ledgerAccount, ledgerId: "alice/main") }`,
+        variableValues: { accountId, ledgerAccount },
         contextValue: { identity, getCurrentIdentity: () => identity },
       });
       const gqlError = gql.errors?.[0];
-      const gqlCode = gqlError
-        ? formatError(gqlError.toJSON(), gqlError).extensions?.code
-        : "ok";
-      return { rest: restCode, mcp: mcpCode, gql: gqlCode };
+      const gqlFormatted = gqlError
+        ? formatError(gqlError.toJSON(), gqlError)
+        : undefined;
+      const gqlCode = gqlFormatted ? gqlFormatted.extensions?.code : "ok";
+      return {
+        rest: restCode,
+        mcp: mcpCode,
+        gql: gqlCode,
+        restStatus: response.status,
+        restError: restBody?.error,
+        mcpError,
+        gqlExtensions: gqlFormatted?.extensions,
+      };
+    },
+    /** Set a bank account's currency on each surface; each result's code, or `ok`. */
+    setCurrency: async (accountId: string, currency = "USD") => {
+      const response = await fetch(
+        `${rest.url}/api-gateway/v1/ledgers/alice/main/bank-accounts/${accountId}/currency`,
+        {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ currency }),
+        },
+      );
+      const restBody =
+        response.status === 200
+          ? undefined
+          : ((await response.json()) as {
+              error: {
+                code: string;
+                message?: string;
+                metadata?: { field?: string; hint?: string };
+              };
+            });
+      const restCode = response.status === 200 ? "ok" : restBody!.error.code;
+      const tool = await client.callTool({
+        name: "setBankAccountCurrency",
+        arguments: {
+          ledger: "alice/main",
+          accountId,
+          currency,
+        },
+      });
+      const mcpError = tool.isError
+        ? (
+            tool.structuredContent as {
+              error: { code: string; message?: string; hint?: string };
+            }
+          ).error
+        : undefined;
+      const mcpCode = mcpError ? mcpError.code : "ok";
+      const gql = await graphql({
+        schema,
+        source: `mutation($accountId: String!, $currency: String!) { updatePlaidAccountCurrency(accountId: $accountId, currency: $currency, ledgerId: "alice/main") }`,
+        variableValues: { accountId, currency },
+        contextValue: { identity, getCurrentIdentity: () => identity },
+      });
+      const gqlError = gql.errors?.[0];
+      const gqlFormatted = gqlError
+        ? formatError(gqlError.toJSON(), gqlError)
+        : undefined;
+      const gqlCode = gqlFormatted ? gqlFormatted.extensions?.code : "ok";
+      return {
+        rest: restCode,
+        mcp: mcpCode,
+        gql: gqlCode,
+        restStatus: response.status,
+        restError: restBody?.error,
+        mcpError,
+        gqlExtensions: gqlFormatted?.extensions,
+      };
     },
     rest: async (id: string, ledger = "alice/main") => {
       const response = await fetch(
@@ -323,7 +407,7 @@ describe("mapping a bank account on REST, MCP and GraphQL", () => {
   it("maps the ledger's own account", async () => {
     const f = await fixture(admin);
     try {
-      expect(await f.map("pacc_main")).toEqual({
+      expect(await f.map("pacc_main")).toMatchObject({
         rest: "ok",
         mcp: "ok",
         gql: "ok",
@@ -337,7 +421,7 @@ describe("mapping a bank account on REST, MCP and GraphQL", () => {
   it("answers a missing account with the concealed NOT_FOUND", async () => {
     const f = await fixture(admin);
     try {
-      expect(await f.map("nope")).toEqual({
+      expect(await f.map("nope")).toMatchObject({
         rest: "NOT_FOUND",
         mcp: "NOT_FOUND",
         gql: "NOT_FOUND",
@@ -351,16 +435,131 @@ describe("mapping a bank account on REST, MCP and GraphQL", () => {
   it("refuses a credential without bank authority before any lookup", async () => {
     const f = await fixture(readWrite);
     try {
-      for (const accountId of ["pacc_main", "nope"])
-        expect(await f.map(accountId)).toEqual({
+      for (const accountId of ["pacc_main", "nope"]) {
+        expect(await f.map(accountId)).toMatchObject({
           rest: "FORBIDDEN",
           mcp: "FORBIDDEN",
           gql: "FORBIDDEN",
         });
+        expect(await f.setCurrency(accountId)).toMatchObject({
+          rest: "FORBIDDEN",
+          mcp: "FORBIDDEN",
+          gql: "FORBIDDEN",
+        });
+      }
       expect(f.getAccountById).not.toHaveBeenCalled();
       expect(f.updateForItem).not.toHaveBeenCalled();
     } finally {
       await f.close();
     }
   });
+
+  it.each(["Assets:Bank:Checking", "Assets:Bank:日本"])(
+    "accepts valid ledgerAccount %j on every surface",
+    async (ledgerAccount) => {
+      const f = await fixture(admin);
+      try {
+        expect(await f.map("pacc_main", ledgerAccount)).toMatchObject({
+          rest: "ok",
+          mcp: "ok",
+          gql: "ok",
+        });
+        expect(f.updateForItem).toHaveBeenCalledTimes(3);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each([
+    "",
+    "   ",
+    "not-an-account",
+    "Assets:Bad Account",
+    "assets:checking",
+    "Assets",
+  ])(
+    "refuses invalid ledgerAccount %j as BAD_USER_INPUT before auth, Fava, or Postgres",
+    async (ledgerAccount) => {
+      const f = await fixture(admin);
+      try {
+        const res = await f.map("pacc_nonexistent", ledgerAccount);
+        expect(res).toMatchObject({
+          rest: "BAD_USER_INPUT",
+          mcp: "BAD_USER_INPUT",
+          gql: "BAD_USER_INPUT",
+          restStatus: 400,
+          restError: expect.objectContaining({
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining("ledgerAccount"),
+          }),
+          mcpError: expect.objectContaining({
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining("ledgerAccount"),
+          }),
+          gqlExtensions: expect.objectContaining({
+            code: "BAD_USER_INPUT",
+            field: "ledgerAccount",
+          }),
+        });
+        expect(f.authorizeOrThrow).not.toHaveBeenCalled();
+        expect(f.getLedger).not.toHaveBeenCalled();
+        expect(f.getAccountById).not.toHaveBeenCalled();
+        expect(f.updateForItem).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each(["USD", "EUR", "VBTLX"])(
+    "accepts valid currency %j on every surface",
+    async (currency) => {
+      const f = await fixture(admin);
+      try {
+        expect(await f.setCurrency("pacc_main", currency)).toMatchObject({
+          rest: "ok",
+          mcp: "ok",
+          gql: "ok",
+        });
+        expect(f.updateForItem).toHaveBeenCalledTimes(3);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each(["", "   ", "usd", "123", "not a currency"])(
+    "refuses invalid currency %j as BAD_USER_INPUT before auth, Fava, or Postgres",
+    async (currency) => {
+      const f = await fixture(admin);
+      try {
+        const res = await f.setCurrency("pacc_nonexistent", currency);
+        expect(res).toMatchObject({
+          rest: "BAD_USER_INPUT",
+          mcp: "BAD_USER_INPUT",
+          gql: "BAD_USER_INPUT",
+          restStatus: 400,
+          restError: expect.objectContaining({
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining("currency"),
+          }),
+          mcpError: expect.objectContaining({
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining("currency"),
+          }),
+          gqlExtensions: expect.objectContaining({
+            code: "BAD_USER_INPUT",
+            field: "currency",
+          }),
+        });
+        expect(f.authorizeOrThrow).not.toHaveBeenCalled();
+        expect(f.getLedger).not.toHaveBeenCalled();
+        expect(f.getAccountById).not.toHaveBeenCalled();
+        expect(f.updateForItem).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
 });

@@ -2,6 +2,7 @@ import { BANK_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import { assertPageArgs } from "@/shared/page-info";
 import { type DbExecutor } from "@/drizzle/drizzle";
 import { assertBankId, assertBankIds } from "../utils/assert-bank-id";
+import { lexesAsAccount } from "@/features/ledger/utils/account-matcher";
 import { type IModels } from "@/foundation/models";
 import { type IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import {
@@ -34,6 +35,33 @@ import type { PlaidAccount } from "../data/plaid-account-model/types";
 import type { PlaidItem } from "../data/plaid-item-model/types";
 
 const itemServiceLogger = logger.child({ module: "plaid-item-service" });
+
+/**
+ * Beancount's commodity grammar, matching `legacy-posting-amount.ts`:
+ * one uppercase letter, or an uppercase letter then up to 22 of uppercase
+ * letters, digits, and `'._-`, ending in an uppercase letter or digit.
+ */
+const BEANCOUNT_COMMODITY_RE = /^[A-Z](?:[A-Z0-9'._-]{0,22}[A-Z0-9])?$/;
+
+function assertBankLedgerAccount(ledgerAccount: string): void {
+  if (!lexesAsAccount(ledgerAccount)) {
+    throw new BadUserInputError(
+      `ledgerAccount ${JSON.stringify(ledgerAccount)} is not a valid Beancount account name`,
+      "ledgerAccount",
+      'Pass a colon-separated Beancount account name such as "Assets:Bank:Checking" or "Liabilities:CreditCard:Visa".',
+    );
+  }
+}
+
+function assertBankCurrency(currency: string): void {
+  if (!BEANCOUNT_COMMODITY_RE.test(currency)) {
+    throw new BadUserInputError(
+      `currency ${JSON.stringify(currency)} is not a valid Beancount currency`,
+      "currency",
+      'Pass an uppercase Beancount currency code such as "USD", "EUR", or "VBTLX".',
+    );
+  }
+}
 
 export interface PlaidItemResult {
   id: string;
@@ -1065,6 +1093,7 @@ export class PlaidItemService implements IPlaidItemService {
     ledgerAccount: string,
     ledgerId: string,
   ): Promise<boolean> {
+    assertBankLedgerAccount(ledgerAccount);
     const { item } = await this.authorizedAccount(
       identity,
       AUTHORIZATION_ACTIONS.BANK_ACCOUNT_MAPPING_UPDATE,
@@ -1097,6 +1126,7 @@ export class PlaidItemService implements IPlaidItemService {
     currency: string,
     ledgerId: string,
   ): Promise<boolean> {
+    assertBankCurrency(currency);
     const { item } = await this.authorizedAccount(
       identity,
       AUTHORIZATION_ACTIONS.BANK_ACCOUNT_CURRENCY_UPDATE,
