@@ -1,4 +1,4 @@
-import type { DirectiveJson } from "@rustledger/wasm";
+import type { DirectiveJson, PostingJson } from "@rustledger/wasm";
 import {
   filterDirectives,
   parseDateRange,
@@ -78,6 +78,62 @@ function directiveKey(directive: DirectiveJson): string {
 
 const keysOf = (directives: DirectiveJson[]): string[] =>
   directives.map(directiveKey);
+
+describe("posting cost comparisons", () => {
+  function lot(
+    narration: string,
+    number: NonNullable<PostingJson["cost"]>["number"],
+    units = "10",
+  ): DirectiveJson {
+    return {
+      type: "transaction",
+      date: "2026-03-19",
+      narration,
+      flag: "*",
+      tags: [],
+      links: [],
+      postings: [
+        {
+          account: "Assets:Broker",
+          units: { number: units, currency: "ITOT" },
+          cost: number ? { number, currency: "USD" } : undefined,
+        },
+      ],
+    };
+  }
+
+  const costed = [
+    lot("per unit", { kind: "per_unit", value: "74.93" }),
+    lot("booked total", {
+      kind: "per_unit_from_total",
+      per_unit: "74.93",
+      total: "749.30",
+    }),
+    lot("total on a reduction", { kind: "total", value: "749.30" }, "-10"),
+    lot("compound", { kind: "compound", per_unit: "69.93", total: "50" }),
+  ];
+  const withoutCost = lot("uncosted", undefined);
+  const ledger = [...costed, withoutCost];
+
+  it.each([
+    "any(cost>70)",
+    "any(cost=74.93)",
+    "any(units>5 cost>60)",
+    'any(cost:"USD")',
+  ])("matches the same booked cost for %s", (filter) => {
+    expect(filterDirectives(ledger, { filter })).toEqual(costed);
+  });
+
+  it("compares per unit, so none of the lots costs over 80", () => {
+    expect(filterDirectives(ledger, { filter: "any(cost>80)" })).toEqual([]);
+  });
+
+  it("keeps only the costless posting when negated", () => {
+    expect(filterDirectives(ledger, { filter: "-any(cost>0)" })).toEqual([
+      withoutCost,
+    ]);
+  });
+});
 
 describe("directive-filter fixture integrity", () => {
   it("rustledger directives correlate 1:1 with the Python 'all' set", () => {

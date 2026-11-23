@@ -149,6 +149,48 @@ async function verifyFilteredPrint(): Promise<void> {
   );
 }
 
+async function verifyPostingCostFilters(): Promise<void> {
+  const source = `2026-01-01 open Assets:Broker ITOT
+2026-01-01 open Assets:Cash USD
+
+2026-03-19 * "Per-unit lot"
+  Assets:Broker  10 ITOT {74.93 USD}
+  Assets:Cash  -749.30 USD
+
+2026-03-20 * "Total-cost lot"
+  Assets:Broker  10 ITOT {{749.30 USD}}
+  Assets:Cash  -749.30 USD
+
+2026-03-21 * "Compound cost lot"
+  Assets:Broker  10 ITOT {69.93 # 50 USD}
+  Assets:Cash  -749.30 USD
+`;
+  const files = { "main.bean": source };
+  const snapshot = await parseLedgerFiles(files, "main.bean");
+  deepStrictEqual(snapshot.errors, []);
+  const journal = new LedgerJournalService(
+    singleFileRepoFactory(source) as never,
+    {} as never,
+  );
+  for (const [filter, total] of [
+    ["any(cost>70)", 3],
+    ["any(cost=74.93)", 3],
+    ["any(units>5 cost>60)", 3],
+    ['any(cost:"USD")', 3],
+    ["any(cost>80)", 0],
+  ] as const) {
+    const result = await journal.getJournal({
+      ledgerId: "synthetic/posting-cost",
+      userId: undefined,
+      query: { filter },
+    });
+    deepStrictEqual(result.total, total, filter);
+  }
+  console.log(
+    "✓ Journal cost comparisons use the booked per-unit cost for all lot forms",
+  );
+}
+
 /**
  * RAW WASM validity — deliberately BYPASSES the sanitization pre-pass
  * (`neutralizeIncludedOptionsAndPlugins` + fava-plugin stripping) that the
@@ -5742,6 +5784,7 @@ poptag #trip
     "BQL over a raw-mode ledger sums no padding",
   );
 
+  await verifyPostingCostFilters();
   // w23/m20: replay the stock beanquery oracle through the shell service.
   await verifyFilteredPrint();
   await verifyBqlOracle();

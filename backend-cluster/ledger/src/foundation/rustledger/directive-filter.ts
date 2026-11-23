@@ -4,6 +4,7 @@ import { MAX_PATTERN_LENGTH, patternRefusal } from "./pattern-complexity";
 import { getRustledgerWorkerPool } from "./rustledger-worker-pool";
 import type { SourceSyntax } from "./source-slice";
 import { utcDate } from "./utc-date";
+import { bookedCostPerUnit } from "./lot-inventory";
 
 /**
  * Fava `FavaLedger.get_filtered(account, filter, time)` reimplemented as a pure
@@ -637,6 +638,7 @@ class FilterParser {
           return keyPredicate(
             token.value,
             makeAmountMatcher(opToken.value, numberToken.value),
+            true,
           );
         }
         throw new AdvancedFilterParseError(
@@ -936,8 +938,18 @@ function postingAttribute(posting: PostingJson, key: string): AttributeLookup {
  * to find postings like the top-level `account` param does. Explicit
  * `any(account:…)` is unaffected: posting targets take the direct path.
  */
-function keyPredicate(key: string, match: FilterValueMatcher): EntryPredicate {
+function keyPredicate(
+  key: string,
+  match: FilterValueMatcher,
+  compareAmount = false,
+): EntryPredicate {
   const direct: EntryPredicate = (target): boolean => {
+    if (compareAmount && key === "cost" && target.kind === "posting") {
+      // Fava compares the booked per-unit amount. Keep the original cost
+      // value for string searches such as cost:"USD".
+      const cost = bookedCostPerUnit(target.posting);
+      return cost !== null && match({ number: cost.number.toFixed() });
+    }
     const attribute =
       target.kind === "directive"
         ? directiveAttribute(target.directive, key)

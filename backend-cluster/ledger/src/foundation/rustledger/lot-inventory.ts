@@ -170,7 +170,7 @@ function normalizeEnginePerUnit(
  * `100` and values to `-1000`, not per-unit `-100` valuing to `+1000`). See
  * {@link perUnitFromTotalCost}.
  */
-function bookedCostPerUnit(
+export function bookedCostPerUnit(
   posting: PostingJson,
 ): { number: BigNumber; currency: string; scale: number } | null {
   const cost = posting.cost;
