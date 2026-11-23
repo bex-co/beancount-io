@@ -1,13 +1,13 @@
 # w23 · m44 — Get every MCP result to text-only and tools-only hosts in full
 
-**Worker:** worker1 **Goal:** An agent on any MCP host gets every row, id and next step it needs. That holds whether the host hands the model only `content` (claude.ai), only tools (ChatGPT), or `structuredContent` (Claude Code), and a QA check keeps the channels from drifting apart again. **Status:** blocked (t003, t004, t005 done; t001, t002, t006 blocked; t007–t010 wait on them)
+**Worker:** worker1 **Goal:** An agent on any MCP host gets every row, id and next step it needs. That holds whether the host hands the model only `content` (claude.ai), only tools (ChatGPT), or `structuredContent` (Claude Code), and a QA check keeps the channels from drifting apart again. **Status:** blocked (t002, t003, t004, t005 done; t001, t006 blocked; t007–t010 wait on them)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
 | t001 | Verify the text-block fix on claude.ai | 30m | — |
-| t002 | Check text against structuredContent in the MCP QA helper and contract replay | 45m | — |
+| t002 | Check text against structuredContent in the MCP QA helper and contract replay — **DONE** | 45m | — |
 | t003 | Page listStagedBankTransactions on every surface — **DONE** | 60m | — |
 | t004 | Put a resource's page signal where a text-only reader sees it — **DONE** | 45m | — |
 | t005 | Put the hint in the message of resource and prompt refusals — **DONE** | 30m | — |
@@ -22,10 +22,9 @@
 - **t001** (blocked 2026-11-13). The remaining check needs someone signed in to claude.ai: whether claude.ai's model can read a `beancount://` resource unprompted, plus recording t001's results in `docs/mcp.md`. The Playwright browser runs `--isolated`, so the earlier sign-in ended when the browser closed.
   - **Already verified on 2026-11-13.** Production runs `f58c89d64`: a tool refusal now ends with the serialized envelope line that commit added (for example, `readLedgerFiles` on a missing path). On claude.ai, with the Beancount.io connector, `getLedgerContext` on the QA ledger `puncsky/mcp-agent-eval` reached the model as `getLedgerContext: ok` followed by the full JSON, and the model listed its 5 payees and 12 accounts. Before the fix it saw only `getLedgerContext: ok`.
   - **Unblock:** a claude.ai sign-in on the QA account in the headed Playwright browser. Only the owner can do this. Then run steps 3 and 4. t006 depends on the answer; t002–t005 proceed without it.
-- **t002** (blocked 2026-11-13). The check shipped in `b8e931fb0`. `qa-contract-replay.mjs` has a `channel` row, the fake deployment's `summary` mode fails it while every other row passes, and making `textCarries` always pass turns three tests red. What remains is the acceptance check "a replay against the current server passes". It cannot run here because the repository-root `.env` `QA_MCP_TOKEN` has expired (production answers `401`).
-  - **Unblock:** a fresh short-lived `bcio_` key for the QA account in `./.env` as `QA_MCP_TOKEN`. Only the owner can mint one. Then run `node .agents/skills/qa-shared/scripts/qa-contract-replay.mjs` and confirm `| channel | ok |`.
+- **t002** cleared 2026-11-23. It was blocked on 2026-11-13 because the QA MCP key in `./.env` had expired (production answered `401`). With a fresh key, the live replay against `https://beancount.io` printed `| channel | ok |` (8 tool results checked; 16 probes, 0 mismatches), so t002 is done. The check itself shipped in `b8e931fb0`.
 - **t006** (blocked 2026-11-13). It depends on t001: whether claude.ai's model can read a resource unprompted decides between fixing only the served prompts and adding tool twins for the resource-only reads. **Unblock:** t001 is cleared.
-- **Milestone** (blocked 2026-11-13). Every open task is blocked or waits on a blocked one. t007 (Adoption surface) needs t002 and t006, and t008–t010 follow it. t003, t004 and t005 shipped (`e195dfe96`, `cd4180907`, `e5877a8ec`). **Unblock:** t001's sign-in and t002's fresh QA key above, both from the owner. Then run t001, t006 and the live replay, and close with t007–t010.
+- **Milestone** (blocked 2026-11-13, updated 2026-11-23). Every open task is blocked or waits on a blocked one. t007 (Adoption surface) needs t006, which needs t001, and t008–t010 follow t007. t002, t003, t004 and t005 are done (`b8e931fb0`, `e195dfe96`, `cd4180907`, `e5877a8ec`). The fresh QA key cleared t002 on 2026-11-23. **Unblock:** t001's claude.ai sign-in on the QA account in the headed Playwright browser, which only the owner can do. Then run t001 steps 3 and 4, then t006, and close with t007–t010.
 
 ## Definition of done
 
