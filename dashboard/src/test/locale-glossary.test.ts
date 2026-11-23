@@ -35,3 +35,17 @@ describe("one word for a ledger per language", () => {
     }
   });
 });
+
+it("uses Saldenbilanz across the German trial balance surfaces", () => {
+  const german = locales.de;
+  for (const key of [
+    "common.trialBalance",
+    "page.trialBalance.overviewTitle",
+    "common.relatedLinks.trialBalance",
+    "common.pageDescription.trialBalance",
+    "seo.ledgerTrialBalance.title",
+    "seo.ledgerTrialBalance.description",
+  ] as const) {
+    expect(german[key], key).toContain("Saldenbilanz");
+  }
+});

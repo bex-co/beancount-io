@@ -537,7 +537,7 @@ const deCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.trialBalance": {
     message:
-      "Probebilanzansicht für {ledgerName}. Überprüfen Sie Soll und Haben in allen Konten.",
+      "Saldenbilanz für {ledgerName}. Überprüfen Sie Soll und Haben in allen Konten.",
     description: "Description for trial balance page",
   },
   "common.pageDescription.uploadFiles": {
@@ -610,7 +610,7 @@ const deCommon: Record<string, TranslationEntry> = {
     description: "Link label for statistics page",
   },
   "common.relatedLinks.trialBalance": {
-    message: "Probebilanz",
+    message: "Saldenbilanz",
     description: "Link label for trial balance page",
   },
   "common.relatedLinks.uploadFiles": {

@@ -322,11 +322,11 @@ const deSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerTrialBalance.description": {
     message:
-      "Probebilanzbericht für {ledgerName}. Überprüfen Sie die Gleichheit von Soll und Haben in Ihren Konten.",
+      "Saldenbilanz für {ledgerName}. Überprüfen Sie die Gleichheit von Soll und Haben in Ihren Konten.",
     description: "Trial balance page meta description",
   },
   "seo.ledgerTrialBalance.title": {
-    message: "Probebilanz - {ledgerName}",
+    message: "Saldenbilanz - {ledgerName}",
     description: "Trial balance page title with ledger name",
   },
   "seo.login.description": {
