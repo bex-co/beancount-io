@@ -463,6 +463,7 @@ export class LedgerDataService
     params: BaseParams & AccountReportParams,
   ): Promise<DateAndBalanceWithAccountBalancePublic[]> {
     const { ledgerId, identity, ...rest } = params;
+    this.assertNotBlankIntervalAccountName(rest.accountName);
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
@@ -486,6 +487,7 @@ export class LedgerDataService
     operatingCurrencies: string[];
   }> {
     const { ledgerId, identity, ...rest } = params;
+    this.assertNotBlankIntervalAccountName(rest.accountName);
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
@@ -498,6 +500,19 @@ export class LedgerDataService
       ),
     ]);
     return { data, operatingCurrencies: options?.operating_currency ?? [] };
+  }
+
+  private assertNotBlankIntervalAccountName(accountName: string): void {
+    // Omitted or empty accountName means all accounts (GraphQL types
+    // accountName as String!), whereas a non-empty whitespace-only string
+    // passes REST/MCP/GraphQL schemas and silently yields all-zero intervals
+    // unless refused before authorizing or calling the ledger (w31/045).
+    if (accountName && accountName.trim() === "") {
+      throw new BadUserInputError(
+        "accountName must not be blank",
+        "accountName",
+      );
+    }
   }
 
   private readIntervalTotals(

@@ -440,7 +440,7 @@ describe("report query validation", () => {
   );
 });
 
-describe("account-report blank accountName parity (w31/040)", () => {
+describe("account-report and interval-totals blank accountName parity (w31/040, w31/045)", () => {
   let resolvers: Map<unknown, object>;
   let schemaPromise: ReturnType<typeof buildSchema> | undefined;
 
@@ -574,18 +574,78 @@ describe("account-report blank accountName parity (w31/040)", () => {
     },
   );
 
+  it.each(["  ", "\t", "\n"])(
+    "refuses interval-totals with whitespace-only accountName=%j as BAD_USER_INPUT across REST, MCP (summary and fava), and GraphQL",
+    async (blankAccountName) => {
+      const f = await realLedgerDataFixture();
+      const encoded = encodeURIComponent(blankAccountName);
+      try {
+        for (const query of [
+          `interval-totals?accountName=${encoded}`,
+          `interval-totals?shape=fava&accountName=${encoded}`,
+        ]) {
+          const rest = await f.rest(query);
+          expect(rest.status).toBe(400);
+          expect(await rest.json()).toMatchObject({
+            ok: false,
+            error: {
+              code: "BAD_USER_INPUT",
+              metadata: { field: "accountName" },
+            },
+          });
+
+          await expect(f.mcp(query)).rejects.toMatchObject({
+            code: -32602,
+            data: {
+              code: "BAD_USER_INPUT",
+            },
+          });
+        }
+
+        const gql = await f.gql(
+          `getLedgerIntervalTotals(ledgerId: "alice/main", accountName: ${JSON.stringify(blankAccountName)}) { date }`,
+        );
+        expect(gql.data).toBeNull();
+        const [error] = gql.errors ?? [];
+        expect(error).toBeDefined();
+        expect(formatError(error!.toJSON(), error!).extensions).toMatchObject({
+          code: "BAD_USER_INPUT",
+          field: "accountName",
+        });
+
+        expect(f.reports.getLedgerIntervalTotals).not.toHaveBeenCalled();
+        expect(f.reports.getLedgerOptions).not.toHaveBeenCalled();
+        expect(f.authorize).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
   it("keeps interval-totals working with omitted or empty accountName across REST, MCP, and GraphQL", async () => {
     const f = await realLedgerDataFixture();
     try {
-      const restOmitted = await f.rest("interval-totals?shape=fava");
-      expect(restOmitted.status).toBe(200);
-      const restEmpty = await f.rest("interval-totals?shape=fava&accountName=");
-      expect(restEmpty.status).toBe(200);
+      const restSummaryOmitted = await f.rest("interval-totals");
+      expect(restSummaryOmitted.status).toBe(200);
+      const restSummaryEmpty = await f.rest("interval-totals?accountName=");
+      expect(restSummaryEmpty.status).toBe(200);
+      const restFavaOmitted = await f.rest("interval-totals?shape=fava");
+      expect(restFavaOmitted.status).toBe(200);
+      const restFavaEmpty = await f.rest(
+        "interval-totals?shape=fava&accountName=",
+      );
+      expect(restFavaEmpty.status).toBe(200);
 
-      const mcpOmitted = await f.mcp("interval-totals?shape=fava");
-      expect(mcpOmitted).toHaveLength(1);
-      const mcpEmpty = await f.mcp("interval-totals?shape=fava&accountName=");
-      expect(mcpEmpty).toHaveLength(1);
+      const mcpSummaryOmitted = await f.mcp("interval-totals");
+      expect(mcpSummaryOmitted.intervals).toHaveLength(1);
+      const mcpSummaryEmpty = await f.mcp("interval-totals?accountName=");
+      expect(mcpSummaryEmpty.intervals).toHaveLength(1);
+      const mcpFavaOmitted = await f.mcp("interval-totals?shape=fava");
+      expect(mcpFavaOmitted).toHaveLength(1);
+      const mcpFavaEmpty = await f.mcp(
+        "interval-totals?shape=fava&accountName=",
+      );
+      expect(mcpFavaEmpty).toHaveLength(1);
 
       const gqlEmpty = await f.gql(
         `getLedgerIntervalTotals(ledgerId: "alice/main", accountName: "") { date }`,

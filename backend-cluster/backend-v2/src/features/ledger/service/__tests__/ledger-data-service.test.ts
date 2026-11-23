@@ -34,6 +34,7 @@ const mockReports = {
   getLedgerPostingsPerAccount: jest.fn(),
   getLedgerAccountReport: jest.fn(),
   getLedgerIntervalTotals: jest.fn(),
+  getLedgerOptions: jest.fn(),
 };
 
 const mockFavaApiClient = { reports: mockReports };
@@ -448,6 +449,69 @@ describe("LedgerDataService", () => {
       expect.objectContaining({ account_name: "" }),
     );
   });
+
+  it("getIntervalTotalsForSummary — continues accepting empty accountName for all accounts", async () => {
+    mockReports.getLedgerIntervalTotals.mockResolvedValue(ok([]));
+    mockReports.getLedgerOptions.mockResolvedValue(
+      ok({ operating_currency: ["USD"] }),
+    );
+
+    const result = await service.getIntervalTotalsForSummary({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      accountName: "",
+    });
+
+    expect(result).toEqual({ data: [], operatingCurrencies: ["USD"] });
+    expect(mockReports.getLedgerIntervalTotals).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+      expect.objectContaining({ account_name: "" }),
+    );
+    expect(mockReports.getLedgerOptions).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+    );
+  });
+
+  // w31/045: whitespace-only accountName (non-empty) must fail fast before
+  // authorizing or hitting the ledger service on both interval-totals paths.
+  it.each(["  ", "\t", "\n"])(
+    "getIntervalTotals & getIntervalTotalsForSummary — refuse whitespace-only accountName=%j as BadUserInputError before calling the ledger",
+    async (blankAccountName) => {
+      mockReports.getLedgerIntervalTotals.mockResolvedValue(ok([]));
+      mockReports.getLedgerOptions.mockResolvedValue(
+        ok({ operating_currency: ["USD"] }),
+      );
+
+      for (const call of [
+        () =>
+          service.getIntervalTotals({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            accountName: blankAccountName,
+          }),
+        () =>
+          service.getIntervalTotalsForSummary({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            accountName: blankAccountName,
+          }),
+      ]) {
+        const failure = await call().catch((error: unknown) => error);
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "accountName" },
+        });
+      }
+
+      expect(authorizeLedger).not.toHaveBeenCalled();
+      expect(mockFavaClientFactory.getPublicApiClient).not.toHaveBeenCalled();
+      expect(mockReports.getLedgerIntervalTotals).not.toHaveBeenCalled();
+      expect(mockReports.getLedgerOptions).not.toHaveBeenCalled();
+    },
+  );
 
   it("passes the identity's userId to getPublicApiClient for all methods", async () => {
     mockReports.getLedgerCurrencies.mockResolvedValue(ok([]));
