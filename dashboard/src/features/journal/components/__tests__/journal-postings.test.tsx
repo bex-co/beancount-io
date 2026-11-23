@@ -127,7 +127,7 @@ function expectNarrowDetail(text: string) {
   return detail;
 }
 
-function expectDesktopAmount(text: string) {
+function expectDesktopDetail(text: string) {
   const detail = screen.getByText(
     (_, element) =>
       element?.classList.contains("sm:block") === true &&
@@ -137,6 +137,62 @@ function expectDesktopAmount(text: string) {
 }
 
 describe("JournalPostings cost and price details", () => {
+  it.each([true, false])(
+    "identifies the booked lot and labels the posting's financial details (compact=%s)",
+    async (compact) => {
+      const sale: JournalPosting = {
+        account: "Assets:Label",
+        units: { number: "-2", currency: "QALBL" },
+        cost: {
+          number: "10.00",
+          currency: "USD",
+          date: "2026-02-01",
+          label: "lot-b",
+        },
+        price: { number: "15.00", currency: "USD" },
+      };
+      await setup(
+        [
+          sale,
+          bitcoinDisposal,
+          {
+            account: "Assets:PriceOnly",
+            units: { number: "7", currency: "QALBL" },
+            price: { number: "9.50", currency: "USD" },
+          },
+          {
+            account: "Assets:Cash",
+            units: { number: "30.00", currency: "USD" },
+          },
+        ],
+        "en",
+        { compact },
+      );
+
+      const [booked, costOnly, priceOnly, plain] =
+        screen.getAllByRole("listitem");
+      const detailsPerRow = compact ? 1 : 2;
+      const lotDates = within(booked!).getAllByText("Feb 1, 2026");
+      expect(lotDates).toHaveLength(detailsPerRow);
+      lotDates.forEach((date) =>
+        expect(date).toHaveAttribute("datetime", "2026-02-01"),
+      );
+      expect(within(booked!).getAllByText("lot-b")).toHaveLength(detailsPerRow);
+      expect(within(booked!).getAllByText("Cost:")).toHaveLength(detailsPerRow);
+      expect(within(booked!).getAllByText("Price:")).toHaveLength(
+        detailsPerRow,
+      );
+      expect(costOnly).toHaveTextContent("Cost: 64,504.60 USD");
+      expect(costOnly).toHaveTextContent("Aug 17, 2026");
+      expect(costOnly).not.toHaveTextContent("Price:");
+      expect(priceOnly).toHaveTextContent("Price: 9.50 USD");
+      expect(priceOnly).not.toHaveTextContent("Cost:");
+      expect(priceOnly?.querySelector("time")).toBeNull();
+      expect(plain).not.toHaveTextContent(/Cost:|Price:/);
+      expect(plain?.querySelector("time")).toBeNull();
+    },
+  );
+
   it("isolates each signed quantity, cost and price in a Persian posting without changing text or account navigation", async () => {
     const account = "Expenses:Food:رستوران";
     const { user, router } = await setup(
@@ -194,8 +250,9 @@ describe("JournalPostings cost and price details", () => {
 
   it("retains the cost-only disposal beside quantity and its actual account navigation", async () => {
     const { user, router } = await setup([bitcoinDisposal]);
-    expectNarrowDetail("Cost: 64,504.60 USD");
-    expectDesktopAmount("64,504.60 USD");
+    const cost = "Cost: 64,504.60 USD (Aug 17, 2026)";
+    expectNarrowDetail(cost);
+    expectDesktopDetail(cost);
     expect(screen.queryByText(/^Price:/)).not.toBeInTheDocument();
     expect(screen.getAllByText("-0.20 BTC", { exact: true })).toHaveLength(2);
     const link = screen.getByRole("link", { name: bitcoinDisposal.account });
@@ -208,25 +265,23 @@ describe("JournalPostings cost and price details", () => {
       router.history.back();
       await router.load();
     });
-    await waitFor(() => expectNarrowDetail("Cost: 64,504.60 USD"));
+    await waitFor(() => expectNarrowDetail(cost));
     expect(
       screen.getByRole("link", { name: bitcoinDisposal.account }),
     ).toBeInTheDocument();
   });
 
   it.each([
-    ["en", en, "148.59", "145.72"],
-    ["de", de, "148,59", "145,72"],
+    ["en", en, "148.59", "145.72", "Mar 19, 2017"],
+    ["de", de, "148,59", "145,72", "19.03.2017"],
   ] as const)(
     "labels both cost and price distinctly in actual %s translations",
-    async (language, labels, costNumber, priceNumber) => {
+    async (language, labels, costNumber, priceNumber, date) => {
       await setup([veaDisposal], language, { ledgerName: "example" });
-      const cost = expectNarrowDetail(
-        `${labels["journal.postingCost"].message}: ${costNumber} USD`,
-      );
-      const price = expectNarrowDetail(
-        `${labels["journal.price"].message}: ${priceNumber} USD`,
-      );
+      const costText = `${labels["journal.postingCost"].message}: ${costNumber} USD (${date})`;
+      const priceText = `${labels["journal.price"].message}: ${priceNumber} USD`;
+      const cost = expectNarrowDetail(costText);
+      const price = expectNarrowDetail(priceText);
       expect(cost).not.toBe(price);
       const row = screen.getByRole("listitem");
       expect(row).toContainElement(cost);
@@ -235,8 +290,8 @@ describe("JournalPostings cost and price details", () => {
         within(row).getByRole("link", { name: veaDisposal.account }),
       ).toBeInTheDocument();
       expect(screen.getAllByText("-4 VEA", { exact: true })).toHaveLength(2);
-      expectDesktopAmount(`${costNumber} USD`);
-      expectDesktopAmount(`${priceNumber} USD`);
+      expectDesktopDetail(costText);
+      expectDesktopDetail(priceText);
     },
   );
 
@@ -282,10 +337,10 @@ describe("JournalPostings cost and price details", () => {
         flag: "!",
       },
     ]);
-    expectNarrowDetail("Cost: 0.00000000 USD");
+    expectNarrowDetail("Cost: 0.00000000 USD (Aug 17, 2026)");
     expectNarrowDetail("Price: 0.000000000000 USD");
-    expectDesktopAmount("0.00000000 USD");
-    expectDesktopAmount("0.000000000000 USD");
+    expectDesktopDetail("Cost: 0.00000000 USD (Aug 17, 2026)");
+    expectDesktopDetail("Price: 0.000000000000 USD");
     expect(
       screen.getAllByText("-0.00020000 BTC", { exact: true }),
     ).toHaveLength(2);

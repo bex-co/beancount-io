@@ -1,8 +1,9 @@
 import { Fragment } from "react";
-import type { JournalTransaction } from "@/common/types/journal";
+import type { JournalCost, JournalTransaction } from "@/common/types/journal";
 import { Link } from "@tanstack/react-router";
 import { LedgerAmount } from "@/common/components/ledger-amount";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { formatLedgerDate } from "@/common/lib/format/ledger-date";
 import { cn } from "@/common/lib/utils/utils";
 
 interface JournalPostingsProps {
@@ -39,6 +40,29 @@ function AccountName({ account }: { account: string }) {
           {segment}
         </Fragment>
       ))}
+    </>
+  );
+}
+
+function PostingCost({ cost }: { cost: JournalCost }) {
+  const { t, i18n } = useTranslations();
+  const date = formatLedgerDate(cost.date, i18n.language, {
+    dateStyle: "medium",
+  });
+
+  return (
+    <>
+      <span>{t("journal.postingCost")}:</span>{" "}
+      <LedgerAmount number={cost.number} currency={cost.currency} />
+      {(date || cost.label) && (
+        <>
+          {" ("}
+          {date && <time dateTime={cost.date}>{date}</time>}
+          {date && cost.label && " · "}
+          {cost.label && <bdi>{cost.label}</bdi>}
+          {")"}
+        </>
+      )}
     </>
   );
 }
@@ -110,19 +134,11 @@ export function JournalPostings({
               {accountLink(posting.account)}
               {(posting.cost || posting.price) && (
                 <span className="block text-muted-foreground">
-                  {posting.cost && (
-                    <>
-                      {t("journal.postingCost")}:{" "}
-                      <LedgerAmount
-                        number={posting.cost.number}
-                        currency={posting.cost.currency}
-                      />
-                    </>
-                  )}
+                  {posting.cost && <PostingCost cost={posting.cost} />}
                   {posting.cost && posting.price && " · "}
                   {posting.price && (
                     <>
-                      {t("journal.price")}:{" "}
+                      <span>{t("journal.price")}:</span>{" "}
                       <LedgerAmount
                         number={posting.price.number}
                         currency={posting.price.currency}
@@ -185,16 +201,12 @@ export function JournalPostings({
               )}
               {posting.cost && (
                 <span className="mt-0.5 block text-muted-foreground sm:hidden">
-                  {t("journal.postingCost")}:{" "}
-                  <LedgerAmount
-                    number={posting.cost.number}
-                    currency={posting.cost.currency}
-                  />
+                  <PostingCost cost={posting.cost} />
                 </span>
               )}
               {posting.price && (
                 <span className="mt-0.5 block text-muted-foreground sm:hidden">
-                  {t("journal.price")}:{" "}
+                  <span>{t("journal.price")}:</span>{" "}
                   <LedgerAmount
                     number={posting.price.number}
                     currency={posting.price.currency}
@@ -210,20 +222,18 @@ export function JournalPostings({
                 />
               )}
             </span>
-            <span className="w-20 sm:w-32 text-end font-mono text-xs sm:text-sm hidden sm:block">
-              {posting.cost && (
-                <LedgerAmount
-                  number={posting.cost.number}
-                  currency={posting.cost.currency}
-                />
-              )}
+            <span className="hidden w-32 text-end font-mono text-sm [overflow-wrap:anywhere] sm:block">
+              {posting.cost && <PostingCost cost={posting.cost} />}
             </span>
-            <span className="w-20 sm:w-32 text-end font-mono text-xs sm:text-sm hidden sm:block">
+            <span className="hidden w-32 text-end font-mono text-sm [overflow-wrap:anywhere] sm:block">
               {posting.price && (
-                <LedgerAmount
-                  number={posting.price.number}
-                  currency={posting.price.currency}
-                />
+                <>
+                  <span>{t("journal.price")}:</span>{" "}
+                  <LedgerAmount
+                    number={posting.price.number}
+                    currency={posting.price.currency}
+                  />
+                </>
               )}
             </span>
           </div>
