@@ -1,7 +1,23 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "@apollo/client/react";
+import {
+  createBrowserHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  Outlet,
+  RouterProvider,
+} from "@tanstack/react-router";
+import { useState } from "react";
 import { AddBudgetDialog } from "../add-budget-dialog";
 
 // The dialog reads the ledger's income root; these budgets use Expenses.
@@ -363,6 +379,129 @@ describe("AddBudgetDialog", () => {
       number: "0.001",
       currency: "MUSD",
     });
+  });
+});
+
+describe("Budget draft navigation", () => {
+  let history: ReturnType<typeof createBrowserHistory> | undefined;
+  const originalUrl = window.location.href;
+  const originalState: unknown = window.history.state;
+  const journalPath = "/ledger/owner/ledger/journal";
+  const budgetPath = "/ledger/owner/ledger/budget";
+
+  beforeEach(() => {
+    mockUseMutation.mockReturnValue([
+      vi.fn().mockResolvedValue({ data: { bulkEntries: { success: true } } }),
+      { loading: false },
+    ] as unknown as ReturnType<typeof useMutation>);
+  });
+
+  afterEach(() => {
+    cleanup();
+    history?.destroy();
+    history = undefined;
+    window.history.replaceState(originalState, "", originalUrl);
+  });
+
+  async function renderBudget() {
+    window.history.replaceState(null, "", journalPath);
+    history = createBrowserHistory();
+    const rootRoute = createRootRoute({ component: Outlet });
+    const journal = createRoute({
+      getParentRoute: () => rootRoute,
+      path: journalPath,
+      component: () => <h1>Journal</h1>,
+    });
+    const budget = createRoute({
+      getParentRoute: () => rootRoute,
+      path: budgetPath,
+      component: function Budget() {
+        const [open, setOpen] = useState(false);
+        return (
+          <AddBudgetDialog
+            open={open}
+            onOpenChange={setOpen}
+            ledgerId="owner/ledger"
+            trigger={<button type="button">Open Add Budget</button>}
+          />
+        );
+      },
+    });
+    const router = createRouter({
+      history,
+      routeTree: rootRoute.addChildren([journal, budget]),
+    });
+    await router.load();
+    render(<RouterProvider router={router} />);
+    const user = userEvent.setup();
+    await act(async () => history?.push(budgetPath));
+    await user.click(
+      await screen.findByRole("button", { name: "Open Add Budget" }),
+    );
+    const amount = await screen.findByRole("spinbutton", { name: /amount/i });
+    return { user, amount };
+  }
+
+  it("protects the typed amount on reload and asks before leaving Budget on Back", async () => {
+    const { user, amount } = await renderBudget();
+    await user.type(amount, "250");
+    const unload = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(unload);
+    expect(unload.defaultPrevented).toBe(true);
+
+    act(() => window.history.back());
+    expect(
+      await screen.findByRole("dialog", { name: "Discard what you typed?" }),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Keep editing" }));
+    await waitFor(() => expect(window.location.pathname).toBe(budgetPath));
+    expect(amount).toHaveValue("250");
+    await waitFor(() => expect(amount).toHaveFocus());
+
+    act(() => window.history.back());
+    await user.click(await screen.findByRole("button", { name: "Discard" }));
+    expect(
+      await screen.findByRole("heading", { name: "Journal" }),
+    ).toBeVisible();
+  });
+
+  it("holds Budget silently while saving and lets Back leave after success", async () => {
+    let finish!: () => void;
+    const write = new Promise((resolve) => {
+      finish = () => resolve({ data: { bulkEntries: { success: true } } });
+    });
+    const mutate = vi.fn(() => write);
+    mockUseMutation.mockReturnValue([
+      mutate,
+      { loading: false },
+    ] as unknown as ReturnType<typeof useMutation>);
+    const { user, amount } = await renderBudget();
+    await user.type(
+      screen.getByTestId("account-combobox"),
+      "Expenses:Groceries",
+    );
+    await user.type(amount, "250");
+    await user.click(screen.getByRole("button", { name: "Add Budget" }));
+    await waitFor(() => expect(mutate).toHaveBeenCalledOnce());
+    await waitFor(() => expect(amount).toBeDisabled());
+
+    await act(async () => {
+      const popped = new Promise<void>((resolve) => {
+        window.addEventListener("popstate", () => resolve(), { once: true });
+      });
+      window.history.back();
+      await popped;
+    });
+    await waitFor(() => expect(window.location.pathname).toBe(budgetPath));
+    expect(screen.getByRole("dialog")).toHaveAccessibleName("Add Budget");
+    expect(amount).toHaveValue("250");
+
+    await act(async () => finish());
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    act(() => window.history.back());
+    expect(
+      await screen.findByRole("heading", { name: "Journal" }),
+    ).toBeVisible();
   });
 });
 

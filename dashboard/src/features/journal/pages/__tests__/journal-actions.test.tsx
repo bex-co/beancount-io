@@ -113,7 +113,7 @@ vi.mock("@/features/journal/components/new-directive-dialog", () => ({
   }: {
     open: boolean;
     activeTab: string;
-    onOpenChange: (open: boolean) => void;
+    onOpenChange: (open: boolean, options?: { saved: boolean }) => void;
     onActiveTabChange: (directive: "note") => void;
   }) => (
     <div
@@ -124,6 +124,9 @@ vi.mock("@/features/journal/components/new-directive-dialog", () => ({
       {open && (
         <>
           <button onClick={() => onOpenChange(false)}>Close entry form</button>
+          <button onClick={() => onOpenChange(false, { saved: true })}>
+            Save entry form
+          </button>
           <button onClick={() => onActiveTabChange("note")}>Choose note</button>
         </>
       )}
@@ -162,7 +165,11 @@ describe("journal action URLs", () => {
     fireEvent.click(screen.getByRole("button", { name: "Choose note" }));
 
     const navigation = mockNavigate.mock.calls.at(-1)?.[0];
-    expect(navigation).toMatchObject({ to: ".", replace: true });
+    expect(navigation).toMatchObject({
+      to: ".",
+      replace: true,
+      ignoreBlocker: true,
+    });
     expect(
       navigation.search({
         account: "Assets:Cash",
@@ -186,6 +193,7 @@ describe("journal action URLs", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close entry form" }));
 
     const navigation = mockNavigate.mock.calls.at(-1)?.[0];
+    expect(navigation).toMatchObject({ replace: true, ignoreBlocker: true });
     expect(
       navigation.search({
         account: "Assets:Cash",
@@ -198,6 +206,34 @@ describe("journal action URLs", () => {
       account: "Assets:Cash",
       filter: "coffee",
       time: "year",
+      action: undefined,
+      directive: undefined,
+    });
+  });
+
+  it("closes a saved draft and clears the offset in one replacement", () => {
+    actionSearch = { action: "new-entry", directive: "transaction" };
+    render(<LedgerJournalPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Save entry form" }));
+
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
+    const [navigation] = mockNavigate.mock.calls[0]!;
+    expect(navigation).toMatchObject({
+      to: "/ledger/$ledgerOwner/$ledgerName/journal",
+      params: { ledgerOwner: "alice", ledgerName: "books" },
+      replace: true,
+      ignoreBlocker: true,
+    });
+    expect(
+      navigation.search({
+        offset: 60,
+        account: "Assets:Cash",
+        action: "new-entry",
+        directive: "transaction",
+      }),
+    ).toEqual({
+      offset: undefined,
+      account: "Assets:Cash",
       action: undefined,
       directive: undefined,
     });

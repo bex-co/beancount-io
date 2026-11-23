@@ -232,6 +232,7 @@ export function AddBudgetDialog({
   // Read during render: react-hook-form tracks only what a render reads.
   const { requestLeave, confirmation } = useDiscardDraftGuard(
     form.formState.isDirty,
+    open ? { writing: pending } : undefined,
   );
   const dismiss = () => {
     resetForm();

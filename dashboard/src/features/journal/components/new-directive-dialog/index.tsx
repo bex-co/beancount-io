@@ -32,7 +32,7 @@ const TABS = [
 
 interface NewDirectiveDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (open: boolean, options?: { saved: boolean }) => void;
   ledgerId: string;
   activeTab: JournalDirectiveAction;
   onActiveTabChange: (tab: JournalDirectiveAction) => void;
@@ -99,7 +99,10 @@ export function NewDirectiveDialog({
       ) as Record<(typeof TABS)[number]["value"], (dirty: boolean) => void>,
     [],
   );
-  const { requestLeave, confirmation } = useDiscardDraftGuard(dirty);
+  const { requestLeave, confirmation } = useDiscardDraftGuard(
+    dirty,
+    open ? { writing: pending } : undefined,
+  );
   const liveSession = useRef<number | null>(open ? session : null);
   useEffect(() => {
     liveSession.current = open ? session : null;
@@ -118,7 +121,7 @@ export function NewDirectiveDialog({
   const handleSuccess = () => {
     // Read before the cache clear below drops it: the pre-write errors.
     const before = writeOutcome.snapshot();
-    if (liveSession.current === session) onOpenChange(false);
+    if (liveSession.current === session) onOpenChange(false, { saved: true });
     clearCache();
     const leftErrors = writeOutcome.report(before);
     // A late completion must not act on a page the reader has already left,

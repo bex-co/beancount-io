@@ -434,16 +434,20 @@ const JournalContent = () => {
       <NewDirectiveDialog
         returnFocusRef={newEntryLinkRef}
         open={canWrite && actionSearch.action === NEW_ENTRY_ACTION}
-        onOpenChange={(open) => {
+        onOpenChange={(open, options) => {
           if (!open) {
+            // The dialog has already confirmed this close or saved the draft.
             void navigate({
-              to: ".",
+              to: "/ledger/$ledgerOwner/$ledgerName/journal",
+              params: { ledgerOwner, ledgerName },
               search: (previous) => ({
                 ...previous,
                 action: undefined,
                 directive: undefined,
+                ...(options?.saved && { offset: undefined }),
               }),
               replace: true,
+              ignoreBlocker: true,
             });
           }
         }}
@@ -457,6 +461,8 @@ const JournalContent = () => {
               directive,
             }),
             replace: true,
+            // All tabs keep their drafts while New Entry stays open.
+            ignoreBlocker: true,
           });
         }}
         ledgerId={ledgerId}
@@ -468,7 +474,6 @@ const JournalContent = () => {
               toast.success(t("journal.entryCreatedSuccess"));
             }
           });
-          setOffset(0);
           // Evict journal query cache and refetch to ensure fresh data
           void refetch();
         }}

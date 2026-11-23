@@ -1,7 +1,26 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import {
+  createBrowserHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  Outlet,
+  RouterProvider,
+} from "@tanstack/react-router";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  journalActionSearchSchema,
+  NEW_TRANSACTION_ACTION_SEARCH,
+} from "@/common/lib/ledger-action-search";
 import { NewDirectiveDialog } from "../index";
 
 vi.mock("@/common/hooks/use-write-outcome", () => ({
@@ -61,6 +80,83 @@ function Harness() {
 
 const confirm = () =>
   screen.queryByRole("dialog", { name: "Discard what you typed?" });
+
+const journalPath = "/ledger/owner/ledger/journal";
+const pageUrl = journalPath + "?offset=60";
+let browserHistory: ReturnType<typeof createBrowserHistory> | undefined;
+const originalUrl = window.location.href;
+const originalState: unknown = window.history.state;
+
+afterEach(() => {
+  cleanup();
+  browserHistory?.destroy();
+  browserHistory = undefined;
+  window.history.replaceState(originalState, "", originalUrl);
+});
+
+async function renderJournal() {
+  window.history.replaceState(null, "", pageUrl);
+  browserHistory = createBrowserHistory();
+  const rootRoute = createRootRoute({ component: Outlet });
+  const route = createRoute({
+    getParentRoute: () => rootRoute,
+    path: journalPath,
+    validateSearch: (search) => journalActionSearchSchema.parse(search),
+    component: function Journal() {
+      const search = route.useSearch();
+      const navigate = route.useNavigate();
+      return (
+        <>
+          <route.Link search={{ ...search, ...NEW_TRANSACTION_ACTION_SEARCH }}>
+            New Entry
+          </route.Link>
+          <NewDirectiveDialog
+            open={search.action === "new-entry"}
+            ledgerId="owner/ledger"
+            activeTab={search.directive ?? "transaction"}
+            onActiveTabChange={(directive) =>
+              void navigate({
+                search: { ...search, directive },
+                replace: true,
+                ignoreBlocker: true,
+              })
+            }
+            onOpenChange={(open, options) => {
+              if (!open) {
+                void navigate({
+                  search: {
+                    ...search,
+                    action: undefined,
+                    directive: undefined,
+                    ...(options?.saved && { offset: undefined }),
+                  },
+                  replace: true,
+                  ignoreBlocker: true,
+                });
+              }
+            }}
+          />
+        </>
+      );
+    },
+  });
+  const router = createRouter({
+    history: browserHistory,
+    routeTree: rootRoute.addChildren([route]),
+  });
+  await router.load();
+  render(<RouterProvider router={router} />);
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("link", { name: "New Entry" }));
+  await screen.findByRole("dialog", { name: "New Entry" });
+  return user;
+}
+
+function unloadWasPrevented() {
+  const event = new Event("beforeunload", { cancelable: true });
+  window.dispatchEvent(event);
+  return event.defaultPrevented;
+}
 
 /**
  * One stray click beside New Entry threw away a minute of typing; Escape and
@@ -148,5 +244,57 @@ describe("New Entry asks before discarding a typed draft", () => {
     );
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(confirm()).toBeNull();
+  });
+
+  it("asks on browser Back, restores the draft and URL on Keep editing, and leaves on Discard", async () => {
+    const user = await renderJournal();
+    const narration = screen.getByLabelText("Narration text");
+    await user.type(narration, "long draft");
+    const draftUrl = window.location.href;
+
+    act(() => window.history.back());
+    expect(
+      await screen.findByRole("dialog", { name: "Discard what you typed?" }),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Keep editing" }));
+    await waitFor(() => expect(window.location.href).toBe(draftUrl));
+    expect(narration).toHaveValue("long draft");
+    await waitFor(() => expect(narration).toHaveFocus());
+
+    act(() => window.history.back());
+    await user.click(await screen.findByRole("button", { name: "Discard" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(window.location.pathname + window.location.search).toBe(pageUrl);
+  });
+
+  it("warns before a dirty reload and stops warning after save", async () => {
+    const user = await renderJournal();
+    expect(unloadWasPrevented()).toBe(false);
+    await user.type(screen.getByLabelText("Narration text"), "booked");
+    expect(unloadWasPrevented()).toBe(true);
+
+    await user.click(screen.getByRole("tab", { name: "Note" }));
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: "Note" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      ),
+    );
+    await user.click(screen.getByRole("tab", { name: "Transaction" }));
+    expect(screen.getByLabelText("Narration text")).toHaveValue("booked");
+
+    await user.click(
+      screen.getByRole("button", { name: "Save Narration text" }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(window.location.pathname + window.location.search).toBe(journalPath);
+    expect(unloadWasPrevented()).toBe(false);
+  });
+
+  it("lets Back leave a clean New Entry", async () => {
+    await renderJournal();
+    act(() => window.history.back());
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(window.location.pathname + window.location.search).toBe(pageUrl);
   });
 });
