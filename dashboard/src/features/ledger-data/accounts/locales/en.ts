@@ -203,8 +203,8 @@ const enAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "Only an account with no postings can be deleted.",
+  "page.accounts.deleteNeedsNoReferences": {
+    message: "An account can only be deleted if no other entry refers to it.",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },

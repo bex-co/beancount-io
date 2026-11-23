@@ -1,4 +1,5 @@
 import type { DirectiveJson } from "@rustledger/wasm";
+import { getEntryAccounts } from "@/foundation/rustledger/directive-filter";
 import {
   accountOwnUnitBalances,
   collectLedgerAccounts,
@@ -124,5 +125,19 @@ export function accountEntryCounts(
       counts.set(posting.account, (counts.get(posting.account) ?? 0) + 1);
     });
   });
+  return counts;
+}
+
+/** Count each directive once per account, excluding its own open and close. */
+export function accountReferenceCounts(
+  directives: readonly DirectiveJson[],
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const directive of directives) {
+    if (directive.type === "open" || directive.type === "close") continue;
+    for (const account of new Set(getEntryAccounts(directive))) {
+      counts.set(account, (counts.get(account) ?? 0) + 1);
+    }
+  }
   return counts;
 }

@@ -3899,6 +3899,82 @@
         }
       }
     },
+    "/reports/{owner}/{repo_name}/account_reference_counts": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Get Ledger Account Reference Counts",
+        "description": "Count loaded directives that name each account. Count a directive once per account and exclude open and close directives. Accounts with no references are omitted.",
+        "operationId": "getLedgerAccountReferenceCounts",
+        "security": [
+          {
+            "HTTPBasic": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Owner"
+            }
+          },
+          {
+            "name": "repo_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Repo Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/reports/{owner}/{repo_name}/postings_per_account": {
       "get": {
         "tags": [

@@ -12,6 +12,7 @@ import {
   getAllOpenEntries,
   getAllCloseEntries,
   getAccountEntryCounts,
+  getAccountReferenceCounts,
 } from "@/features/ledger/utils/account-entries";
 import { logger } from "@/shared/logger";
 import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
@@ -31,6 +32,7 @@ export type LedgerAccountDirectiveItem = {
   closedAt?: string;
   balance?: Record<string, string>;
   entryCount: number;
+  referenceCount: number | null;
   entryHash: string;
   closeEntryHash?: string;
   /** The `open` directive's metadata (e.g. `cash-flow-role`), when any. */
@@ -135,16 +137,22 @@ export class LedgerAccountService
       ledgerName,
     });
 
-    const [openItems, closeItems, lastEntriesResponse, countMap] =
-      await Promise.all([
-        getAllOpenEntries(favaApiClient, ledgerOwner, ledgerName),
-        getAllCloseEntries(favaApiClient, ledgerOwner, ledgerName),
-        favaApiClient.reports.getLedgerAccountLastEntries(
-          ledgerOwner,
-          ledgerName,
-        ),
-        getAccountEntryCounts(favaApiClient, ledgerOwner, ledgerName),
-      ]);
+    const [
+      openItems,
+      closeItems,
+      lastEntriesResponse,
+      countMap,
+      referenceCounts,
+    ] = await Promise.all([
+      getAllOpenEntries(favaApiClient, ledgerOwner, ledgerName),
+      getAllCloseEntries(favaApiClient, ledgerOwner, ledgerName),
+      favaApiClient.reports.getLedgerAccountLastEntries(
+        ledgerOwner,
+        ledgerName,
+      ),
+      getAccountEntryCounts(favaApiClient, ledgerOwner, ledgerName),
+      getAccountReferenceCounts(favaApiClient, ledgerOwner, ledgerName),
+    ]);
 
     const closeMap = new Map<string, { date: string; entry_hash: string }>(
       closeItems.map((item) => [
@@ -186,6 +194,9 @@ export class LedgerAccountService
       closeEntryHash: closeMap.get(item.account)?.entry_hash,
       balance: balanceMap.get(item.account),
       entryCount: countMap.get(item.account) ?? 0,
+      referenceCount: referenceCounts
+        ? (referenceCounts[item.account] ?? 0)
+        : null,
       entryHash: item.entry_hash,
       meta: item.meta ?? undefined,
     }));

@@ -5,6 +5,7 @@ query GetLedgerAccountDirectives($ledgerId: String!) {
     closedAt
     balance
     entryCount
+    referenceCount
     entryHash
     closeEntryHash
   }

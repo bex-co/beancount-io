@@ -214,8 +214,9 @@ const frAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "Seul un compte sans écritures peut être supprimé.",
+  "page.accounts.deleteNeedsNoReferences": {
+    message:
+      "Un compte ne peut être supprimé que si aucune autre écriture n’y fait référence.",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },

@@ -25,6 +25,13 @@ class LedgerAccountItem {
   })
   entryCount: number;
 
+  @Field(() => Number, {
+    nullable: true,
+    description:
+      "Loaded directives naming this account, excluding its open and close. Null when the ledger service cannot supply the count.",
+  })
+  referenceCount: number | null;
+
   @Field(() => String)
   entryHash: string;
 

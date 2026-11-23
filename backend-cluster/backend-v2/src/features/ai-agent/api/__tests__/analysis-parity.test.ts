@@ -164,6 +164,9 @@ describe("ledger analysis reads", () => {
     );
     expect(read?.description).toContain("`entryCount` counts");
     expect(read?.description).toContain("postings, not its directives");
+    expect(read?.description).toContain(
+      "`referenceCount` counts loaded directives",
+    );
   });
 
   it.each(ANALYSIS_READS)(

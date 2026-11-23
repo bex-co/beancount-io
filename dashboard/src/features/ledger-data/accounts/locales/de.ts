@@ -206,8 +206,9 @@ const deAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "Nur ein Konto ohne Buchungen kann gelöscht werden.",
+  "page.accounts.deleteNeedsNoReferences": {
+    message:
+      "Ein Konto kann nur gelöscht werden, wenn kein anderer Eintrag darauf verweist.",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },

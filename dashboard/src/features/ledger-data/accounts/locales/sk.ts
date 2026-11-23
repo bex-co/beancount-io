@@ -215,8 +215,8 @@ const skAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "Odstrániť možno len účet bez zápisov.",
+  "page.accounts.deleteNeedsNoReferences": {
+    message: "Účet možno odstrániť, iba ak naň neodkazuje žiadny iný záznam.",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },

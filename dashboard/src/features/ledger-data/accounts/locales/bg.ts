@@ -205,8 +205,9 @@ const bgAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "Може да се изтрие само сметка без проводки.",
+  "page.accounts.deleteNeedsNoReferences": {
+    message:
+      "Сметката може да се изтрие само ако никой друг запис не я използва.",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },

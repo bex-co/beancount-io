@@ -210,8 +210,9 @@ const esAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "Solo se puede eliminar una cuenta sin asientos.",
+  "page.accounts.deleteNeedsNoReferences": {
+    message:
+      "Solo se puede eliminar una cuenta si ningún otro asiento hace referencia a ella.",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },

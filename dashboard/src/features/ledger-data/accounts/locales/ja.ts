@@ -199,8 +199,8 @@ const jaAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "ポスティングのない口座のみ削除できます。",
+  "page.accounts.deleteNeedsNoReferences": {
+    message: "他の記録から参照されていない口座のみ削除できます。",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },

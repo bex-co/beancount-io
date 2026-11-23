@@ -4,6 +4,7 @@ export type AccountDirective = {
   closedAt: string | null;
   balance?: Record<string, unknown> | null;
   entryCount: number;
+  referenceCount: number | null;
   entryHash: string;
   closeEntryHash: string | null;
 };

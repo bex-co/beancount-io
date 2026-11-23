@@ -19,6 +19,7 @@ function renderRow(overrides: Partial<AccountDirective>) {
             closedAt: null,
             balance: null,
             entryCount: 71,
+            referenceCount: 71,
             entryHash: "entry-1",
             closeEntryHash: null,
             ...overrides,
@@ -49,6 +50,7 @@ describe("AccountRow", () => {
               closedAt: null,
               balance: { USD: "100.00" },
               entryCount: 1,
+              referenceCount: 1,
               entryHash: "entry-1",
               closeEntryHash: null,
             }}
@@ -128,12 +130,12 @@ describe("AccountRow balance states", () => {
     );
     expect(remove).toHaveAttribute("aria-disabled", "true");
     expect(remove).toHaveTextContent(
-      "Only an account with no postings can be deleted.",
+      "An account can only be deleted if no other entry refers to it.",
     );
   });
 
   it("offers Delete but not Close for an unused account whose balance was not computed", async () => {
-    renderRow({ balance: null, entryCount: 0 });
+    renderRow({ balance: null, entryCount: 0, referenceCount: 0 });
     const { close, remove } = await openMenu("Income:US:Hoogle:Salary");
     expect(remove).not.toHaveAttribute("aria-disabled");
     expect(close).toHaveAttribute("aria-disabled", "true");
@@ -144,6 +146,7 @@ describe("AccountRow balance states", () => {
       account: "Liabilities:AccountsPayable",
       balance: {},
       entryCount: 6,
+      referenceCount: 6,
     });
 
     expect(balanceCell).toHaveTextContent(/^0$/);
@@ -157,6 +160,7 @@ describe("AccountRow balance states", () => {
       account: "Liabilities:US:Chase:Slate",
       balance: { USD: "-8123.35" },
       entryCount: 528,
+      referenceCount: 528,
     });
 
     expect(within(balanceCell).getByText("-8,123.35 USD")).toBeInTheDocument();
@@ -177,6 +181,7 @@ describe("AccountRow for a parent account", () => {
               closedAt: null,
               balance: {},
               entryCount: 0,
+              referenceCount: 0,
               entryHash: "bofa",
               closeEntryHash: null,
             }}

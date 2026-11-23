@@ -77,10 +77,13 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-async function setup(language: "en" | "de" = "en") {
+async function setup(language: "en" | "de" = "en", referenceCount = 0) {
   const operations: string[] = [];
   const mutations: Record<string, unknown>[] = [];
-  let currentAccounts = accounts;
+  let currentAccounts = accounts.map((row, index) => ({
+    ...row,
+    referenceCount: index === 0 ? referenceCount : 0,
+  }));
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: new ApolloLink(
@@ -171,6 +174,22 @@ async function setup(language: "en" | "de" = "en") {
 }
 
 describe("account row action names", () => {
+  it("keeps Delete disabled when another directive refers to an account with no postings", async () => {
+    const { operations, mutations } = await setup("en", 1);
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole("button", { name: "Actions for Assets:Checking" }),
+    );
+    const remove = await screen.findByRole("menuitem", { name: /^Delete/ });
+    expect(remove).toHaveAttribute("aria-disabled", "true");
+    expect(remove).toHaveTextContent(
+      "An account can only be deleted if no other entry refers to it.",
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(operations).toEqual(["GetLedgerAccountDirectives"]);
+    expect(mutations).toEqual([]);
+  });
+
   it.each([
     ["en", "Actions for Assets:Checking", "Actions for Assets:Savings"],
     ["de", "Aktionen für Assets:Checking", "Aktionen für Assets:Savings"],

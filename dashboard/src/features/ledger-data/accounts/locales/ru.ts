@@ -213,8 +213,9 @@ const ruAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "Удалить можно только счёт без проводок.",
+  "page.accounts.deleteNeedsNoReferences": {
+    message:
+      "Счёт можно удалить, только если на него не ссылаются другие записи.",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },

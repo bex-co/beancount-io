@@ -197,8 +197,8 @@ const koAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "게시가 없는 계정만 삭제할 수 있습니다.",
+  "page.accounts.deleteNeedsNoReferences": {
+    message: "다른 기록에서 참조하지 않는 계정만 삭제할 수 있습니다.",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },

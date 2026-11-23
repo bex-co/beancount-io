@@ -206,8 +206,9 @@ const nlAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "Alleen een rekening zonder boekingen kan worden verwijderd.",
+  "page.accounts.deleteNeedsNoReferences": {
+    message:
+      "Een rekening kan alleen worden verwijderd als geen andere boeking ernaar verwijst.",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },

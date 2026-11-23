@@ -229,6 +229,8 @@ function relocateSlices(
   });
 }
 
+type DeletedSourceLines = Map<string, { start: number; end: number }[]>;
+
 /**
  * A {@link LedgerFileTransform} that deletes one or more entries' blocks from a
  * file, re-locating each in the fresh content and deleting bottom-to-top so
@@ -237,18 +239,29 @@ function relocateSlices(
 function makeDeleteTransform(
   file: string,
   targets: SliceTarget[],
+  deletedLines?: DeletedSourceLines,
 ): LedgerFileTransform {
   return async (current) => {
     if (current === null) {
       throw new NotFoundError("Entry", targets[0]?.base ?? file);
     }
     const located = relocateSlices(file, current, targets);
+    const ranges: { start: number; end: number }[] = [];
+    const recordCut = deletedLines
+      ? (start: number, end: number) => ranges.push({ start, end })
+      : undefined;
     let content = current;
     located
       .sort((a, b) => b.startLine - a.startLine)
       .forEach((slice) => {
-        content = deleteSliceFromFile(content, slice.startLine, slice.endLine);
+        content = deleteSliceFromFile(
+          content,
+          slice.startLine,
+          slice.endLine,
+          recordCut,
+        );
       });
+    deletedLines?.set(file, ranges.reverse());
     return content;
   };
 }
@@ -708,6 +721,7 @@ export class LedgerJournalService implements ILedgerJournalService {
     transforms: Map<string, LedgerFileTransform>,
     action: LedgerWriteAction,
     allowInvalid: boolean | undefined,
+    deletedLines?: DeletedSourceLines,
   ): Promise<ProjectedLedgerErrors> {
     const { files, entryPoint, repoPaths } = loaded;
     const projected: FileMap = { ...files };
@@ -722,7 +736,23 @@ export class LedgerJournalService implements ILedgerJournalService {
       await errorsOf(projected),
       () => errorsOf(files),
     );
-    if (!allowInvalid) refuseProjectedErrors(projection, action);
+    if (!allowInvalid) {
+      const newErrors = deletedLines
+        ? projection.newErrors.map((error) => {
+            const source = error.source;
+            const cuts = source && deletedLines.get(source.filename);
+            if (!source || !cuts) return error;
+            // Reverse the edits to recover the current file's 1-based line.
+            const lineno = cuts.reduce(
+              (line, { start, end }) =>
+                line > start ? line + end - start : line,
+              source.lineno,
+            );
+            return { ...error, source: { ...source, lineno } };
+          })
+        : projection.newErrors;
+      refuseProjectedErrors({ ...projection, newErrors }, action);
+    }
     return projection;
   }
 
@@ -1207,17 +1237,22 @@ export class LedgerJournalService implements ILedgerJournalService {
       sourceEntryHash,
       sha256sum,
     );
+    const deletedLines: DeletedSourceLines = new Map();
     const transforms = new Map([
       [
         found.file,
-        makeDeleteTransform(found.file, [
-          sliceTarget(
-            files,
-            found,
-            parseEntryId(sourceEntryHash).base,
-            sha256sum,
-          ),
-        ]),
+        makeDeleteTransform(
+          found.file,
+          [
+            sliceTarget(
+              files,
+              found,
+              parseEntryId(sourceEntryHash).base,
+              sha256sum,
+            ),
+          ],
+          deletedLines,
+        ),
       ],
     ]);
     const validation = await this.projectWriteErrors(
@@ -1225,6 +1260,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       transforms,
       "delete",
       allowInvalid,
+      deletedLines,
     );
     let commit: CommitSha = {};
     if (!dryRun) {
@@ -1262,9 +1298,11 @@ export class LedgerJournalService implements ILedgerJournalService {
       );
     }
     const loaded = await this.loadFileMap(ledgerId, userId);
+    const deletedLines: DeletedSourceLines = new Map();
     const { removed, transforms } = await this.planSliceRemoval(
       loaded,
       entries,
+      deletedLines,
     );
     const deletedHashes = removed.map(({ hash }) => hash);
 
@@ -1273,6 +1311,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       transforms,
       "delete",
       allowInvalid,
+      deletedLines,
     );
     let commit: CommitSha = {};
     if (!dryRun) {
@@ -1314,6 +1353,7 @@ export class LedgerJournalService implements ILedgerJournalService {
   private async planSliceRemoval(
     loaded: LoadedLedgerWithManagedPrices,
     entries: readonly { entryHash: string; sha256sum: string }[],
+    deletedLines?: DeletedSourceLines,
   ): Promise<{
     /** Each removed entry once, as the caller named it, in request order. */
     removed: { hash: string; slice: EntrySlice }[];
@@ -1359,7 +1399,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       transforms: new Map(
         [...byFile.entries()].map(
           ([file, targets]) =>
-            [file, makeDeleteTransform(file, targets)] as const,
+            [file, makeDeleteTransform(file, targets, deletedLines)] as const,
         ),
       ),
     };

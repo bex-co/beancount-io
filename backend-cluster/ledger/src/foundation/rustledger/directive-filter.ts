@@ -142,7 +142,7 @@ export async function filterDirectivesAsync(
  * transactions the posting accounts are reversed; ordering is irrelevant to the
  * membership tests here but preserved for faithfulness).
  */
-function getEntryAccounts(directive: DirectiveJson): string[] {
+export function getEntryAccounts(directive: DirectiveJson): string[] {
   switch (directive.type) {
     case "transaction":
       return directive.postings.map((posting) => posting.account).reverse();

@@ -21,6 +21,7 @@ const account: AccountDirective = {
   openedAt: "2023-01-01",
   closedAt: null,
   entryCount: 0,
+  referenceCount: 0,
   entryHash: "abc123",
   closeEntryHash: null,
 };

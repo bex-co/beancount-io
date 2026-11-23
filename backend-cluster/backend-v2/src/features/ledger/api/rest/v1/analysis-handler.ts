@@ -440,7 +440,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     segment: "account-directives",
     summary: "List open/close directives per account",
     description:
-      "Each account's open and close directives — which accounts are usable on a given date. `entryCount` counts the account's postings, not its directives.",
+      "Each account's open and close directives — which accounts are usable on a given date. `entryCount` counts the account's postings, not its directives. `referenceCount` counts loaded directives naming the account, excluding its open and close, or is null when unavailable.",
     query: z.object({}).strict(),
     uriPath: "",
     fetch: (s, { ledgerId, identity }) => {

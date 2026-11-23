@@ -1,6 +1,7 @@
 import { LedgerAccountService } from "../ledger-account-service";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
+import { FavaApiError } from "@/foundation/fava";
 
 // Exercises this service's own behavior; authorizeLedger has its own suite.
 jest.mock("@/features/ledger/utils/authorize-ledger", () => ({
@@ -11,6 +12,7 @@ jest.mock("@/features/ledger/utils/authorize-ledger", () => ({
 const mockGetLedgerAccounts = jest.fn();
 const mockGetLedgerAccountLastEntries = jest.fn();
 const mockGetLedgerBalanceSheet = jest.fn();
+const mockGetLedgerAccountReferenceCounts = jest.fn();
 const mockGetJournal = jest.fn();
 const mockQueryShell = jest.fn();
 
@@ -19,6 +21,7 @@ const mockFavaApiClient = {
     getLedgerAccounts: mockGetLedgerAccounts,
     getLedgerAccountLastEntries: mockGetLedgerAccountLastEntries,
     getLedgerBalanceSheet: mockGetLedgerBalanceSheet,
+    getLedgerAccountReferenceCounts: mockGetLedgerAccountReferenceCounts,
   },
   journal: {
     getJournal: mockGetJournal,
@@ -74,6 +77,9 @@ describe("LedgerAccountService", () => {
     mockGetLedgerAccounts.mockResolvedValue(accountsResponse);
     mockGetLedgerAccountLastEntries.mockResolvedValue({
       data: { success: true, data: [] },
+    });
+    mockGetLedgerAccountReferenceCounts.mockResolvedValue({
+      data: { success: true, data: { "Assets:Cash": 7 } },
     });
     mockQueryShell.mockResolvedValue({
       data: { success: true, data: { result: { rows: [] } } },
@@ -192,12 +198,25 @@ describe("LedgerAccountService", () => {
             openedAt: "2020-01-01",
             entryHash: "open1",
             entryCount: 5,
+            referenceCount: 7,
           }),
         ]),
+      );
+      expect(mockGetLedgerAccountReferenceCounts).toHaveBeenCalledWith(
+        OWNER,
+        LEDGER,
       );
       // No metadata on the open directive -> no `meta` on the item.
       expect(result[0].meta).toBeUndefined();
       expect(mockGetLedgerBalanceSheet).not.toHaveBeenCalled();
+    });
+
+    it("keeps reference counts unknown with an older ledger service", async () => {
+      mockGetLedgerAccountReferenceCounts.mockRejectedValueOnce(
+        new FavaApiError("Not Found", 404),
+      );
+      const result = await service.getAccountDirectives(OWNER, LEDGER);
+      expect(result[0]).toMatchObject({ entryCount: 5, referenceCount: null });
     });
 
     it("uses direct units balances for closed accounts under the configured balance roots", async () => {

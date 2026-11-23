@@ -211,8 +211,9 @@ const ptAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "Só é possível excluir uma conta sem lançamentos.",
+  "page.accounts.deleteNeedsNoReferences": {
+    message:
+      "Só pode eliminar uma conta se nenhum outro lançamento fizer referência a ela.",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },

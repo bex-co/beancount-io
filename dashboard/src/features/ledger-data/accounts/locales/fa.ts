@@ -204,8 +204,8 @@ const faAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "فقط حسابی بدون سند را می‌توان حذف کرد.",
+  "page.accounts.deleteNeedsNoReferences": {
+    message: "حساب فقط زمانی حذف می‌شود که هیچ ثبت دیگری به آن ارجاع ندهد.",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },

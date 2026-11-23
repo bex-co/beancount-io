@@ -292,7 +292,7 @@ function AccountActions({
   const { t } = useTranslations();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const isClosed = account.closedAt !== null;
-  const canDelete = account.entryCount === 0;
+  const canDelete = account.entryCount === 0 && account.referenceCount === 0;
   const canClose = !isClosed && isBalanceEmpty(account.balance);
   // An action this account cannot take stays in the menu, greyed, with the
   // reason, rather than vanishing from some rows and not others.
@@ -366,7 +366,7 @@ function AccountActions({
               {t("common.delete")}
               {!canDelete && (
                 <span className="text-xs text-muted-foreground">
-                  {t("page.accounts.deleteNeedsNoPostings")}
+                  {t("page.accounts.deleteNeedsNoReferences")}
                 </span>
               )}
             </span>

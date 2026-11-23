@@ -5720,6 +5720,34 @@ export class Api<
       ),
 
     /**
+     * @description Count loaded directives that name each account. Count a directive once per account and exclude open and close directives. Accounts with no references are omitted.
+     *
+     * @tags reports
+     * @name GetLedgerAccountReferenceCounts
+     * @summary Get Ledger Account Reference Counts
+     * @request GET:/reports/{owner}/{repo_name}/account_reference_counts
+     * @secure
+     */
+    getLedgerAccountReferenceCounts: (
+      owner: string,
+      repoName: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<
+        {
+          success: boolean;
+          data: Record<string, number>;
+        },
+        ErrorResponse
+      >({
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/account_reference_counts`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
      * @description Count postings per account over the filtered/clamped Statistics report stream. An account filter selects matching entries and counts every posting on those entries, including counterpart accounts. Zero-count accounts are omitted; rows are sorted by account.
      *
      * @tags reports

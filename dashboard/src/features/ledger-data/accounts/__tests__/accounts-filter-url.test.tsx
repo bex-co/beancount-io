@@ -32,6 +32,7 @@ const accounts = [
     openedAt: "2024-01-01",
     closedAt: null,
     entryCount: 4,
+    referenceCount: 4,
     balance: { USD: "10.00" },
   },
   {
@@ -39,6 +40,7 @@ const accounts = [
     openedAt: "2024-01-02",
     closedAt: null,
     entryCount: 7,
+    referenceCount: 7,
     balance: { USD: "250.00" },
   },
   {
@@ -46,6 +48,7 @@ const accounts = [
     openedAt: "2024-01-03",
     closedAt: null,
     entryCount: 1,
+    referenceCount: 1,
     balance: null,
   },
   {
@@ -53,6 +56,7 @@ const accounts = [
     openedAt: "2024-01-04",
     closedAt: null,
     entryCount: 2,
+    referenceCount: 2,
     balance: null,
   },
 ];

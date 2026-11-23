@@ -209,7 +209,9 @@ describe("source-slice writes that would break the ledger", () => {
     await expect(deleteFarmers()).rejects.toMatchObject({
       constructor: NewLedgerErrorsError,
       message: expect.stringMatching(
-        /^this deletion would introduce 1 new bean-check error: Balance failed for Assets:Cash: expected 49\.75 USD, got 73\.25 USD \(main\.bean:\d+\)$/,
+        new RegExp(
+          `^this deletion would introduce 1 new bean-check error: Balance failed for Assets:Cash: expected 49\\.75 USD, got 73\\.25 USD \\(main\\.bean:${lineOf(before, BALANCE)}\\)$`,
+        ),
       ),
       metadata: { code: "NEW_LEDGER_ERRORS", details: { action: "delete" } },
     });

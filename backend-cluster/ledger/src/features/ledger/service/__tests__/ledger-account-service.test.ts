@@ -65,6 +65,54 @@ const transfer = (
   ],
 });
 
+it("counts each directive that uses an account while preserving posting counts", async () => {
+  const names = {
+    posting: "Assets:Posted",
+    balance: "Assets:Asserted",
+    note: "Assets:Noted",
+    document: "Assets:Documented",
+    target: "Assets:Padded",
+    source: "Equity:PadSource",
+    custom: "Expenses:Budgeted",
+    unused: "Assets:Unused",
+  };
+  const date = "2024-04-01";
+  const usd = { number: "0", currency: "USD" };
+  const { accounts } = fixture([
+    ...Object.values(names).map(open),
+    transfer(date, names.posting, names.posting, "2"),
+    { type: "balance", date, account: names.balance, amount: usd },
+    { type: "note", date, account: names.note, comment: "Still used" },
+    { type: "document", date, account: names.document, path: "evidence.pdf" },
+    { type: "pad", date, account: names.target, source_account: names.source },
+    {
+      type: "custom",
+      date,
+      custom_type: "budget",
+      values: [
+        { type: "account", value: names.custom },
+        { type: "account", value: names.custom },
+        { type: "string", value: names.unused },
+      ],
+    },
+    close(names.unused),
+  ]);
+  const rows = await accounts.getAccountDirectives("owner", "book");
+  expect(
+    rows.map(({ account, entryCount, referenceCount }) => ({
+      account,
+      entryCount,
+      referenceCount,
+    })),
+  ).toEqual(
+    Object.values(names).map((account) => ({
+      account,
+      entryCount: account === names.posting ? 2 : 0,
+      referenceCount: account === names.unused ? 0 : 1,
+    })),
+  );
+});
+
 describe("account directive balances", () => {
   const cash = "Assets:Cash";
   const frozen = "Assets:Qa:Frozen";

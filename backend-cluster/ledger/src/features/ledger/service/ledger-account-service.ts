@@ -4,6 +4,7 @@ import { createLedgerId } from "@/shared/str";
 import {
   accountBalances,
   accountEntryCounts,
+  accountReferenceCounts,
   collectCloseEntries,
   collectOpenEntries,
 } from "@/features/ledger/utils/account-entries";
@@ -34,6 +35,7 @@ export type LedgerAccountDirectiveItem = {
   closedAt?: string;
   balance?: Record<string, string>;
   entryCount: number;
+  referenceCount: number;
   entryHash: string;
   closeEntryHash?: string;
 };
@@ -174,6 +176,7 @@ export class LedgerAccountService implements ILedgerAccountService {
       reportAccounts.roots.liabilities,
     ]);
     const countMap = accountEntryCounts(directives);
+    const referenceCounts = accountReferenceCounts(directives);
 
     const closeMap = new Map<string, { date: string; entry_hash: string }>(
       closeItems.map((item) => [
@@ -189,6 +192,7 @@ export class LedgerAccountService implements ILedgerAccountService {
       closeEntryHash: closeMap.get(item.account)?.entry_hash,
       balance: balanceMap.get(item.account),
       entryCount: countMap.get(item.account) ?? 0,
+      referenceCount: referenceCounts.get(item.account) ?? 0,
       entryHash: item.entry_hash,
     }));
   }

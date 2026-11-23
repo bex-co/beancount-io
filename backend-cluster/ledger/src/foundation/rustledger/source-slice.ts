@@ -867,6 +867,7 @@ export function deleteSliceFromFile(
   fileText: string,
   startLine: number,
   endLine: number,
+  onDelete?: (start: number, end: number) => void,
 ): string {
   const lines = splitKeepEnds(fileText);
   const blank = (line: string | undefined) =>
@@ -882,6 +883,7 @@ export function deleteSliceFromFile(
   if (start > 0 && blank(lines[start - 1]) && lines.slice(end).every(blank)) {
     start -= 1;
   }
+  onDelete?.(start, end);
   return [...lines.slice(0, start), ...lines.slice(end)].join("");
 }
 

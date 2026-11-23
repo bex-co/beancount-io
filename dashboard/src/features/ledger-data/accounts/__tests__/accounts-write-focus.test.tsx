@@ -80,6 +80,7 @@ const row = (account: string, closedAt: string | null): AccountDirective => ({
   closedAt,
   balance: {},
   entryCount: 0,
+  referenceCount: 0,
   entryHash: `${account}-open`,
   closeEntryHash: closedAt ? `${account}-close` : null,
 });

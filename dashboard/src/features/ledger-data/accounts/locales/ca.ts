@@ -212,8 +212,9 @@ const caAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "Només es pot eliminar un compte sense registres.",
+  "page.accounts.deleteNeedsNoReferences": {
+    message:
+      "Només es pot suprimir un compte si cap altre apunt hi fa referència.",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },

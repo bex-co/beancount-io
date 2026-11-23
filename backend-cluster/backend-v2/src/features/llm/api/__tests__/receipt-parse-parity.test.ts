@@ -155,6 +155,7 @@ async function fixture(
       },
       reports: {
         getLedgerAccountLastEntries: async () => envelope([]),
+        getLedgerAccountReferenceCounts: async () => envelope({}),
         getLedgerBalanceSheet: async () =>
           envelope({
             assets_hierarchy_data: {

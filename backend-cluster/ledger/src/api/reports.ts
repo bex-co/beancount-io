@@ -18,6 +18,7 @@ import {
   resolveConversion,
 } from "@/foundation/rustledger";
 import { BadUserInputError } from "@/shared/errors";
+import { accountReferenceCounts } from "@/features/ledger/utils/account-entries";
 
 /** An append writes at most 50 directives; this leaves room, not a ledger. */
 const MAX_LOCATIONS = 200;
@@ -282,6 +283,17 @@ export function setReportsHandler(router: Router): void {
       }),
     );
   });
+
+  router.get(
+    `${base}/account_reference_counts`,
+    authMiddleware,
+    async (ctx) => {
+      const { snapshot } = await loadSnapshotForRequest(ctx, ledgerIdOf(ctx));
+      ctx.body = successResponse(
+        Object.fromEntries(accountReferenceCounts(snapshot.directives)),
+      );
+    },
+  );
 
   router.get(`${base}/account_report`, authMiddleware, async (ctx) => {
     const { data } = servicesForRequest(ctx);

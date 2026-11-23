@@ -102,6 +102,7 @@ const accounts = [
   openedAt: "2025-01-01",
   closedAt: null,
   entryCount: 7,
+  referenceCount: 7,
   entryHash: `open-${index}`,
   closeEntryHash: null,
 }));

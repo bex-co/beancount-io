@@ -3,6 +3,7 @@ import {
   JournalOpenPublic,
   JournalClosePublic,
   FavaApiClient,
+  FavaApiError,
   unwrapFavaResponse,
 } from "@/foundation/fava";
 
@@ -91,5 +92,23 @@ export async function getAccountEntryCounts(
 
   return new Map(
     result.rows.map(([account, count]) => [String(account), Number(count)]),
+  );
+}
+
+export async function getAccountReferenceCounts(
+  client: FavaApiClient,
+  owner: string,
+  repoName: string,
+): Promise<Record<string, number> | null> {
+  const response = await client.reports
+    .getLedgerAccountReferenceCounts(owner, repoName)
+    .catch((error: unknown) => {
+      if (error instanceof FavaApiError && error.status === 404) return null;
+      throw error;
+    });
+  // A gateway ahead of its ledger service can still list accounts. Keep the
+  // count unknown so the dashboard doesn't mistake it for no references.
+  return (
+    response && unwrapFavaResponse(response, "get account reference counts")
   );
 }

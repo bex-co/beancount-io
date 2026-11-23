@@ -215,8 +215,9 @@ const ukAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
-  "page.accounts.deleteNeedsNoPostings": {
-    message: "Видалити можна лише рахунок без проводок.",
+  "page.accounts.deleteNeedsNoReferences": {
+    message:
+      "Рахунок можна видалити, лише якщо на нього не посилається жоден інший запис.",
     description:
       "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
   },
