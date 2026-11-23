@@ -101,7 +101,7 @@ def test_unknown_id_exits_2(tmp_path: Path) -> None:
         app, ["--file", str(ledger), "update", "transaction", "--id", "nope", "--flag", "*", "--apply"]
     )
     assert result.exit_code == 2
-    assert "No transaction with import-id or ref 'nope'" in result.output
+    assert "No transaction with import-id, ref, or bank ID 'nope'" in result.output
     assert ledger.read_text() == LEDGER
 
 

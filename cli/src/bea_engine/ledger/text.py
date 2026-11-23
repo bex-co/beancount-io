@@ -57,6 +57,16 @@ def single_line(text: str) -> str:
     return CONTROL_CHARACTERS.sub(visible_escape, re.sub(r"[\r\n]+", " ", text))
 
 
+BANK_ID_KEYS = ("bank_id", "fitid", "transaction_id", "imported_id")
+"""The metadata keys a row's own bank ID is kept under.
+
+`bea import` writes a CSV `id` column as `bank_id` and an OFX FITID as
+`fitid`, deduplicates on all four by default, and derives the row's
+`import-id` from the first (`bank:<id>`, `ofx:<id>`). `bea update` finds a
+row by them too, since the statement's ID is the one a person holds (w1/372).
+"""
+
+
 ISO_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 """The one date spelling write input accepts.
 

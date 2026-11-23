@@ -154,18 +154,23 @@ file, resolved relative to the root ledger.
 ### `update`
 
 `--type` is `transaction` (one entry) or `transactions` (a batch of rows).
-The request names its entry with `id`, in one of three forms:
+The request names its entry with `id`, in one of four forms:
 
 - an `import-id` metadata value, which every bea import stamps;
 - a `ref` metadata value, which bank importers use;
+- a bank ID: a `bank_id`, `fitid`, `transaction_id`, or `imported_id`
+  metadata value, the bank's own transaction ID that bea's import keeps
+  beside the `import-id` it derives from it (`bank_id: "TX-1001"` beside
+  `import-id: "bank:TX-1001"`);
 - `file:line`, the entry's header line, which names the entry outright. A
   relative `file` is read from the working directory and then from the
   root's folder; when both name a file, the one the ledger loads wins.
 
-An `import-id` always wins when a `ref` elsewhere spells the same value. A
-value shared by two entries is refused as ambiguous (naming each `file:line`
-so the caller can pick one), and an unknown value as not found; both are
-`usage` failures and both change no bytes. Only entries written in a ledger
+An `import-id` always wins when a `ref` or a bank ID elsewhere spells the
+same value, and a `ref` wins over a bank ID. A value shared by two entries
+(for a bank ID, under one key or two) is refused as ambiguous (naming each
+`file:line` so the caller can pick one), and an unknown value as not found;
+both are `usage` failures and both change no bytes. Only entries written in a ledger
 file resolve — a plugin-synthesized row has no source lines to rewrite.
 
 An explicit `--into PATH` constrains the entries to their existing file,

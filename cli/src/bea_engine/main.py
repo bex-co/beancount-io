@@ -330,10 +330,10 @@ def update(
 ) -> None:
     """Rewrite entries in place, previewed as a diff unless `--apply` writes them.
 
-    A `transaction` request names its entry with `id` — an import-id, a `ref`,
-    or `file:line` — and changes it with `account` (a bare account retargets
-    the review queue's leg, `OLD=NEW` names the leg outright), `flag`, `tags`,
-    or `narration`. Only the entry's own lines change, so neighbours keep
+    A `transaction` request names its entry with `id` — an import-id, a
+    `ref`, a bank ID, or `file:line` — and changes it with `account` (a bare
+    account retargets the review queue's leg, `OLD=NEW` names the leg
+    outright), `flag`, `tags`, or `narration`. Only the entry's own lines change, so neighbours keep
     their bytes and the diff stays reviewable. Answers `{"id", "target",
     "lineno", "diff", "written", "warnings"}` with `written` 0 on a preview
     and 1 on an applied write. A `transactions` request carries `rows` of the

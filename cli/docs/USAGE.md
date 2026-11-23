@@ -2039,9 +2039,15 @@ bea update transaction --id demo-1 --account Expenses:Dining --flag '*' --apply
 bea list transaction --flag '!'
 ```
 
-`--id` takes the row's import-id, a `ref` metadata value, or `file:line`; an
-id shared by two rows is refused rather than guessed at. A bare `--account`
-retargets the queue's leg, while `OLD=NEW` names another leg. A retarget
+`--id` takes the row's import-id, a `ref` metadata value, the bank's own
+transaction ID, or `file:line`; an id shared by two rows is refused rather
+than guessed at. A bank ID is what a CSV import keeps from its `id` column as
+`bank_id` (and an OFX import from FITID as `fitid`, a Python importer as
+`transaction_id` or `imported_id`), so the ID printed on the statement finds
+the row whose import-id reads `bank:TX-1001` without the prefix. An import-id
+wins over a `ref`, and a `ref` over a bank ID, when they spell the same
+value. A bare `--account` retargets the queue's leg, while `OLD=NEW` names
+another leg. A retarget
 onto the entry's only other account (the queue leg of a row imported from
 `Assets:Checking`, moved to `Assets:Checking`) would post against its own
 source and cancel out, so it exits **2** and writes nothing, as `bea import`
@@ -2059,7 +2065,8 @@ the `WRITTEN IN` listings use: run from the folder holding `books/`,
 `bea --file books/main.bean update transaction --id 2026/jan.bean:5` finds
 `books/2026/jan.bean`. When both places hold such a file, the one the ledger
 loads wins. An id shaped `file:line` that names a file in neither place is
-looked up as an import-id or `ref`, and its refusal names where it looked.
+looked up as an import-id, `ref`, or bank ID, and its refusal names where
+it looked.
 
 Both update commands accept `--into FILE` to explicitly select the existing
 file the entries must belong to. Keep `--file` on the governing root;

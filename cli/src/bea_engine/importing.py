@@ -29,6 +29,7 @@ from typing import Any
 from bea_engine.ledger import write as ledger_write
 from bea_engine.ledger.prices import quote_refusal, reciprocal_agrees
 from bea_engine.ledger.text import (
+    BANK_ID_KEYS,
     OPENED_ACCOUNTS,
     bea_command,
     checked_operating_currencies,
@@ -58,8 +59,6 @@ _IDENTITY_KINDS = {
     "transaction_id": "bank",
     "imported_id": "bank",
 }
-
-_DEFAULT_ID_KEYS = ["bank_id", "fitid", "transaction_id", "imported_id"]
 
 
 def _exited(exc: SystemExit, logs: io.StringIO) -> EngineError:
@@ -132,7 +131,7 @@ def _effective_id_keys(id_keys: list[str] | None, *, csv_id_mapped: bool = False
     defaults with a key no entry carries and turn native-ID matching off (w5/469).
     """
     if not id_keys:
-        return list(_DEFAULT_ID_KEYS)
+        return list(BANK_ID_KEYS)
     resolved: list[str] = []
     seen: set[str] = set()
     for key in [*id_keys, *(["bank_id"] if csv_id_mapped else [])]:
@@ -141,7 +140,7 @@ def _effective_id_keys(id_keys: list[str] | None, *, csv_id_mapped: bool = False
         # keys a ledger may use, and folding them turned their matching off (w5/604).
         if folded == "id":
             mapped = "bank_id"
-        elif _METADATA_KEY.fullmatch(key) or folded not in _DEFAULT_ID_KEYS:
+        elif _METADATA_KEY.fullmatch(key) or folded not in BANK_ID_KEYS:
             mapped = key
         else:
             mapped = folded
@@ -149,7 +148,7 @@ def _effective_id_keys(id_keys: list[str] | None, *, csv_id_mapped: bool = False
             raise UsageError(
                 f"--id-key {key!r} is not a metadata key; a key needs at least two characters, starts with a "
                 f"lowercase ASCII letter, and then holds ASCII letters, digits, '-' or '_', "
-                f"such as {', '.join(_DEFAULT_ID_KEYS)}."
+                f"such as {', '.join(BANK_ID_KEYS)}."
             )
         if mapped not in seen:
             seen.add(mapped)

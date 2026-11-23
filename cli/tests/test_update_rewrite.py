@@ -124,7 +124,7 @@ class TestPreviewAndApply:
         assert completed.returncode == 2
         error = envelope(completed)["error"]
         assert error["category"] == "usage"
-        assert "No transaction with import-id or ref 'nope'" in error["message"]
+        assert "No transaction with import-id, ref, or bank ID 'nope'" in error["message"]
         assert ledger.read_bytes() == before
 
     def test_ambiguous_id_exits_2_and_writes_nothing(self, ledger: Path) -> None:

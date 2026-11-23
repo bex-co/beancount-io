@@ -312,8 +312,9 @@ opening any missing accounts: a rule naming an account the ledger does not
 open fails validation with the `bea add open` command to run.
 
 Clear the queue with `bea update transaction`: point `--id` at a row's
-import-id (or its `file:line` from `--details`), preview the diff, and apply
-it. Only that entry's lines change, and its `import-id` stays, so the next
+import-id, at the bank's own ID the row was imported with (`TX-1001` for a
+row written with `bank_id: "TX-1001"`), or at its `file:line` from
+`--details`, preview the diff, and apply it. Only that entry's lines change, and its `import-id` stays, so the next
 import of the export still skips it:
 
 ```bash

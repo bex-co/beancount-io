@@ -101,7 +101,9 @@ class TestEngineBatch:
         assert completed.returncode == 0, completed.stdout
         data = json.loads(completed.stdout)["data"]
         assert [row["status"] for row in data["rows"]] == ["ok", "ok", "rejected"]
-        assert data["rows"][2]["reason"] == "Row 3: No transaction with import-id or ref 'nope' in this ledger."
+        assert data["rows"][2]["reason"] == (
+            "Row 3: No transaction with import-id, ref, or bank ID 'nope' in this ledger."
+        )
         assert ledger.read_text() == LEDGER
 
     def test_apply_with_a_reject_writes_the_valid_rows_and_exits_1(self, tmp_path: Path) -> None:
@@ -111,7 +113,7 @@ class TestEngineBatch:
         error = json.loads(completed.stdout)["error"]
         assert error["category"] == "validation"
         assert error["message"] == "Updated 1 of 2 transactions; 1 row was rejected."
-        assert error["details"] == ["Row 1: No transaction with import-id or ref 'nope' in this ledger."]
+        assert error["details"] == ["Row 1: No transaction with import-id, ref, or bank ID 'nope' in this ledger."]
         assert error["result"]["written"] == 1
         assert error["result"]["written_rows"] == [1]
         assert error["result"]["rejected_rows"] == [0]
@@ -335,8 +337,8 @@ class TestEngineBatch:
         ("message", "expected"),
         [
             (
-                "No transaction with import-id or ref 'x' in this ledger. Nothing was written.",
-                "No transaction with import-id or ref 'x' in this ledger.",
+                "No transaction with import-id, ref, or bank ID 'x' in this ledger. Nothing was written.",
+                "No transaction with import-id, ref, or bank ID 'x' in this ledger.",
             ),
             (
                 "The change would leave the ledger invalid; nothing was written.",
@@ -385,7 +387,7 @@ class TestBatchCommand:
         )
         assert result.exit_code == 1, result.output
         assert "Updated 2 of 3 transactions; 1 row was rejected." in result.output
-        assert "Row 2: No transaction with import-id or ref 'nope' in this ledger." in result.output
+        assert "Row 2: No transaction with import-id, ref, or bank ID 'nope' in this ledger." in result.output
         assert "Expenses:Groceries 9.99 USD" in ledger.read_text()
         assert "Expenses:Dining 5.00 USD" in ledger.read_text()
 

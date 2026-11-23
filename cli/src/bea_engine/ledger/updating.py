@@ -1,10 +1,11 @@
 """Locate and rewrite transactions for `bea-engine update`.
 
 An imported row is found by the identity its importer wrote: the `import-id`
-metadata every bea import stamps, or the `ref` metadata bank importers use.
-Either may repeat across entries — a re-imported statement, a transfer both of
-whose legs carry the bank's reference — so a repeated value is refused rather
-than guessed at, and `file:line` names the entry outright. Only entries written
+metadata every bea import stamps, the `ref` metadata bank importers use, or
+the bank's own ID that bea's import keeps beside its import-id (`bank_id`,
+`fitid`, ...). Any may repeat across entries — a re-imported statement, a
+transfer both of whose legs carry the bank's reference — so a repeated value
+is refused rather than guessed at, and `file:line` names the entry outright. Only entries written
 in a ledger file resolve: a plugin-synthesized row has no source lines to
 rewrite.
 
@@ -33,6 +34,7 @@ from bea_engine import protocol
 from bea_engine.ledger import reader
 from bea_engine.ledger import write as ledger_write
 from bea_engine.ledger.text import (
+    BANK_ID_KEYS,
     decode_error_message,
     ledger_roots,
     parse_account,
@@ -191,11 +193,11 @@ def locate_transaction(entries: list[Any], id_text: str, root: Path | None = Non
 
     `file:line` resolves by location, its path read from the working
     directory and then from the folder of `root`, the root ledger; anything
-    else resolves by `import-id` first and `ref` second, so an import-id
-    always wins when a `ref` elsewhere spells the same value. A repeated value
-    is ambiguous and an absent one is not found; both are usage errors,
-    because the caller named the wrong entry rather than the ledger failing
-    to load.
+    else resolves by `import-id` first, `ref` second, and a bank ID
+    (`BANK_ID_KEYS`) third, so an import-id always wins when a `ref` or a bank
+    ID elsewhere spells the same value. A repeated value is ambiguous and an
+    absent one is not found; both are usage errors, because the caller named
+    the wrong entry rather than the ledger failing to load.
     """
     from beancount.core.data import Transaction
 
@@ -225,9 +227,19 @@ def locate_transaction(entries: list[Any], id_text: str, root: Path | None = Non
             raise _ambiguous(id_text, key, matches)
         if matches:
             return matches[0]
+    # The statement's own ID, which a CSV import keeps as `bank_id: "TX-1001"`
+    # beside `import-id: "bank:TX-1001"`: refused, the one ID a person holds
+    # sent them into the file for the prefix (w1/372). The keys are one tier,
+    # so two entries holding the value under different keys are ambiguous too.
+    matches = [entry for entry in on_disk if any(wanted in _metadata_values(entry, key) for key in BANK_ID_KEYS)]
+    if len(matches) > 1:
+        keys = [key for key in BANK_ID_KEYS if any(wanted in _metadata_values(entry, key) for entry in matches)]
+        raise _ambiguous(id_text, " or ".join(keys), matches)
+    if matches:
+        return matches[0]
     raise protocol.UsageError(
-        f"No transaction with import-id or ref {id_text!r} in this ledger{_no_file_named(id_text, root)}. "
-        "Nothing was written."
+        f"No transaction with import-id, ref, or bank ID {id_text!r} in this ledger"
+        f"{_no_file_named(id_text, root)}. Nothing was written."
     )
 
 
@@ -261,7 +273,9 @@ def _validate_request(request: dict[str, Any]) -> _Changes:
         )
     raw_id = request.get("id")
     if not isinstance(raw_id, str) or not raw_id.strip():
-        raise protocol.UsageError("An update needs an 'id': an import-id, a ref, or file:line. Nothing was written.")
+        raise protocol.UsageError(
+            "An update needs an 'id': an import-id, a ref, a bank ID, or file:line. Nothing was written."
+        )
     changes = _Changes(id=raw_id)
     account = request.get("account")
     if account is not None:

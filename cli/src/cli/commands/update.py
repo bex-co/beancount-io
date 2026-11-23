@@ -104,7 +104,9 @@ def _rendered(data: dict[str, Any], *, file: Path, apply: bool) -> None:
 
 @update_app.command("transaction", cls=_SingleValueCommand)
 def update_transaction(
-    entry_id: Annotated[str, typer.Option("--id", help="Entry to change: an import-id, a ref, or file:line")],
+    entry_id: Annotated[
+        str, typer.Option("--id", help="Entry to change: an import-id, a ref, a bank ID, or file:line")
+    ],
     account: Annotated[
         str | None,
         typer.Option("--account", "-a", help="Retarget postings: an account, or OLD=NEW to name the leg"),
@@ -129,10 +131,12 @@ def update_transaction(
     """Recategorize or retouch one imported transaction.
 
     Clears the review queue `bea import` leaves behind: point --id at the
-    row's import-id and pass the account it belongs to. The entry is located
-    by its import-id, by a ref metadata value, or by file:line; an id shared
-    by two entries is refused rather than guessed at. Only the entry's own
-    lines change, so the diff stays reviewable:
+    row's import-id, or at the bank's own transaction ID, and pass the
+    account it belongs to. The entry is located by its import-id, by a ref
+    metadata value, by a bank ID (the bank_id, fitid, transaction_id or
+    imported_id an import kept), or by file:line; an id shared by two
+    entries is refused rather than guessed at. Only the entry's own lines
+    change, so the diff stays reviewable:
 
     \b
       bea update transaction --id 9f2c --account Expenses:Groceries --flag '*'

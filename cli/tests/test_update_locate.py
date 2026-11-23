@@ -80,7 +80,7 @@ def test_repeated_import_id_is_ambiguous(tmp_path: Path) -> None:
 
 
 def test_unknown_id_is_not_found(ledger: Path) -> None:
-    with pytest.raises(protocol.UsageError, match="No transaction with import-id or ref 'nope'"):
+    with pytest.raises(protocol.UsageError, match="No transaction with import-id, ref, or bank ID 'nope'"):
         updating.locate_transaction(_entries(ledger), "nope")
 
 
@@ -90,7 +90,7 @@ def test_line_holding_no_transaction_is_not_found(ledger: Path) -> None:
 
 
 def test_colon_value_without_a_file_is_metadata(ledger: Path) -> None:
-    with pytest.raises(protocol.UsageError, match="No transaction with import-id or ref 'stmt:42'"):
+    with pytest.raises(protocol.UsageError, match="No transaction with import-id, ref, or bank ID 'stmt:42'"):
         updating.locate_transaction(_entries(ledger), "stmt:42")
 
 
@@ -119,12 +119,12 @@ def test_typed_ref_resolves(tmp_path: Path) -> None:
 
 
 def test_line_zero_is_not_a_location(ledger: Path) -> None:
-    with pytest.raises(protocol.UsageError, match="No transaction with import-id or ref"):
+    with pytest.raises(protocol.UsageError, match="No transaction with import-id, ref, or bank ID"):
         updating.locate_transaction(_entries(ledger), f"{ledger}:0")
 
 
 def test_drive_letter_without_a_file_is_metadata(ledger: Path) -> None:
-    with pytest.raises(protocol.UsageError, match="No transaction with import-id or ref") as caught:
+    with pytest.raises(protocol.UsageError, match="No transaction with import-id, ref, or bank ID") as caught:
         updating.locate_transaction(_entries(ledger), "C:\\x.bean:12")
     assert repr("C:\\x.bean:12") in str(caught.value)
 
@@ -147,7 +147,7 @@ def test_synthesized_entry_never_resolves() -> None:
         '2026-01-02 * "Nowhere"\n  import-id: "ghost"\n  Expenses:X 1 USD\n  Assets:Y\n'
     )
     assert not errors
-    with pytest.raises(protocol.UsageError, match="No transaction with import-id or ref 'ghost'"):
+    with pytest.raises(protocol.UsageError, match="No transaction with import-id, ref, or bank ID 'ghost'"):
         updating.locate_transaction(list(entries), "ghost")
 
 
@@ -208,7 +208,7 @@ def test_a_location_naming_no_file_says_where_it_looked(nested: Path) -> None:
     with pytest.raises(protocol.UsageError) as caught:
         updating.locate_transaction(_entries(nested), "2026/feb.bean:1", nested)
     message = str(caught.value)
-    assert "No transaction with import-id or ref '2026/feb.bean:1'" in message
+    assert "No transaction with import-id, ref, or bank ID '2026/feb.bean:1'" in message
     assert f"'2026/feb.bean' is not a file under {Path.cwd()} or {nested.parent}." in message
 
 
@@ -227,4 +227,6 @@ def test_a_colon_import_id_still_resolves_as_metadata(nested: Path) -> None:
 def test_a_plain_id_names_no_file(nested: Path) -> None:
     with pytest.raises(protocol.UsageError) as caught:
         updating.locate_transaction(_entries(nested), "nope", nested)
-    assert str(caught.value) == "No transaction with import-id or ref 'nope' in this ledger. Nothing was written."
+    assert str(caught.value) == (
+        "No transaction with import-id, ref, or bank ID 'nope' in this ledger. Nothing was written."
+    )

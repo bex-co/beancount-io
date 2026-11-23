@@ -671,7 +671,7 @@ Usage: bea update transaction [OPTIONS]
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
-| `--id` | str | required | Entry to change: an import-id, a ref, or file:line |
+| `--id` | str | required | Entry to change: an import-id, a ref, a bank ID, or file:line |
 | `--account, -a` | str |  | Retarget postings: an account, or OLD=NEW to name the leg |
 | `--flag` | str |  | Transaction flag |
 | `--tag` | str (repeatable) |  | Tag to add (repeat for multiple) |
