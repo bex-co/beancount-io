@@ -323,10 +323,17 @@ export function previewLedgerSetup(
   // A known opening posts the day before the history boundary and asserts
   // on the boundary, so the accounts must already be open then: when any
   // known opening exists, every account opens the day before the boundary.
+  // Year 0000 is not a valid Beancount date, so 0001-01-01 cannot carry a
+  // known opening balance (w31/059, matching CLI w5/889).
   const hasKnownOpening = [...selected.values()].some(
     (account) => account.openingState === "known",
   );
   const openDate = hasKnownOpening ? dayBefore(historyStart) : historyStart;
+  if (hasKnownOpening && !isCalendarDate(openDate)) {
+    fail(
+      `History start "${historyStart}" cannot be used with a known opening balance: known opening balances post on the day before historyStart, which has no valid Beancount date before "${historyStart}". Use "0001-01-02" or later, or use "unknown" or "zero" opening states to start on "${historyStart}"`,
+    );
+  }
 
   const openingStatusKey = setupCatalog.metadataKeys.openingBalanceStatus;
   const lines: string[] = [
@@ -385,7 +392,7 @@ export function previewLedgerSetup(
       }
       const negated = amount.startsWith("-") ? amount.slice(1) : `-${amount}`;
       openings.push(
-        `${dayBefore(historyStart)} * "Opening balance"`,
+        `${openDate} * "Opening balance"`,
         `  ${account.name} ${amount} ${currency}`,
         `  ${OPENING_EQUITY} ${negated} ${currency}`,
         "",

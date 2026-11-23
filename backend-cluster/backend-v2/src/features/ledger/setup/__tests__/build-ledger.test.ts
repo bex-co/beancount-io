@@ -377,6 +377,98 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
     ).toContain("0004-02-29 open");
   });
 
+  // w31/059: a known opening posts on dayBefore(historyStart), so 0001-01-01
+  // underflowed to year 0000 (0000-12-31), which stock Beancount refuses.
+  describe("minimum historyStart with known opening balances (w31/059)", () => {
+    it.each(["100", "0"])(
+      "refuses 0001-01-01 when an account has openingState known (amount %s)",
+      (amount) => {
+        const setup: LedgerSetup = {
+          preset: "personal@1",
+          operatingCurrency: "USD",
+          historyStart: "0001-01-01",
+          accounts: [{ name: "Assets:Cash", openingState: "known", amount }],
+        };
+        for (const run of [
+          () => previewLedgerSetup(setup, "2026-01-01"),
+          () => buildLedgerFiles(setup, "2026-01-01"),
+        ]) {
+          let thrown: unknown;
+          try {
+            run();
+          } catch (error) {
+            thrown = error;
+          }
+          expect(thrown).toBeInstanceOf(ValidationError);
+          const error = thrown as ValidationError;
+          expect(error.category).toBe("VALIDATION_FAILED");
+          expect(error.metadata).toMatchObject({ field: "setup" });
+          expect(error.message).toContain("day before");
+          expect(error.message).toContain("0001-01-02");
+        }
+      },
+    );
+
+    it.each(["unknown", "zero"] as const)(
+      "still accepts 0001-01-01 with openingState %s and emits no year-0000 dates",
+      (openingState) => {
+        const preview = previewLedgerSetup(
+          {
+            preset: "personal@1",
+            operatingCurrency: "USD",
+            historyStart: "0001-01-01",
+            accounts: [{ name: "Assets:Cash", openingState }],
+          },
+          "2026-01-01",
+        );
+        const main = preview.files["main.bean"];
+        expect(main).toContain("0001-01-01 open Assets:Cash");
+        expect(main).toContain(
+          `bcio_opening_balance_status: "${openingState}"`,
+        );
+        expect(main).not.toContain("0000-");
+      },
+    );
+
+    it.each(["100", "0"])(
+      "accepts 0001-01-02 with openingState known (amount %s) and posts on 0001-01-01",
+      (amount) => {
+        const preview = previewLedgerSetup(
+          {
+            preset: "personal@1",
+            operatingCurrency: "USD",
+            historyStart: "0001-01-02",
+            accounts: [{ name: "Assets:Cash", openingState: "known", amount }],
+          },
+          "2026-01-01",
+        );
+        const main = preview.files["main.bean"];
+        expect(main).toContain("0001-01-01 open Assets:Cash");
+        expect(main).toContain("0001-01-01 open Equity:OpeningBalances");
+        expect(main).toContain('0001-01-01 * "Opening balance"');
+        expect(main).toContain(`0001-01-02 balance Assets:Cash ${amount} USD`);
+        expect(main).not.toContain("0000-");
+      },
+    );
+
+    it("still accepts 9999-12-31 with openingState known", () => {
+      const main = previewLedgerSetup(
+        {
+          preset: "personal@1",
+          operatingCurrency: "USD",
+          historyStart: "9999-12-31",
+          accounts: [
+            { name: "Assets:Cash", openingState: "known", amount: "100" },
+          ],
+        },
+        "2026-01-01",
+      ).files["main.bean"];
+      expect(main).toContain("9999-12-30 open Assets:Cash");
+      expect(main).toContain('9999-12-30 * "Opening balance"');
+      expect(main).toContain("9999-12-31 balance Assets:Cash 100 USD");
+    });
+  });
+
   // w21/107: Date.parse rolled 2026-04-31 over to 1 May, so it was accepted.
   it("refuses a history start that is not a calendar day", () => {
     for (const historyStart of ["2026-02-30", "2026-04-31", "2025-02-29"]) {

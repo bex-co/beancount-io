@@ -879,6 +879,43 @@ describe("LedgerWorkflow", () => {
         });
         expect(mockFavaApiClient.ledgers.createLedger).not.toHaveBeenCalled();
       });
+
+      // w31/059: 0001-01-01 + known opening would underflow to 0000-12-31.
+      it("refuses historyStart 0001-01-01 with a known opening before checking or creating a ledger", async () => {
+        const setup = {
+          preset: "personal@1" as const,
+          operatingCurrency: "USD",
+          historyStart: "0001-01-01",
+          accounts: [
+            {
+              name: "Assets:Cash",
+              openingState: "known" as const,
+              amount: "100",
+            },
+          ],
+        };
+        await expect(
+          workflow.previewLedgerSetup({ identity: IDENTITY, setup }),
+        ).rejects.toMatchObject({
+          category: "VALIDATION_FAILED",
+          metadata: expect.objectContaining({ field: "setup" }),
+          message: expect.stringContaining("0001-01-02"),
+        });
+        await expect(
+          workflow.createLedger({
+            identity: IDENTITY,
+            input: { name: "household", setup },
+          }),
+        ).rejects.toMatchObject({
+          category: "VALIDATION_FAILED",
+          metadata: expect.objectContaining({ field: "setup" }),
+          message: expect.stringContaining("0001-01-02"),
+        });
+        expect(
+          mockFavaApiClient.reports.checkLedgerFiles,
+        ).not.toHaveBeenCalled();
+        expect(mockFavaApiClient.ledgers.createLedger).not.toHaveBeenCalled();
+      });
     });
 
     describe("starter currency (w3/m62)", () => {

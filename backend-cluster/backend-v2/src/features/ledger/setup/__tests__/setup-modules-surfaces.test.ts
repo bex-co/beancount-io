@@ -7,6 +7,7 @@ import { LedgerMutationResolver } from "@/features/ledger/api/resolvers/ledger-r
 import { LedgerQueryResolver } from "@/features/ledger/api/resolvers/ledger-resolver.query";
 import { HealthResolver } from "@/features/healthz/api/health-resolver";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
+import { formatError } from "@/server/graphql/format-error";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
@@ -43,8 +44,26 @@ const GQL_PRESET: Record<string, string> = {
   "personal@1": "PERSONAL",
   "freelance@1": "FREELANCE",
 };
+const GQL_OPENING_STATE: Record<string, string> = {
+  unknown: "UNKNOWN",
+  zero: "ZERO",
+  known: "KNOWN",
+};
 
-const setupOf = (preset: string, modules: Module[]) => ({
+type SurfaceSetup = {
+  preset: string;
+  operatingCurrency?: string;
+  historyStart?: string;
+  modules?: Module[];
+  accounts?: {
+    name: string;
+    currency?: string;
+    openingState?: string;
+    amount?: string;
+  }[];
+};
+
+const setupOf = (preset: string, modules: Module[]): SurfaceSetup => ({
   preset,
   historyStart: "2026-01-01",
   modules,
@@ -111,22 +130,40 @@ async function fixture() {
   const [a, b] = InMemoryTransport.createLinkedPair();
   await Promise.all([client.connect(a), server.connect(b)]);
 
-  const gqlSetup = (setup: ReturnType<typeof setupOf>) => ({
+  const gqlSetup = (setup: SurfaceSetup) => ({
     ...setup,
     preset: GQL_PRESET[setup.preset] ?? setup.preset,
-    modules: setup.modules.map((module) => ({
-      ...module,
-      id: GQL_MODULE[module.id] ?? module.id,
-    })),
+    ...(setup.modules
+      ? {
+          modules: setup.modules.map((module) => ({
+            ...module,
+            id: GQL_MODULE[module.id] ?? module.id,
+          })),
+        }
+      : {}),
+    ...(setup.accounts
+      ? {
+          accounts: setup.accounts.map((account) => ({
+            ...account,
+            ...(account.openingState
+              ? {
+                  openingState:
+                    GQL_OPENING_STATE[account.openingState] ??
+                    account.openingState,
+                }
+              : {}),
+          })),
+        }
+      : {}),
   });
 
   /** Preview, then create, on one surface: the result or the refusal. */
   const run = async (
     surface: Surface,
-    setup: ReturnType<typeof setupOf>,
+    setup: SurfaceSetup,
   ): Promise<
     | { ok: true; accounts: string[]; files: Record<string, string> }
-    | { ok: false; message: string }
+    | { ok: false; message: string; code?: string; status?: number }
   > => {
     if (surface === "rest") {
       const post = (path: string, body: unknown) =>
@@ -138,9 +175,17 @@ async function fixture() {
       const preview = await post("/preview", { setup });
       const body = (await preview.json()) as Record<string, unknown>;
       if (preview.status !== 200) {
-        await post("", { name: "household", setup });
-        const error = body.error as { message?: string } | undefined;
-        return { ok: false, message: error?.message ?? JSON.stringify(body) };
+        const createRes = await post("", { name: "household", setup });
+        expect(createRes.status).toBe(preview.status);
+        const error = body.error as
+          | { code?: string; message?: string }
+          | undefined;
+        return {
+          ok: false,
+          status: preview.status,
+          code: error?.code,
+          message: error?.message ?? JSON.stringify(body),
+        };
       }
       await post("", { name: "household", setup });
       return {
@@ -157,14 +202,21 @@ async function fixture() {
         variableValues,
         contextValue: { identity, getCurrentIdentity: () => identity },
       });
-      await graphql({
+      const createdRes = await graphql({
         schema,
         source: `mutation($setup: LedgerSetupInput!) { createLedger(name: "household", setup: $setup) { name } }`,
         variableValues,
         contextValue: { identity, getCurrentIdentity: () => identity },
       });
       if (preview.errors) {
-        return { ok: false, message: preview.errors[0]!.message };
+        expect(createdRes.errors?.length).toBeGreaterThan(0);
+        const raw = preview.errors[0]!;
+        const formatted = formatError({ message: raw.message }, raw);
+        return {
+          ok: false,
+          code: formatted.extensions?.code as string | undefined,
+          message: formatted.message,
+        };
       }
       const data = preview.data!.previewLedgerSetup as {
         accounts: string[];
@@ -176,16 +228,21 @@ async function fixture() {
       name: "previewLedgerSetup",
       arguments: { setup },
     });
-    await client.callTool({
+    const createdRes = await client.callTool({
       name: "createLedger",
       arguments: { name: "household", setup },
     });
     const content = preview.structuredContent as {
       result?: { accounts: string[]; files: Record<string, string> };
-      error?: { message: string };
+      error?: { code?: string; message: string };
     };
     if (preview.isError) {
-      return { ok: false, message: content.error?.message ?? "" };
+      expect(createdRes.isError).toBe(true);
+      return {
+        ok: false,
+        code: content.error?.code,
+        message: content.error?.message ?? "",
+      };
     }
     const { accounts, files } = content.result!;
     return { ok: true, accounts, files };
@@ -335,5 +392,93 @@ describe("setup.modules on REST, GraphQL, and MCP (w3/m59/t002)", () => {
     } finally {
       await f.close();
     }
+  });
+
+  // w31/059: historyStart 0001-01-01 + known opening must fail validation
+  // identically on REST, GraphQL, and MCP without creating anything.
+  describe("minimum historyStart with known opening on REST, GraphQL, and MCP (w31/059)", () => {
+    it.each(["100", "0"])(
+      "refuses 0001-01-01 with known opening (amount %s) on every surface and creates nothing",
+      async (amount) => {
+        const f = await fixture();
+        try {
+          const setup: SurfaceSetup = {
+            preset: "personal@1",
+            operatingCurrency: "USD",
+            historyStart: "0001-01-01",
+            accounts: [{ name: "Assets:Cash", openingState: "known", amount }],
+          };
+          for (const surface of SURFACES) {
+            const result = await f.run(surface, setup);
+            expect({ surface, ok: result.ok }).toEqual({ surface, ok: false });
+            if (result.ok) continue;
+            expect({ surface, code: result.code }).toEqual({
+              surface,
+              code: "VALIDATION_FAILED",
+            });
+            if (surface === "rest") {
+              expect(result.status).toBe(400);
+            }
+            expect(result.message).toContain("day before");
+            expect(result.message).toContain("0001-01-02");
+          }
+          expect(f.created).toEqual([]);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it.each([
+      [
+        "0001-01-01 with unknown opening",
+        {
+          preset: "personal@1",
+          operatingCurrency: "USD",
+          historyStart: "0001-01-01",
+          accounts: [{ name: "Assets:Cash", openingState: "unknown" }],
+        },
+        "0001-01-01 open Assets:Cash",
+      ],
+      [
+        "0001-01-01 with zero opening",
+        {
+          preset: "personal@1",
+          operatingCurrency: "USD",
+          historyStart: "0001-01-01",
+          accounts: [{ name: "Assets:Cash", openingState: "zero" }],
+        },
+        "0001-01-01 open Assets:Cash",
+      ],
+      [
+        "0001-01-02 with known opening",
+        {
+          preset: "personal@1",
+          operatingCurrency: "USD",
+          historyStart: "0001-01-02",
+          accounts: [
+            { name: "Assets:Cash", openingState: "known", amount: "100" },
+          ],
+        },
+        '0001-01-01 * "Opening balance"',
+      ],
+    ] as [string, SurfaceSetup, string][])(
+      "accepts %s on every surface with no year-0000 dates",
+      async (_, setup, expectedLine) => {
+        const f = await fixture();
+        try {
+          for (const surface of SURFACES) {
+            const result = await f.run(surface, setup);
+            expect({ surface, ok: result.ok }).toEqual({ surface, ok: true });
+            if (!result.ok) continue;
+            expect(result.files["main.bean"]).toContain(expectedLine);
+            expect(result.files["main.bean"]).not.toContain("0000-");
+          }
+          expect(f.created).toHaveLength(SURFACES.length);
+        } finally {
+          await f.close();
+        }
+      },
+    );
   });
 });
