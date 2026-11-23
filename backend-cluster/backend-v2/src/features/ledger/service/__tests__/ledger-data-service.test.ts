@@ -1,6 +1,7 @@
 import { LedgerDataService } from "../ledger-data-service";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
+import { BadUserInputError } from "@/shared/errors";
 
 // This suite exercises LedgerDataService's own behavior (Fava calls, response
 // mapping) — authorizeLedger's own contract has its own dedicated suite
@@ -384,6 +385,38 @@ describe("LedgerDataService", () => {
     );
   });
 
+  // w31/040: empty or whitespace-only accountName must fail fast before
+  // authorizing or hitting the ledger service.
+  it.each(["", "  ", "\t", "\n"])(
+    "getAccountReport — refuses empty or whitespace-only accountName=%j as BadUserInputError before calling the ledger",
+    async (blankAccountName) => {
+      mockReports.getLedgerAccountReport.mockResolvedValue(
+        ok({
+          linechart_data: [],
+          interval_totals_data: [],
+          account_balance_data: [],
+        }),
+      );
+
+      const failure = await service
+        .getAccountReport({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          accountName: blankAccountName,
+        })
+        .catch((error: unknown) => error);
+
+      expect(failure).toBeInstanceOf(BadUserInputError);
+      expect(failure).toMatchObject({
+        category: "BAD_USER_INPUT",
+        metadata: { field: "accountName" },
+      });
+      expect(authorizeLedger).not.toHaveBeenCalled();
+      expect(mockFavaClientFactory.getPublicApiClient).not.toHaveBeenCalled();
+      expect(mockReports.getLedgerAccountReport).not.toHaveBeenCalled();
+    },
+  );
+
   it("getIntervalTotals — passes accountName as account_name", async () => {
     mockReports.getLedgerIntervalTotals.mockResolvedValue(ok([]));
 
@@ -397,6 +430,22 @@ describe("LedgerDataService", () => {
       "testowner",
       "testledger",
       expect.objectContaining({ account_name: "Expenses:Food" }),
+    );
+  });
+
+  it("getIntervalTotals — continues accepting empty accountName for all accounts", async () => {
+    mockReports.getLedgerIntervalTotals.mockResolvedValue(ok([]));
+
+    await service.getIntervalTotals({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      accountName: "",
+    });
+
+    expect(mockReports.getLedgerIntervalTotals).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+      expect.objectContaining({ account_name: "" }),
     );
   });
 

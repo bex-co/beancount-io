@@ -1,12 +1,22 @@
 import "reflect-metadata";
 
-import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
+import { buildSchema } from "type-graphql";
+import { graphql } from "graphql";
+import {
+  startV1TestServer,
+  pinnedReadToken,
+} from "@/server/rest/__tests__/v1-test-server";
 import type { AppLayers } from "@/foundation/composition";
 import { UriTemplate } from "@modelcontextprotocol/sdk/shared/uriTemplate.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { ANALYSIS_READS } from "@/features/ledger/api/rest/v1/analysis-handler";
+import { LedgerDataQueryResolver } from "@/features/ledger/api/resolvers/ledger-data-resolver.query";
+import { LedgerDataService } from "@/features/ledger/service/ledger-data-service";
+import { AuthorizationService } from "@/server/api/authorization";
+import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
+import { formatError } from "@/server/graphql/format-error";
 import { MCP_TOOLS } from "../mcp-tools";
 import { RESOURCE_SCHEME } from "../mcp-resources";
 import { ForbiddenError } from "@/shared/errors";
@@ -428,4 +438,164 @@ describe("report query validation", () => {
       }
     },
   );
+});
+
+describe("account-report blank accountName parity (w31/040)", () => {
+  let resolvers: Map<unknown, object>;
+  let schemaPromise: ReturnType<typeof buildSchema> | undefined;
+
+  async function realLedgerDataFixture() {
+    const check = jest.fn().mockResolvedValue(true);
+    const authorization = new AuthorizationService({ check }, jest.fn());
+    const authorize = jest.spyOn(authorization, "authorizeOrThrow");
+    const envelope = (data: unknown) => ({ data: { success: true, data } });
+    const reports = {
+      getLedgerAccountReport: jest.fn().mockResolvedValue(
+        envelope({
+          linechart_data: [],
+          interval_totals_data: [],
+          account_balance_data: [],
+        }),
+      ),
+      getLedgerIntervalTotals: jest.fn().mockResolvedValue(
+        envelope([
+          {
+            date: "2026-01-31",
+            balance: { USD: "10.00" },
+            account_balances: { "Expenses:Food": { USD: "10.00" } },
+          },
+        ]),
+      ),
+      getLedgerOptions: jest
+        .fn()
+        .mockResolvedValue(envelope({ operating_currency: ["USD"] })),
+    };
+    const factory = { getPublicApiClient: async () => ({ reports }) };
+    const services = {
+      ledgerData: new LedgerDataService(factory as never, authorization),
+    };
+    resolvers = new Map<unknown, object>([
+      [
+        LedgerDataQueryResolver,
+        new LedgerDataQueryResolver(services.ledgerData),
+      ],
+    ]);
+    schemaPromise ??= buildSchema({
+      resolvers: [LedgerDataQueryResolver],
+      container: { get: (ctor) => resolvers.get(ctor) },
+      globalMiddlewares: [graphqlScopeMiddleware("enforce")],
+      validate: true,
+    });
+    const schema = await schemaPromise;
+    const rest = await startV1TestServer(
+      { services } as unknown as AppLayers,
+      config,
+      { apiKeys: false },
+    );
+    rest.setIdentity(pinnedReadToken);
+    const server = assembleMcpRegistry(
+      { identity: pinnedReadToken, services } as unknown as McpRequestContext,
+      config,
+    );
+    const client = new Client({ name: "analysis-parity", version: "1" });
+    const [a, b] = InMemoryTransport.createLinkedPair();
+    await Promise.all([client.connect(a), server.connect(b)]);
+    return {
+      reports,
+      authorize,
+      rest: (path: string) =>
+        fetch(`${rest.url}/api-gateway/v1/ledgers/alice/main/${path}`),
+      mcp: async (path: string) => {
+        const result = await client.readResource({
+          uri: `${RESOURCE_SCHEME}://alice/main/${path}`,
+        });
+        const content = result.contents[0];
+        if (!("text" in content)) throw new Error("Expected JSON");
+        return JSON.parse(content.text);
+      },
+      gql: (selection: string) =>
+        graphql({
+          schema,
+          source: `query { ${selection} }`,
+          contextValue: { identity: pinnedReadToken },
+        }),
+      close: async () => {
+        await client.close();
+        await server.close();
+        await rest.close();
+      },
+    };
+  }
+
+  it.each(["", "  ", "\t", "\n"])(
+    "refuses account-report with empty or whitespace-only accountName=%j as BAD_USER_INPUT across REST, GraphQL, and MCP",
+    async (blankAccountName) => {
+      const f = await realLedgerDataFixture();
+      try {
+        const rest = await f.rest(
+          `account-report?accountName=${encodeURIComponent(blankAccountName)}`,
+        );
+        expect(rest.status).toBe(400);
+        expect(await rest.json()).toMatchObject({
+          ok: false,
+          error: {
+            code: "BAD_USER_INPUT",
+            metadata: { field: "accountName" },
+          },
+        });
+
+        if (blankAccountName !== "") {
+          await expect(
+            f.mcp(`account-report/${encodeURIComponent(blankAccountName)}`),
+          ).rejects.toMatchObject({
+            code: -32602,
+            data: {
+              code: "BAD_USER_INPUT",
+            },
+          });
+        }
+
+        const gql = await f.gql(
+          `getLedgerAccountReport(ledgerId: "alice/main", accountName: ${JSON.stringify(blankAccountName)}) { linechartData { date } }`,
+        );
+        expect(gql.data).toBeNull();
+        const [error] = gql.errors ?? [];
+        expect(error).toBeDefined();
+        expect(formatError(error!.toJSON(), error!).extensions).toMatchObject({
+          code: "BAD_USER_INPUT",
+          field: "accountName",
+        });
+
+        expect(f.reports.getLedgerAccountReport).not.toHaveBeenCalled();
+        expect(f.authorize).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it("keeps interval-totals working with omitted or empty accountName across REST, MCP, and GraphQL", async () => {
+    const f = await realLedgerDataFixture();
+    try {
+      const restOmitted = await f.rest("interval-totals?shape=fava");
+      expect(restOmitted.status).toBe(200);
+      const restEmpty = await f.rest("interval-totals?shape=fava&accountName=");
+      expect(restEmpty.status).toBe(200);
+
+      const mcpOmitted = await f.mcp("interval-totals?shape=fava");
+      expect(mcpOmitted).toHaveLength(1);
+      const mcpEmpty = await f.mcp("interval-totals?shape=fava&accountName=");
+      expect(mcpEmpty).toHaveLength(1);
+
+      const gqlEmpty = await f.gql(
+        `getLedgerIntervalTotals(ledgerId: "alice/main", accountName: "") { date }`,
+      );
+      expect(gqlEmpty.errors).toBeUndefined();
+      expect(gqlEmpty.data).toEqual({
+        getLedgerIntervalTotals: [{ date: "2026-01-31" }],
+      });
+    } finally {
+      await f.close();
+    }
+  });
 });

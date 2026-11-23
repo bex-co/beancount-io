@@ -1,4 +1,5 @@
 import { parseLedgerId } from "@/shared/str";
+import { BadUserInputError } from "@/shared/errors";
 import { unwrapFavaResponse } from "@/foundation/fava";
 import { filterNullish } from "@/shared/tools";
 import type { Identity } from "@/server/api/identity";
@@ -436,6 +437,12 @@ export class LedgerDataService
     params: BaseParams & AccountReportParams,
   ): Promise<AccountReportPublic> {
     const { ledgerId, identity, accountName, ...rest } = params;
+    // Empty or whitespace-only accountName strings pass REST/MCP string schemas
+    // and GraphQL's non-null String, so guard here for all three surfaces before
+    // authorizing or calling the ledger (w31/040).
+    if (accountName.trim() === "") {
+      throw new BadUserInputError("accountName is required", "accountName");
+    }
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
