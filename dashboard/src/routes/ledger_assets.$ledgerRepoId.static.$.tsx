@@ -1,19 +1,14 @@
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { GetLedgerAssetDownloadUrlDocument } from "@/graphql/definitions";
+import { isUnauthenticatedError } from "@/common/apollo/links/auth-error-link";
+import { getSafeReturnPath } from "@/common/lib/auth/auth";
 import { AttachmentUnavailablePage } from "@/common/root-route/not-found-page";
 
-/**
- * Receipt links written into ledgers (`/ledger_assets/<repo>/static/<file>`)
- * outlive their assets and reach readers without access. A missing, foreign
- * or malformed target is a 404 "attachment unavailable", not a 500
- * "unexpected error" (w0/018); a signed-out reader still goes through the
- * root error page's login redirect.
- */
 const UNAVAILABLE_CODES = new Set(["NOT_FOUND", "FORBIDDEN", "BAD_USER_INPUT"]);
 
 export const Route = createFileRoute("/ledger_assets/$ledgerRepoId/static/$")({
-  beforeLoad: async ({ context, params }) => {
+  beforeLoad: async ({ context, location, params }) => {
     const ledgerRepoId = Number(params.ledgerRepoId);
     const filename = params._splat ?? "";
     if (!Number.isSafeInteger(ledgerRepoId) || ledgerRepoId <= 0 || !filename) {
@@ -29,6 +24,12 @@ export const Route = createFileRoute("/ledger_assets/$ledgerRepoId/static/$")({
       });
       downloadUrl = result.data?.getLedgerAssetDownloadUrl.downloadUrl;
     } catch (error) {
+      if (isUnauthenticatedError(error)) {
+        throw redirect({
+          to: "/auth/login",
+          search: { next: getSafeReturnPath(location) },
+        });
+      }
       if (
         CombinedGraphQLErrors.is(error) &&
         error.errors.some((gqlError) =>
