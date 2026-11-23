@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import type { PostingJson } from "@rustledger/wasm";
 import type { PriceMap } from "./price-map";
 import { perUnitFromTotalCost, perUnitFromTotalCostString } from "./total-cost";
-import { writtenScale } from "./decimal-context";
+import { roundWithPythonDecimalContext, writtenScale } from "./decimal-context";
 
 /**
  * A cost-lot-aware inventory + Fava's three valuation reducers, ported from
@@ -50,6 +50,59 @@ interface Lot {
 type ValuedAmount = [currency: string, value: BigNumber, scale: number];
 
 /**
+ * Digits Python's `Decimal` drops when rounding an exact result to its
+ * 28-digit context. The exact coefficient is an integer at exponent `-scale`,
+ * so its digit count is `scale + exponent + 1`, trailing zeros included —
+ * the count `Decimal` rounds down to 28. Zero carries no digits and keeps its
+ * scale (mirrors `journal-running-balance.ts`).
+ */
+function droppedDigits(exact: BigNumber, scale: number): number {
+  if (exact.isZero()) return 0;
+  return Math.max(scale + (exact.e ?? 0) + 1 - 28, 0);
+}
+
+/**
+ * An exact sum/product under beancount's 28-digit `Decimal` context: the
+ * value rounded to 28 significant digits half-even, the scale dropped a place
+ * per digit rounding removes (matching `Decimal`'s exponent). A value that
+ * already fits passes through untouched — an identity everywhere except past
+ * beancount's precision, where exact arithmetic would erase the dust
+ * beancount's intermediate rounding leaves behind.
+ */
+function withDecimalContext(
+  exact: BigNumber,
+  scale: number,
+): { value: BigNumber; scale: number } {
+  const dropped = droppedDigits(exact, scale);
+  if (dropped === 0) return { value: exact, scale };
+  const value = roundWithPythonDecimalContext(exact);
+  // Rounding up across a power of ten (999.99… → 1000.0…) gains a digit the
+  // count above cannot see; `Decimal`'s exponent shifts one more place.
+  const overflow = (value.e ?? 0) > (exact.e ?? 0) ? 1 : 0;
+  return { value, scale: Math.max(scale - dropped - overflow, 0) };
+}
+
+/** `Decimal.__add__` under beancount's context: sum, then scale = max. */
+function addDecimal(
+  left: BigNumber,
+  leftScale: number,
+  right: BigNumber,
+  rightScale: number,
+): { value: BigNumber; scale: number } {
+  return withDecimalContext(left.plus(right), Math.max(leftScale, rightScale));
+}
+
+/** `Decimal.__mul__` under beancount's context: product, then scale = sum. */
+function mulDecimal(
+  left: BigNumber,
+  leftScale: number,
+  right: BigNumber,
+  rightScale: number,
+): { value: BigNumber; scale: number } {
+  return withDecimalContext(left.times(right), leftScale + rightScale);
+}
+
+/**
  * How an inventory is valued before display — Fava's conversion keywords. A bare
  * currency code (or comma list) is a `convert_position` target; the reserved
  * keywords select the cost-aware reducers. `units_by_cost` is ours, not
@@ -87,6 +140,27 @@ export function parseConversion(target: string): Conversion {
 }
 
 /**
+ * The engine derives `per_unit` from a total with its own division precision
+ * (29 digits for a repeating quotient); beancount's
+ * `booking_full.compute_cost_number` divides under its 28-digit Decimal
+ * context, so restore that booking here. Values that already fit pass through
+ * untouched — and a user-typed `per_unit` is never normalized, which is why
+ * the call site applies this only to the engine-derived kind
+ * (mirrors `time-clamp.ts`).
+ */
+function normalizeEnginePerUnit(
+  source: string,
+  currency: string,
+): { number: BigNumber; currency: string; scale: number } {
+  const parsed = new Amount(source);
+  const rounded = roundWithPythonDecimalContext(parsed);
+  if (rounded.eq(parsed)) {
+    return { number: parsed, currency, scale: writtenScale(source) };
+  }
+  return { number: rounded, currency, scale: rounded.decimalPlaces() ?? 0 };
+}
+
+/**
  * The booked per-unit cost of a posting (number + currency), or `null` when the
  * posting is cost-less or the cost is unusable. `total`/`compound` costs are
  * reduced to their effective per-unit so valuation matches beancount's booked
@@ -119,11 +193,7 @@ function bookedCostPerUnit(
         scale: writtenScale(n.value),
       };
     case "per_unit_from_total":
-      return {
-        number: new Amount(n.per_unit),
-        currency: cost.currency,
-        scale: writtenScale(n.per_unit),
-      };
+      return normalizeEnginePerUnit(n.per_unit, cost.currency);
     case "compound": {
       const totalPart = perUnitFromTotalCost(n.total, unitsNumber);
       if (totalPart === null) {
@@ -133,14 +203,18 @@ function bookedCostPerUnit(
           scale: writtenScale(n.per_unit),
         };
       }
+      // `compute_cost_number` adds under the Decimal context too, so the
+      // compound's total-derived part joins the per-unit part rounded.
+      const sum = addDecimal(
+        new Amount(n.per_unit),
+        writtenScale(n.per_unit),
+        totalPart,
+        resolvedScale(n.total, totalPart),
+      );
       return {
-        number: new Amount(n.per_unit).plus(totalPart),
+        number: sum.value,
         currency: cost.currency,
-        // A sum keeps the wider operand's places.
-        scale: Math.max(
-          writtenScale(n.per_unit),
-          resolvedScale(n.total, totalPart),
-        ),
+        scale: sum.scale,
       };
     }
     case "total": {
@@ -187,16 +261,19 @@ function valueLot(
         lot.number,
         lot.scale,
       ];
-    case "at_cost":
+    case "at_cost": {
       // get_cost: units × per-unit cost, in the cost currency (else raw units).
       if (lot.costNumber && lot.costCurrency) {
-        return [
-          lot.costCurrency,
-          lot.number.times(lot.costNumber),
-          lot.scale + lot.costScale,
-        ];
+        const valued = mulDecimal(
+          lot.number,
+          lot.scale,
+          lot.costNumber,
+          lot.costScale,
+        );
+        return [lot.costCurrency, valued.value, valued.scale];
       }
       return [lot.currency, lot.number, lot.scale];
+    }
     case "at_value": {
       // get_market_value: price(units→cost.ccy) × units, else the COST value —
       // in the cost currency; a cost-less lot stays in its units currency.
@@ -207,17 +284,21 @@ function valueLot(
           date,
         );
         if (rate) {
-          return [
-            lot.costCurrency,
-            lot.number.times(rate.value),
-            lot.scale + rate.scale,
-          ];
+          const valued = mulDecimal(
+            lot.number,
+            lot.scale,
+            rate.value,
+            rate.scale,
+          );
+          return [lot.costCurrency, valued.value, valued.scale];
         }
-        return [
-          lot.costCurrency,
-          lot.number.times(lot.costNumber),
-          lot.scale + lot.costScale,
-        ];
+        const fallback = mulDecimal(
+          lot.number,
+          lot.scale,
+          lot.costNumber,
+          lot.costScale,
+        );
+        return [lot.costCurrency, fallback.value, fallback.scale];
       }
       return [lot.currency, lot.number, lot.scale];
     }
@@ -227,22 +308,28 @@ function valueLot(
       const target = conversion.targets[0];
       const direct = priceMap.getScaledRate(lot.currency, target, date);
       if (direct) {
-        return [
-          target,
-          lot.number.times(direct.value),
-          lot.scale + direct.scale,
-        ];
+        const valued = mulDecimal(
+          lot.number,
+          lot.scale,
+          direct.value,
+          direct.scale,
+        );
+        return [target, valued.value, valued.scale];
       }
       if (lot.costCurrency && lot.costCurrency !== target) {
         const r1 = priceMap.getScaledRate(lot.currency, lot.costCurrency, date);
         if (r1) {
           const r2 = priceMap.getScaledRate(lot.costCurrency, target, date);
           if (r2) {
-            return [
-              target,
-              lot.number.times(r1.value).times(r2.value),
-              lot.scale + r1.scale + r2.scale,
-            ];
+            // Chained left to right, rounding at each step as `Decimal` does.
+            const first = mulDecimal(lot.number, lot.scale, r1.value, r1.scale);
+            const chained = mulDecimal(
+              first.value,
+              first.scale,
+              r2.value,
+              r2.scale,
+            );
+            return [target, chained.value, chained.scale];
           }
         }
       }
@@ -271,8 +358,9 @@ export class LotInventory {
     const scale = writtenScale(posting.units.number);
     const existing = this.lots.get(key);
     if (existing) {
-      existing.number = existing.number.plus(incoming);
-      existing.scale = Math.max(existing.scale, scale);
+      const net = addDecimal(existing.number, existing.scale, incoming, scale);
+      existing.number = net.value;
+      existing.scale = net.scale;
       existing.costScale = Math.max(existing.costScale, costScale);
       return;
     }
@@ -291,8 +379,9 @@ export class LotInventory {
     const key = lotKey(currency, null, null);
     const existing = this.lots.get(key);
     if (existing) {
-      existing.number = existing.number.plus(value);
-      existing.scale = Math.max(existing.scale, scale);
+      const net = addDecimal(existing.number, existing.scale, value, scale);
+      existing.number = net.value;
+      existing.scale = net.scale;
       return;
     }
     this.lots.set(key, {
@@ -317,8 +406,14 @@ export class LotInventory {
     other.lots.forEach((lot, key) => {
       const existing = this.lots.get(key);
       if (existing) {
-        existing.number = existing.number.plus(lot.number);
-        existing.scale = Math.max(existing.scale, lot.scale);
+        const net = addDecimal(
+          existing.number,
+          existing.scale,
+          lot.number,
+          lot.scale,
+        );
+        existing.number = net.value;
+        existing.scale = net.scale;
         existing.costScale = Math.max(existing.costScale, lot.costScale);
       } else this.lots.set(key, { ...lot });
     });
@@ -378,12 +473,8 @@ export class LotInventory {
         out.forEach(({ value, scale }, currency) => {
           const rate = priceMap.getScaledRate(currency, target, date);
           if (rate) {
-            addScaledInto(
-              next,
-              target,
-              value.times(rate.value),
-              scale + rate.scale,
-            );
+            const hopped = mulDecimal(value, scale, rate.value, rate.scale);
+            addScaledInto(next, target, hopped.value, hopped.scale);
           } else addScaledInto(next, currency, value, scale);
         });
         out = next;
@@ -404,10 +495,7 @@ function addScaledInto(
   map.set(
     currency,
     existing
-      ? {
-          value: existing.value.plus(value),
-          scale: Math.max(existing.scale, scale),
-        }
+      ? addDecimal(existing.value, existing.scale, value, scale)
       : { value, scale },
   );
 }
