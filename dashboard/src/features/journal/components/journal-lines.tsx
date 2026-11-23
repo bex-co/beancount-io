@@ -73,6 +73,8 @@ function LineRows({
   const transaction = isJournalTransaction(directive) ? directive : null;
   const balance = isJournalBalance(directive) ? directive : null;
   const document = isJournalDocument(directive) ? directive : null;
+  // Descriptive entries can use the empty columns before the register balance.
+  const hasStatementColumns = transaction !== null || balance !== null;
   const entryLabel = useJournalEntryLabel(directive);
   const postingsRegionId = useId();
   const [expanded, setExpanded] = useState(false);
@@ -171,7 +173,10 @@ function LineRows({
             ) : null}
           </span>
         </td>
-        <td className="py-1.5 pe-2 ps-2 align-top text-[15px] leading-5 sm:ps-1 sm:text-sm pointer-coarse:py-2.5 pointer-coarse:text-base pointer-coarse:leading-6">
+        <td
+          colSpan={hasStatementColumns ? undefined : register ? 2 : 3}
+          className="py-1.5 pe-2 ps-2 align-top text-[15px] leading-5 sm:ps-1 sm:text-sm pointer-coarse:py-2.5 pointer-coarse:text-base pointer-coarse:leading-6"
+        >
           <div className="flex min-w-0 items-baseline gap-2">
             {/* On a phone the status column folds into the line: only what
                 is not cleared needs saying. */}
@@ -209,7 +214,8 @@ function LineRows({
                   // Alone on its line where the accounts drop beneath it:
                   // whole, never cut to a stub that three rows share.
                   "@max-4xl/journal:whitespace-normal @max-4xl/journal:[overflow-wrap:anywhere]",
-                  balance && "shrink-0",
+                  !transaction &&
+                    "max-w-full shrink-0 whitespace-normal [overflow-wrap:anywhere]",
                 )}
                 onClick={(event) => {
                   event.stopPropagation();
@@ -222,7 +228,11 @@ function LineRows({
               <span
                 dir="auto"
                 title={title}
-                className="min-w-0 truncate font-medium"
+                className={cn(
+                  "min-w-0 truncate font-medium",
+                  !transaction &&
+                    "max-w-full shrink-0 whitespace-normal [overflow-wrap:anywhere]",
+                )}
               >
                 {title}
               </span>
@@ -261,8 +271,8 @@ function LineRows({
             )}
             {!transaction && !balance && !document && (
               // Notes, prices and other directives on one line.
-              <span className="min-w-0 truncate text-muted-foreground [&_div]:inline [&_div]:p-0">
-                <JournalDescription directive={directive} />
+              <span className="min-w-0 truncate text-muted-foreground">
+                <JournalDescription directive={directive} compact />
               </span>
             )}
           </div>
@@ -382,126 +392,134 @@ function LineRows({
             </div>
           )}
         </td>
-        <td className="p-0 align-top text-[13px] leading-5 text-muted-foreground @4xl/journal:py-2 @4xl/journal:pe-4 pointer-coarse:@4xl/journal:py-2.5 pointer-coarse:@4xl/journal:leading-6">
-          {balance && (
-            // The account the statement is for, where transactions show
-            // theirs.
-            <AccountName
-              account={balance.account}
-              title={balance.account}
-              className="hidden text-[13px] @4xl/journal:block"
-            />
-          )}
-          {flow && shortFlow && (
-            // Where the list is not yet wide enough for full names: the
-            // accounts by the names that tell them apart, whole on hover.
-            <span
-              title={`${flow.from} → ${flow.to}`}
-              className="hidden min-w-0 items-center gap-1.5 @4xl/journal:flex @5xl/journal:hidden"
-            >
-              {/* Last parts only: in the foreground, as every account's
+        {hasStatementColumns && (
+          <td className="p-0 align-top text-[13px] leading-5 text-muted-foreground @4xl/journal:py-2 @4xl/journal:pe-4 pointer-coarse:@4xl/journal:py-2.5 pointer-coarse:@4xl/journal:leading-6">
+            {balance && (
+              // The account the statement is for, where transactions show
+              // theirs.
+              <AccountName
+                account={balance.account}
+                title={balance.account}
+                className="hidden text-[13px] @4xl/journal:block"
+              />
+            )}
+            {flow && shortFlow && (
+              // Where the list is not yet wide enough for full names: the
+              // accounts by the names that tell them apart, whole on hover.
+              <span
+                title={`${flow.from} → ${flow.to}`}
+                className="hidden min-w-0 items-center gap-1.5 @4xl/journal:flex @5xl/journal:hidden"
+              >
+                {/* Last parts only: in the foreground, as every account's
                   last part is. */}
-              <span className="min-w-0 truncate font-medium text-foreground">
-                {shortFlow.from}
+                <span className="min-w-0 truncate font-medium text-foreground">
+                  {shortFlow.from}
+                </span>
+                <ArrowRight
+                  aria-hidden="true"
+                  className="size-3 shrink-0 text-muted-foreground/70 rtl:-scale-x-100"
+                />
+                <span className="min-w-0 truncate font-medium text-foreground">
+                  {shortFlow.to}
+                </span>
+                {flow.more > 0 && (
+                  <span className="shrink-0 whitespace-nowrap">
+                    +{flow.more}
+                  </span>
+                )}
               </span>
-              <ArrowRight
-                aria-hidden="true"
-                className="size-3 shrink-0 text-muted-foreground/70 rtl:-scale-x-100"
-              />
-              <span className="min-w-0 truncate font-medium text-foreground">
-                {shortFlow.to}
+            )}
+            {flow && (
+              <span className="hidden min-w-0 items-center gap-1.5 @5xl/journal:flex">
+                <AccountName
+                  account={flow.from}
+                  title={flow.from}
+                  className="text-[13px]"
+                />
+                <ArrowRight
+                  aria-hidden="true"
+                  className="size-3 shrink-0 text-muted-foreground/70 rtl:-scale-x-100"
+                />
+                <AccountName
+                  account={flow.to}
+                  title={flow.to}
+                  className="text-[13px]"
+                />
+                {flow.more > 0 && (
+                  <span className="shrink-0 whitespace-nowrap">
+                    +{flow.more}
+                  </span>
+                )}
               </span>
-              {flow.more > 0 && (
-                <span className="shrink-0 whitespace-nowrap">+{flow.more}</span>
-              )}
-            </span>
-          )}
-          {flow && (
-            <span className="hidden min-w-0 items-center gap-1.5 @5xl/journal:flex">
-              <AccountName
-                account={flow.from}
-                title={flow.from}
-                className="text-[13px]"
-              />
-              <ArrowRight
-                aria-hidden="true"
-                className="size-3 shrink-0 text-muted-foreground/70 rtl:-scale-x-100"
-              />
-              <AccountName
-                account={flow.to}
-                title={flow.to}
-                className="text-[13px]"
-              />
-              {flow.more > 0 && (
-                <span className="shrink-0 whitespace-nowrap">+{flow.more}</span>
-              )}
-            </span>
-          )}
-        </td>
-        <td className="py-2 pe-2 align-top text-[15px] leading-5 sm:text-sm pointer-coarse:py-2.5 pointer-coarse:text-base pointer-coarse:leading-6">
-          {/* The amount, and the entry's postings beside it: under it on a
+            )}
+          </td>
+        )}
+        {(hasStatementColumns || register) && (
+          <td className="py-2 pe-2 align-top text-[15px] leading-5 sm:text-sm pointer-coarse:py-2.5 pointer-coarse:text-base pointer-coarse:leading-6">
+            {/* The amount, and the entry's postings beside it: under it on a
               phone, so the entry's own words get the width. */}
-          <div className="flex flex-col items-end gap-0.5 sm:flex-row sm:items-start sm:justify-end sm:gap-2">
-            <div className="text-end sm:whitespace-nowrap">
-              {register && !balance ? (
-                // On an account's journal: what the entry did there.
-                <RegisterChange
-                  item={item}
-                  register={register}
-                  quietCurrencyOnPhone={money.primaryCurrency}
-                />
-              ) : summary && transaction ? (
-                <TransactionAmount
-                  summary={summary}
-                  transaction={transaction}
-                  money={money}
-                  quietPrimaryOnPhone
-                />
-              ) : balance?.amount ? (
-                // The balance the statement gave, as asserted.
-                <LedgerAmount
-                  {...balance.amount}
-                  tolerance={balance.tolerance}
-                  className="font-medium tabular-nums"
-                  currencyClassName={
-                    balance.amount.currency === money.primaryCurrency
-                      ? "max-sm:sr-only"
-                      : "max-sm:block max-sm:text-xs max-sm:font-normal max-sm:text-muted-foreground"
-                  }
-                />
-              ) : null}
+            <div className="flex flex-col items-end gap-0.5 sm:flex-row sm:items-start sm:justify-end sm:gap-2">
+              <div className="text-end sm:whitespace-nowrap">
+                {register && !balance ? (
+                  // On an account's journal: what the entry did there.
+                  <RegisterChange
+                    item={item}
+                    register={register}
+                    quietCurrencyOnPhone={money.primaryCurrency}
+                  />
+                ) : summary && transaction ? (
+                  <TransactionAmount
+                    summary={summary}
+                    transaction={transaction}
+                    money={money}
+                    quietPrimaryOnPhone
+                  />
+                ) : balance?.amount ? (
+                  // The balance the statement gave, as asserted.
+                  <LedgerAmount
+                    {...balance.amount}
+                    tolerance={balance.tolerance}
+                    className="font-medium tabular-nums"
+                    currencyClassName={
+                      balance.amount.currency === money.primaryCurrency
+                        ? "max-sm:sr-only"
+                        : "max-sm:block max-sm:text-xs max-sm:font-normal max-sm:text-muted-foreground"
+                    }
+                  />
+                ) : null}
+              </div>
+              {register && (
+                // Where the account then stood: its own place beside the
+                // amount, and under it on a phone, named there.
+                <div className="text-end max-sm:text-xs max-sm:text-muted-foreground max-sm:empty:hidden sm:w-36 sm:whitespace-nowrap">
+                  <RegisterBalance
+                    item={item}
+                    labelClassName="sm:sr-only"
+                    quietCurrencyOnPhone={money.primaryCurrency}
+                  />
+                </div>
+              )}
+              {transaction ? (
+                <div className="flex justify-end sm:w-14">
+                  <JournalPostingToggle
+                    directive={transaction}
+                    entry={entryLabel}
+                    position={position}
+                    controls={hasVisiblePostings ? postingsRegionId : undefined}
+                    onClick={() => {
+                      if (!showPostings) setExpanded((open) => !open);
+                    }}
+                    expanded={postingsVisible}
+                    forcedOpen={showPostings}
+                    className="-me-1.5 sm:-my-1 sm:me-0 pointer-coarse:-my-1.5 pointer-coarse:h-11 pointer-coarse:min-w-11 sm:pointer-coarse:-my-2.5"
+                  />
+                </div>
+              ) : (
+                <span aria-hidden="true" className="hidden sm:block sm:w-14" />
+              )}
             </div>
-            {register && (
-              // Where the account then stood: its own place beside the
-              // amount, and under it on a phone, named there.
-              <div className="text-end max-sm:text-xs max-sm:text-muted-foreground max-sm:empty:hidden sm:w-36 sm:whitespace-nowrap">
-                <RegisterBalance
-                  item={item}
-                  labelClassName="sm:sr-only"
-                  quietCurrencyOnPhone={money.primaryCurrency}
-                />
-              </div>
-            )}
-            {transaction ? (
-              <div className="flex justify-end sm:w-14">
-                <JournalPostingToggle
-                  directive={transaction}
-                  entry={entryLabel}
-                  position={position}
-                  controls={hasVisiblePostings ? postingsRegionId : undefined}
-                  onClick={() => {
-                    if (!showPostings) setExpanded((open) => !open);
-                  }}
-                  expanded={postingsVisible}
-                  forcedOpen={showPostings}
-                  className="-me-1.5 sm:-my-1 sm:me-0 pointer-coarse:-my-1.5 pointer-coarse:h-11 pointer-coarse:min-w-11 sm:pointer-coarse:-my-2.5"
-                />
-              </div>
-            ) : (
-              <span aria-hidden="true" className="hidden sm:block sm:w-14" />
-            )}
-          </div>
-        </td>
+          </td>
+        )}
       </tr>
       {(hasVisiblePostings || hasVisibleMetadata) && (
         <tr className="border-b border-border/50">

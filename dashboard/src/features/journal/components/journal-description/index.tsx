@@ -1,5 +1,6 @@
 import type { JournalDirectiveType } from "@/common/types/journal";
 import {
+  DirectiveType,
   isJournalTransaction,
   isJournalBalance,
   isJournalDocument,
@@ -22,17 +23,20 @@ import { PadDescription } from "./pad-description";
 import { CustomDescription } from "./custom-description";
 import { EventDescription } from "./event-description";
 import { PriceDescription } from "./price-description";
+import { DescriptionParts } from "./description-parts";
 
 interface JournalDescriptionProps {
   directive: JournalDirectiveType;
   ledgerOwner?: string;
   ledgerName?: string;
+  compact?: boolean;
 }
 
 export function JournalDescription({
   directive,
   ledgerOwner,
   ledgerName,
+  compact,
 }: JournalDescriptionProps) {
   const { t } = useTranslations();
 
@@ -49,18 +53,36 @@ export function JournalDescription({
       />
     );
   if (isJournalOpen(directive))
-    return <OpenDescription directive={directive} />;
+    return <OpenDescription directive={directive} compact={compact} />;
   if (isJournalClose(directive))
-    return <CloseDescription directive={directive} />;
+    return <CloseDescription directive={directive} compact={compact} />;
   if (isJournalNote(directive))
-    return <NoteDescription directive={directive} />;
-  if (isJournalPad(directive)) return <PadDescription directive={directive} />;
+    return <NoteDescription directive={directive} compact={compact} />;
+  if (isJournalPad(directive))
+    return <PadDescription directive={directive} compact={compact} />;
   if (isJournalCustom(directive))
-    return <CustomDescription directive={directive} />;
+    return <CustomDescription directive={directive} compact={compact} />;
   if (isJournalEvent(directive))
-    return <EventDescription directive={directive} />;
+    return <EventDescription directive={directive} compact={compact} />;
   if (isJournalPrice(directive))
-    return <PriceDescription directive={directive} />;
+    return <PriceDescription directive={directive} compact={compact} />;
+  if (directive.directive_type === DirectiveType.COMMODITY) {
+    const name = directive.meta?.name;
+    return (
+      <DescriptionParts
+        compact={compact}
+        primary={
+          <span className="font-mono text-sm">{directive.currency}</span>
+        }
+        detail={typeof name === "string" && name.trim() && <span>{name}</span>}
+      />
+    );
+  }
 
-  return <div className="flex-1 px-2">{t("journal.unknownDirectiveType")}</div>;
+  return (
+    <DescriptionParts
+      compact={compact}
+      primary={t("journal.unknownDirectiveType")}
+    />
+  );
 }

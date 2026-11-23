@@ -1,13 +1,16 @@
 import type { JournalNote } from "@/common/types/journal";
+import { DescriptionParts } from "./description-parts";
 
 interface NoteDescriptionProps {
   directive: JournalNote;
+  compact?: boolean;
 }
 
-export function NoteDescription({ directive }: NoteDescriptionProps) {
+export function NoteDescription({ directive, compact }: NoteDescriptionProps) {
   return (
-    <div className="flex-1 px-2 overflow-hidden">
-      <div className="text-sm break-words">{directive.comment}</div>
-    </div>
+    <DescriptionParts
+      compact={compact}
+      primary={<span className="text-sm break-words">{directive.comment}</span>}
+    />
   );
 }

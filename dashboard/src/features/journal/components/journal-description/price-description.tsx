@@ -1,19 +1,26 @@
 import type { JournalPrice } from "@/common/types/journal";
 import { LedgerAmount } from "@/common/components/ledger-amount";
+import { DescriptionParts } from "./description-parts";
 
 interface PriceDescriptionProps {
   directive: JournalPrice;
+  compact?: boolean;
 }
 
-export function PriceDescription({ directive }: PriceDescriptionProps) {
+export function PriceDescription({
+  directive,
+  compact,
+}: PriceDescriptionProps) {
   return (
-    <div className="flex-1 px-2 overflow-hidden">
-      <div className="font-mono text-sm break-all cursor-pointer">
+    <DescriptionParts
+      compact={compact}
+      primary={
         <LedgerAmount
           number={directive.amount.number}
           currency={`${directive.amount.currency}/${directive.currency}`}
+          className="font-mono text-sm break-all"
         />
-      </div>
-    </div>
+      }
+    />
   );
 }

@@ -1,21 +1,25 @@
 import type { JournalPad } from "@/common/types/journal";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { DescriptionParts } from "./description-parts";
 
 interface PadDescriptionProps {
   directive: JournalPad;
+  compact?: boolean;
 }
 
-export function PadDescription({ directive }: PadDescriptionProps) {
+export function PadDescription({ directive, compact }: PadDescriptionProps) {
   const { t } = useTranslations();
   return (
-    <div className="flex-1 px-2 overflow-hidden">
-      <div className="font-mono text-sm break-all cursor-pointer">
-        {directive.account}
-      </div>
-      <div className="text-sm text-muted-foreground">
-        {t("journal.fromAccount")}{" "}
-        <span className="cursor-pointer">{directive.source_account}</span>
-      </div>
-    </div>
+    <DescriptionParts
+      compact={compact}
+      primary={
+        <span className="font-mono text-sm break-all">{directive.account}</span>
+      }
+      detail={
+        <>
+          {t("journal.fromAccount")} <span>{directive.source_account}</span>
+        </>
+      }
+    />
   );
 }

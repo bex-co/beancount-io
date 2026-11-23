@@ -1,15 +1,18 @@
 import type { JournalOpen } from "@/common/types/journal";
+import { DescriptionParts } from "./description-parts";
 
 interface OpenDescriptionProps {
   directive: JournalOpen;
+  compact?: boolean;
 }
 
-export function OpenDescription({ directive }: OpenDescriptionProps) {
+export function OpenDescription({ directive, compact }: OpenDescriptionProps) {
   return (
-    <div className="flex-1 px-2 overflow-hidden">
-      <div className="font-mono text-sm break-all cursor-pointer">
-        {directive.account}
-      </div>
-    </div>
+    <DescriptionParts
+      compact={compact}
+      primary={
+        <span className="font-mono text-sm break-all">{directive.account}</span>
+      }
+    />
   );
 }

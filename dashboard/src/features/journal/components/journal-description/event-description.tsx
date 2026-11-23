@@ -1,16 +1,20 @@
 import type { JournalEvent } from "@/common/types/journal";
+import { DescriptionParts } from "./description-parts";
 
 interface EventDescriptionProps {
   directive: JournalEvent;
+  compact?: boolean;
 }
 
-export function EventDescription({ directive }: EventDescriptionProps) {
+export function EventDescription({
+  directive,
+  compact,
+}: EventDescriptionProps) {
   return (
-    <div className="flex-1 px-2 overflow-hidden">
-      <div className="font-medium text-sm">{directive.type}</div>
-      <div className="text-sm text-muted-foreground break-words">
-        {directive.description}
-      </div>
-    </div>
+    <DescriptionParts
+      compact={compact}
+      primary={<span className="text-sm font-medium">{directive.type}</span>}
+      detail={directive.description && <span>{directive.description}</span>}
+    />
   );
 }

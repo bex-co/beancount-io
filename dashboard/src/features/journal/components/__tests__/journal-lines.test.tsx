@@ -101,6 +101,61 @@ async function renderLines(
 }
 
 describe("the Journal's compact lines", () => {
+  it("keeps directive labels and separates non-transaction details on one line", async () => {
+    const date = "2026-05-01";
+    await renderLines([
+      {
+        entry_hash: "event",
+        directive_type: DirectiveType.EVENT,
+        date,
+        type: "location",
+        description: "New Metropolis",
+      },
+      {
+        entry_hash: "budget",
+        directive_type: DirectiveType.CUSTOM,
+        date,
+        type: "budget",
+        values: [
+          "Expenses:Food:Restaurant",
+          "monthly",
+          { number: "600", currency: "USD" },
+        ],
+      },
+      {
+        entry_hash: "pad",
+        directive_type: DirectiveType.PAD,
+        date,
+        account: "Equity:OtherComprehensiveIncome",
+        source_account: "Equity:Opening-Balances",
+      },
+      {
+        entry_hash: "commodity",
+        directive_type: DirectiveType.COMMODITY,
+        date,
+        currency: "IRAUSD",
+        meta: { name: "US 401k and IRA Contributions" },
+      },
+    ]);
+
+    for (const [label, details] of [
+      ["Event", "location · New Metropolis"],
+      ["Custom", "Expenses:Food:Restaurant · monthly · 600 USD"],
+      ["Pad", "Equity:OtherComprehensiveIncome · from Equity:Opening-Balances"],
+      ["Commodity", "IRAUSD · US 401k and IRA Contributions"],
+    ]) {
+      const button = screen.getByRole("button", {
+        name: new RegExp(`^Open entry .* ${label} `),
+      });
+      expect(button).toHaveTextContent(label);
+      expect(button).toHaveClass("shrink-0");
+      expect(button.closest("tr")).toHaveTextContent(details);
+    }
+    expect(
+      screen.queryByText("Unknown directive type"),
+    ).not.toBeInTheDocument();
+  });
+
   it("gives every line its date and status in columns of their own", async () => {
     await renderLines([dinner]);
 
