@@ -358,8 +358,8 @@ export function BudgetChartCard({
               onSuccess={onUpdateSuccess}
               ledgerId={ledgerId}
               lockedAccount={group.account}
+              lockedCurrency={group.currency}
               defaultInterval={currentInterval}
-              defaultCurrency={displayCurrency}
               defaultAmount={absDecimalNumber(
                 parseBudgetAmount(group.amount).exact,
               )}

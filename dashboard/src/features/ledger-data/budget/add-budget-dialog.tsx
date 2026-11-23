@@ -85,6 +85,7 @@ interface AddBudgetDialogProps {
   onSuccess?: (submitted: { account: string; currency: string }) => void;
   lockedAccount?: string;
   lockedInterval?: BudgetInterval;
+  lockedCurrency?: string;
   defaultInterval?: BudgetInterval;
   defaultCurrency?: string;
   /** The amount to start from: the target in force, when updating one. */
@@ -104,6 +105,7 @@ export function AddBudgetDialog({
   onSuccess,
   lockedAccount,
   lockedInterval,
+  lockedCurrency,
   defaultInterval,
   defaultCurrency = "USD",
   defaultAmount,
@@ -130,6 +132,7 @@ export function AddBudgetDialog({
   const [addEntryBudget] = useMutation(BulkEntriesDocument);
   const entryWrite = useEntryWrite();
   const [error, setError] = useState<string | null>(null);
+  const initialCurrency = lockedCurrency ?? defaultCurrency;
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -138,7 +141,7 @@ export function AddBudgetDialog({
       account: lockedAccount ?? "",
       interval: lockedInterval ?? defaultInterval ?? BudgetInterval.Monthly,
       number: defaultAmount ?? "",
-      currency: defaultCurrency,
+      currency: initialCurrency,
     },
     mode: "onChange",
   });
@@ -149,7 +152,7 @@ export function AddBudgetDialog({
       account: lockedAccount ?? "",
       interval: lockedInterval ?? defaultInterval ?? BudgetInterval.Monthly,
       number: defaultAmount ?? "",
-      currency: defaultCurrency,
+      currency: initialCurrency,
     });
     setError(null);
   };
@@ -259,7 +262,7 @@ export function AddBudgetDialog({
             {lockedAccount
               ? t("page.budget.budgetUpdateForAccount", {
                   account: lockedAccount,
-                  currency: defaultCurrency,
+                  currency: initialCurrency,
                 })
               : t("page.budget.budgetAddBudget")}
           </DialogTitle>
@@ -394,12 +397,16 @@ export function AddBudgetDialog({
                     <FormItem className="w-28 shrink-0 sm:w-48">
                       <FormLabel>{t("page.budget.budgetCurrency")}</FormLabel>
                       <FormControl>
-                        <CurrencyCombobox
-                          ledgerId={ledgerId}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          placeholder="USD"
-                        />
+                        {lockedCurrency !== undefined ? (
+                          <Input value={field.value} disabled />
+                        ) : (
+                          <CurrencyCombobox
+                            ledgerId={ledgerId}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="USD"
+                          />
+                        )}
                       </FormControl>
                       <FormMessage />
                     </FormItem>

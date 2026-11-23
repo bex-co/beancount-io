@@ -168,9 +168,7 @@ describe("Budget update triggers identify their card", () => {
       expect(account).toHaveValue("Expenses:Groceries");
       expect(account).toBeDisabled();
       expect(
-        within(dialog).getByRole("combobox", {
-          name: i18n.t("page.budget.budgetCurrency"),
-        }),
+        within(dialog).getByLabelText(i18n.t("page.budget.budgetCurrency")),
       ).toHaveValue("EUR");
       expect(
         within(dialog).getByRole("combobox", {
@@ -203,6 +201,16 @@ describe("Budget update triggers identify their card", () => {
       });
       await user.click(opener);
       const dialog = await screen.findByRole("dialog");
+      const currencyField = within(dialog).getByLabelText(
+        i18n.t("page.budget.budgetCurrency"),
+      );
+      expect(currencyField).toHaveValue(currency);
+      expect(currencyField).toBeDisabled();
+      expect(
+        within(dialog).getByRole("combobox", {
+          name: i18n.t("page.budget.budgetInterval"),
+        }),
+      ).toBeEnabled();
       // It starts from the target in force; the reader replaces it.
       const amount = within(dialog).getByRole("spinbutton", {
         name: i18n.t("page.budget.budgetAmount"),

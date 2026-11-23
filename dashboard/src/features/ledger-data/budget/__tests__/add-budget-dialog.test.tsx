@@ -340,7 +340,9 @@ describe("AddBudgetDialog", () => {
       screen.getByTestId("account-combobox"),
       "Expenses:CostOfRevenue",
     );
-    await user.type(screen.getByTestId("currency-combobox"), "MUSD");
+    const currency = screen.getByTestId("currency-combobox");
+    await user.clear(currency);
+    await user.type(currency, "MUSD");
 
     const amount = screen.getByRole("spinbutton", { name: /amount/i });
     await user.clear(amount);
@@ -357,8 +359,10 @@ describe("AddBudgetDialog", () => {
     });
 
     const variables = mockAddBudget.mock.calls[0]?.[0]?.variables;
-    const number = variables?.entries?.[0]?.budget?.amount?.number;
-    expect(number).toBe("0.001");
+    expect(variables?.entries?.[0]?.budget?.amount).toEqual({
+      number: "0.001",
+      currency: "MUSD",
+    });
   });
 });
 
