@@ -8,8 +8,8 @@ import type { QueryResult } from "@rustledger/wasm";
  * span many dates) — while stock beanquery refuses (`all non-aggregates
  * must be covered by GROUP-BY clause`). The pick is row-consistent and
  * stable under ORDER BY / HAVING, so the arbitrary value propagates
- * through the whole query. Refused before the query runs, naming the
- * uncovered columns and the explicit `first()` spelling (which exists on
+ * through the whole query. When the query succeeds, return an error naming
+ * the uncovered columns and the explicit `first()` spelling (which exists on
  * both sides and is byte-identical to the pick).
  *
  * The guard fires ONLY on proven bare-column violations, and abstains

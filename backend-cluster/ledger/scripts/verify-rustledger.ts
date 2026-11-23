@@ -2861,6 +2861,18 @@ async function main(): Promise<void> {
       ),
     "the query path refuses the uncovered bare column and names it",
   );
+  const misspelledGroup = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT account, count(*) GROUP BY accnt",
+  );
+  assert(
+    misspelledGroup.rows.length === 0 &&
+      misspelledGroup.errors.some(
+        (e) => e.severity === "error" && e.message.includes("column 'accnt' not found"),
+      ),
+    "a misspelled GROUP BY key reports the unknown column",
+  );
   const coveredGroup = await queryLedgerFiles(
     FILES,
     "main.beancount",

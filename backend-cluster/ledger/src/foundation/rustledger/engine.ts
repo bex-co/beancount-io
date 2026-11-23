@@ -1117,13 +1117,17 @@ export async function queryLedgerFilesResultInProcess(
           inventoryGroupByError(query) ??
           valueTargetError(query, () => ledgerCommodities(ledger)) ??
           joinstrArityError(query) ??
-          groupByCoverageError(query) ??
           stringConcatError(query) ??
           dateArithmeticError(query) ??
           mixedComparisonError(query);
         if (refused !== undefined) return refused;
         const result = ledger.query(query);
+        // Preserve engine diagnostics for invalid grouping keys before checking
+        // whether a successful query would return arbitrary first-row values.
+        if (result.errors.some((error) => error.severity === "error"))
+          return result;
         return (
+          groupByCoverageError(query) ??
           collapsedCostOfSumError(query, result, (probe) =>
             ledger.query(probe),
           ) ??
