@@ -353,6 +353,11 @@ const ruAuth: Record<string, TranslationEntry> = {
       "Ваши финансовые данные защищены безопасностью корпоративного уровня",
     description: "Secure access feature description",
   },
+  "auth.requestNewResetLink": {
+    message: "Запросить новую ссылку",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "Отправить ссылку для сброса",
     description: "Button to send password reset link",

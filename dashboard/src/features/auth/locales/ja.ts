@@ -260,6 +260,11 @@ const jaAuth: Record<string, TranslationEntry> = {
     message: "パスワードをリセット中...",
     description: "Button text while resetting password",
   },
+  "auth.requestNewResetLink": {
+    message: "新しいリンクをリクエスト",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "リセットリンクを送信",
     description: "Button to send password reset link",

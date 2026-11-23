@@ -146,7 +146,7 @@ export default function ResetPasswordPage() {
             <Card>
               <CardHeader className="space-y-1">
                 <CardTitle className="text-2xl font-bold text-center">
-                  {t("auth.tokenValidationUnavailable")}
+                  <h1>{t("auth.tokenValidationUnavailable")}</h1>
                 </CardTitle>
                 <CardDescription className="text-center">
                   {t("auth.tokenValidationUnavailableDescription")}
@@ -197,6 +197,7 @@ export default function ResetPasswordPage() {
           <div className="w-full max-w-md">
             <Card>
               <CardHeader className="space-y-1">
+                <h1 className="sr-only">{t("auth.resetYourPassword")}</h1>
                 <Skeleton className="h-8 w-64 mx-auto" />
                 <Skeleton className="h-4 w-80 mx-auto" />
               </CardHeader>
@@ -226,7 +227,7 @@ export default function ResetPasswordPage() {
             <Card>
               <CardHeader className="space-y-1">
                 <CardTitle className="text-2xl font-bold text-center">
-                  {t("auth.tokenExpired")}
+                  <h1>{t("auth.tokenExpired")}</h1>
                 </CardTitle>
                 <CardDescription className="text-center">
                   {t("auth.tokenExpiredDescription")}
@@ -238,6 +239,11 @@ export default function ResetPasswordPage() {
                     {t("auth.tokenExpiredMessage")}
                   </AlertDescription>
                 </Alert>
+                <Button asChild className="mt-4 w-full" size="lg">
+                  <Link to="/auth/forgot-password">
+                    {t("auth.requestNewResetLink")}
+                  </Link>
+                </Button>
                 <div className="mt-4 text-center">
                   <Link
                     to="/auth/login"
@@ -269,9 +275,9 @@ export default function ResetPasswordPage() {
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center justify-center space-y-4 py-8">
                   <div className="text-center space-y-2">
-                    <h3 className="text-lg font-semibold text-primary">
+                    <h1 className="text-lg font-semibold text-primary">
                       {t("auth.passwordResetSuccessful")}
-                    </h3>
+                    </h1>
                     <p className="text-sm text-muted-foreground">
                       {t("auth.passwordResetSuccessMessage")}
                     </p>
@@ -298,7 +304,7 @@ export default function ResetPasswordPage() {
           <Card>
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl font-bold text-center">
-                {t("auth.resetYourPassword")}
+                <h1>{t("auth.resetYourPassword")}</h1>
               </CardTitle>
               <CardDescription className="text-center">
                 {t("auth.enterNewPasswordBelow")}

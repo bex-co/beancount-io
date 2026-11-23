@@ -351,6 +351,11 @@ const ukAuth: Record<string, TranslationEntry> = {
     message: "Ваші фінансові дані захищені безпекою корпоративного рівня",
     description: "Secure access feature description",
   },
+  "auth.requestNewResetLink": {
+    message: "Запросити нове посилання",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "Надіслати посилання для скидання",
     description: "Button to send password reset link",

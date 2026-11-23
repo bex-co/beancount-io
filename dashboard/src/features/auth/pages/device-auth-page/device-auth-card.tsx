@@ -3,6 +3,7 @@ import { Loader2, ShieldAlert } from "lucide-react";
 import { Card, CardContent } from "@/common/components/ui/card";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { PageSEO } from "@/common/components/seo/page-seo";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 interface DeviceAuthCardProps {
   loading?: boolean;
@@ -15,6 +16,8 @@ export function DeviceAuthCard({
   error,
   children,
 }: DeviceAuthCardProps) {
+  const { t } = useTranslations();
+
   return (
     <>
       <PageSEO
@@ -22,8 +25,11 @@ export function DeviceAuthCard({
         descriptionKey="seo.deviceAuth.description"
         noIndex
       />
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <main className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
+          {(loading || error) && (
+            <h1 className="sr-only">{t("auth.cliAuthCodeEntryTitle")}</h1>
+          )}
           {loading && (
             <CardContent className="pt-8 pb-8 flex justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -43,7 +49,7 @@ export function DeviceAuthCard({
           )}
           {children}
         </Card>
-      </div>
+      </main>
     </>
   );
 }

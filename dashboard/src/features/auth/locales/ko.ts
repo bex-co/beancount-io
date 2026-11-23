@@ -258,6 +258,11 @@ const koAuth: Record<string, TranslationEntry> = {
     message: "비밀번호 재설정 중...",
     description: "Button text while resetting password",
   },
+  "auth.requestNewResetLink": {
+    message: "새 링크 요청",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "재설정 링크 보내기",
     description: "Button to send password reset link",

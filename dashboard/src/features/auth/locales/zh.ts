@@ -346,6 +346,11 @@ const zhAuth: Record<string, TranslationEntry> = {
     message: "你的财务数据受到企业级安全保护",
     description: "Secure access feature description",
   },
+  "auth.requestNewResetLink": {
+    message: "请求新链接",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "发送重置链接",
     description: "Button to send password reset link",

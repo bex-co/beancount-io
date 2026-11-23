@@ -351,6 +351,11 @@ const nlAuth: Record<string, TranslationEntry> = {
       "Uw financiële gegevens zijn beschermd met beveiliging op bedrijfsniveau",
     description: "Secure access feature description",
   },
+  "auth.requestNewResetLink": {
+    message: "Een nieuwe link aanvragen",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "Verstuur resetlink",
     description: "Button to send password reset link",

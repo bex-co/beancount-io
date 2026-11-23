@@ -352,6 +352,11 @@ const ptAuth: Record<string, TranslationEntry> = {
       "Seus dados financeiros estão protegidos com segurança de nível empresarial",
     description: "Secure access feature description",
   },
+  "auth.requestNewResetLink": {
+    message: "Solicitar um novo link",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "Enviar link de redefinição",
     description: "Button to send password reset link",

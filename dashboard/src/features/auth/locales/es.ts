@@ -355,6 +355,11 @@ const esAuth: Record<string, TranslationEntry> = {
       "Tus datos financieros están protegidos con seguridad de nivel empresarial",
     description: "Secure access feature description",
   },
+  "auth.requestNewResetLink": {
+    message: "Solicitar un enlace nuevo",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "Enviar enlace de restablecimiento",
     description: "Button to send password reset link",

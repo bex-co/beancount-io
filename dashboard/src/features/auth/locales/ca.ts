@@ -355,6 +355,11 @@ const caAuth: Record<string, TranslationEntry> = {
       "Les teves dades financeres estan protegides amb seguretat de nivell empresarial",
     description: "Secure access feature description",
   },
+  "auth.requestNewResetLink": {
+    message: "Demana un enllaç nou",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "Enviar enllaç de restabliment",
     description: "Button to send password reset link",

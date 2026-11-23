@@ -137,11 +137,11 @@ function OutcomeCard({ outcome }: { outcome: Outcome }) {
           )}
         </div>
         <div>
-          <p className="text-lg font-semibold">
+          <h1 className="text-lg font-semibold">
             {authorized
               ? t("auth.cliAuthSuccessTitle")
               : t("auth.cliAuthDeniedTitle")}
-          </p>
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {authorized
               ? t("auth.cliAuthSuccessDescription")

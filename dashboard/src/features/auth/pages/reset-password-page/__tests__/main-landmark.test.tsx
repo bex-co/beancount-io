@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ResetPasswordPage from "../index";
 
@@ -37,11 +37,13 @@ vi.mock("@apollo/client/react", () => ({
 
 vi.mock("@/common/components/seo/page-seo", () => ({ PageSEO: () => null }));
 
-function expectOneMainAround(text: string | RegExp) {
-  const mains = document.querySelectorAll("main, [role='main']");
-  expect(mains).toHaveLength(1);
-  const marker = screen.getByText(text);
-  expect(mains[0].contains(marker)).toBe(true);
+function expectPageHeading(name: string) {
+  const main = screen.getByRole("main");
+  expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+  expect(
+    within(main).getByRole("heading", { level: 1, name }),
+  ).toBeInTheDocument();
+  return main;
 }
 
 beforeEach(() => {
@@ -54,23 +56,37 @@ beforeEach(() => {
   });
 });
 
-describe("ResetPasswordPage main landmark", () => {
+describe("ResetPasswordPage main landmark and heading", () => {
   it("marks the form shell", () => {
     render(<ResetPasswordPage />);
-    expectOneMainAround("Reset your password");
+    expectPageHeading("Reset your password");
   });
 
   it("marks the validating shell", () => {
     mockUseQuery.mockReturnValue({ data: null, loading: true, error: null });
     render(<ResetPasswordPage />);
-    expect(document.querySelectorAll("main, [role='main']")).toHaveLength(1);
+    expectPageHeading("Reset your password");
   });
 
-  it("marks the expired-token shell", () => {
-    mockUseSearch.mockReturnValue({});
-    render(<ResetPasswordPage />);
-    expectOneMainAround("Token Expired");
-  });
+  it.each([undefined, "invalid-token"])(
+    "names the expired-token page and offers a fresh link for token %s",
+    (token) => {
+      mockUseSearch.mockReturnValue({ token });
+      mockUseQuery.mockReturnValue({
+        data: { validateEmailToken: { isValid: false } },
+        loading: false,
+        error: null,
+      });
+      render(<ResetPasswordPage />);
+      const main = expectPageHeading("Token Expired");
+      expect(
+        within(main).getByRole("link", { name: "Request a new link" }),
+      ).toHaveAttribute("href", "/auth/forgot-password");
+      expect(
+        within(main).getByRole("link", { name: "Back to Sign in" }),
+      ).toHaveAttribute("href", "/auth/login");
+    },
+  );
 
   it("marks the validation-unavailable shell", () => {
     mockUseQuery.mockReturnValue({
@@ -80,7 +96,7 @@ describe("ResetPasswordPage main landmark", () => {
       refetch: vi.fn(),
     });
     render(<ResetPasswordPage />);
-    expectOneMainAround("Couldn't check your reset link");
+    expectPageHeading("Couldn't check your reset link");
   });
 
   it("marks the success shell", async () => {
@@ -102,6 +118,6 @@ describe("ResetPasswordPage main landmark", () => {
         screen.getByText("Password reset successful!"),
       ).toBeInTheDocument(),
     );
-    expectOneMainAround("Password reset successful!");
+    expectPageHeading("Password reset successful!");
   });
 });

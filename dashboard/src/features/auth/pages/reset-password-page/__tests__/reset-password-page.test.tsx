@@ -367,8 +367,10 @@ describe("ResetPasswordPage", () => {
 
       render(<ResetPasswordPage />);
 
-      // Should show skeleton loading state
-      expect(screen.queryByText("Reset your password")).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("main").querySelector('[data-slot="skeleton"]'),
+      ).toBeInTheDocument();
+      expect(screen.queryByLabelText("New Password")).not.toBeInTheDocument();
     });
   });
 

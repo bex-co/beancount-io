@@ -355,6 +355,11 @@ const frAuth: Record<string, TranslationEntry> = {
       "Vos données financières sont protégées par une sécurité de niveau entreprise",
     description: "Secure access feature description",
   },
+  "auth.requestNewResetLink": {
+    message: "Demander un nouveau lien",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "Envoyer le lien de réinitialisation",
     description: "Button to send password reset link",

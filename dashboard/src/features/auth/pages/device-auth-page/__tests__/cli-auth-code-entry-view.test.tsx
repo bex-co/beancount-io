@@ -1,12 +1,67 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { CliAuthCodeEntryView } from "../cli-auth-code-entry-view";
+import { CliAuthStatus } from "@/graphql/definitions";
+import DeviceAuthPage from "../index";
 
 // PageSEO reads the router location, which these tests do not provide.
 vi.mock("@/common/components/seo/page-seo", () => ({
   PageSEO: () => null,
 }));
+
+vi.mock("@apollo/client/react", () => ({
+  useQuery: () => ({
+    data: {
+      getCliAuthRequest: {
+        status: CliAuthStatus.Pending,
+        client: {
+          name: "bea",
+          version: "0.0.0",
+          deviceLabel: "Synthetic terminal",
+          platform: null,
+          ipAddress: null,
+        },
+      },
+    },
+  }),
+  useMutation: () => [vi.fn(), { loading: false }],
+}));
+
+describe("device authorization page outline (w5/1163)", () => {
+  it("names the code entry page with one main and one h1", () => {
+    render(<DeviceAuthPage />);
+    const main = screen.getByRole("main");
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(
+      within(main).getByRole("heading", {
+        level: 1,
+        name: "Authorize a device",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(main).getByRole("textbox", { name: "One-time code" }),
+    ).toBeInTheDocument();
+  });
+
+  it("names the consent page with one main and one h1 after an accepted code", async () => {
+    const user = userEvent.setup();
+    render(<DeviceAuthPage />);
+    await user.type(
+      screen.getByRole("textbox", { name: "One-time code" }),
+      "CBTW-74V6",
+    );
+    expect(await screen.findByText("Synthetic terminal")).toBeInTheDocument();
+    const main = screen.getByRole("main");
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(
+      within(main).getByRole("heading", {
+        level: 1,
+        name: "Authorize CLI Access",
+      }),
+    ).toBeInTheDocument();
+  });
+});
 
 function renderView() {
   const onSubmit = vi.fn();

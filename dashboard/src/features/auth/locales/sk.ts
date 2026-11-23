@@ -350,6 +350,11 @@ const skAuth: Record<string, TranslationEntry> = {
     message: "Vaše finančné údaje sú chránené podnikovým zabezpečením",
     description: "Secure access feature description",
   },
+  "auth.requestNewResetLink": {
+    message: "Požiadať o nový odkaz",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "Odoslať odkaz na resetovanie",
     description: "Button to send password reset link",

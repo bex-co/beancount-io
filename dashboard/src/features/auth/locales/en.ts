@@ -263,6 +263,11 @@ const enAuth: Record<string, TranslationEntry> = {
     message: "Resetting password...",
     description: "Button text while resetting password",
   },
+  "auth.requestNewResetLink": {
+    message: "Request a new link",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "Send reset link",
     description: "Button to send password reset link",

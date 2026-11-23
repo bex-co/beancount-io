@@ -353,6 +353,11 @@ const deAuth: Record<string, TranslationEntry> = {
       "Ihre Finanzdaten sind durch Sicherheit auf Unternehmensebene geschützt",
     description: "Secure access feature description",
   },
+  "auth.requestNewResetLink": {
+    message: "Neuen Link anfordern",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "Reset-Link senden",
     description: "Button to send password reset link",

@@ -351,6 +351,11 @@ const bgAuth: Record<string, TranslationEntry> = {
     message: "Вашите финансови данни са защитени с корпоративна сигурност",
     description: "Secure access feature description",
   },
+  "auth.requestNewResetLink": {
+    message: "Поискайте нова връзка",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "Изпрати връзка за нулиране",
     description: "Button to send password reset link",

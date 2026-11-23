@@ -350,6 +350,11 @@ const faAuth: Record<string, TranslationEntry> = {
     message: "داده‌های مالی شما با امنیت در سطح سازمانی محافظت می‌شوند",
     description: "Secure access feature description",
   },
+  "auth.requestNewResetLink": {
+    message: "درخواست پیوند جدید",
+    description:
+      "Link to request a new password reset after an expired or invalid token",
+  },
   "auth.sendResetLink": {
     message: "ارسال لینک بازنشانی",
     description: "Button to send password reset link",

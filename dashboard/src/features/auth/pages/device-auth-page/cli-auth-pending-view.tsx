@@ -88,7 +88,9 @@ export function CliAuthPendingView({
           <Terminal className="w-8 h-8 text-primary" />
         </div>
         <div>
-          <CardTitle className="text-xl">{t("auth.cliAuthTitle")}</CardTitle>
+          <CardTitle className="text-xl">
+            <h1>{t("auth.cliAuthTitle")}</h1>
+          </CardTitle>
           <CardDescription className="mt-2">
             {t("auth.cliAuthDescription")}
           </CardDescription>

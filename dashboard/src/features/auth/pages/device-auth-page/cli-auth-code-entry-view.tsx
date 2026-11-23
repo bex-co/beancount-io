@@ -157,7 +157,7 @@ export function CliAuthCodeEntryView({ onSubmit }: CliAuthCodeEntryViewProps) {
           </div>
           <div>
             <CardTitle className="text-xl">
-              {t("auth.cliAuthCodeEntryTitle")}
+              <h1>{t("auth.cliAuthCodeEntryTitle")}</h1>
             </CardTitle>
             <CardDescription className="mt-2">
               {t("auth.cliAuthCodeEntryDescription")}
