@@ -65,6 +65,8 @@ const H_BTC = "cc".repeat(16);
 const H_TEA_DUP = `${H_TEA}:1`;
 const ENTRY_HASH_FORMAT_ERROR =
   "entryHash must be an entry_hash from list output: 32 lowercase hex digits, with a :<n> suffix on a repeated entry";
+const SHA256_FORMAT_ERROR =
+  "sha256sum must be a 64-character lowercase hex SHA-256 digest from getEntryContext or listLedgerEntries(include_source: true)";
 
 type MoveBody = {
   entries: { entry_hash: string; sha256sum: string }[];
@@ -215,13 +217,19 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
         },
       );
       const body = (await response.json()) as Record<string, unknown> & {
-        error?: { code?: string; message?: string };
+        error?: {
+          code?: string;
+          message?: string;
+          metadata?: Record<string, unknown>;
+        };
       };
       return {
         success: response.status === 200,
+        status: response.status,
         result: body,
         code: body.error?.code,
         message: body.error?.message,
+        metadata: body.error?.metadata,
       };
     }
     if (surface === "gql") {
@@ -235,6 +243,7 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
       const error = result.errors?.[0];
       return {
         success: !result.errors,
+        status: undefined,
         result: result.data?.moveLedgerEntrySources as
           | Record<string, unknown>
           | undefined,
@@ -242,6 +251,11 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
           ? formatError(error.toJSON(), error).extensions?.code
           : undefined,
         message: error?.message,
+        metadata: (
+          error?.originalError as
+            | { metadata?: Record<string, unknown> }
+            | undefined
+        )?.metadata,
       };
     }
     // MCP's own spellings, unless the call already sends them (a twin test).
@@ -269,9 +283,11 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
     };
     return {
       success: !result.isError,
+      status: undefined,
       result: structured?.result,
       code: structured?.error?.code,
       message: structured?.error?.message,
+      metadata: undefined,
     };
   };
   return {
@@ -546,6 +562,37 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
       await env.close();
     }
   });
+
+  // w31/054: malformed sha256sum values are refused as BAD_USER_INPUT before
+  // reaching the ledger, while mismatched valid 64-hex values return CONFLICT.
+  it.each(["", "   ", "not-a-sha", H_TEA, hash(TEA).toUpperCase()] as const)(
+    "refuses malformed sha256sum %j as BAD_USER_INPUT before reaching the ledger",
+    async (badSha) => {
+      const env = await fixture();
+      try {
+        const refused = await env.call(surface, {
+          ...MOVE,
+          entries: [{ entryHash: H_TEA, sha256sum: badSha }],
+          dryRun: true,
+        });
+        expect(refused).toMatchObject({
+          success: false,
+          code: "BAD_USER_INPUT",
+          message: SHA256_FORMAT_ERROR,
+        });
+        if (surface === "rest") {
+          expect(refused.status).toBe(400);
+          expect(refused.metadata).toEqual({ field: "sha256sum" });
+        } else if (surface === "gql") {
+          expect(refused.metadata).toEqual({ field: "sha256sum" });
+        }
+        expect(env.moveSourceSlices).not.toHaveBeenCalled();
+        expect(env.commits).toHaveLength(0);
+      } finally {
+        await env.close();
+      }
+    },
+  );
 });
 
 describe("moveEntrySources description (w31/017)", () => {

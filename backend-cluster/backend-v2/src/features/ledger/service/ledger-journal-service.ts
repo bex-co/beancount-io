@@ -22,7 +22,10 @@ import {
 import { directiveLimitExemptParams } from "@/features/ledger/operations/directive-limit-bypass";
 import { normalizeJournalKinds } from "@/features/ledger/utils/journal-kinds";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
-import { assertEntryHashFormat } from "@/features/ledger/utils/entry-hash-alias";
+import {
+  assertEntryHashFormat,
+  assertSha256Format,
+} from "@/features/ledger/utils/entry-hash-alias";
 
 /**
  * The page a journal read asks for: limit 1–1000 (default 20), offset 0 or
@@ -490,6 +493,7 @@ export class LedgerJournalService
       AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
     );
     assertEntryHashFormat(entryHash);
+    assertSha256Format(sha256sum);
 
     const data = await unwrapFavaResponse(
       favaApiClient.journal.deleteSourceSlice(ledgerOwner, ledgerName, {
@@ -539,6 +543,7 @@ export class LedgerJournalService
     assertBulkEntriesSize(entries, "deleted");
     for (const entry of entries) {
       assertEntryHashFormat(entry.entryHash);
+      assertSha256Format(entry.sha256sum);
     }
 
     const data = await unwrapFavaResponse(
@@ -592,6 +597,7 @@ export class LedgerJournalService
     assertBulkEntriesSize(entries, "moved");
     for (const entry of entries) {
       assertEntryHashFormat(entry.entryHash);
+      assertSha256Format(entry.sha256sum);
     }
 
     const data = await unwrapFavaResponse(
@@ -649,6 +655,7 @@ export class LedgerJournalService
       AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
     );
     assertEntryHashFormat(entryHash);
+    assertSha256Format(sha256sum);
     // An empty edit would replace the entry with a blank line: a delete that
     // skipped the delete confirmation and reported "saved" (w21/120). REST,
     // GraphQL and MCP all edit through here.

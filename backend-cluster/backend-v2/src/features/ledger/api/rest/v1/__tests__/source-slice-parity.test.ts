@@ -58,6 +58,8 @@ const ENTRY_OTHER = "44".repeat(16);
 const ENTRY1_DUP = `${ENTRY1}:1`;
 const ENTRY_HASH_FORMAT_ERROR =
   "entryHash must be an entry_hash from list output: 32 lowercase hex digits, with a :<n> suffix on a repeated entry";
+const SHA256_FORMAT_ERROR =
+  "sha256sum must be a 64-character lowercase hex SHA-256 digest from getEntryContext or listLedgerEntries(include_source: true)";
 const operations = {
   delete: {
     field: "deleteLedgerEntrySourceSlice",
@@ -317,6 +319,7 @@ async function fixture(caller = identity) {
         );
         return {
           success: response.status === 200,
+          status: response.status,
           result: await response.json(),
           errors: undefined,
           full: undefined,
@@ -337,6 +340,7 @@ async function fixture(caller = identity) {
         });
         return {
           success: !response.errors,
+          status: undefined,
           result: response.data?.[spec.field],
           errors: response.errors,
           full: undefined,
@@ -356,6 +360,7 @@ async function fixture(caller = identity) {
       });
       return {
         success: !response.isError,
+        status: undefined,
         result: (response.structuredContent as { result?: unknown })?.result,
         errors: undefined,
         full: response.structuredContent,
@@ -375,13 +380,13 @@ const args = (operation: Operation, stale = false) =>
           { entryHash: ENTRY1, sha256sum: hash(original) },
           {
             entryHash: ENTRY2,
-            sha256sum: stale ? "stale" : hash("; second\n"),
+            sha256sum: stale ? "0".repeat(64) : hash("; second\n"),
           },
         ],
       }
     : {
         entryHash: ENTRY1,
-        sha256sum: stale ? "stale" : hash(original),
+        sha256sum: stale ? "0".repeat(64) : hash(original),
         ...(operation === "update"
           ? { newContent: "; replacement café\n" }
           : {}),
@@ -1456,6 +1461,141 @@ describe.each(["rest", "gql", "mcp"])(
             withHash(operation, ENTRY1_DUP),
           );
           expect(result.success).toBe(true);
+        } finally {
+          await f.close();
+        }
+      });
+    });
+  },
+);
+
+// w31/054: entry-source write operations must refuse empty, blank, and
+// malformed sha256sum values with BAD_USER_INPUT before loading the ledger,
+// while mismatched valid 64-hex digests still reach the ledger as CONFLICT.
+describe.each(["rest", "gql", "mcp"])(
+  "sha256sum format validation via %s (w31/054)",
+  (surface) => {
+    const withSha = (
+      operation: Operation,
+      sha256sum: string,
+    ): Record<string, unknown> => {
+      const dryFlag = surface === "mcp" ? { dry_run: true } : { dryRun: true };
+      if (operation === "delete_many") {
+        return {
+          entries: [{ entryHash: ENTRY1, sha256sum }],
+          ...dryFlag,
+        };
+      }
+      return {
+        entryHash: ENTRY1,
+        sha256sum,
+        ...(operation === "update"
+          ? { newContent: "; replacement café\n" }
+          : {}),
+        ...dryFlag,
+      };
+    };
+
+    describe.each(Object.keys(operations) as Operation[])("%s", (operation) => {
+      it.each([
+        "",
+        "   ",
+        "not-a-sha",
+        ENTRY1,
+        hash(original).toUpperCase(),
+      ] as const)(
+        "refuses %j as BAD_USER_INPUT without calling the ledger",
+        async (badSha) => {
+          const f = await fixture();
+          const before = [...f.slices];
+          try {
+            const result = await f.call(
+              surface,
+              operation,
+              withSha(operation, badSha),
+            );
+            expect(result.success).toBe(false);
+            expect([...f.slices]).toEqual(before);
+            for (const call of Object.values(f.journal))
+              expect(call).not.toHaveBeenCalled();
+            if (surface === "rest") {
+              expect(result.status).toBe(400);
+              expect(result.result).toMatchObject({
+                ok: false,
+                error: {
+                  code: "BAD_USER_INPUT",
+                  message: SHA256_FORMAT_ERROR,
+                  metadata: { field: "sha256sum" },
+                },
+              });
+            } else if (surface === "gql") {
+              const refusal = result.errors?.[0]?.originalError as
+                | {
+                    category?: string;
+                    message?: string;
+                    metadata?: Record<string, unknown>;
+                  }
+                | undefined;
+              expect(refusal).toMatchObject({
+                category: "BAD_USER_INPUT",
+                message: SHA256_FORMAT_ERROR,
+                metadata: { field: "sha256sum" },
+              });
+            } else {
+              expect(result.full).toMatchObject({
+                ok: false,
+                error: {
+                  code: "BAD_USER_INPUT",
+                  message: SHA256_FORMAT_ERROR,
+                },
+              });
+            }
+          } finally {
+            await f.close();
+          }
+        },
+      );
+
+      it("still forwards a mismatched valid 64-hex sha256sum to the ledger as CONFLICT", async () => {
+        const f = await fixture();
+        const key =
+          operation === "update"
+            ? "updateSourceSlice"
+            : operation === "delete"
+              ? "deleteSourceSlice"
+              : "deleteMultiSourceSlices";
+        f.journal[key].mockRejectedValueOnce(
+          new FavaApiError(
+            "Entry conflict: it has changed since it was loaded; refresh and retry",
+            409,
+            { error: "Entry conflict" },
+          ),
+        );
+        try {
+          const result = await f.call(
+            surface,
+            operation,
+            withSha(operation, "0".repeat(64)),
+          );
+          expect(result.success).toBe(false);
+          expect(f.journal[key]).toHaveBeenCalledTimes(1);
+          if (surface === "rest") {
+            expect(result.status).toBe(409);
+            expect(result.result).toMatchObject({
+              ok: false,
+              error: { code: "CONFLICT" },
+            });
+          } else if (surface === "gql") {
+            const refusal = result.errors?.[0]?.originalError as
+              | { category?: string }
+              | undefined;
+            expect(refusal?.category).toBe("CONFLICT");
+          } else {
+            expect(result.full).toMatchObject({
+              ok: false,
+              error: { code: "CONFLICT" },
+            });
+          }
         } finally {
           await f.close();
         }

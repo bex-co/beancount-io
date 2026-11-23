@@ -450,6 +450,7 @@ describe("LedgerJournalService", () => {
   describe("deleteSourceSlice", () => {
     const HASH_ABC = "ab".repeat(16);
     const HASH_DUP = `${"ab".repeat(16)}:2`;
+    const SHA_ABC = "a1".repeat(32);
 
     it("returns message and entryHash on success", async () => {
       mockDeleteSourceSlice.mockResolvedValue({
@@ -463,7 +464,7 @@ describe("LedgerJournalService", () => {
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
         entryHash: HASH_ABC,
-        sha256sum: "sum-xyz",
+        sha256sum: SHA_ABC,
       });
 
       expect(result.message).toBe("Deleted");
@@ -471,7 +472,7 @@ describe("LedgerJournalService", () => {
       expect(mockDeleteSourceSlice).toHaveBeenCalledWith(
         "testowner",
         "testledger",
-        { entry_hash: HASH_ABC, sha256sum: "sum-xyz" },
+        { entry_hash: HASH_ABC, sha256sum: SHA_ABC },
       );
     });
 
@@ -487,14 +488,14 @@ describe("LedgerJournalService", () => {
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
         entryHash: HASH_DUP,
-        sha256sum: "sum-xyz",
+        sha256sum: SHA_ABC,
       });
 
       expect(result.entryHash).toBe(HASH_DUP);
       expect(mockDeleteSourceSlice).toHaveBeenCalledWith(
         "testowner",
         "testledger",
-        { entry_hash: HASH_DUP, sha256sum: "sum-xyz" },
+        { entry_hash: HASH_DUP, sha256sum: SHA_ABC },
       );
     });
 
@@ -506,7 +507,7 @@ describe("LedgerJournalService", () => {
             ledgerId: LEDGER_ID,
             identity: IDENTITY,
             entryHash: badHash,
-            sha256sum: "sum-xyz",
+            sha256sum: SHA_ABC,
             dryRun: true,
           })
           .catch((error: unknown) => error);
@@ -520,6 +521,28 @@ describe("LedgerJournalService", () => {
       },
     );
 
+    it.each(["", "   ", "not-a-sha", HASH_ABC, SHA_ABC.toUpperCase()])(
+      "refuses malformed sha256sum=%j with BadUserInputError before calling the ledger",
+      async (badSha) => {
+        const failure = await service
+          .deleteSourceSlice({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entryHash: HASH_ABC,
+            sha256sum: badSha,
+            dryRun: true,
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "sha256sum" },
+        });
+        expect(mockDeleteSourceSlice).not.toHaveBeenCalled();
+      },
+    );
+
     it("throws InternalServerError on failure", async () => {
       mockDeleteSourceSlice.mockResolvedValue({ data: { success: false } });
 
@@ -528,7 +551,7 @@ describe("LedgerJournalService", () => {
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
           entryHash: HASH_ABC,
-          sha256sum: "s",
+          sha256sum: SHA_ABC,
         }),
       ).rejects.toThrow(InternalServerError);
     });
@@ -538,6 +561,8 @@ describe("LedgerJournalService", () => {
     const H1 = "1a".repeat(16);
     const H2 = "2b".repeat(16);
     const H2_DUP = `${H2}:1`;
+    const S1 = "1a".repeat(32);
+    const S2 = "2b".repeat(32);
 
     it("returns message and deletedHashes on success", async () => {
       mockDeleteMultiSourceSlices.mockResolvedValue({
@@ -551,8 +576,8 @@ describe("LedgerJournalService", () => {
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
         entries: [
-          { entryHash: H1, sha256sum: "s1" },
-          { entryHash: H2_DUP, sha256sum: "s2" },
+          { entryHash: H1, sha256sum: S1 },
+          { entryHash: H2_DUP, sha256sum: S2 },
         ],
       });
 
@@ -562,8 +587,8 @@ describe("LedgerJournalService", () => {
         "testledger",
         {
           entries: [
-            { entry_hash: H1, sha256sum: "s1" },
-            { entry_hash: H2_DUP, sha256sum: "s2" },
+            { entry_hash: H1, sha256sum: S1 },
+            { entry_hash: H2_DUP, sha256sum: S2 },
           ],
         },
       );
@@ -577,8 +602,8 @@ describe("LedgerJournalService", () => {
             ledgerId: LEDGER_ID,
             identity: IDENTITY,
             entries: [
-              { entryHash: H1, sha256sum: "s1" },
-              { entryHash: badHash, sha256sum: "s2" },
+              { entryHash: H1, sha256sum: S1 },
+              { entryHash: badHash, sha256sum: S2 },
             ],
             dryRun: true,
           })
@@ -593,6 +618,30 @@ describe("LedgerJournalService", () => {
       },
     );
 
+    it.each(["", "   ", "not-a-sha", H2, S2.toUpperCase()])(
+      "refuses malformed sha256sum=%j in any entry with BadUserInputError before calling the ledger",
+      async (badSha) => {
+        const failure = await service
+          .deleteMultiSourceSlices({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entries: [
+              { entryHash: H1, sha256sum: S1 },
+              { entryHash: H2, sha256sum: badSha },
+            ],
+            dryRun: true,
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "sha256sum" },
+        });
+        expect(mockDeleteMultiSourceSlices).not.toHaveBeenCalled();
+      },
+    );
+
     it("throws InternalServerError on failure", async () => {
       mockDeleteMultiSourceSlices.mockResolvedValue({
         data: { success: false },
@@ -602,7 +651,7 @@ describe("LedgerJournalService", () => {
         service.deleteMultiSourceSlices({
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
-          entries: [{ entryHash: H1, sha256sum: "s1" }],
+          entries: [{ entryHash: H1, sha256sum: S1 }],
         }),
       ).rejects.toThrow(InternalServerError);
     });
@@ -633,6 +682,8 @@ describe("LedgerJournalService", () => {
   describe("moveSourceSlices", () => {
     const H1 = "3c".repeat(16);
     const H2_DUP = `${"4d".repeat(16)}:1`;
+    const S1 = "3c".repeat(32);
+    const S2 = "4d".repeat(32);
 
     it("forwards valid hashes including :<n> suffixes to the ledger", async () => {
       mockMoveSourceSlices.mockResolvedValue({
@@ -651,8 +702,8 @@ describe("LedgerJournalService", () => {
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
         entries: [
-          { entryHash: H1, sha256sum: "s1" },
-          { entryHash: H2_DUP, sha256sum: "s2" },
+          { entryHash: H1, sha256sum: S1 },
+          { entryHash: H2_DUP, sha256sum: S2 },
         ],
         toPath: "2026.bean",
       });
@@ -663,8 +714,8 @@ describe("LedgerJournalService", () => {
         "testledger",
         {
           entries: [
-            { entry_hash: H1, sha256sum: "s1" },
-            { entry_hash: H2_DUP, sha256sum: "s2" },
+            { entry_hash: H1, sha256sum: S1 },
+            { entry_hash: H2_DUP, sha256sum: S2 },
           ],
           to_path: "2026.bean",
         },
@@ -679,8 +730,8 @@ describe("LedgerJournalService", () => {
             ledgerId: LEDGER_ID,
             identity: IDENTITY,
             entries: [
-              { entryHash: H1, sha256sum: "s1" },
-              { entryHash: badHash, sha256sum: "s2" },
+              { entryHash: H1, sha256sum: S1 },
+              { entryHash: badHash, sha256sum: S2 },
             ],
             toPath: "2026.bean",
             dryRun: true,
@@ -695,6 +746,31 @@ describe("LedgerJournalService", () => {
         expect(mockMoveSourceSlices).not.toHaveBeenCalled();
       },
     );
+
+    it.each(["", "   ", "not-a-sha", H1, S2.toUpperCase()])(
+      "refuses malformed sha256sum=%j in any entry with BadUserInputError before calling the ledger",
+      async (badSha) => {
+        const failure = await service
+          .moveSourceSlices({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entries: [
+              { entryHash: H1, sha256sum: S1 },
+              { entryHash: H2_DUP, sha256sum: badSha },
+            ],
+            toPath: "2026.bean",
+            dryRun: true,
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "sha256sum" },
+        });
+        expect(mockMoveSourceSlices).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe("updateSourceSlice", () => {
@@ -702,6 +778,8 @@ describe("LedgerJournalService", () => {
     const HASH_NEW = "bb".repeat(16);
     const HASH_STALE = "cc".repeat(16);
     const HASH_DUP = `${HASH_OLD}:1`;
+    const SHA_OLD = "5e".repeat(32);
+    const SHA_NEW = "6f".repeat(32);
 
     it("returns mapped result on success", async () => {
       mockUpdateSourceSlice.mockResolvedValue({
@@ -710,7 +788,7 @@ describe("LedgerJournalService", () => {
           data: {
             message: "Updated",
             entry_hash: HASH_NEW,
-            new_sha256sum: "newsum",
+            new_sha256sum: SHA_NEW,
             new_entry_hash: HASH_NEW,
           },
         },
@@ -720,11 +798,11 @@ describe("LedgerJournalService", () => {
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
         entryHash: HASH_OLD,
-        sha256sum: "oldsum",
+        sha256sum: SHA_OLD,
         newContent: '2024-01-02 * "new"\n',
       });
 
-      expect(result.newSha256sum).toBe("newsum");
+      expect(result.newSha256sum).toBe(SHA_NEW);
       expect(result.entryHash).toBe(HASH_NEW);
       expect(result.newEntryHash).toBe(HASH_NEW);
       expect(mockUpdateSourceSlice).toHaveBeenCalledWith(
@@ -732,7 +810,7 @@ describe("LedgerJournalService", () => {
         "testledger",
         {
           entry_hash: HASH_OLD,
-          sha256sum: "oldsum",
+          sha256sum: SHA_OLD,
           new_content: '2024-01-02 * "new"\n',
         },
         {},
@@ -746,7 +824,7 @@ describe("LedgerJournalService", () => {
           data: {
             message: "Updated",
             entry_hash: HASH_NEW,
-            new_sha256sum: "newsum",
+            new_sha256sum: SHA_NEW,
             new_entry_hash: HASH_NEW,
           },
         },
@@ -756,7 +834,7 @@ describe("LedgerJournalService", () => {
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
         entryHash: HASH_DUP,
-        sha256sum: "oldsum",
+        sha256sum: SHA_OLD,
         newContent: '2024-01-02 * "new"\n',
       });
 
@@ -776,7 +854,7 @@ describe("LedgerJournalService", () => {
             ledgerId: LEDGER_ID,
             identity: IDENTITY,
             entryHash: badHash,
-            sha256sum: "oldsum",
+            sha256sum: SHA_OLD,
             newContent: '2024-01-02 * "new"\n',
             dryRun: true,
           })
@@ -786,6 +864,29 @@ describe("LedgerJournalService", () => {
         expect(failure).toMatchObject({
           category: "BAD_USER_INPUT",
           metadata: { field: "entryHash" },
+        });
+        expect(mockUpdateSourceSlice).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(["", "   ", "not-a-sha", HASH_OLD, SHA_OLD.toUpperCase()])(
+      "refuses malformed sha256sum=%j with BadUserInputError before calling the ledger",
+      async (badSha) => {
+        const failure = await service
+          .updateSourceSlice({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entryHash: HASH_OLD,
+            sha256sum: badSha,
+            newContent: '2024-01-02 * "new"\n',
+            dryRun: true,
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "sha256sum" },
         });
         expect(mockUpdateSourceSlice).not.toHaveBeenCalled();
       },
@@ -811,7 +912,7 @@ describe("LedgerJournalService", () => {
           data: {
             message: "Updated",
             entry_hash: HASH_NEW,
-            new_sha256sum: "oldsum",
+            new_sha256sum: SHA_OLD,
             new_entry_hash: HASH_NEW,
             files: ["main.bean"],
             ...flag,
@@ -823,7 +924,7 @@ describe("LedgerJournalService", () => {
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
         entryHash: HASH_OLD,
-        sha256sum: "oldsum",
+        sha256sum: SHA_OLD,
         newContent: "x",
       });
 
@@ -841,7 +942,7 @@ describe("LedgerJournalService", () => {
           data: {
             message: "Updated",
             entry_hash: HASH_NEW,
-            new_sha256sum: "newsum",
+            new_sha256sum: SHA_NEW,
             new_entry_hash: HASH_NEW,
           },
         },
@@ -851,7 +952,7 @@ describe("LedgerJournalService", () => {
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
         entryHash: HASH_OLD,
-        sha256sum: "oldsum",
+        sha256sum: SHA_OLD,
         newContent: "x",
         platform: "mobile",
       });
@@ -873,7 +974,7 @@ describe("LedgerJournalService", () => {
             ledgerId: LEDGER_ID,
             identity: IDENTITY,
             entryHash: HASH_OLD,
-            sha256sum: "s",
+            sha256sum: SHA_OLD,
             newContent,
           }),
         ).rejects.toMatchObject({ category: "BAD_USER_INPUT" });
@@ -896,7 +997,7 @@ describe("LedgerJournalService", () => {
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
           entryHash: HASH_OLD,
-          sha256sum: "s",
+          sha256sum: SHA_OLD,
           newContent,
         }),
       ).rejects.toMatchObject({
@@ -916,7 +1017,7 @@ describe("LedgerJournalService", () => {
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
           entryHash: HASH_OLD,
-          sha256sum: "s",
+          sha256sum: SHA_OLD,
           newContent: "x",
         }),
       ).rejects.toThrow(InternalServerError);
@@ -934,7 +1035,7 @@ describe("LedgerJournalService", () => {
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
           entryHash: HASH_STALE,
-          sha256sum: "s",
+          sha256sum: SHA_OLD,
           newContent: "x",
         }),
       ).rejects.toThrow(NotFoundError);
@@ -952,7 +1053,7 @@ describe("LedgerJournalService", () => {
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
           entryHash: HASH_OLD,
-          sha256sum: "old",
+          sha256sum: SHA_OLD,
           newContent: "x",
         }),
       ).rejects.toThrow(ConflictError);

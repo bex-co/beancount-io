@@ -50,3 +50,23 @@ export function assertEntryHashFormat(entryHash: string): void {
     );
   }
 }
+
+/**
+ * A source-slice checksum as the ledger service issues it (`sliceSha256`):
+ * 64 lowercase hexadecimal digits.
+ */
+const SHA256_HEX_PATTERN = /^[0-9a-f]{64}$/;
+
+/**
+ * Every entry-source write carries an optimistic-lock `sha256sum`. Refuse
+ * anything that is not a 64-character lowercase hex SHA-256 digest upfront as
+ * `BAD_USER_INPUT` instead of loading the full ledger and answering `CONFLICT`.
+ */
+export function assertSha256Format(sha256sum: string): void {
+  if (typeof sha256sum !== "string" || !SHA256_HEX_PATTERN.test(sha256sum)) {
+    throw new BadUserInputError(
+      "sha256sum must be a 64-character lowercase hex SHA-256 digest from getEntryContext or listLedgerEntries(include_source: true)",
+      "sha256sum",
+    );
+  }
+}

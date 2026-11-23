@@ -1,5 +1,5 @@
 import { BadUserInputError } from "@/shared/errors";
-import { resolveEntryHash } from "../entry-hash-alias";
+import { assertSha256Format, resolveEntryHash } from "../entry-hash-alias";
 
 // w23/m3/t001: the one entry-hash spelling rule.
 describe("resolveEntryHash", () => {
@@ -27,5 +27,37 @@ describe("resolveEntryHash", () => {
     expect(() => resolveEntryHash({})).toThrow(
       "entryHash is required (entry_hash, as list output spells it, also works).",
     );
+  });
+});
+
+// w31/054: entry-source optimistic-lock checksums are 64 lowercase hex digits.
+describe("assertSha256Format", () => {
+  const VALID = "0123456789abcdef".repeat(4);
+
+  it("accepts a 64-character lowercase hex SHA-256 digest", () => {
+    expect(() => assertSha256Format(VALID)).not.toThrow();
+  });
+
+  it.each([
+    "",
+    "   ",
+    "not-a-sha",
+    "ab".repeat(16),
+    VALID.toUpperCase(),
+    VALID.slice(0, 63),
+    `${VALID}0`,
+    "g".repeat(64),
+  ])("refuses %j with BadUserInputError on field sha256sum", (bad) => {
+    let thrown: unknown;
+    try {
+      assertSha256Format(bad);
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(BadUserInputError);
+    expect(thrown).toMatchObject({
+      category: "BAD_USER_INPUT",
+      metadata: { field: "sha256sum" },
+    });
   });
 });
