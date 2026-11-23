@@ -504,10 +504,12 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
         );
       // A preview commits nothing, so no post-write read can see what the
       // write would break: its verdict is the ledger's projection (w23/161).
-      // A commit is re-checked after it lands, as before.
+      // An empty batch is refused by the service after auth, so skip the
+      // pre-write error read too (w31/048). A commit is re-checked after it
+      // lands, as before.
       let committed: Awaited<ReturnType<typeof write>>;
       let validation: WriteValidation;
-      if (dryPreview) {
+      if (dryPreview || entries.length === 0) {
         committed = await write();
         validation = committed.validation;
       } else {

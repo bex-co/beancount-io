@@ -2,7 +2,11 @@ import {
   createLedgerEntryWriter,
   LedgerEntryService,
 } from "../ledger-entry-service";
-import { OperationNotAllowedError, ValidationError } from "@/shared/errors";
+import {
+  BadUserInputError,
+  OperationNotAllowedError,
+  ValidationError,
+} from "@/shared/errors";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
 
@@ -1225,5 +1229,33 @@ describe("LedgerEntryService", () => {
       );
       expect(mockAddBulkEntries).not.toHaveBeenCalled();
     });
+  });
+
+  describe("empty entries (w31/048)", () => {
+    it.each([false, true])(
+      "refuses empty entries with BadUserInputError without calling bcio options or ledger (dryRun: %s)",
+      async (dryRun) => {
+        const failure = await service
+          .addBulkEntries(
+            IDENTITY,
+            "testuser",
+            "test-ledger",
+            [],
+            "web",
+            false,
+            dryRun,
+          )
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          message: "entries must contain at least one entry",
+          metadata: { field: "entries" },
+        });
+        expect(mockGetLedgerBcioOptions).not.toHaveBeenCalled();
+        expect(mockAddBulkEntries).not.toHaveBeenCalled();
+      },
+    );
   });
 });

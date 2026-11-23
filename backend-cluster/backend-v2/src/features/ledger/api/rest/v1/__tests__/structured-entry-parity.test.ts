@@ -238,6 +238,12 @@ async function fixture(
     });
   });
   const createFile = jest.fn();
+  const getBcioOptions = jest.fn(async () =>
+    envelope({
+      default_file: "main.bean",
+      account_file: state.accountFile,
+    }),
+  );
   const fava = {
     getAdminClient: () => ({
       ledgers: { getLedger: async () => envelope({ id: 42, private: true }) },
@@ -253,11 +259,7 @@ async function fixture(
     getPublicApiClient: async () => ({
       entries: { addBulkEntries: write },
       reports: {
-        getLedgerBcioOptions: async () =>
-          envelope({
-            default_file: "main.bean",
-            account_file: state.accountFile,
-          }),
+        getLedgerBcioOptions: getBcioOptions,
         getLedgerAccounts: async () =>
           envelope(
             Object.fromEntries(state.accounts.map((account) => [account, {}])),
@@ -324,6 +326,8 @@ async function fixture(
     state,
     write,
     createFile,
+    getBcioOptions,
+    ledgerData,
     call: async (
       surface: string,
       batch = entries,
@@ -1976,22 +1980,22 @@ describe.each(["rest", "gql", "mcp"])(
   },
 );
 
-it.each([0, 101])(
-  "preserves GraphQL batch size %s on every surface",
-  async (size) => {
-    for (const surface of ["rest", "gql", "mcp"]) {
-      const f = await fixture();
-      try {
-        const batch = Array.from({ length: size }, () => entries[1]!);
-        expect((await f.call(surface, batch)).success).toBe(true);
-        expect(f.committed).toHaveLength(size);
-        expect(f.write).toHaveBeenCalledTimes(1);
-      } finally {
-        await f.close();
-      }
+// Size 0 is refused on every surface (w31/048, tested below); batches above
+// 100 still pass up to MAX_BULK_ENTRIES.
+it("preserves GraphQL batch size 101 on every surface", async () => {
+  const size = 101;
+  for (const surface of ["rest", "gql", "mcp"]) {
+    const f = await fixture();
+    try {
+      const batch = Array.from({ length: size }, () => entries[1]!);
+      expect((await f.call(surface, batch)).success).toBe(true);
+      expect(f.committed).toHaveLength(size);
+      expect(f.write).toHaveBeenCalledTimes(1);
+    } finally {
+      await f.close();
     }
-  },
-);
+  }
+});
 
 it("normalizes optional null values identically", async () => {
   const batch = [
@@ -2749,3 +2753,67 @@ describe.each(["rest", "gql", "mcp"])("requestId via %s", (surface) => {
     }
   });
 });
+
+describe.each(["rest", "gql", "mcp"])(
+  "empty entries via %s (w31/048)",
+  (surface) => {
+    beforeEach(() => fakeRedisIdempotencyState.reset());
+    let n = 0;
+
+    it.each([false, true])(
+      "refuses empty entries with BAD_USER_INPUT without touching Redis or upstream ledger (dryRun: %s)",
+      async (dryRun) => {
+        const f = await fixture({
+          ...identity,
+          userId: `usr_empty_entries_${surface}_${n++}`,
+        });
+        try {
+          const outcome = await f.call(surface, [], {
+            ...(dryRun
+              ? surface === "mcp"
+                ? { dry_run: true }
+                : { dryRun: true }
+              : {}),
+            requestId: `empty-${surface}-${dryRun}`,
+          });
+          expect(outcome.success).toBe(false);
+          expect(f.write).not.toHaveBeenCalled();
+          expect(f.getBcioOptions).not.toHaveBeenCalled();
+          expect(f.ledgerData.getErrors).not.toHaveBeenCalled();
+          expect(f.committed).toEqual([]);
+          expect(fakeRedisIdempotencyState.records.size).toBe(0);
+
+          if (surface === "rest") {
+            expect(outcome.result).toMatchObject({
+              ok: false,
+              error: {
+                code: "BAD_USER_INPUT",
+                message: "entries must contain at least one entry",
+                metadata: { field: "entries" },
+              },
+            });
+          } else if (surface === "gql") {
+            const gqlError = outcome.errors![0];
+            expect(formatError(gqlError.toJSON(), gqlError)).toMatchObject({
+              message: "entries must contain at least one entry",
+              extensions: {
+                code: "BAD_USER_INPUT",
+                field: "entries",
+              },
+            });
+          } else {
+            expect(outcome.full).toMatchObject({
+              ok: false,
+              error: {
+                code: "BAD_USER_INPUT",
+                message: "entries must contain at least one entry",
+              },
+            });
+          }
+        } finally {
+          await f.close();
+        }
+      },
+    );
+  },
+);

@@ -7,7 +7,11 @@ import { LedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { LedgerEntryInput } from "../ledger-entry-service";
 import type { Identity } from "@/server/api/identity";
-import { ConflictError, ValidationError } from "@/shared/errors";
+import {
+  BadUserInputError,
+  ConflictError,
+  ValidationError,
+} from "@/shared/errors";
 
 jest.mock(
   "@/foundation/redis/redis-idempotency",
@@ -220,6 +224,34 @@ describe("addBulkEntries with a requestId", () => {
     ).resolves.toMatchObject({ success: true });
     expect(writer.writeBulkEntries).toHaveBeenCalledTimes(1);
   });
+
+  it.each([false, true])(
+    "refuses empty entries without touching Redis or writing (dryRun: %s, w31/048)",
+    async (dryRun) => {
+      const { service, writer } = entryService();
+      const failure = await service
+        .addBulkEntries(
+          identity,
+          "alice",
+          "books",
+          [],
+          "web",
+          false,
+          dryRun,
+          "empty-batch-1",
+        )
+        .catch((error: unknown) => error);
+
+      expect(failure).toBeInstanceOf(BadUserInputError);
+      expect(failure).toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: "entries must contain at least one entry",
+        metadata: { field: "entries" },
+      });
+      expect(writer.writeBulkEntries).not.toHaveBeenCalled();
+      expect(fakeRedisIdempotencyState.records.size).toBe(0);
+    },
+  );
 });
 
 describe("appendDirectiveText with a requestId", () => {

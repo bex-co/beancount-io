@@ -169,6 +169,12 @@ export class LedgerEntryService implements ILedgerEntryService {
     platform: "web" | "mobile",
     attachments: RawFileCreate[] = [],
   ): Promise<AddBulkEntriesResult> {
+    if (inputs.length === 0 && attachments.length === 0) {
+      throw new BadUserInputError(
+        "entries must contain at least one entry",
+        "entries",
+      );
+    }
     const datedInputs = inputs.map((input) => {
       const date = parseEntryDate(input.entry.date);
       if (date === null) {

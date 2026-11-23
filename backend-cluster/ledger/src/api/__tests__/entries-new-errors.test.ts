@@ -20,6 +20,7 @@ let baselineErrors: {
   source?: { filename: string; lineno: number };
 }[] = [];
 const committed: { files: { path: string; content: string }[] }[] = [];
+let fileReads = 0;
 
 jest.mock("@/server/auth", () => ({
   authMiddleware: async (_ctx: unknown, next: () => Promise<void>) => next(),
@@ -27,6 +28,7 @@ jest.mock("@/server/auth", () => ({
   giteaClientForRequest: () => ({
     repos: {
       repoGetContents: async (_owner: string, _repo: string, path: string) => {
+        fileReads += 1;
         if (path !== "main.bean")
           throw Object.assign(new Error("404"), { status: 404 });
         return { data: { content: b64(MAIN), sha: "sha-main" } };
@@ -119,6 +121,7 @@ describe("bulk entries refuse a write that adds ledger errors", () => {
   beforeEach(() => {
     baselineErrors = [];
     baselineReads = 0;
+    fileReads = 0;
     committed.length = 0;
   });
 
@@ -240,4 +243,20 @@ describe("bulk entries refuse a write that adds ledger errors", () => {
     expect(body.data.errors_after).toBe(0);
     expect(body.data.new_errors).toEqual([]);
   });
+
+  // w31/048: empty entries must be refused before reading Gitea or loading
+  // ledger errors, on both commit and dry-run paths.
+  it.each([false, true])(
+    "refuses empty entries with 400 without reading files or errors (dryRun: %s)",
+    async (dryRun) => {
+      const response = await post({ entries: [], dryRun });
+      const body = (await response.json()) as Record<string, any>;
+      expect(response.status).toBe(400);
+      expect(body.success).toBe(false);
+      expect(body.error).toBe("entries must contain at least one entry");
+      expect(fileReads).toBe(0);
+      expect(baselineReads).toBe(0);
+      expect(committed).toEqual([]);
+    },
+  );
 });

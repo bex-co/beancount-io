@@ -14,7 +14,6 @@ import type { LedgerEntryInput } from "@/foundation/ledger-api-types/ledger-entr
 import { BadUserInputError, UnbalancedTransactionError } from "@/shared/errors";
 import { ledgerIdOf, servicesForRequest } from "./service-context";
 import {
-  countLedgerErrors,
   projectNewLedgerErrors,
   refuseProjectedErrors,
 } from "@/features/ledger/utils/new-ledger-errors";
@@ -230,6 +229,12 @@ export function setEntriesHandler(router: Router): void {
       const allowInvalid = body.allowInvalid === true;
       const dryRun = body.dryRun === true;
       const rows = body.entries ?? [];
+      if (rows.length === 0) {
+        throw new BadUserInputError(
+          "entries must contain at least one entry",
+          "entries",
+        );
+      }
       assertDecimalAmounts(rows);
       assertEntryTokens(rows);
       assertNoControlCharacters(rows);
@@ -336,17 +341,15 @@ export function setEntriesHandler(router: Router): void {
       const { data } = servicesForRequest(ctx);
       const ledgerId = ledgerIdOf(ctx);
       const loaded = new Set(
-        rows.length === 0
-          ? []
-          : await data.projectedSourceFiles({
-              ledgerId,
-              userId: undefined,
-              overlays: [...currentContents].map(([path, { current }]) => ({
-                path,
-                content: Buffer.from(current, "utf8").toString("base64"),
-              })),
-              enforceInputLimits: false,
-            }),
+        await data.projectedSourceFiles({
+          ledgerId,
+          userId: undefined,
+          overlays: [...currentContents].map(([path, { current }]) => ({
+            path,
+            content: Buffer.from(current, "utf8").toString("base64"),
+          })),
+          enforceInputLimits: false,
+        }),
       );
       const included = [...byFile.keys()].filter((path) => !loaded.has(path));
       if (included.length > 0) {
@@ -405,101 +408,87 @@ export function setEntriesHandler(router: Router): void {
         });
       }
 
-      if (updates.length > 0) {
-        // Check the projection, then commit — the text-append route's order
-        // (w0/m2). A second `open` for an open account, or a balance against
-        // an unopened one, used to be committed and only surfaced later as a
-        // ledger error. `allowInvalid` records such entries deliberately.
-        // The check always runs: the flag suppresses only the refusal, and
-        // the projection is reported on the response either way (w23/161).
-        const after = await data.checkProjectedErrors({
-          ledgerId,
-          userId: undefined,
-          overlays: updates,
-          enforceInputLimits: false,
-        });
-        const projection = await projectNewLedgerErrors(after, () =>
-          data.getErrors({ ledgerId, userId: undefined }),
-        );
-        if (!allowInvalid) {
-          refuseProjectedErrors(projection, "add");
-          // A parse error already in the file (an unclosed quote) can swallow
-          // what is written after it, and the same message at another line
-          // counts as nothing new: look for the entries themselves (w21/682).
-          if (after.length > 0) {
-            await assertEntriesAreRead(data, ledgerId, updates, ranges);
-          }
+      // Check the projection, then commit — the text-append route's order
+      // (w0/m2). A second `open` for an open account, or a balance against
+      // an unopened one, used to be committed and only surfaced later as a
+      // ledger error. `allowInvalid` records such entries deliberately.
+      // The check always runs: the flag suppresses only the refusal, and
+      // the projection is reported on the response either way (w23/161).
+      const after = await data.checkProjectedErrors({
+        ledgerId,
+        userId: undefined,
+        overlays: updates,
+        enforceInputLimits: false,
+      });
+      const projection = await projectNewLedgerErrors(after, () =>
+        data.getErrors({ ledgerId, userId: undefined }),
+      );
+      if (!allowInvalid) {
+        refuseProjectedErrors(projection, "add");
+        // A parse error already in the file (an unclosed quote) can swallow
+        // what is written after it, and the same message at another line
+        // counts as nothing new: look for the entries themselves (w21/682).
+        if (after.length > 0) {
+          await assertEntriesAreRead(data, ledgerId, updates, ranges);
         }
-        await checkDirectiveLimitForFileChanges(
-          client,
-          owner,
-          repoName,
-          Object.fromEntries(updates.map((u) => [u.path, u.content])),
-          { exempt: directiveLimitExempt(ctx) },
-        );
-        // A caller that has to do something irreversible first — store a
-        // receipt — asks whether the entries would be accepted, so a refusal
-        // leaves nothing behind (w23/058).
-        if (dryRun) {
-          ctx.body = successResponse({
-            entry_hashes: [],
-            included_files: included,
-            preview,
-            errors_before: projection.errorsBefore,
-            errors_after: projection.errorsAfter,
-            new_errors: projection.newErrors,
-          });
-          return;
-        }
-        // A commit that lost a race to a concurrent write fails with a status
-        // the classifier may not know: settle it from the files' content, so
-        // the loser reads as 409 CONFLICT (re-read and retry), never as an
-        // outage, and a commit that landed is never reported as failed (w23/072).
-        const { commit } = await changeExistingFiles(
-          client,
-          owner,
-          repoName,
-          {
-            files: [],
-            message: addEntriesCommitMessage(
-              rows.length,
-              [...byFile.values()].flatMap((written) =>
-                written.map(({ text }) => text),
-              ),
-            ),
-          },
-          updates.map((u) => ({
-            operation: "update" as const,
-            path: u.path,
-            content: u.content,
-            sha: u.sha,
-          })),
-        );
+      }
+      await checkDirectiveLimitForFileChanges(
+        client,
+        owner,
+        repoName,
+        Object.fromEntries(updates.map((u) => [u.path, u.content])),
+        { exempt: directiveLimitExempt(ctx) },
+      );
+      // A caller that has to do something irreversible first — store a
+      // receipt — asks whether the entries would be accepted, so a refusal
+      // leaves nothing behind (w23/058).
+      if (dryRun) {
         ctx.body = successResponse({
-          entry_hashes: await writtenEntryHashes(
-            data,
-            ledgerId,
-            updates.map(({ path, content }) => ({ path, content })),
-            ranges,
-          ),
+          entry_hashes: [],
           included_files: included,
+          preview,
           errors_before: projection.errorsBefore,
           errors_after: projection.errorsAfter,
           new_errors: projection.newErrors,
-          ...(commit ? { commit } : {}),
         });
         return;
       }
-      // An empty batch changes nothing: the projection is today's errors,
-      // before and after, with nothing new.
-      const current = await data.getErrors({ ledgerId, userId: undefined });
-      const currentCount = countLedgerErrors(current);
+      // A commit that lost a race to a concurrent write fails with a status
+      // the classifier may not know: settle it from the files' content, so
+      // the loser reads as 409 CONFLICT (re-read and retry), never as an
+      // outage, and a commit that landed is never reported as failed (w23/072).
+      const { commit } = await changeExistingFiles(
+        client,
+        owner,
+        repoName,
+        {
+          files: [],
+          message: addEntriesCommitMessage(
+            rows.length,
+            [...byFile.values()].flatMap((written) =>
+              written.map(({ text }) => text),
+            ),
+          ),
+        },
+        updates.map((u) => ({
+          operation: "update" as const,
+          path: u.path,
+          content: u.content,
+          sha: u.sha,
+        })),
+      );
       ctx.body = successResponse({
-        entry_hashes: [],
-        included_files: [],
-        errors_before: currentCount,
-        errors_after: currentCount,
-        new_errors: [],
+        entry_hashes: await writtenEntryHashes(
+          data,
+          ledgerId,
+          updates.map(({ path, content }) => ({ path, content })),
+          ranges,
+        ),
+        included_files: included,
+        errors_before: projection.errorsBefore,
+        errors_after: projection.errorsAfter,
+        new_errors: projection.newErrors,
+        ...(commit ? { commit } : {}),
       });
     },
   );

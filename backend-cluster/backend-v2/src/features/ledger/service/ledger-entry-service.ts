@@ -488,6 +488,12 @@ export class LedgerEntryService implements ILedgerEntryService {
       AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
       { authorization: this.authorization },
     );
+    if (inputs.length === 0) {
+      throw new BadUserInputError(
+        "entries must contain at least one entry",
+        "entries",
+      );
+    }
     // GraphQL's entries argument arrives unchecked, so the schema maxItems
     // alone would leave that surface uncapped (w23/103).
     assertBulkEntriesSize(inputs, "added");

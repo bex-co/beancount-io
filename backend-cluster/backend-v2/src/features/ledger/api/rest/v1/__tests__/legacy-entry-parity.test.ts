@@ -379,4 +379,35 @@ describe.each(["rest", "gql"])("legacy entries refusals via %s", (surface) => {
       await f.close();
     }
   });
+
+  it("refuses empty entriesInput with BAD_USER_INPUT without touching Redis or writing (w31/048)", async () => {
+    fakeRedisIdempotencyState.reset();
+    const f = await fixture();
+    try {
+      const outcome = await f.call(surface, [], "legacy-empty-1");
+      expect(outcome.success).toBe(false);
+      expect(f.write).not.toHaveBeenCalled();
+      expect(fakeRedisIdempotencyState.records.size).toBe(0);
+      if (surface === "rest") {
+        expect(outcome.result).toMatchObject({
+          ok: false,
+          error: {
+            code: "BAD_USER_INPUT",
+            message: "entries must contain at least one entry",
+            metadata: { field: "entries" },
+          },
+        });
+      } else {
+        expect(outcome.result).toMatchObject({
+          message: "entries must contain at least one entry",
+          extensions: {
+            code: "BAD_USER_INPUT",
+            field: "entries",
+          },
+        });
+      }
+    } finally {
+      await f.close();
+    }
+  });
 });

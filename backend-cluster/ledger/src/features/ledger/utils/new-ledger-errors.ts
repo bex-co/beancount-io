@@ -82,7 +82,7 @@ const isError = (error: BeancountErrorPublic): boolean =>
   error.severity !== "warning";
 
 /** Errors bean-check fails on: the engine's warnings are not errors (w21/188). */
-export const countLedgerErrors = (
+const countLedgerErrors = (
   errors: readonly BeancountErrorPublic[],
 ): number => errors.filter(isError).length;
 
