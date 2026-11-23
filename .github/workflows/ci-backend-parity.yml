@@ -10,6 +10,7 @@ on:
       # Client operations must be first-party metric labels (first-party-operations.test.ts).
       - "dashboard/src/**/*.graphql"
       - "mobile/src/common/graphql/**"
+      - "cli/openapi/v1.json"
       - ".github/workflows/ci-backend-parity.yml"
   pull_request:
     branches: [main]
@@ -20,6 +21,7 @@ on:
       # Client operations must be first-party metric labels (first-party-operations.test.ts).
       - "dashboard/src/**/*.graphql"
       - "mobile/src/common/graphql/**"
+      - "cli/openapi/v1.json"
       - ".github/workflows/ci-backend-parity.yml"
 
 concurrency:
