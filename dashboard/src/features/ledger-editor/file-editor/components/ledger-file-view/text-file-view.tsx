@@ -149,6 +149,16 @@ export const TextFileView = ({
     [],
   );
 
+  // The view toolbar unmounts when editing starts. Hand off focus to the
+  // existing editor without moving its caret. A save can also toggle the
+  // editor's readOnly option, so follow the view mode here.
+  const wasEditing = useRef(effectiveEditMode);
+  useEffect(() => {
+    const enteringEditMode = effectiveEditMode && !wasEditing.current;
+    wasEditing.current = effectiveEditMode;
+    if (enteringEditMode) editorRef.current?.focus();
+  }, [effectiveEditMode]);
+
   // Strip unauthorized or preview-only ?editMode= without a navigation loop.
   useEffect(() => {
     if (requestedEditMode && !canEdit) {
@@ -156,8 +166,7 @@ export const TextFileView = ({
     }
   }, [requestedEditMode, canEdit, onExitEditMode]);
 
-  // Enter edit mode - just flip the URL flag; the persistent editor keeps its
-  // scroll position and content, so there is nothing to reset here.
+  // Enter edit mode by updating the URL.
   const handleEditClick = useCallback(() => {
     if (!canEdit) return;
     savedExitRef.current = false;

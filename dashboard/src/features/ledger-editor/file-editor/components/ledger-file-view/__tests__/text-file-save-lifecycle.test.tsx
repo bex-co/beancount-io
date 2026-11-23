@@ -5,6 +5,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import {
   Outlet,
   RouterProvider,
@@ -32,34 +33,60 @@ vi.mock("../../../hooks/use-normalized-line-number", () => ({
   useNormalizedLineNumber: (line?: number) => line,
 }));
 vi.mock("../../../hooks/use-platform", () => ({ useIsMac: () => true }));
-vi.mock("../../non-text-file-views", () => ({
-  FileMetadataBar: () => null,
-  FileActionButtons: () => null,
+vi.mock("@/common/hooks/use-theme", () => ({
+  useIsDarkTheme: () => false,
 }));
-vi.mock("../text-editor", () => ({
-  TextEditor: ({
-    content,
-    readOnly,
-    setEditedContent,
-  }: {
-    content: string;
-    readOnly?: boolean;
-    setEditedContent?: (value: string) => void;
-  }) => (
-    <textarea
-      aria-label="file-source"
-      value={content}
-      readOnly={readOnly}
-      onChange={(event) => setEditedContent?.(event.target.value)}
-    />
-  ),
+vi.mock("@/common/lib/editor/monaco-beancount-actions", () => ({
+  registerEditorShortcuts: vi.fn(),
 }));
+vi.mock("@/common/components/monaco-editor", async () => {
+  const { useEffect, useRef } = await import("react");
+  return {
+    MonacoEditor: ({
+      value,
+      options,
+      onChange,
+      onMount,
+    }: {
+      value: string;
+      options: { readOnly: boolean };
+      onChange: (value: string) => void;
+      onMount: (editor: unknown, monaco: unknown) => void;
+    }) => {
+      const inputRef = useRef<HTMLTextAreaElement>(null);
+      const initialMount = useRef(onMount);
+      useEffect(() => {
+        initialMount.current(
+          {
+            focus: () => inputRef.current?.focus(),
+            getDomNode: () => inputRef.current?.parentElement,
+            getModel: () => null,
+            onDidCompositionStart: vi.fn(),
+            onDidCompositionEnd: vi.fn(),
+          },
+          {},
+        );
+      }, []);
+      return (
+        <div className="monaco-editor">
+          <textarea
+            ref={inputRef}
+            aria-label="file-source"
+            value={value}
+            readOnly={options.readOnly}
+            onChange={(event) => onChange(event.target.value)}
+          />
+        </div>
+      );
+    },
+  };
+});
 
 /**
  * A successful save leaves edit mode once, without an unsaved-changes
  * prompt, and nothing typed while it is pending can be lost (w4/241).
  */
-function setup(save: () => Promise<void>) {
+function setup(save: () => Promise<void>, initialEditMode = true) {
   const onSave = vi.fn(save);
   const root = createRootRoute({ component: Outlet });
   const file = createRoute({
@@ -87,13 +114,53 @@ function setup(save: () => Promise<void>) {
   });
   const router = createRouter({
     routeTree: root.addChildren([file]),
-    history: createMemoryHistory({ initialEntries: ["/file?editMode=true"] }),
+    history: createMemoryHistory({
+      initialEntries: [initialEditMode ? "/file?editMode=true" : "/file"],
+    }),
   });
   render(<RouterProvider router={router} />);
   return { router, onSave };
 }
 
 const editor = () => screen.getByLabelText("file-source");
+
+describe("TextFileView edit focus", () => {
+  it.each(["click", "Enter", "Meta+E", "Ctrl+E"])(
+    "lets the reader type immediately after entering edit mode with %s",
+    async (action) => {
+      const user = userEvent.setup();
+      const { onSave } = setup(async () => {}, false);
+      const viewInput = await screen.findByLabelText("file-source");
+      expect(viewInput).toHaveAttribute("readonly");
+      expect(viewInput).not.toHaveFocus();
+
+      const edit = screen.getByRole("button", { name: "common.edit" });
+      if (action === "click") {
+        await user.click(edit);
+      } else {
+        edit.focus();
+        if (action === "Enter") await user.keyboard("{Enter}");
+        if (action === "Meta+E") await user.keyboard("{Meta>}e{/Meta}");
+        if (action === "Ctrl+E") await user.keyboard("{Control>}e{/Control}");
+      }
+
+      await screen.findByRole("button", { name: "common.save" });
+      expect(editor()).toBe(viewInput);
+      expect(viewInput).toHaveFocus();
+      expect(viewInput).not.toHaveAttribute("readonly");
+      await user.keyboard("qa");
+      expect((viewInput as HTMLTextAreaElement).value).toContain("qa");
+
+      await user.click(screen.getByRole("button", { name: "common.cancel" }));
+      expect(
+        await screen.findByRole("dialog", {
+          name: "ledgerEditor.unsavedChanges",
+        }),
+      ).toBeInTheDocument();
+      expect(onSave).not.toHaveBeenCalled();
+    },
+  );
+});
 
 describe("TextFileView save lifecycle", () => {
   it("locks the source while saving, then exits edit mode without a prompt", async () => {
