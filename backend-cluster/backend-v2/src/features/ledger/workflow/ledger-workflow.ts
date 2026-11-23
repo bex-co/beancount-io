@@ -1927,18 +1927,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     identity: Identity;
     ledgerId: string;
   }): Promise<StarLedgerResult> {
-    let ledgerOwner: string;
-    let ledgerName: string;
-    try {
-      ({ ledgerOwner, ledgerName } = parseLedgerId(ledgerId));
-    } catch (error) {
-      workflowLogger.error("Failed to star ledger", { ledgerId, error });
-      return {
-        success: false,
-        isStarred: false,
-        message: "Failed to star ledger",
-      };
-    }
+    const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE,
@@ -1975,18 +1964,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     identity: Identity;
     ledgerId: string;
   }): Promise<StarLedgerResult> {
-    let ledgerOwner: string;
-    let ledgerName: string;
-    try {
-      ({ ledgerOwner, ledgerName } = parseLedgerId(ledgerId));
-    } catch (error) {
-      workflowLogger.error("Failed to unstar ledger", { ledgerId, error });
-      return {
-        success: false,
-        isStarred: true,
-        message: "Failed to unstar ledger",
-      };
-    }
+    const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_DELETE,

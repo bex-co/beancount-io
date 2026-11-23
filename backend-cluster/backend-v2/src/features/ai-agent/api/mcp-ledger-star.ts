@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ErrorCategory } from "@/shared/errors";
 import { starResultSchema } from "@/features/ledger/api/rest/v1/star-handler";
 import { mcpOutputSchema, toolOutputSchema } from "../tools/types";
 import {
@@ -25,5 +26,13 @@ export async function executeLedgerStar(
   });
   return result.success
     ? { ok: true, result }
-    : { ok: false, error: result.message ?? "Star operation failed", result };
+    : {
+        ok: false,
+        error: result.message ?? "Star operation failed",
+        // Upstream star write failures are returned as success:false on REST
+        // and GraphQL; mark them coded so production error masking keeps the
+        // failure message instead of replacing it with INTERNAL_SERVER_ERROR.
+        errorCode: ErrorCategory.OPERATION_NOT_ALLOWED,
+        result,
+      };
 }

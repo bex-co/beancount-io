@@ -2854,14 +2854,10 @@ describe("LedgerWorkflow", () => {
       expect(giteaClientFactory.getUserApiClient).not.toHaveBeenCalled();
     });
 
-    it("preserves the failure response for an invalid ledger id", async () => {
+    it("throws BadUserInputError for an invalid ledger id without authorizing or calling Gitea", async () => {
       await expect(
         workflow.starLedger({ identity: IDENTITY, ledgerId: "invalid" }),
-      ).resolves.toEqual({
-        success: false,
-        isStarred: false,
-        message: "Failed to star ledger",
-      });
+      ).rejects.toThrow(BadUserInputError);
       expect(authorization.authorizeOrThrow).not.toHaveBeenCalled();
       expect(giteaClientFactory.getUserApiClient).not.toHaveBeenCalled();
     });
@@ -2909,6 +2905,14 @@ describe("LedgerWorkflow", () => {
 
       expect(result.success).toBe(false);
       expect(result.isStarred).toBe(true);
+    });
+
+    it("throws BadUserInputError for an invalid ledger id without authorizing or calling Gitea", async () => {
+      await expect(
+        workflow.unstarLedger({ identity: IDENTITY, ledgerId: "invalid" }),
+      ).rejects.toThrow(BadUserInputError);
+      expect(authorization.authorizeOrThrow).not.toHaveBeenCalled();
+      expect(giteaClientFactory.getUserApiClient).not.toHaveBeenCalled();
     });
   });
 

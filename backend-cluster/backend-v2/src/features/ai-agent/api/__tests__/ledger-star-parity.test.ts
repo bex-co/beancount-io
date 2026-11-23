@@ -20,6 +20,7 @@ import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { McpRequestContext } from "../mcp-context";
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
+const prodConfig = { ...config, env: "production" } as AppConfig;
 const identity: Identity = {
   userId: "usr_ada",
   method: "oauth",
@@ -30,7 +31,7 @@ const surfaces = ["rest", "gql", "mcp"] as const;
 let mutation: LedgerMutationResolver;
 let query: LedgerQueryResolver;
 let schemaPromise: ReturnType<typeof buildSchema>;
-async function fixture(caller = identity) {
+async function fixture(caller = identity, runtimeConfig = config) {
   const stars = new Set<string>();
   const state = { readable: true, unavailable: false, writeFailure: false };
   const write = jest.fn(
@@ -145,7 +146,7 @@ async function fixture(caller = identity) {
   const schema = await schemaPromise;
   const rest = await startV1TestServer(
     { workflows: { ledger: workflow } } as unknown as AppLayers,
-    config,
+    runtimeConfig,
   );
   rest.setIdentity(caller);
   const server = assembleMcpRegistry(
@@ -153,7 +154,7 @@ async function fixture(caller = identity) {
       identity: caller,
       ledgerWorkflow: workflow,
     } as unknown as McpRequestContext,
-    config,
+    runtimeConfig,
   );
   const client = new Client({ name: "star-parity", version: "1" });
   const [a, b] = InMemoryTransport.createLinkedPair();
@@ -400,6 +401,101 @@ describe("ledger star changes through actual transports and live relationship ch
         ).isError,
       ).toBe(true);
       expect(f.write).toHaveBeenCalledTimes(1);
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w31/068: GraphQL used to swallow parseLedgerId BadUserInputError into
+  // HTTP 200 { success: false, isStarred: true/false }, while MCP and REST
+  // refused malformed ledger IDs upfront.
+  it.each(["not-a-ledger", "", "a/b/c"])(
+    "refuses malformed ledgerId %j as BAD_USER_INPUT on GraphQL and MCP without calling Gitea",
+    async (badLedgerId) => {
+      const f = await fixture({ ...identity, ledgerScope: undefined });
+      try {
+        for (const starred of [true, false]) {
+          const method = starred ? "starLedger" : "unstarLedger";
+          const gql = await graphql({
+            schema: f.schema,
+            source: `mutation($id:String!){${method}(ledgerId:$id){success isStarred message}}`,
+            variableValues: { id: badLedgerId },
+            contextValue: {
+              identity: { ...identity, ledgerScope: undefined },
+              getCurrentIdentity: () => ({
+                ...identity,
+                ledgerScope: undefined,
+              }),
+            },
+          });
+          expect(gql.errors?.[0]).toMatchObject({
+            originalError: { category: "BAD_USER_INPUT" },
+          });
+
+          const mcp = await f.client.callTool({
+            name: "setLedgerStar",
+            arguments: { starred, ledger: badLedgerId },
+          });
+          expect(mcp.isError).toBe(true);
+          expect(mcp.structuredContent).toMatchObject({
+            error: { code: "BAD_USER_INPUT" },
+          });
+        }
+        expect(f.repoGet).not.toHaveBeenCalled();
+        expect(f.write).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it("refuses invalid path slugs on REST star endpoints with 400 VALIDATION_FAILED", async () => {
+    const f = await fixture({ ...identity, ledgerScope: undefined });
+    try {
+      for (const method of ["PUT", "DELETE"]) {
+        const r = await fetch(
+          `${f.url}/api-gateway/v1/ledgers/BAD%20OWNER/books/star`,
+          { method },
+        );
+        expect(r.status).toBe(400);
+        expect(await r.json()).toMatchObject({
+          error: { code: "VALIDATION_FAILED" },
+        });
+      }
+      expect(f.repoGet).not.toHaveBeenCalled();
+      expect(f.write).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w31/068: executeLedgerStar omitted errorCode on success:false, so
+  // splitToolFailure in production masked the message as INTERNAL_SERVER_ERROR.
+  it("preserves upstream star failure message with OPERATION_NOT_ALLOWED on MCP in production", async () => {
+    const f = await fixture(identity, prodConfig);
+    try {
+      f.state.writeFailure = true;
+      for (const [starred, expectedMessage, expectedStarred] of [
+        [true, "Failed to star ledger", false],
+        [false, "Failed to unstar ledger", true],
+      ] as const) {
+        const mcp = await f.client.callTool({
+          name: "setLedgerStar",
+          arguments: { starred, ledger: "ada/books" },
+        });
+        expect(mcp.isError).toBe(true);
+        expect(mcp.structuredContent).toMatchObject({
+          error: {
+            code: "OPERATION_NOT_ALLOWED",
+            message: expectedMessage,
+          },
+          result: {
+            success: false,
+            isStarred: expectedStarred,
+            message: expectedMessage,
+          },
+        });
+      }
     } finally {
       await f.close();
     }
