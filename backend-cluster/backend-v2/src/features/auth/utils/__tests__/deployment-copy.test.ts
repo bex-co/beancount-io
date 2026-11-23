@@ -25,7 +25,7 @@ describe("welcomeMailLinks", () => {
   it("keeps the managed service's links whatever its mail setup", () => {
     expect(welcomeMailLinks({ dashboard }, false)).toEqual({
       dashboardUrl: "https://beancount.io/ledger",
-      mobileAppUrl: "http://onelink.to/v3rz2v",
+      mobileAppUrl: "https://onelink.to/v3rz2v",
       helpCenterUrl: "https://beancount.io/docs/help-center",
     });
   });

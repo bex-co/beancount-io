@@ -37,7 +37,7 @@ export function welcomeMailLinks(
   selfHost = isSelfHost(),
 ): WelcomeMailLinks | null {
   const shared = {
-    mobileAppUrl: "http://onelink.to/v3rz2v",
+    mobileAppUrl: "https://onelink.to/v3rz2v",
     helpCenterUrl: "https://beancount.io/docs/help-center",
   };
   if (!selfHost) {
