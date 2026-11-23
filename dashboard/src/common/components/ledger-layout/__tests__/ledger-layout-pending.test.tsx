@@ -1,9 +1,19 @@
 import { act, cleanup, render, screen } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { LedgerLayout } from "../index";
+
+const printStyles = readFileSync(
+  resolve(
+    process.cwd(),
+    "src/common/components/ledger-layout/ledger-print.css",
+  ),
+  "utf8",
+);
 
 const { useRouterState, useParams, useLocation, useNavigate, useQuery } =
   vi.hoisted(() => ({
@@ -40,7 +50,7 @@ vi.mock("@/common/hooks/use-mobile", () => ({
 vi.mock(
   "@/common/providers/react-native-bridge-provider/react-native-bridge",
   () => ({
-    isReactNative: () => true,
+    isReactNative: () => false,
   }),
 );
 
@@ -67,11 +77,11 @@ vi.mock("../ledger-layout-loading", () => ({
 }));
 
 vi.mock("../layout-header", () => ({
-  LayoutHeader: () => null,
+  LayoutHeader: () => <header>ledger controls</header>,
 }));
 
 vi.mock("@/common/components/ui/sidebar.tsx", () => ({
-  SidebarProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
+  SidebarProvider: (props: ComponentProps<"div">) => <div {...props} />,
 }));
 
 describe("LedgerLayout pending outlet", () => {
@@ -140,6 +150,48 @@ describe("LedgerLayout pending outlet", () => {
 
     expect(screen.getByTestId("ledger-outlet")).toBeInTheDocument();
     expect(screen.getByRole("main")).not.toHaveAttribute("aria-busy");
+  });
+
+  it("lets the rendered ledger outlet flow across print pages and hides the chrome", () => {
+    expect(
+      readFileSync(resolve(process.cwd(), "src/style.css"), "utf8"),
+    ).toContain(
+      '@import "./common/components/ledger-layout/ledger-print.css";',
+    );
+    render(<LedgerLayout />);
+    const outlet = screen.getByTestId("ledger-outlet");
+    const scroller = outlet.closest(
+      '[data-scroll-restoration-id="ledger-content"]',
+    );
+    const shell = outlet.closest("[data-ledger-layout]");
+    expect(scroller).toBeInTheDocument();
+    expect(shell).toBeInTheDocument();
+
+    const style = document.createElement("style");
+    style.textContent = printStyles;
+    document.head.append(style);
+    try {
+      const print = style.sheet?.cssRules[0] as CSSMediaRule;
+      expect(print.conditionText).toBe("print");
+      // jsdom does not emulate print media. Activate only its declarations
+      // and match them against the actual shell DOM.
+      style.textContent = Array.from(
+        print.cssRules,
+        (rule) => rule.cssText,
+      ).join("\n");
+      expect(getComputedStyle(scroller!)).toMatchObject({
+        display: "block",
+        height: "auto",
+        overflow: "visible",
+      });
+      expect(getComputedStyle(shell!).minHeight).toBe("0");
+      expect(getComputedStyle(screen.getByRole("main")).display).toBe("block");
+      expect(screen.getByText("sidebar")).not.toBeVisible();
+      expect(screen.getByText("ledger controls")).not.toBeVisible();
+      expect(outlet).toBeVisible();
+    } finally {
+      style.remove();
+    }
   });
 
   it.each(["search", "type", "query", "groupBy"])(

@@ -1,0 +1,47 @@
+@media print {
+  /* The screen shell is one viewport tall. Printing needs ordinary document
+     flow so the outlet can fragment across paper pages. */
+  [data-ledger-layout],
+  [data-ledger-layout] > div,
+  [data-ledger-layout] > div > main,
+  [data-ledger-layout] [data-scroll-restoration-id="ledger-content"],
+  [data-ledger-layout] [data-scroll-restoration-id="ledger-content"] > div {
+    display: block;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  [data-ledger-layout] > div > :not(main),
+  [data-ledger-layout]
+    > div
+    > main
+    > :not([data-scroll-restoration-id="ledger-content"]),
+  body:has([data-ledger-layout])
+    > :is(
+      [data-slot="sheet-overlay"],
+      [data-slot="sheet-content"],
+      [data-slot="sidebar"][data-mobile]
+    ) {
+    display: none;
+  }
+
+  [data-ledger-layout] [data-scroll-restoration-id="ledger-content"] {
+    padding: 0;
+  }
+
+  /* A horizontally scrollable table wrapper also computes to overflow-y:auto.
+     Let both it and any table card split across pages. */
+  [data-ledger-layout] [data-slot="table-container"],
+  [data-ledger-layout] .overflow-clip:has(table) {
+    overflow: visible;
+  }
+
+  [data-ledger-layout] :is(thead, th) {
+    position: static;
+  }
+
+  [data-ledger-layout] tr {
+    break-inside: avoid;
+  }
+}

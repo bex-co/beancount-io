@@ -145,7 +145,7 @@ export function LedgerLayout() {
     >
       <LedgerSearchParamsProvider>
         <LedgerLayoutBackgroundQueries ledgerId={ledgerId} />
-        <SidebarProvider>
+        <SidebarProvider data-ledger-layout="">
           <div
             className={cn(
               "flex h-(--visual-viewport-height,100vh) w-full",
