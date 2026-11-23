@@ -180,6 +180,15 @@ async function fixture(
     maxAllowed: 1000,
   }));
   const charge = jest.fn(async () => undefined);
+  const authorization = new AuthorizationService(
+    new SourceBackedRelationshipEvaluator(
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    ),
+  );
+  const authorize = jest.spyOn(authorization, "authorizeOrThrow");
   const service = new LLMService(
     {} as never,
     { getObjectMetadata: metadata, generateDownloadUrl: download } as never,
@@ -187,14 +196,7 @@ async function fixture(
     {
       openai: { apiKey: "fixture", baseUrl: "https://api.openai.com/v1" },
     } as never,
-    new AuthorizationService(
-      new SourceBackedRelationshipEvaluator(
-        {} as never,
-        {} as never,
-        {} as never,
-        {} as never,
-      ),
-    ),
+    authorization,
   );
   resolver = new LLMParserResolver(service);
   const rest = await startV1TestServer(
@@ -214,6 +216,7 @@ async function fixture(
   const [a, b] = InMemoryTransport.createLinkedPair();
   await Promise.all([client.connect(a), server.connect(b)]);
   return {
+    authorize,
     check,
     charge,
     metadata,
@@ -580,5 +583,87 @@ it("answers an issued but never-uploaded key as NOT_FOUND on REST, GraphQL and M
   } finally {
     await f.close();
     send.mockRestore();
+  }
+});
+
+// w31/049: empty or whitespace-only fileFormat passed through to PDP, quota,
+// S3, and the LLM system prompt instead of failing upfront with BAD_USER_INPUT.
+it.each(["", "   ", "\t\n"])(
+  "refuses blank fileFormat %j as BAD_USER_INPUT before authorization, quota, S3, or LLM on every surface",
+  async (fileFormat) => {
+    const f = await fixture();
+    const args = { ...input, fileFormat };
+    try {
+      const r = await f.rest(args);
+      expect(r.status).toBe(400);
+      expect(await r.json()).toMatchObject({
+        error: {
+          code: "BAD_USER_INPUT",
+          message: "fileFormat must not be empty",
+          metadata: {
+            field: "fileFormat",
+            hint: expect.any(String),
+          },
+        },
+      });
+
+      const g = await f.gql(args);
+      expect(g.errors).toHaveLength(1);
+      const gqlError = g.errors![0];
+      expect(formatError(gqlError.toJSON(), gqlError)).toMatchObject({
+        message: "fileFormat must not be empty",
+        extensions: {
+          code: "BAD_USER_INPUT",
+          field: "fileFormat",
+          hint: expect.any(String),
+        },
+      });
+
+      const m = await f.mcp(args);
+      expect(m.isError).toBe(true);
+      expect(m.structuredContent).toMatchObject({
+        ok: false,
+        error: {
+          code: "BAD_USER_INPUT",
+          message: "fileFormat must not be empty",
+          hint: expect.any(String),
+        },
+      });
+
+      expect(f.authorize).not.toHaveBeenCalled();
+      expect(f.check).not.toHaveBeenCalled();
+      expect(f.metadata).not.toHaveBeenCalled();
+      expect(f.download).not.toHaveBeenCalled();
+      expect(extractTransactionsFromFile).not.toHaveBeenCalled();
+      expect(f.charge).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
+
+it("trims surrounding whitespace on valid fileFormat identically across REST, GraphQL, and MCP", async () => {
+  const f = await fixture();
+  const args = { ...input, fileFormat: "  csv  " };
+  try {
+    const r = await f.rest(args);
+    const g = await f.gql(args);
+    const m = await f.mcp(args);
+    expect(r.status).toBe(200);
+    expect(g.errors).toBeUndefined();
+    expect(m.isError).not.toBe(true);
+    for (const result of [
+      await r.json(),
+      g.data!.parseFile,
+      (m.structuredContent as { result: unknown }).result,
+    ]) {
+      expect(result).toEqual({ rows });
+    }
+    expect(extractTransactionsFromFile).toHaveBeenCalledTimes(3);
+    for (const [call] of jest.mocked(extractTransactionsFromFile).mock.calls) {
+      expect(call.format).toBe("csv");
+    }
+  } finally {
+    await f.close();
   }
 });

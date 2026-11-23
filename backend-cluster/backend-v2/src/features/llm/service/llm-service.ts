@@ -228,6 +228,14 @@ export class LLMService implements ILLMService {
   ): Promise<ParseFileResult> {
     const { userId } = identity;
     assertTempAssetKey(s3ObjectKey, "objectKey");
+    const format = typeof fileFormat === "string" ? fileFormat.trim() : "";
+    if (format === "") {
+      throw new BadUserInputError(
+        "fileFormat must not be empty",
+        "fileFormat",
+        "Pass the file's format, such as csv, pdf, xlsx, json, or jpg.",
+      );
+    }
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.ASSISTED_FILE_PARSE,
@@ -261,7 +269,7 @@ export class LLMService implements ILLMService {
       await extractTransactionsFromFile({
         llmClient: this.llmClient,
         fileUrl: downloadUrl,
-        format: fileFormat,
+        format,
         mediaType: contentType,
       });
 

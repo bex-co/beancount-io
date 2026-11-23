@@ -226,3 +226,48 @@ describe("LLMService statement formats", () => {
     expect(generateDownloadUrl).toHaveBeenCalled();
   });
 });
+
+// w31/049: blank fileFormat bypassed input validation and reached PDP, quota,
+// S3, and the LLM system prompt ("specializing in  files").
+describe("LLMService parseFile fileFormat validation", () => {
+  const user: Identity = {
+    userId: "usr_1",
+    method: "session",
+    scopes: new Set(),
+  };
+
+  it.each(["", "   ", "\t\n"])(
+    "refuses blank fileFormat %j before authorization, quota, or S3",
+    async (fileFormat) => {
+      const authorizeOrThrow = jest.fn().mockResolvedValue({ allowed: true });
+      const check = jest.fn().mockResolvedValue({ allowed: true });
+      const getObjectMetadata = jest.fn();
+      const generateDownloadUrl = jest.fn();
+      const service = new LLMService(
+        { getApiContext: jest.fn() } as never,
+        { getObjectMetadata, generateDownloadUrl } as never,
+        { check, addTokenUsage: jest.fn() } as never,
+        {
+          openai: { apiKey: "test-key", baseUrl: "https://api.openai.com/v1" },
+        } as never,
+        { authorize: jest.fn(), authorizeOrThrow },
+      );
+
+      await expect(
+        service.parseFile(user, "tmp/usr_1/statement.csv", fileFormat),
+      ).rejects.toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: "fileFormat must not be empty",
+        metadata: {
+          field: "fileFormat",
+          hint: expect.any(String),
+        },
+      });
+
+      expect(authorizeOrThrow).not.toHaveBeenCalled();
+      expect(check).not.toHaveBeenCalled();
+      expect(getObjectMetadata).not.toHaveBeenCalled();
+      expect(generateDownloadUrl).not.toHaveBeenCalled();
+    },
+  );
+});
