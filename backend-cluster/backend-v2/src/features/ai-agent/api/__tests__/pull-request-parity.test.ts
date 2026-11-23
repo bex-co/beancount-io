@@ -957,6 +957,181 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
     );
   });
 
+  describe("baseBranch with leading or trailing whitespace refusal on every surface (w31/056)", () => {
+    const createMutation = `mutation($input:CreatePRFromPatchInput!){createPullRequestFromPatch(input:$input){${resultFields}}}`;
+
+    it.each([" main ", "main ", "\tmain\n", " no-such-branch-qa "])(
+      "refuses baseBranch=%j as BAD_USER_INPUT on REST, MCP, and GraphQL without calling Gitea",
+      async (badBaseBranch) => {
+        const f = await fixture();
+        const input = {
+          title: "Patch",
+          ...validCreate,
+          baseBranch: badBaseBranch,
+          changes,
+        };
+        try {
+          const restRes = await fetch(
+            `${f.restUrl}/api-gateway/v1/ledgers/alice/main/pull-requests`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(input),
+            },
+          );
+          expect(restRes.status).toBe(400);
+          expect(await restRes.json()).toMatchObject({
+            error: {
+              code: "BAD_USER_INPUT",
+              metadata: { field: "baseBranch" },
+            },
+          });
+
+          const mcpRes = await f.client.callTool(
+            perOperation({
+              operation: "create",
+              ledger: "alice/main",
+              ...input,
+            }),
+          );
+          expect(mcpRes.isError).toBe(true);
+          expect(mcpRes.structuredContent).toMatchObject({
+            error: {
+              code: "BAD_USER_INPUT",
+              message: expect.stringContaining("baseBranch"),
+            },
+          });
+
+          const gqlRes = await f.gql(createMutation, {
+            input: { ledgerOwner: "alice", ledgerName: "main", ...input },
+          });
+          expect(gqlRes.errors?.[0]).toMatchObject({
+            message: expect.stringContaining("baseBranch"),
+            originalError: {
+              category: "BAD_USER_INPUT",
+              metadata: { field: "baseBranch" },
+            },
+          });
+
+          expect(f.getUserApiClient).not.toHaveBeenCalled();
+          expect(f.repos.repoGetBranch).not.toHaveBeenCalled();
+          expect(f.repos.repoChangeFiles).not.toHaveBeenCalled();
+          expect(f.branches.size).toBe(2);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it.each(["", "   "])(
+      "refuses empty or blank baseBranch=%j as BAD_USER_INPUT on REST, MCP, and GraphQL without calling Gitea",
+      async (blankBaseBranch) => {
+        const f = await fixture();
+        const input = {
+          title: "Patch",
+          ...validCreate,
+          baseBranch: blankBaseBranch,
+          changes,
+        };
+        try {
+          const restRes = await fetch(
+            `${f.restUrl}/api-gateway/v1/ledgers/alice/main/pull-requests`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(input),
+            },
+          );
+          expect(restRes.status).toBe(400);
+          expect(await restRes.json()).toMatchObject({
+            error: {
+              code: "BAD_USER_INPUT",
+              message: "baseBranch must not be empty",
+              metadata: { field: "baseBranch" },
+            },
+          });
+
+          const mcpRes = await f.client.callTool(
+            perOperation({
+              operation: "create",
+              ledger: "alice/main",
+              ...input,
+            }),
+          );
+          expect(mcpRes.isError).toBe(true);
+          expect(mcpRes.structuredContent).toMatchObject({
+            error: {
+              code: "BAD_USER_INPUT",
+              message: "baseBranch must not be empty",
+            },
+          });
+
+          const gqlRes = await f.gql(createMutation, {
+            input: { ledgerOwner: "alice", ledgerName: "main", ...input },
+          });
+          expect(gqlRes.errors?.[0]).toMatchObject({
+            message: "baseBranch must not be empty",
+            originalError: {
+              category: "BAD_USER_INPUT",
+              metadata: { field: "baseBranch" },
+            },
+          });
+
+          expect(f.getUserApiClient).not.toHaveBeenCalled();
+          expect(f.repos.repoGetBranch).not.toHaveBeenCalled();
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("still refuses a read-only token as FORBIDDEN when baseBranch has surrounding whitespace", async () => {
+      const f = await fixture({
+        ...identity,
+        scopes: new Set(["ledger.read"]),
+      });
+      const input = {
+        title: "Patch",
+        ...validCreate,
+        baseBranch: " main ",
+        changes,
+      };
+      try {
+        const restRes = await fetch(
+          `${f.restUrl}/api-gateway/v1/ledgers/alice/main/pull-requests`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(input),
+          },
+        );
+        expect(restRes.status).toBe(403);
+
+        const mcpRes = await f.client.callTool(
+          perOperation({
+            operation: "create",
+            ledger: "alice/main",
+            ...input,
+          }),
+        );
+        expect(mcpRes.isError).toBe(true);
+        expect(mcpRes.structuredContent).toMatchObject({
+          error: { code: "FORBIDDEN" },
+        });
+
+        const gqlRes = await f.gql(createMutation, {
+          input: { ledgerOwner: "alice", ledgerName: "main", ...input },
+        });
+        expect(gqlRes.errors?.[0]).toMatchObject({
+          originalError: { category: "FORBIDDEN" },
+        });
+        expect(f.getUserApiClient).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  });
+
   it("marks failed MCP reviews as errors while retaining their domain result", async () => {
     const f = await fixture();
     try {

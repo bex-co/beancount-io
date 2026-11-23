@@ -254,7 +254,7 @@ export class PullRequestService implements IPullRequestService {
     });
     const title = input.title?.trim() ?? "";
     const description = input.description?.trim() ?? "";
-    const baseBranch = input.baseBranch?.trim() ?? "";
+    const baseBranch = input.baseBranch ?? "";
     const clearCommitMessage = input.clearCommitMessage?.trim() ?? "";
     if (!title) {
       throw new BadUserInputError("title must not be empty");
@@ -264,8 +264,8 @@ export class PullRequestService implements IPullRequestService {
         "description must not be empty — describe what the pull request changes and why",
       );
     }
-    if (!baseBranch) {
-      throw new BadUserInputError("baseBranch must not be empty");
+    if (baseBranch.trim() === "") {
+      throw new BadUserInputError("baseBranch must not be empty", "baseBranch");
     }
     assertBranchName(baseBranch);
     if (!clearCommitMessage) {

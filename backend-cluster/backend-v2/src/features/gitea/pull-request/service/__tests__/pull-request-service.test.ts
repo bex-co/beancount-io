@@ -319,7 +319,8 @@ describe("PullRequestService", () => {
     });
 
     // The base branch is the tail of a git-host URL path: a name outside
-    // git's ref rules, or holding a URL delimiter, never reaches the host.
+    // git's ref rules, or holding a URL delimiter or leading/trailing
+    // whitespace (w31/056), never reaches the host.
     it.each([
       "../../other/repo",
       "main?x=1",
@@ -328,6 +329,11 @@ describe("PullRequestService", () => {
       "main..x",
       "/main",
       "feat.lock",
+      " main ",
+      "main ",
+      " main",
+      "\tmain\n",
+      " no-such-branch-qa ",
     ])(
       "refuses the base branch %j as bad input before reading it",
       async (baseBranch) => {
@@ -336,7 +342,29 @@ describe("PullRequestService", () => {
             ...input,
             baseBranch,
           }),
-        ).rejects.toMatchObject({ category: "BAD_USER_INPUT" });
+        ).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "baseBranch" },
+        });
+        expect(mockGiteaClientFactory.getUserApiClient).not.toHaveBeenCalled();
+        expect(mockClient.repos.repoGetBranch).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(["", "   "])(
+      "refuses empty or blank baseBranch %j as bad input before reading it",
+      async (baseBranch) => {
+        await expect(
+          service.createPRFromPatch(identity, owner, repo, {
+            ...input,
+            baseBranch,
+          }),
+        ).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          message: "baseBranch must not be empty",
+          metadata: { field: "baseBranch" },
+        });
+        expect(mockGiteaClientFactory.getUserApiClient).not.toHaveBeenCalled();
         expect(mockClient.repos.repoGetBranch).not.toHaveBeenCalled();
       },
     );

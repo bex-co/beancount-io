@@ -166,6 +166,7 @@ import {
   type GitBlob,
 } from "@/features/ledger/utils/commit-revert";
 import { findCommit } from "@/features/gitea/commits/service/commits-service";
+import { assertCommitRef } from "@/shared/commit-ref";
 import { COMMIT_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 
 const workflowLogger = logger.child({ module: "ledger-workflow" });
@@ -1726,8 +1727,9 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       action: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
       resource: ledgerResource(ledgerId),
     });
-    const sha = input.sha.trim();
-    if (sha === "") {
+    const sha = input.sha;
+    assertCommitRef(sha, "sha");
+    if (sha.trim() === "") {
       throw new BadUserInputError(
         "sha is required",
         "sha",

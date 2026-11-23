@@ -62,12 +62,19 @@ beforeAll(async () => {
 
 type Answer = {
   ok: boolean;
+  status?: number;
   code?: string;
+  field?: string;
+  message?: string;
   result?: Record<string, unknown>;
 };
 
 async function fixture(history: Snapshot[], caller: Identity = writer) {
   const ledger = createFakeLedger(history);
+  const getUserApiClient = jest.spyOn(
+    ledger.giteaClientFactory,
+    "getUserApiClient",
+  );
   const models = {
     user: {
       getUserByUsername: async () => ({ id: "usr_owner" }),
@@ -133,8 +140,14 @@ async function fixture(history: Snapshot[], caller: Identity = writer) {
       );
       const body = await response.json();
       return response.status === 200
-        ? { ok: true, result: body }
-        : { ok: false, code: body.error?.code };
+        ? { ok: true, status: response.status, result: body }
+        : {
+            ok: false,
+            status: response.status,
+            code: body.error?.code,
+            field: body.error?.metadata?.field,
+            message: body.error?.message,
+          };
     }
     if (surface === "gql") {
       const response = await graphql({
@@ -149,17 +162,19 @@ async function fixture(history: Snapshot[], caller: Identity = writer) {
         },
       });
       const error = response.errors?.[0];
-      return error
-        ? {
-            ok: false,
-            code: formatError(error.toJSON(), error).extensions?.code as string,
-          }
-        : {
-            ok: true,
-            result: JSON.parse(
-              JSON.stringify(response.data?.revertLedgerCommit),
-            ),
-          };
+      if (error) {
+        const formatted = formatError(error.toJSON(), error);
+        return {
+          ok: false,
+          code: formatted.extensions?.code as string,
+          field: formatted.extensions?.field as string | undefined,
+          message: formatted.message,
+        };
+      }
+      return {
+        ok: true,
+        result: JSON.parse(JSON.stringify(response.data?.revertLedgerCommit)),
+      };
     }
     const response = await client.callTool({
       name: "revertCommit",
@@ -172,14 +187,19 @@ async function fixture(history: Snapshot[], caller: Identity = writer) {
     const content = response.structuredContent as {
       ok?: boolean;
       result?: Record<string, unknown>;
-      error?: { code?: string };
+      error?: { code?: string; message?: string };
     };
     return response.isError
-      ? { ok: false, code: content.error?.code }
+      ? {
+          ok: false,
+          code: content.error?.code,
+          message: content.error?.message,
+        }
       : { ok: true, result: content.result };
   };
   return {
     call,
+    getUserApiClient,
     snapshot: ledger.snapshot,
     shas: ledger.shas,
     close: async () => {
@@ -303,20 +323,66 @@ describe.each(["rest", "gql", "mcp"])("revertCommit via %s", (surface) => {
     }
   });
 
-  // w31/024: the host answers a ref with a space it cannot find with a 500, so
-  // the revert refuses it before the lookup, through the shared commit check.
-  it("refuses a sha with a space inside it as bad input, writing nothing", async () => {
-    const f = await fixture([FINE, BROKEN]);
-    try {
-      expect(common(await f.call(surface, { sha: "c1 c0" })).code).toBe(
-        "BAD_USER_INPUT",
-      );
-      expect(f.snapshot()).toEqual(BROKEN);
-      expect(f.shas()).toEqual(["c0", "c1"]);
-    } finally {
-      await f.close();
-    }
-  });
+  // w31/024, w31/056: the host answers a ref with a space it cannot find with
+  // a 500, and leading/trailing spaces must never be silently trimmed; refuse
+  // upfront with BAD_USER_INPUT before acquiring a Gitea client.
+  it.each([
+    ["c1 c0", false],
+    [" main ", true],
+    [" main ", false],
+    ["main ", true],
+    ["main ", false],
+    [" main", true],
+    [" main", false],
+    ["   ", true],
+  ])(
+    "refuses sha=%j (dryRun=%s) as BAD_USER_INPUT without calling Gitea",
+    async (sha, dryRun) => {
+      const f = await fixture([FINE, BROKEN]);
+      try {
+        const answer = await f.call(surface, {
+          sha,
+          ...(dryRun && { dryRun: true }),
+        });
+        expect(answer.ok).toBe(false);
+        expect(answer.code).toBe("BAD_USER_INPUT");
+        expect(answer.message).toContain("sha must not contain a space");
+        if (surface === "rest") {
+          expect(answer.status).toBe(400);
+          expect(answer.field).toBe("sha");
+        } else if (surface === "gql") {
+          expect(answer.field).toBe("sha");
+        }
+        expect(f.getUserApiClient).not.toHaveBeenCalled();
+        expect(f.snapshot()).toEqual(BROKEN);
+        expect(f.shas()).toEqual(["c0", "c1"]);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each(["", "\t", "\n"])(
+    "refuses empty or blank sha=%j as BAD_USER_INPUT without calling Gitea",
+    async (sha) => {
+      const f = await fixture([FINE, BROKEN]);
+      try {
+        const answer = await f.call(surface, { sha, dryRun: true });
+        expect(answer.ok).toBe(false);
+        expect(answer.code).toBe("BAD_USER_INPUT");
+        expect(answer.message).toBe("sha is required");
+        if (surface === "rest") {
+          expect(answer.status).toBe(400);
+          expect(answer.field).toBe("sha");
+        } else if (surface === "gql") {
+          expect(answer.field).toBe("sha");
+        }
+        expect(f.getUserApiClient).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
 
   it("refuses a credential that may not write, writing nothing", async () => {
     const f = await fixture([FINE, BROKEN], reader);
@@ -324,6 +390,10 @@ describe.each(["rest", "gql", "mcp"])("revertCommit via %s", (surface) => {
       expect(common(await f.call(surface, { sha: "c1" })).code).toBe(
         "FORBIDDEN",
       );
+      expect(common(await f.call(surface, { sha: " main " })).code).toBe(
+        "FORBIDDEN",
+      );
+      expect(f.getUserApiClient).not.toHaveBeenCalled();
       expect(f.snapshot()).toEqual(BROKEN);
     } finally {
       await f.close();
