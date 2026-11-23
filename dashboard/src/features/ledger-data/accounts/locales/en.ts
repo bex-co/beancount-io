@@ -13,6 +13,11 @@ const enAccounts: Record<string, TranslationEntry> = {
     message: "Account",
     description: "Table column header for account name",
   },
+  "page.accounts.accountNeedsChild": {
+    message: "Add a name after {root}, as in {example}.",
+    description:
+      "Validation error for a bare account root. {root} is the configured root and {example} is a valid full account name.",
+  },
   "page.accounts.accountMustStartWith": {
     message: "Account must start with one of: {prefixes}",
     description: "Validation error when account prefix is invalid",

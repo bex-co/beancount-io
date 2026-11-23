@@ -13,6 +13,11 @@ const faAccounts: Record<string, TranslationEntry> = {
     message: "حساب",
     description: "Table column header for account name",
   },
+  "page.accounts.accountNeedsChild": {
+    message: "بعد از {root} یک نام اضافه کنید، مانند {example}.",
+    description:
+      "Validation error for a bare account root. {root} is the configured root and {example} is a valid full account name.",
+  },
   "page.accounts.accountMustStartWith": {
     message: "حساب باید با یکی از این‌ها شروع شود: {prefixes}",
     description: "Validation error when account prefix is invalid",

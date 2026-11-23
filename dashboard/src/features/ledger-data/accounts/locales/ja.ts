@@ -13,6 +13,11 @@ const jaAccounts: Record<string, TranslationEntry> = {
     message: "口座",
     description: "Table column header for account name",
   },
+  "page.accounts.accountNeedsChild": {
+    message: "{root} の後ろに名前を追加してください（例 {example}）。",
+    description:
+      "Validation error for a bare account root. {root} is the configured root and {example} is a valid full account name.",
+  },
   "page.accounts.accountMustStartWith": {
     message: "口座名は次のいずれかで始まる必要があります: {prefixes}",
     description: "Validation error when account prefix is invalid",

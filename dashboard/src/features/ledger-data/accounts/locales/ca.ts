@@ -13,6 +13,11 @@ const caAccounts: Record<string, TranslationEntry> = {
     message: "Compte",
     description: "Table column header for account name",
   },
+  "page.accounts.accountNeedsChild": {
+    message: "Afegiu un nom després de {root}, com ara {example}.",
+    description:
+      "Validation error for a bare account root. {root} is the configured root and {example} is a valid full account name.",
+  },
   "page.accounts.accountMustStartWith": {
     message: "El compte ha de començar amb un d'aquests: {prefixes}",
     description: "Validation error when account prefix is invalid",

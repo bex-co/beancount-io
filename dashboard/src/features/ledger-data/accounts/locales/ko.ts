@@ -13,6 +13,11 @@ const koAccounts: Record<string, TranslationEntry> = {
     message: "계정",
     description: "Table column header for account name",
   },
+  "page.accounts.accountNeedsChild": {
+    message: "{root} 뒤에 이름을 추가하세요. 예를 들면 {example}입니다.",
+    description:
+      "Validation error for a bare account root. {root} is the configured root and {example} is a valid full account name.",
+  },
   "page.accounts.accountMustStartWith": {
     message: "계정명은 다음 중 하나로 시작해야 합니다: {prefixes}",
     description: "Validation error when account prefix is invalid",

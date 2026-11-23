@@ -13,6 +13,11 @@ const ptAccounts: Record<string, TranslationEntry> = {
     message: "Conta",
     description: "Table column header for account name",
   },
+  "page.accounts.accountNeedsChild": {
+    message: "Adicione um nome após {root}, como em {example}.",
+    description:
+      "Validation error for a bare account root. {root} is the configured root and {example} is a valid full account name.",
+  },
   "page.accounts.accountMustStartWith": {
     message: "A conta deve começar com um dos: {prefixes}",
     description: "Validation error when account prefix is invalid",

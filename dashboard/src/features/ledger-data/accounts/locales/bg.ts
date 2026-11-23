@@ -13,6 +13,11 @@ const bgAccounts: Record<string, TranslationEntry> = {
     message: "Сметка",
     description: "Table column header for account name",
   },
+  "page.accounts.accountNeedsChild": {
+    message: "Добавете име след {root}, например {example}.",
+    description:
+      "Validation error for a bare account root. {root} is the configured root and {example} is a valid full account name.",
+  },
   "page.accounts.accountMustStartWith": {
     message: "Сметката трябва да започва с един от: {prefixes}",
     description: "Validation error when account prefix is invalid",

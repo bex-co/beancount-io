@@ -13,6 +13,11 @@ const skAccounts: Record<string, TranslationEntry> = {
     message: "Účet",
     description: "Table column header for account name",
   },
+  "page.accounts.accountNeedsChild": {
+    message: "Za {root} pridajte názov, napríklad {example}.",
+    description:
+      "Validation error for a bare account root. {root} is the configured root and {example} is a valid full account name.",
+  },
   "page.accounts.accountMustStartWith": {
     message: "Účet musí začínať jedným z: {prefixes}",
     description: "Validation error when account prefix is invalid",

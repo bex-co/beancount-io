@@ -13,6 +13,11 @@ const deAccounts: Record<string, TranslationEntry> = {
     message: "Konto",
     description: "Table column header for account name",
   },
+  "page.accounts.accountNeedsChild": {
+    message: "Ergänzen Sie nach {root} einen Namen, etwa {example}.",
+    description:
+      "Validation error for a bare account root. {root} is the configured root and {example} is a valid full account name.",
+  },
   "page.accounts.accountMustStartWith": {
     message: "Das Konto muss mit einem der folgenden beginnen: {prefixes}",
     description: "Validation error when account prefix is invalid",

@@ -103,6 +103,21 @@ describe.each(surfaces)("Open Account in $name (w3/557)", (surface) => {
     expect(screen.queryByText(/already open/)).not.toBeInTheDocument();
   });
 
+  it.each(["Assets", "Expenses"])(
+    "asks for a name after the bare %s root",
+    async (root) => {
+      surface.render();
+      await type(root);
+
+      expect(
+        await screen.findByText(
+          `Add a name after ${root}, as in ${root}:Bank.`,
+        ),
+      ).toBeInTheDocument();
+      expect(surface.submit()).toBeDisabled();
+    },
+  );
+
   it("keeps the prefix message for a case-different name", async () => {
     surface.render();
     await type("assets:cash");

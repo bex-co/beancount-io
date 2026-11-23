@@ -62,10 +62,12 @@ describe("buildOpenAccountSchema", () => {
   const schema = buildOpenAccountSchema(prefixes, {
     required: "required",
     mustStartWith: "prefix",
+    needsChild: (root) => `child:${root}`,
     invalid: (problem) =>
       "component" in problem
         ? `${problem.kind}:${problem.component}`
         : problem.kind,
+    exists: () => "exists",
   });
 
   it("blocks malformed tokens before a mutation can be prepared", () => {
@@ -82,7 +84,7 @@ describe("buildOpenAccountSchema", () => {
 
   it("keeps the configured-prefix rule and accepts valid names", () => {
     expect(
-      schema.safeParse({ date: "2026-10-20", account: "Checking" }).error
+      schema.safeParse({ date: "2026-10-20", account: "Foo:Bar" }).error
         ?.issues[0]?.message,
     ).toBe("prefix");
     expect(
@@ -92,6 +94,17 @@ describe("buildOpenAccountSchema", () => {
       }).success,
     ).toBe(true);
   });
+
+  it.each(["Assets", "Expenses"])(
+    "asks for a child of the configured root %s",
+    (account) => {
+      const parsed = schema.safeParse({ date: "2026-10-20", account });
+      expect(parsed.success).toBe(false);
+      expect(parsed.error?.issues.map(({ message }) => message)).toEqual([
+        `child:${account}`,
+      ]);
+    },
+  );
 
   it("keeps a joined or numbered name exactly as written", () => {
     for (const account of ["Assets:فارسی\u200Cحساب", "Assets:Qa\u2163"]) {
@@ -118,10 +131,12 @@ describe("account name reasons (w0/017)", () => {
   const schema = buildOpenAccountSchema(["Assets", "Expenses"], {
     required: "required",
     mustStartWith: "prefix",
+    needsChild: (root) => `child:${root}`,
     invalid: (problem) =>
       "component" in problem
         ? `${problem.kind}:${problem.component}`
         : problem.kind,
+    exists: () => "exists",
   });
   const message = (account: string) =>
     schema.safeParse({ date: "2026-10-20", account }).error?.issues[0]?.message;
@@ -155,6 +170,7 @@ describe("accounts the ledger already opens (w3/557)", () => {
     {
       required: "required",
       mustStartWith: "prefix",
+      needsChild: (root) => `child:${root}`,
       invalid: (problem) => problem.kind,
       exists: (account, { openedAt, closedAt }) =>
         closedAt

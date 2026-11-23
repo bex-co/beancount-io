@@ -12,6 +12,7 @@ export function buildOpenAccountSchema(
   messages: {
     required: string;
     mustStartWith: string;
+    needsChild: (root: string) => string;
     /** Message for each reason the name is not a complete account token. */
     invalid: (problem: AccountTokenProblem) => string;
     /** Message for a name the ledger already opens, open or closed. */
@@ -24,13 +25,17 @@ export function buildOpenAccountSchema(
     account: z
       .string()
       .min(1, messages.required)
-      .refine(
-        (val) =>
-          prefixes.length === 0 ||
-          prefixes.some((prefix) => val.startsWith(`${prefix}:`)),
-        messages.mustStartWith,
-      )
       .superRefine((val, ctx) => {
+        if (prefixes.includes(val)) {
+          ctx.addIssue({ code: "custom", message: messages.needsChild(val) });
+          return;
+        }
+        if (
+          prefixes.length > 0 &&
+          !prefixes.some((prefix) => val.startsWith(`${prefix}:`))
+        ) {
+          ctx.addIssue({ code: "custom", message: messages.mustStartWith });
+        }
         const problem = accountTokenProblem(val);
         if (problem) {
           ctx.addIssue({ code: "custom", message: messages.invalid(problem) });

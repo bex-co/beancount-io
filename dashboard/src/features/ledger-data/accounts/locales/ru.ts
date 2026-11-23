@@ -13,6 +13,11 @@ const ruAccounts: Record<string, TranslationEntry> = {
     message: "Счёт",
     description: "Table column header for account name",
   },
+  "page.accounts.accountNeedsChild": {
+    message: "Добавьте имя после {root}, как в {example}.",
+    description:
+      "Validation error for a bare account root. {root} is the configured root and {example} is a valid full account name.",
+  },
   "page.accounts.accountMustStartWith": {
     message: "Счёт должен начинаться с одного из: {prefixes}",
     description: "Validation error when account prefix is invalid",

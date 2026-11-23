@@ -13,6 +13,11 @@ const nlAccounts: Record<string, TranslationEntry> = {
     message: "Rekening",
     description: "Table column header for account name",
   },
+  "page.accounts.accountNeedsChild": {
+    message: "Voeg na {root} een naam toe, zoals in {example}.",
+    description:
+      "Validation error for a bare account root. {root} is the configured root and {example} is a valid full account name.",
+  },
   "page.accounts.accountMustStartWith": {
     message: "Rekening moet beginnen met een van: {prefixes}",
     description: "Validation error when account prefix is invalid",

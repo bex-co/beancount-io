@@ -61,6 +61,11 @@ export function useOpenAccountSchema(ledgerId: string) {
           mustStartWith: t("page.accounts.accountMustStartWith", {
             prefixes: accountPrefixes.join(", "),
           }),
+          needsChild: (root) =>
+            t("page.accounts.accountNeedsChild", {
+              root,
+              example: `${root}:Bank`,
+            }),
           invalid: accountProblemMessage(t),
           exists: accountExistsMessage(t),
         },
