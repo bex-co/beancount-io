@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { act, render, screen, fireEvent } from "@testing-library/react";
+import {
+  act,
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FileSpreadsheet } from "lucide-react";
 import { LedgerSidebarGroup } from "../ledger-sidebar-group";
@@ -42,6 +48,7 @@ function renderFlyout(
 ) {
   return render(
     <SidebarProvider>
+      <input aria-label="Search accounts" />
       <LedgerSidebarGroup
         label="Reports"
         icon={FileSpreadsheet}
@@ -138,6 +145,33 @@ describe("LedgerSidebarGroup", () => {
     fireEvent.pointerEnter(item, { pointerType: "mouse" });
     expect(await screen.findByText("Income statement")).toBeInTheDocument();
   });
+
+  it.each([
+    { label: "Reports", role: "link", landingPath: "/x/income" },
+    { label: "Import", role: "button" },
+    { label: "Advanced", role: "button" },
+  ] as const)(
+    "preserves typing while the mouse crosses $label",
+    async (group) => {
+      const user = userEvent.setup();
+      renderFlyout(group);
+      const field = screen.getByRole("textbox", { name: "Search accounts" });
+      await user.type(field, "Che");
+      const trigger = screen.getByRole(group.role, { name: group.label });
+      await user.hover(trigger);
+      expect(
+        await screen.findByRole("dialog", { name: group.label }),
+      ).toBeVisible();
+      expect(field).toHaveFocus();
+      await user.unhover(trigger);
+      await waitFor(() =>
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+      );
+      expect(field).toHaveFocus();
+      await user.keyboard("ck");
+      expect(field).toHaveValue("Check");
+    },
+  );
 
   it("calls onNavigate when a destination is chosen", async () => {
     const onNavigate = vi.fn();
@@ -251,6 +285,32 @@ describe("LedgerSidebarGroup", () => {
       fireEvent.keyDown(icon, { key: "ArrowRight" });
       expect(await screen.findByText("Balance sheet")).toBeInTheDocument();
       expect(icon).toHaveAttribute("aria-expanded", "true");
+    });
+
+    it("returns focus after Escape to the link that opened the flyout", async () => {
+      const user = userEvent.setup();
+      renderFlyout({ landingPath: "/x/income" });
+      const link = screen.getByRole("link", { name: "Reports" });
+      link.focus();
+      await user.keyboard("{ArrowRight}");
+      const dialog = await screen.findByRole("dialog", { name: "Reports" });
+      await user.tab();
+      expect(dialog).toContainElement(document.activeElement as HTMLElement);
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(link).toHaveFocus());
+      expect(dialog).not.toBeInTheDocument();
+    });
+
+    it("leaves focus on the outside control clicked to dismiss it", async () => {
+      const user = userEvent.setup();
+      renderFlyout({ landingPath: "/x/income" });
+      screen.getByRole("link", { name: "Reports" }).focus();
+      await user.keyboard("{ArrowDown}");
+      const dialog = await screen.findByRole("dialog", { name: "Reports" });
+      const field = screen.getByRole("textbox", { name: "Search accounts" });
+      await user.click(field);
+      await waitFor(() => expect(dialog).not.toBeInTheDocument());
+      expect(field).toHaveFocus();
     });
   });
 });

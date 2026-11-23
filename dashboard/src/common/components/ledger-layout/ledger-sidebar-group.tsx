@@ -2,6 +2,7 @@ import {
   type ElementType,
   type PointerEvent,
   type ReactNode,
+  useCallback,
   useEffect,
   useId,
   useRef,
@@ -24,6 +25,7 @@ import {
   PopoverTrigger,
 } from "@/common/components/ui/popover.tsx";
 import { EXACT_PAGE_LINK } from "@/common/lib/navigation/active-options";
+import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 
 interface FlyoutItem {
   id: string;
@@ -82,6 +84,13 @@ export function LedgerSidebarGroup({
   const titleId = useId();
   const submenuId = useId();
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openerRef = useRef<HTMLElement>(null);
+  const flyoutRef = useRef<HTMLDivElement>(null);
+  const openedByHover = useRef(false);
+  const interactedOutside = useRef(false);
+  const setOpener = useCallback((element: HTMLElement | null) => {
+    openerRef.current = element;
+  }, []);
   if (!inRail && open) setOpen(false);
 
   const cancelClose = () => {
@@ -90,9 +99,14 @@ export function LedgerSidebarGroup({
       closeTimer.current = null;
     }
   };
-  const openNow = () => {
+  const openNow = (source: "hover" | "activation") => {
     cancelClose();
-    setOpen(true);
+    if (open && source === "hover") return;
+    openedByHover.current = source === "hover";
+    interactedOutside.current = false;
+    // A click or arrow key can take over a panel already open on hover.
+    if (open) flyoutRef.current?.focus({ preventScroll: true });
+    else setOpen(true);
   };
   const scheduleClose = () => {
     cancelClose();
@@ -106,10 +120,12 @@ export function LedgerSidebarGroup({
   // keyboard activation go through the popover's own toggle instead, which
   // already works.
   const handlePointerEnter = (event: PointerEvent<HTMLElement>) => {
-    if (inRail && event.pointerType === "mouse") openNow();
+    if (inRail && event.pointerType === "mouse") openNow("hover");
   };
   const handlePointerLeave = (event: PointerEvent<HTMLElement>) => {
-    if (inRail && event.pointerType === "mouse") scheduleClose();
+    if (inRail && event.pointerType === "mouse" && openedByHover.current) {
+      scheduleClose();
+    }
   };
 
   // Drop a pending hover timer when the group leaves the rail or unmounts.
@@ -127,12 +143,31 @@ export function LedgerSidebarGroup({
   // label names the rail icon (w4/1012).
   const flyout = inRail && (
     <PopoverContent
+      ref={flyoutRef}
       aria-labelledby={titleId}
       side="right"
       align="start"
       sideOffset={8}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
+      onOpenAutoFocus={(event) => {
+        if (openedByHover.current) event.preventDefault();
+      }}
+      onInteractOutside={(event) => {
+        if (
+          event.target instanceof Node &&
+          !openerRef.current?.contains(event.target)
+        ) {
+          interactedOutside.current = true;
+        }
+      }}
+      onCloseAutoFocus={(event) => {
+        if (openedByHover.current || interactedOutside.current) {
+          event.preventDefault();
+          return;
+        }
+        restoreFocusOnDialogClose(event, openerRef.current);
+      }}
       className="w-56 p-1"
     >
       <div
@@ -173,12 +208,16 @@ export function LedgerSidebarGroup({
     >
       <Popover
         open={inRail && open}
-        onOpenChange={inRail ? setOpen : undefined}
+        onOpenChange={(next) => {
+          if (inRail && next) openNow("activation");
+          if (!next) setOpen(false);
+        }}
       >
         {landingPath ? (
           <PopoverAnchor asChild>
             <SidebarMenuButton asChild isActive={isActive}>
               <Link
+                ref={setOpener}
                 to={landingPath}
                 aria-label={inRail ? label : undefined}
                 aria-haspopup={inRail ? "dialog" : undefined}
@@ -195,7 +234,7 @@ export function LedgerSidebarGroup({
                     (event.key === "ArrowRight" || event.key === "ArrowDown")
                   ) {
                     event.preventDefault();
-                    openNow();
+                    openNow("activation");
                   }
                 }}
               >
@@ -216,8 +255,15 @@ export function LedgerSidebarGroup({
             })}
           >
             <SidebarMenuButton
+              ref={setOpener}
               isActive={isActive}
               aria-label={inRail ? label : undefined}
+              onClick={(event) => {
+                if (inRail && open && openedByHover.current) {
+                  event.preventDefault();
+                  openNow("activation");
+                }
+              }}
             >
               <Icon className="h-4 w-4" />
               <span>{label}</span>
