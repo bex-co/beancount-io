@@ -3562,6 +3562,37 @@ _PARSER_REPRS = (
 )
 
 
+#: How a stray comma refusal begins, so a caller can add where the rest belongs.
+STRAY_COMMA = "Unexpected ','"
+
+
+def _unexpected_comma_message(text: str) -> str | None:
+    """Name the comma the parser stopped at in one amount or posting `text`.
+
+    `1.234,56` never lexes as one number, so the parser cannot quote it; a
+    number beside a comma that is not grouping in threes is the amount
+    (w5/722). A correctly grouped `1,000.00` is not: the comma it stopped at
+    is a later one, after the amount, and the decimal-comma advice sent the
+    user to a second refusal (w1/370). Commas inside a cost's braces are its
+    own separators.
+    """
+    from bea_engine.amounts import DECIMAL_COMMA_HELP
+
+    numbers = [(found.start(), found[0].rstrip(",")) for found in re.finditer(r"[0-9][0-9.,]*", text)]
+    for _, number in numbers:
+        if "," in number and not re.fullmatch(r"[0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]*)?", number):
+            return f"Invalid amount {number!r}. {DECIMAL_COMMA_HELP}"
+    grouping = {start + offset for start, number in numbers for offset in range(len(number))}
+    depth = 0
+    for index, character in enumerate(text):
+        if character in "{}":
+            depth = max(depth + (1 if character == "{" else -1), 0)
+        elif character == "," and depth == 0 and index not in grouping:
+            before = text[:index].strip()
+            return f"{STRAY_COMMA} after {before!r}; the text from the comma on is not part of it." if before else None
+    return None
+
+
 def readable_parser_message(message: str, *, text: str = "") -> str:
     """A parser diagnostic with the grammar value it quotes written as Beancount text.
 
@@ -3579,13 +3610,9 @@ def readable_parser_message(message: str, *, text: str = "") -> str:
 
         return f"Invalid amount {comma[1]!r}. {DECIMAL_COMMA_HELP}"
     if "unexpected COMMA" in message:
-        # `1.234,56` never lexes as one number, so the parser cannot quote
-        # it; the comma beside digits in the input is the amount (w5/722).
-        from bea_engine.amounts import DECIMAL_COMMA_HELP
-
-        found = re.search(r"[0-9][0-9.,]*,[0-9.,]*", text)
-        if found is not None:
-            return f"Invalid amount {found[0]!r}. {DECIMAL_COMMA_HELP}"
+        unexpected = _unexpected_comma_message(text)
+        if unexpected is not None:
+            return unexpected
     for pattern, kind in _PARSER_REPRS:
         match = pattern.match(message)
         if match is None:

@@ -1443,7 +1443,7 @@ def _transaction(
     from bea_engine import managed_load
     from bea_engine.ledger.models import COMMENT_HELP, WRITE_INPUT, TransactionHeader, comment_start
     from bea_engine.ledger.reader import metadata_to_json
-    from bea_engine.query import readable_parser_message
+    from bea_engine.query import STRAY_COMMA, readable_parser_message
 
     postings: list[str] = [str(posting) for posting in request.get("postings") or []]
     for number, posting_text in enumerate(postings, start=1):
@@ -1499,7 +1499,11 @@ def _transaction(
             blamed = 0 < posting_number <= len(postings)
             location = f"--posting {posting_number}" if blamed else "Transaction options"
             scope = postings[posting_number - 1] if blamed else ""
-            details.append(f"{location}: {readable_parser_message(error.message, text=scope)}")
+            readable = readable_parser_message(error.message, text=scope)
+            if readable.startswith(STRAY_COMMA):
+                # `-p 'Expenses:Food 10 USD, Assets:Checking'` is two postings in one flag (w1/370).
+                readable += " Give each posting its own --posting."
+            details.append(f"{location}: {readable}")
         if details and all(detail.startswith("Transaction options:") for detail in details):
             message = _HEADER_ERROR
         else:

@@ -580,7 +580,10 @@ accept finite decimal notation with ASCII digits and an optional sign and
 decimal point. Comma grouping in threes (`1,000.00`, `65,432.10`) is accepted
 for these values, as it is for `add balance` and `--posting`; numbers are
 written without the commas. Other comma placements (`1,50`, `12,34,567`) are
-refused naming the thousands separators.
+refused naming the thousands separators. A well-grouped number refused for
+something else (`$1,500.00`, `1,500.5.5`) gets the general notation message,
+and a comma after a posting or balance amount (`1,000.00 USD,`) is named as
+text that is not part of it.
 Exponents, underscores, and non-ASCII digits are refused before anything is
 written.
 

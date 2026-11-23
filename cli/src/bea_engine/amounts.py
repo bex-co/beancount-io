@@ -218,10 +218,23 @@ def parse_decimal_number(value: str, *, grouping: bool = True) -> Decimal:
     if grouping and re.fullmatch(r"[+-]?[0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]*)?", text):
         return Decimal(text.replace(",", ""))
     if not re.fullmatch(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)", text):
-        if grouping and "," in text:
+        if grouping and _comma_is_the_obstacle(text):
             raise ValueError(f"Invalid amount {value!r}. {DECIMAL_COMMA_HELP}")
         raise ValueError(f"Invalid amount {value!r}. Use finite decimal notation with ASCII digits, such as '1538.25'.")
     return Decimal(text)
+
+
+def _comma_is_the_obstacle(text: str) -> bool:
+    """Whether a refused number fails on its commas rather than on something else.
+
+    The frontend twin's rule: only digits, commas and points, with commas that
+    are not grouping in threes before the fraction. `$1,500.00`, `~1,500` and
+    `1,500.5.5` group correctly and get the generic message (w1/370).
+    """
+    return (
+        re.fullmatch(r"[+-]?[0-9.,]*,[0-9.,]*", text) is not None
+        and re.fullmatch(r"[+-]?[0-9]{1,3}(?:,[0-9]{3})+\.[0-9.]*", text) is None
+    )
 
 
 def require_plain_decimal(value: Any) -> Any:

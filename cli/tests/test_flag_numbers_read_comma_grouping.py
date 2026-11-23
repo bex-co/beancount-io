@@ -75,6 +75,29 @@ def test_any_other_comma_is_refused_naming_the_separators_on_both_sides(text: st
     assert "thousands separator" in str(frontend.value)
 
 
+@pytest.mark.parametrize("text", ["4,50", "1.234,56", "1,5000", "1.234.567,89", "-12,34"])
+def test_a_decimal_comma_keeps_the_separator_advice_on_both_sides(text: str) -> None:
+    with pytest.raises(UsageError) as frontend:
+        parse_decimal_number(text)
+    with pytest.raises(ValueError) as engine:
+        engine_decimal_number(text)
+    assert str(frontend.value) == str(engine.value)
+    assert "thousands separator" in str(frontend.value)
+
+
+@pytest.mark.parametrize("text", ["$1,500.00", "~1,500", "1,500.5.5", "1,234..5", "1,500 USD", "1,000-", "€1,000"])
+def test_a_well_grouped_number_refused_for_something_else_is_not_told_about_separators(text: str) -> None:
+    """The comma advice is for a comma that is the obstacle; these group correctly (w1/370)."""
+    with pytest.raises(UsageError) as frontend:
+        parse_decimal_number(text)
+    with pytest.raises(ValueError) as engine:
+        engine_decimal_number(text)
+    assert str(frontend.value) == str(engine.value)
+    assert repr(text) in str(frontend.value)
+    assert "thousands separator" not in str(frontend.value)
+    assert "Use finite decimal notation with ASCII digits" in str(frontend.value)
+
+
 def test_add_price_writes_a_grouped_quote_ungrouped(tmp_path: Path) -> None:
     ledger = _ledger(tmp_path)
 

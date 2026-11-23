@@ -70,10 +70,24 @@ def parse_decimal_number(value: str) -> Decimal:
     if re.fullmatch(r"[+-]?[0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]*)?", text):
         return Decimal(text.replace(",", ""))
     if not re.fullmatch(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)", text):
-        if "," in text:
+        if _comma_is_the_obstacle(text):
             raise UsageError(_GROUPING_MESSAGE.format(value))
         raise UsageError(f"Invalid amount {value!r}. Use finite decimal notation with ASCII digits, such as '1538.25'.")
     return Decimal(text)
+
+
+def _comma_is_the_obstacle(text: str) -> bool:
+    """Whether a refused number fails on its commas rather than on something else.
+
+    Only digits, commas and points, with commas that are not grouping in
+    threes before the fraction (`4,50`, `1.234,56`, `1,5000`). `$1,500.00`,
+    `~1,500` and `1,500.5.5` group correctly, so the comma advice would send
+    the user to a second refusal (w1/370).
+    """
+    return (
+        re.fullmatch(r"[+-]?[0-9.,]*,[0-9.,]*", text) is not None
+        and re.fullmatch(r"[+-]?[0-9]{1,3}(?:,[0-9]{3})+\.[0-9.]*", text) is None
+    )
 
 
 # A slash currency needs a letter somewhere in its token: /0-J is a currency,
