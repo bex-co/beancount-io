@@ -1,8 +1,13 @@
 import { z } from "zod";
 import { validateRequest } from "../validation-middleware";
+import { restErrorMiddleware } from "../error-middleware";
 import { BadUserInputError } from "@/shared/errors";
 import { graphqlNulMiddleware } from "@/server/graphql/nul-middleware";
 import { ARGUMENT_LIMITS } from "@/shared/argument-limits";
+import {
+  JOURNAL_READS,
+  jsonQuery,
+} from "@/features/ledger/api/rest/v1/journal-reads";
 
 /**
  * w23/m22 — REST and GraphQL refuse U+0000 in any caller-supplied string
@@ -197,5 +202,80 @@ describe("the argument ceilings", () => {
     await expect(
       runRest({ body: { files: [{ path: "a\ud800" }] } }),
     ).rejects.toThrow(/files\[\]\.path/);
+  });
+});
+
+describe("jsonQuery argument limits on REST (w31/065)", () => {
+  const journalQuery = JOURNAL_READS[0].query;
+
+  const runJournalRest = async (directiveTypes: string) => {
+    const ctx = {
+      method: "GET",
+      path: "/api-gateway/v1/ledgers/alice/main/journal",
+      querystring: `directiveTypes=${encodeURIComponent(directiveTypes)}`,
+      params: {},
+      query: { directiveTypes },
+      request: { body: {} },
+      state: {} as Record<string, unknown>,
+      status: 200,
+      body: undefined as unknown,
+      get: () => "",
+      set: () => undefined,
+    };
+    const next = jest.fn(async () => undefined);
+    await restErrorMiddleware()(ctx as never, async () => {
+      await validateRequest({ query: journalQuery })(ctx as never, next);
+    });
+    return { ctx, next };
+  };
+
+  it.each([
+    ["JSON-escaped NUL", '["Trans\\u0000action"]', /directiveTypes\[\].*NUL/],
+    [
+      "JSON-escaped unpaired surrogate",
+      '["Trans\\ud800action"]',
+      /directiveTypes\[\].*unpaired surrogate/,
+    ],
+    [
+      "array past the ceiling",
+      JSON.stringify(new Array(ARGUMENT_LIMITS.maxArrayLength + 1).fill("a")),
+      new RegExp(`directiveTypes.*${ARGUMENT_LIMITS.maxArrayLength}`),
+    ],
+    [
+      "nesting past the ceiling",
+      `${"[".repeat(ARGUMENT_LIMITS.maxDepth + 1)}"x"${"]".repeat(ARGUMENT_LIMITS.maxDepth + 1)}`,
+      new RegExp(`${ARGUMENT_LIMITS.maxDepth} levels deep`),
+    ],
+  ])(
+    "refuses %s inside journal directiveTypes with HTTP 400 BAD_USER_INPUT",
+    async (_label, raw, pattern) => {
+      const { ctx, next } = await runJournalRest(raw);
+      expect(next).not.toHaveBeenCalled();
+      expect(ctx.status).toBe(400);
+      expect(ctx.body).toMatchObject({
+        ok: false,
+        error: {
+          code: "BAD_USER_INPUT",
+          message: expect.stringMatching(pattern),
+        },
+      });
+    },
+  );
+
+  it("refuses an over-length decoded string directly in jsonQuery", () => {
+    const schema = jsonQuery(z.string(), "test", "payload");
+    const over = JSON.stringify(
+      "a".repeat(ARGUMENT_LIMITS.maxStringLength + 1),
+    );
+    expect(() => schema.parse(over)).toThrow(BadUserInputError);
+  });
+
+  it("still accepts valid UTF-8 and paired surrogate emoji in jsonQuery", async () => {
+    const { ctx, next } = await runJournalRest(JSON.stringify(["Café ☕ 😀"]));
+    expect(next).toHaveBeenCalled();
+    expect(ctx.status).toBe(200);
+    expect(ctx.state.validated).toMatchObject({
+      query: { directiveTypes: ["Café ☕ 😀"] },
+    });
   });
 });

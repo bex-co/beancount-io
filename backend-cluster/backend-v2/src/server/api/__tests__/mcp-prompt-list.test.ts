@@ -11,6 +11,7 @@ import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import { MCP_RESOURCES } from "@/features/ai-agent/api/mcp-resources";
 import { LEDGER_NAME_RULE, LEDGER_OWNER_RULE } from "@/shared/ledger-slug";
 import { JSON_RPC_INVALID_PARAMS } from "@/features/ai-agent/api/mcp-errors";
+import { ARGUMENT_LIMITS } from "@/shared/argument-limits";
 import { isMcpHandshakeRequest } from "@/features/ai-agent/api/mcp-rate-policy";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import type { AppConfig } from "@/config/config";
@@ -469,5 +470,46 @@ describe("MCP prompts", () => {
   it("charges prompts/get but not prompts/list", () => {
     expect(isMcpHandshakeRequest({ method: "prompts/list" })).toBe(true);
     expect(isMcpHandshakeRequest({ method: "prompts/get" })).toBe(false);
+  });
+
+  // w31/065: prompts/get enforces the same argument limits as tools and resources.
+  it.each([
+    ["NUL character", { question: "foo\u0000bar" }, /question.*NUL/],
+    [
+      "unpaired surrogate",
+      { question: "foo\ud800bar" },
+      /question.*unpaired surrogate/,
+    ],
+    [
+      "over-limit string",
+      { question: "a".repeat(ARGUMENT_LIMITS.maxStringLength + 1) },
+      new RegExp(`question.*${ARGUMENT_LIMITS.maxStringLength}`),
+    ],
+  ])(
+    "refuses a prompt argument containing %s as BAD_USER_INPUT",
+    async (_label, args, pattern) => {
+      const error = await withClient(pinned, (client) =>
+        client
+          .getPrompt({ name: "spending-report", arguments: args })
+          .then(() => undefined)
+          .catch((caught: unknown) => caught as McpError),
+      );
+      expect(error?.code).toBe(JSON_RPC_INVALID_PARAMS);
+      expect(error?.data).toMatchObject({
+        code: "BAD_USER_INPUT",
+        message: expect.stringMatching(pattern),
+        hint: expect.stringContaining("prompts/list"),
+      });
+    },
+  );
+
+  it("still renders a prompt argument with valid UTF-8 and paired surrogate emoji", async () => {
+    const result = await withClient(pinned, (client) =>
+      client.getPrompt({
+        name: "spending-report",
+        arguments: { question: "Café ☕ 😀 spending" },
+      }),
+    );
+    expect(textOf(result.messages[0].content)).toContain("Café ☕ 😀 spending");
   });
 });

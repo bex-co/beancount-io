@@ -32,6 +32,7 @@ export const suggestCategoriesQuery = z.object({
   transactions: jsonQuery(
     z.array(transactionToCategorizeSchema),
     "JSON-encoded array of {rowIndex, date, payee, description, amount}",
+    "transactions",
   ),
 });
 

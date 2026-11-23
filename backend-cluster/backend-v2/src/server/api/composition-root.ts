@@ -813,6 +813,16 @@ export function assembleMcpRegistry(
       }
       const request = parsed.data;
       const raw = request.params.uri;
+      try {
+        assertNoNulDeep(raw, undefined, "uri");
+      } catch (error) {
+        return refuseMcpRequest(
+          error,
+          "MCP resource read failed",
+          { resource: UNKNOWN_RESOURCE },
+          config,
+        );
+      }
       if (!URL.canParse(raw)) {
         return refuseMcpRequest(
           new BadUserInputError(
@@ -965,6 +975,16 @@ export function assembleMcpRegistry(
         );
       }
       const descriptor = MCP_PROMPTS.find((prompt) => prompt.name === name)!;
+      try {
+        assertNoNulDeep(request.params.arguments);
+      } catch (error) {
+        return refuseMcpRequest(
+          error,
+          "MCP prompt fetch failed",
+          { prompt: name },
+          config,
+        );
+      }
       // Strict like tools and resources: a misspelled argument must refuse
       // with the unknown key named, not render with the intent silently
       // dropped (w23/117).
@@ -1129,7 +1149,9 @@ function refuseMcpRequest(
         : "tool";
   const options = {
     surface,
-    ...(typeof meta.resource === "string" ? { template: meta.resource } : {}),
+    ...(typeof meta.resource === "string" && meta.resource !== UNKNOWN_RESOURCE
+      ? { template: meta.resource }
+      : {}),
   } as const;
   const envelope = envelopeFromThrown(err, options);
   mcpLogger.error(logMessage, {
@@ -1207,6 +1229,7 @@ function makeMcpResourceHandler(
         userId: toolCtx.identity.userId,
       });
       try {
+        assertNoNulDeep(variables);
         await gateMcpCall(opId, toolCtx, config);
         const result = await descriptor.read(toolCtx, variables);
         if (typeof result === "string")

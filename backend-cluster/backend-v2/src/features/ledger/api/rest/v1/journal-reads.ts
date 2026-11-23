@@ -1,4 +1,5 @@
 import { z } from "@/shared/zod-openapi-setup";
+import { assertNoNulDeep } from "@/shared/assert-no-nul";
 import { booleanQuery } from "@/server/rest/v1-schemas";
 import { INCLUDE_SOURCE_DESCRIPTION } from "@/features/ledger/utils/include-source-description";
 import { JOURNAL_KINDS } from "@/features/ledger/utils/journal-kinds";
@@ -53,13 +54,15 @@ const directiveTypesQuery = (schema: z.ZodTypeAny) =>
 export function jsonQuery<Schema extends z.ZodTypeAny>(
   schema: Schema,
   description: string,
+  field = "",
 ) {
   return z
     .string()
     .describe(description)
     .transform((value, context): unknown => {
+      let parsed: unknown;
       try {
-        return JSON.parse(value);
+        parsed = JSON.parse(value);
       } catch {
         context.addIssue({
           code: "custom",
@@ -67,31 +70,36 @@ export function jsonQuery<Schema extends z.ZodTypeAny>(
         });
         return z.NEVER;
       }
+      assertNoNulDeep(parsed, undefined, field);
+      return parsed;
     })
     .pipe(schema);
 }
 
-export const jsonStringArrayQuery = jsonQuery(
-  z.array(z.string()),
-  "JSON-encoded string array, including [] for an empty filter list",
-);
+export function jsonStringArrayQuery(field = "") {
+  return jsonQuery(
+    z.array(z.string()),
+    "JSON-encoded string array, including [] for an empty filter list",
+    field,
+  );
+}
 
 /**
  * Subtype filters narrow only their own directive family and pass every
  * other family through (engine parity — w23/150). One described schema
  * per family, shared by the journal and account-journal reads.
  */
-const transactionSubtypesQuery = jsonStringArrayQuery
+const transactionSubtypesQuery = jsonStringArrayQuery("transactionSubtypes")
   .optional()
   .describe(
     'JSON-encoded transaction flag filter, e.g. ["cleared"]: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned.',
   );
-const documentSubtypesQuery = jsonStringArrayQuery
+const documentSubtypesQuery = jsonStringArrayQuery("documentSubtypes")
   .optional()
   .describe(
     "JSON-encoded document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
   );
-const customSubtypesQuery = jsonStringArrayQuery
+const customSubtypesQuery = jsonStringArrayQuery("customSubtypes")
   .optional()
   .describe(
     "JSON-encoded custom-directive subtype filter: narrows custom directives only — other families pass through. Combine with directiveTypes to restrict the families returned.",
@@ -107,7 +115,9 @@ const journalQuerySchema = filters.extend({
     description: "Alias of include_source.",
   }),
   // The journal service normalizes and validates these for every surface.
-  directiveTypes: directiveTypesQuery(jsonStringArrayQuery.optional()),
+  directiveTypes: directiveTypesQuery(
+    jsonStringArrayQuery("directiveTypes").optional(),
+  ),
   transactionSubtypes: transactionSubtypesQuery,
   documentSubtypes: documentSubtypesQuery,
   customSubtypes: customSubtypesQuery,
@@ -142,7 +152,9 @@ const accountJournalQuery = filters.extend({
   }),
   conversion: z.string().optional(),
   // Same optional display selectors as the main journal read.
-  directiveTypes: directiveTypesQuery(jsonStringArrayQuery.optional()),
+  directiveTypes: directiveTypesQuery(
+    jsonStringArrayQuery("directiveTypes").optional(),
+  ),
   transactionSubtypes: transactionSubtypesQuery,
   documentSubtypes: documentSubtypesQuery,
   customSubtypes: customSubtypesQuery,

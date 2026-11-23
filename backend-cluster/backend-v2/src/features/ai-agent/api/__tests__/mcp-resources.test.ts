@@ -8,6 +8,7 @@ import type { McpError } from "@modelcontextprotocol/sdk/types.js";
 import { MCP_RESOURCES, RESOURCE_SCHEME } from "../mcp-resources";
 import { JSON_RPC_INVALID_PARAMS, JSON_RPC_NOT_FOUND } from "../mcp-errors";
 import { ForbiddenError } from "@/shared/errors";
+import { ARGUMENT_LIMITS } from "@/shared/argument-limits";
 import type { AppConfig } from "@/config/config";
 import type { ToolContext } from "../../tools/types";
 import type { McpRequestContext } from "../mcp-context";
@@ -686,6 +687,178 @@ describe("an unmatched resource URI", () => {
     try {
       const result = await client.readResource({ uri: FILE_URI });
       expect(result.contents[0]).toMatchObject({ text: "contents" });
+    } finally {
+      await close();
+    }
+  });
+});
+
+/**
+ * w31/065. Resource reads enforce the same argument limits as tools, REST and
+ * GraphQL: raw/percent-encoded NUL, unpaired surrogates (refused before
+ * `new URL` rewrites them to U+FFFD), over-limit URIs, and hostile values
+ * inside `jsonQuery`-decoded JSON parameters.
+ */
+describe("argument limits on resource reads (w31/065)", () => {
+  const services = () => {
+    const getFilesContent = contentOf("main.beancount", "ok");
+    const getNarrationTransactions = jest.fn();
+    const getPayeeTransactions = jest.fn();
+    const getPayeeAccounts = jest.fn();
+    const getJournal = jest.fn();
+    const suggestCategories = jest.fn();
+    const base = ctx(getFilesContent);
+    const context = {
+      ...base,
+      services: {
+        ...base.services,
+        ledgerData: {
+          getNarrationTransactions,
+          getPayeeTransactions,
+          getPayeeAccounts,
+        },
+        ledgerJournal: { getJournal },
+      },
+      llmService: { suggestCategories },
+    } as unknown as McpRequestContext;
+    return {
+      context,
+      spies: {
+        getFilesContent,
+        getNarrationTransactions,
+        getPayeeTransactions,
+        getPayeeAccounts,
+        getJournal,
+        suggestCategories,
+      },
+    };
+  };
+
+  it.each([
+    [
+      "percent-encoded NUL in query parameter",
+      `${RESOURCE_SCHEME}://alice/main/narration-transactions?narration=foo%00bar`,
+      /narration.*NUL/,
+    ],
+    [
+      "percent-encoded NUL in public config query parameter",
+      `${RESOURCE_SCHEME}://configuration/feature-flags?userId=foo%00bar`,
+      /userId.*NUL/,
+    ],
+    [
+      "percent-encoded NUL in payee-transactions path parameter",
+      `${RESOURCE_SCHEME}://alice/main/payee-transactions/foo%00bar`,
+      /payee.*NUL/,
+    ],
+    [
+      "percent-encoded NUL in payee-accounts path parameter",
+      `${RESOURCE_SCHEME}://alice/main/payee-accounts/foo%00bar`,
+      /payee.*NUL/,
+    ],
+    [
+      "percent-encoded NUL in file path parameter",
+      `${RESOURCE_SCHEME}://alice/main/files/a%00b.beancount`,
+      /path.*NUL/,
+    ],
+    [
+      "raw NUL in URI",
+      `${RESOURCE_SCHEME}://alice/main/narration-transactions?narration=foo\u0000bar`,
+      /uri.*NUL/,
+    ],
+    [
+      "unpaired surrogate in raw URI (before new URL U+FFFD replacement)",
+      `${RESOURCE_SCHEME}://alice/main/narration-transactions?narration=foo\ud800bar`,
+      /uri.*unpaired surrogate/,
+    ],
+    [
+      "over-limit URI",
+      `${RESOURCE_SCHEME}://alice/main/narration-transactions?narration=${"a".repeat(ARGUMENT_LIMITS.maxStringLength + 1)}`,
+      new RegExp(`uri.*${ARGUMENT_LIMITS.maxStringLength}`),
+    ],
+    [
+      "JSON-escaped NUL inside suggest-categories transactions",
+      `${RESOURCE_SCHEME}://alice/main/import/suggest-categories?transactions=${encodeURIComponent('[{"rowIndex":0,"date":"2026-01-01","payee":"foo\\u0000bar","description":"x","amount":1}]')}`,
+      /transactions\[\]\.payee.*NUL/,
+    ],
+    [
+      "JSON-escaped unpaired surrogate inside suggest-categories transactions",
+      `${RESOURCE_SCHEME}://alice/main/import/suggest-categories?transactions=${encodeURIComponent('[{"rowIndex":0,"date":"2026-01-01","payee":"foo\\ud800bar","description":"x","amount":1}]')}`,
+      /transactions\[\]\.payee.*unpaired surrogate/,
+    ],
+    [
+      "JSON-escaped NUL inside journal directiveTypes",
+      `${RESOURCE_SCHEME}://alice/main/journal?directiveTypes=${encodeURIComponent('["Trans\\u0000action"]')}`,
+      /directiveTypes\[\].*NUL/,
+    ],
+    [
+      "over-limit array inside journal directiveTypes",
+      `${RESOURCE_SCHEME}://alice/main/journal?directiveTypes=${encodeURIComponent(JSON.stringify(new Array(ARGUMENT_LIMITS.maxArrayLength + 1).fill("a")))}`,
+      new RegExp(`directiveTypes.*${ARGUMENT_LIMITS.maxArrayLength}`),
+    ],
+    [
+      "over-depth JSON nesting inside journal directiveTypes",
+      `${RESOURCE_SCHEME}://alice/main/journal?directiveTypes=${encodeURIComponent(
+        `${"[".repeat(ARGUMENT_LIMITS.maxDepth + 1)}"x"${"]".repeat(ARGUMENT_LIMITS.maxDepth + 1)}`,
+      )}`,
+      new RegExp(`${ARGUMENT_LIMITS.maxDepth} levels deep`),
+    ],
+  ])(
+    "refuses %s as BAD_USER_INPUT before any service",
+    async (_label, uri, pattern) => {
+      const { context, spies } = services();
+      const { client, close } = await connect(context);
+      try {
+        const error = await client
+          .readResource({ uri })
+          .then(() => undefined)
+          .catch((caught: unknown) => caught as McpError);
+        expect(error?.code).toBe(JSON_RPC_INVALID_PARAMS);
+        expect(error?.data).toMatchObject({
+          code: "BAD_USER_INPUT",
+          message: expect.stringMatching(pattern),
+          hint: expect.stringContaining("resources/templates/list"),
+        });
+        expect((error?.data as { hint: string }).hint).not.toContain(
+          "unknownResource",
+        );
+        for (const spy of Object.values(spies)) {
+          expect(spy).not.toHaveBeenCalled();
+        }
+      } finally {
+        await close();
+      }
+    },
+  );
+
+  it("still allows valid UTF-8 and paired surrogate emoji in paths and JSON query params", async () => {
+    const path = "café ☕ 😀.beancount";
+    const { context, spies } = services();
+    spies.getFilesContent.mockResolvedValue([
+      { path, content: "emoji ok", sha: "abc" },
+    ]);
+    spies.suggestCategories.mockResolvedValue([]);
+    const { client, close } = await connect(context);
+    try {
+      const file = await client.readResource({
+        uri: `${RESOURCE_SCHEME}://alice/main/files/${encodeURIComponent(path)}`,
+      });
+      expect(file.contents[0]).toMatchObject({ text: "emoji ok" });
+
+      const suggestions = await client.readResource({
+        uri: `${RESOURCE_SCHEME}://alice/main/import/suggest-categories?transactions=${encodeURIComponent(
+          JSON.stringify([
+            {
+              rowIndex: 0,
+              date: "2026-01-01",
+              payee: "Café ☕ 😀",
+              description: "Latte",
+              amount: -5,
+            },
+          ]),
+        )}`,
+      });
+      expect(suggestions.contents[0]).toMatchObject({ text: "[]" });
+      expect(spies.suggestCategories).toHaveBeenCalledTimes(1);
     } finally {
       await close();
     }

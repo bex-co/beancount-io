@@ -14,7 +14,7 @@ const legacyJournalQuery = z
     accountFilter: z.string().optional(),
     amountMin: z.coerce.number().optional(),
     amountMax: z.coerce.number().optional(),
-    entryTypes: jsonStringArrayQuery.optional(),
+    entryTypes: jsonStringArrayQuery("entryTypes").optional(),
     sortBy: z.string().optional(),
     sortOrder: z.string().optional(),
     groupBy: z.string().optional(),
