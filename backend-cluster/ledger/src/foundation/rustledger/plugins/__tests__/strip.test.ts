@@ -2,6 +2,7 @@ import type { FileMap } from "@rustledger/wasm";
 import {
   neutralizeIncludedOptionsAndPlugins,
   stripFavaPlugins,
+  stripUnavailablePlugins,
 } from "../strip";
 
 describe("stripFavaPlugins", () => {
@@ -57,6 +58,47 @@ describe("stripFavaPlugins", () => {
     const result = stripFavaPlugins(files, "main.bean");
     expect(result.strippedFiles).toBe(files);
     expect(result.stripped).toEqual([]);
+  });
+});
+
+describe("stripUnavailablePlugins", () => {
+  it("blanks the qualified alias and reports its original source line", () => {
+    const files = {
+      "main.bean": [
+        'plugin "unrealized"',
+        'plugin "beancount.plugins.implicit_prices"',
+        '  plugin "beancount.plugins.unrealized" "Unrealized" ; legacy',
+        "2026-01-01 open Assets:Cash",
+      ].join("\n"),
+    };
+
+    const result = stripUnavailablePlugins(files, "main.bean");
+    expect(result.strippedFiles["main.bean"].split("\n")).toEqual([
+      'plugin "unrealized"',
+      'plugin "beancount.plugins.implicit_prices"',
+      "",
+      "2026-01-01 open Assets:Cash",
+    ]);
+    expect(result.errors).toMatchObject([
+      { code: "E8005", severity: "error", file: "main.bean", line: 3 },
+    ]);
+  });
+
+  it("leaves plugin text in comments, quoted content and included files alone", () => {
+    const plugin = 'plugin "beancount.plugins.unrealized"';
+    const files = {
+      "main.bean": [
+        `; ${plugin}`,
+        '2026-01-01 note Assets:Cash "continued',
+        plugin,
+        'text"',
+        'include "included.bean"',
+      ].join("\n"),
+      "included.bean": plugin,
+    };
+    const result = stripUnavailablePlugins(files, "main.bean");
+    expect(result.strippedFiles).toBe(files);
+    expect(result.errors).toEqual([]);
   });
 });
 

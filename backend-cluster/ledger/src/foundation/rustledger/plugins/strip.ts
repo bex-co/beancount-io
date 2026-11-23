@@ -1,9 +1,12 @@
-import type { FileMap } from "@rustledger/wasm";
+import type { BeancountError, FileMap } from "@rustledger/wasm";
 import { OPTION_LINE_RE } from "../beancount-options";
+import { endsInsideString } from "../source-slice";
 import { PLUGIN_LINE_RE, decodeStringLiteral } from "./collect-plugins";
+import { pluginError } from "./types";
 
 /** The python-only plugin namespace the WASM engine cannot run (emits `E8005`). */
 const FAVA_PREFIX = "fava.plugins.";
+const UNAVAILABLE_UNREALIZED = "beancount.plugins.unrealized";
 
 interface StrippedPlugin {
   name: string;
@@ -34,16 +37,52 @@ export function stripFavaPlugins(
   files: FileMap,
   entryPoint: string,
 ): StripResult {
+  return stripPluginLines(files, entryPoint, (name) =>
+    name.startsWith(FAVA_PREFIX),
+  );
+}
+
+/** Beancount 3 removed this plugin. Rustledger's alias only emits warnings. */
+export function stripUnavailablePlugins(
+  files: FileMap,
+  entryPoint: string,
+): { strippedFiles: FileMap; errors: BeancountError[] } {
+  const { strippedFiles, stripped } = stripPluginLines(
+    files,
+    entryPoint,
+    (name) => name === UNAVAILABLE_UNREALIZED,
+  );
+  return {
+    strippedFiles,
+    errors: stripped.map(({ name, line }) =>
+      pluginError(`Unavailable plugin "${name}" in Beancount 3`, {
+        code: "E8005",
+        file: entryPoint,
+        line,
+        hint: "The Balance Sheet's At Market Value view shows unrealized gains under Equity:Unrealized by default.",
+      }),
+    ),
+  };
+}
+
+function stripPluginLines(
+  files: FileMap,
+  entryPoint: string,
+  shouldStrip: (name: string) => boolean,
+): StripResult {
   const source = files[entryPoint];
   if (source === undefined) return { strippedFiles: files, stripped: [] };
 
   const stripped: StrippedPlugin[] = [];
   const lines = source.split(/\r\n|\r|\n/u);
+  let inString = false;
   lines.forEach((line, index) => {
-    const match = PLUGIN_LINE_RE.exec(line);
+    const startsInsideString = inString;
+    inString = endsInsideString(line, inString);
+    const match = startsInsideString ? null : PLUGIN_LINE_RE.exec(line);
     if (match === null) return;
     const name = decodeStringLiteral(match[1]);
-    if (name.startsWith(FAVA_PREFIX)) {
+    if (shouldStrip(name)) {
       stripped.push({ name, line: index + 1 });
       lines[index] = "";
     }

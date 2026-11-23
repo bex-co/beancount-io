@@ -41,6 +41,7 @@ import {
   stripFavaPlugins,
   type DirectiveSourceLocation,
 } from "./plugins";
+import { stripUnavailablePlugins } from "./plugins/strip";
 import { reconcileDocumentErrors } from "./document-validation";
 import { averageBookingErrors } from "./average-booking";
 import { openAutoAccounts } from "./auto-accounts";
@@ -676,7 +677,11 @@ async function parseLedgerFilesUncached(
   // them from included files too, which can invalidate an otherwise-valid ledger
   // (e.g. an included `option "name_assets"` renames a root so entry-point
   // postings fail E1005). Blank those included directives (line-preserving) first.
-  const scoped = neutralizeIncludedOptionsAndPlugins(files, entryPoint);
+  const { strippedFiles: scoped, errors: unavailablePlugins } =
+    stripUnavailablePlugins(
+      neutralizeIncludedOptionsAndPlugins(files, entryPoint),
+      entryPoint,
+    );
   const stripResult = applyTs
     ? stripFavaPlugins(scoped, entryPoint)
     : undefined;
@@ -717,7 +722,7 @@ async function parseLedgerFilesUncached(
     located,
     stripResult?.strippedFiles ?? scoped,
   );
-  let errors = located;
+  let errors = [...located, ...unavailablePlugins];
   let paddingTransactions = raw.paddingTransactions;
   // Beancount finds `option "documents"` files before any plugin (w21/738).
   const discovered = discoverDocuments(
@@ -1034,7 +1039,10 @@ export async function queryLedgerFilesResultInProcess(
   entryPoint: string,
   query: string,
 ): Promise<QueryResult> {
-  const scoped = neutralizeIncludedOptionsAndPlugins(files, entryPoint);
+  const { strippedFiles: scoped } = stripUnavailablePlugins(
+    neutralizeIncludedOptionsAndPlugins(files, entryPoint),
+    entryPoint,
+  );
   const { strippedFiles } = stripFavaPlugins(scoped, entryPoint);
   const declared = collectLedgerPlugins(files[entryPoint]);
   const needsTsPluginStream = declared.some((name) =>

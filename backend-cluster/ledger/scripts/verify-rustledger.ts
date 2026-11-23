@@ -699,6 +699,57 @@ async function verifyWindowedPlaintextExport(): Promise<void> {
   );
 }
 
+async function verifyUnavailableUnrealizedPlugin(): Promise<void> {
+  const plugin = 'plugin "beancount.plugins.unrealized" "Unrealized"';
+  const source = [
+    'option "operating_currency" "USD"',
+    "2026-01-01 open Assets:Investment QAFIFO",
+    "2026-01-01 open Assets:Cash USD",
+    '2026-02-01 * "buy"',
+    "  Assets:Investment  10 QAFIFO {10.00 USD}",
+    "  Assets:Cash       -100.00 USD",
+    "2026-05-01 price QAFIFO 40.00 USD",
+    "",
+  ].join("\n");
+  const main = "main.bean";
+  const baseline = await parseLedgerFiles({ [main]: source }, main);
+  assert(
+    baseline.valid && baseline.errors.length === 0,
+    "the priced lot without the plugin is valid",
+  );
+
+  const declared = await parseLedgerFiles(
+    { [main]: `${plugin}\n${source}` },
+    main,
+  );
+  assert(
+    !declared.valid && declared.errors.length === 1,
+    "an unavailable unrealized plugin yields one error",
+  );
+  const [error] = declared.errors;
+  const hint = error.hint ?? "";
+  assert(
+    error.severity === "error" &&
+      error.file === main &&
+      error.line === 1 &&
+      error.message.includes('Unavailable plugin "beancount.plugins.unrealized"') &&
+      hint.includes("At Market Value") &&
+      hint.includes("Equity:Unrealized"),
+    "the plugin error points to its declaration and explains the Balance Sheet view",
+  );
+  deepStrictEqual(declared.directives, baseline.directives);
+
+  const included = await parseLedgerFiles(
+    {
+      [main]: `${source}include "included.bean"\n`,
+      "included.bean": `${plugin}\n`,
+    },
+    main,
+  );
+  deepStrictEqual(included.errors, baseline.errors);
+  deepStrictEqual(included.directives, baseline.directives);
+}
+
 /**
  * A quoted string may span physical lines — unindented, blank and date-like
  * lines inside it are content (w4/m34). Each such entry must resolve its
@@ -1096,6 +1147,7 @@ async function main(): Promise<void> {
   await verifyTrialBalanceAdjustment();
   await verifyTrialBalanceRounding();
   await verifyWindowedPlaintextExport();
+  await verifyUnavailableUnrealizedPlugin();
   await verifyJournalRoundTrip();
 
   const paddedSnapshot = await parseLedgerFiles(
