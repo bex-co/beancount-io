@@ -11,7 +11,11 @@ import type {
 } from "echarts";
 import { sortUsdFirst } from "@/common/lib/utils/sort";
 import { getChartColors } from "@/common/lib/chart/color";
-import { type BaseChartProps, createEmptyChartOption } from "./utils";
+import {
+  type BaseChartProps,
+  createEmptyChartOption,
+  periodBalanceText,
+} from "./utils";
 import {
   createCommonAxisConfig,
   createCommonGridConfig,
@@ -135,9 +139,11 @@ export function SingleDateBalanceChart({
 
     return {
       units: commodityList,
-      periodSeries: seriesData.map((item) => ({
-        unit: item.name,
-        values: item.data,
+      periodSeries: commodityList.map((unit) => ({
+        unit,
+        values: data.map((item) =>
+          periodBalanceText(item.balance[unit], inverted),
+        ),
       })),
       chartOption: {
         tooltip,

@@ -15,7 +15,11 @@ import {
   ChartPeriodTable,
   type ChartPeriodSeries,
 } from "../../components/chart-period-table";
-import { type BaseChartProps, createEmptyChartOption } from "./utils";
+import {
+  type BaseChartProps,
+  createEmptyChartOption,
+  periodBalanceText,
+} from "./utils";
 import {
   createCommonAxisConfig,
   createCommonGridConfig,
@@ -81,15 +85,13 @@ export function StackDateBalanceChart({
     const periodSeries: ChartPeriodSeries[] = [];
     currencyList.forEach((currency) => {
       accountList.forEach((account, accountIndex) => {
-        const values = data.map((item) => {
-          if (!item.accountBalances?.[account]) {
-            return 0;
-          }
-          const accountBalance = item.accountBalances[account] as Record<
-            string,
-            unknown
-          >;
-          const balance = accountBalance[currency];
+        const balances = data.map((item) => {
+          const accountBalance = item.accountBalances?.[account] as
+            | Record<string, unknown>
+            | undefined;
+          return accountBalance?.[currency];
+        });
+        const values = balances.map((balance) => {
           if (balance === null || balance === undefined) {
             return 0;
           }
@@ -102,7 +104,13 @@ export function StackDateBalanceChart({
               : numericValue;
         });
 
-        periodSeries.push({ unit: currency, account, values });
+        periodSeries.push({
+          unit: currency,
+          account,
+          values: balances.map((balance) =>
+            periodBalanceText(balance, inverted),
+          ),
+        });
         seriesData.push({
           name: currency,
           type: "bar",
