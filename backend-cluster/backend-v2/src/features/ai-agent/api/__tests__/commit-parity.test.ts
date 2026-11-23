@@ -465,6 +465,70 @@ describe("commit reads through actual REST, GraphQL, and MCP adapters", () => {
       }
     },
   );
+  // w31/047: Gitea treats an empty sha query parameter as the default branch,
+  // and tab/newline-only branch strings bypass assertCommitRef, so explicit
+  // empty or whitespace-only branch/branchName values must fail with
+  // BAD_USER_INPUT on every surface without calling Gitea.
+  const branchReads = [
+    { path: "commits", param: "branch", field: "listCommits" },
+    {
+      path: "latest-commit",
+      param: "branchName",
+      field: "getLatestLedgerCommit",
+    },
+  ];
+  const blankBranches = ["", "\t", "\n", "\r\n"];
+  it.each(
+    branchReads.flatMap((read) =>
+      blankBranches.map((value) => ({
+        ...read,
+        value,
+        label: JSON.stringify(value),
+      })),
+    ),
+  )(
+    "refuses $field with empty or whitespace-only $param=$label as BAD_USER_INPUT across REST, GraphQL, and MCP",
+    async ({ path, param, field, value }) => {
+      const f = await fixture();
+      const query = `${path}?${param}=${encodeURIComponent(value)}`;
+      const expectedMessage = `${param} must not be empty`;
+      try {
+        const response = await f.rest(query);
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({
+          ok: false,
+          error: {
+            code: "BAD_USER_INPUT",
+            message: expectedMessage,
+            metadata: {
+              field: param,
+              hint: expect.stringContaining("main"),
+            },
+          },
+        });
+        await expect(f.mcp(query)).rejects.toMatchObject({
+          code: -32602,
+          data: {
+            code: "BAD_USER_INPUT",
+            message: expectedMessage,
+            hint: expect.stringContaining("main"),
+          },
+        });
+        const result = await f.gql(
+          `${field}(ledgerId: "alice/main", ${param}: ${JSON.stringify(value)}) { sha }`,
+        );
+        const [graphqlError] = result.errors ?? [];
+        expect(graphqlError).toBeDefined();
+        const formatted = formatError(graphqlError.toJSON(), graphqlError);
+        expect(formatted.extensions?.code).toBe("BAD_USER_INPUT");
+        expect(formatted.message).toBe(expectedMessage);
+        expect(f.history).not.toHaveBeenCalled();
+        expect(f.latest).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it("maps an unknown branch on the commits list to NOT_FOUND across REST, GraphQL, and MCP", async () => {
     const f = await fixture();
     f.history.mockRejectedValue(

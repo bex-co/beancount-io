@@ -280,6 +280,58 @@ describe("CommitsService.listCommits unknown branches", () => {
       ),
     ).rejects.toBeInstanceOf(ForbiddenError);
   });
+
+  // w31/047: Gitea treats an empty sha query parameter as the default branch,
+  // and tab/newline-only branch strings bypass assertCommitRef, so explicit
+  // empty or whitespace-only branches must be refused before any Gitea call.
+  it.each(["", "\t", "\n", "\r\n"])(
+    "refuses empty or whitespace-only branch=%j as BadUserInputError before calling Gitea",
+    async (blankBranch) => {
+      const history = jest.fn().mockResolvedValue({ data: [] });
+      const service = new CommitsService(
+        {
+          getUserApiClient: jest.fn().mockResolvedValue({
+            repos: { repoGetAllCommits: history },
+          }),
+          getAnonymousApiClient: jest.fn(),
+        } as never,
+        { authorizeOrThrow: jest.fn().mockResolvedValue(undefined) } as never,
+      );
+      const failure = await service
+        .listCommits({ identity, ledgerId: "alice/main", branch: blankBranch })
+        .catch((error: unknown) => error);
+      expect(failure).toBeInstanceOf(BadUserInputError);
+      expect(failure).toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: "branch must not be empty",
+        metadata: {
+          field: "branch",
+          hint: expect.stringContaining("main"),
+        },
+      });
+      expect(history).not.toHaveBeenCalled();
+    },
+  );
+
+  it("defaults omitted branch to main", async () => {
+    const history = jest.fn().mockResolvedValue({ data: [] });
+    const service = new CommitsService(
+      {
+        getUserApiClient: jest.fn().mockResolvedValue({
+          repos: { repoGetAllCommits: history },
+        }),
+        getAnonymousApiClient: jest.fn(),
+      } as never,
+      { authorizeOrThrow: jest.fn().mockResolvedValue(undefined) } as never,
+    );
+    await service.listCommits({ identity, ledgerId: "alice/main" });
+    expect(history).toHaveBeenCalledWith(
+      "alice",
+      "main",
+      expect.objectContaining({ sha: "main" }),
+      { format: "json" },
+    );
+  });
 });
 
 describe("isMissingCommitLookupError", () => {

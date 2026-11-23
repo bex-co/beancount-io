@@ -1,7 +1,7 @@
 import { LedgerRepoService } from "../ledger-repo-service";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import { FavaApiError, FILE_EXISTS_HINT } from "@/foundation/fava";
-import { OperationNotAllowedError } from "@/shared/errors";
+import { BadUserInputError, OperationNotAllowedError } from "@/shared/errors";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
 
@@ -247,6 +247,38 @@ describe("LedgerRepoService", () => {
         },
       );
     });
+
+    // w31/047: Gitea treats an empty sha query parameter as the default branch,
+    // and tab/newline-only branchName strings bypass assertCommitRef, so
+    // explicit empty or whitespace-only branchName values must be refused
+    // before any Gitea call.
+    it.each(["", "\t", "\n", "\r\n"])(
+      "refuses empty or whitespace-only branchName=%j as BadUserInputError before calling Gitea",
+      async (blankBranchName) => {
+        mockRepoGetAllCommits.mockResolvedValue({
+          data: { success: true, data: [] },
+        });
+
+        const failure = await service
+          .getLatestCommit({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            branchName: blankBranchName,
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          message: "branchName must not be empty",
+          metadata: {
+            field: "branchName",
+            hint: expect.stringContaining("main"),
+          },
+        });
+        expect(mockRepoGetAllCommits).not.toHaveBeenCalled();
+      },
+    );
 
     it("propagates the identity's userId to the fava client factory", async () => {
       mockRepoGetAllCommits.mockResolvedValue({
