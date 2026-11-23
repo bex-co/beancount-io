@@ -574,6 +574,47 @@ describe("journal adapter contracts", () => {
       await f.close();
     }
   });
+
+  // w31/036: empty or whitespace-only account must be refused as BAD_USER_INPUT
+  // across REST, GraphQL, and MCP before authorization or any ledger call.
+  it.each(["", "  ", "\t", "\n"])(
+    "refuses account-journal with empty or whitespace-only account=%j as BAD_USER_INPUT across REST, GraphQL, and MCP",
+    async (blankAccount) => {
+      const f = await fixture();
+      const path = `account-journal?account=${encodeURIComponent(blankAccount)}`;
+      try {
+        const rest = await f.rest(path);
+        expect(rest.status).toBe(400);
+        expect(await rest.json()).toMatchObject({
+          ok: false,
+          error: {
+            code: "BAD_USER_INPUT",
+            metadata: { field: "account" },
+          },
+        });
+        await expect(f.mcp(path)).rejects.toMatchObject({
+          code: -32602,
+          data: {
+            code: "BAD_USER_INPUT",
+          },
+        });
+        const gql = await f.gql(
+          `getLedgerAccountJournal(ledgerId: "alice/main", query: { account: ${JSON.stringify(blankAccount)} }) { total }`,
+        );
+        expect(gql.data).toBeNull();
+        const [error] = gql.errors ?? [];
+        expect(error).toBeDefined();
+        expect(formatError(error!.toJSON(), error!).extensions).toMatchObject({
+          code: "BAD_USER_INPUT",
+          field: "account",
+        });
+        expect(f.journal.getAccountJournal).not.toHaveBeenCalled();
+        expect(f.authorize).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
 });
 
 describe("journal access revocation", () => {

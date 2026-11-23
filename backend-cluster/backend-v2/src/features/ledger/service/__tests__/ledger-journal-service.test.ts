@@ -412,6 +412,37 @@ describe("LedgerJournalService", () => {
         }),
       ).rejects.toThrow(BadUserInputError);
     });
+
+    it.each(["", "  ", "\t", "\n"])(
+      "refuses empty or whitespace-only account=%j as BadUserInputError before calling the ledger",
+      async (blankAccount) => {
+        mockGetAccountJournal.mockResolvedValue({
+          data: {
+            success: true,
+            data: {
+              items: [],
+              total: 0,
+              account: blankAccount,
+              with_children: true,
+            },
+          },
+        });
+        const failure = await service
+          .getAccountJournal({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            query: { account: blankAccount },
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "account" },
+        });
+        expect(mockGetAccountJournal).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe("deleteSourceSlice", () => {

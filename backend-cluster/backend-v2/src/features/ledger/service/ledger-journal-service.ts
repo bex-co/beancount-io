@@ -434,6 +434,12 @@ export class LedgerJournalService
     query: AccountJournalQueryParams;
   }): Promise<AccountJournalResult> {
     const { ledgerId, identity, query } = params;
+    // Empty or whitespace-only account strings pass REST/MCP string schemas and
+    // GraphQL's non-null String, so guard here for all three surfaces before
+    // authorizing or calling the ledger (w31/036).
+    if (query.account.trim() === "") {
+      throw new BadUserInputError("account is required", "account");
+    }
     const page = journalPage(query);
     const kinds = normalizeJournalKinds(query);
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
