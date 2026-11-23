@@ -97,10 +97,21 @@ interface AccountGroup {
   accounts: AccountDirective[];
 }
 
+function compareAccountPaths(left: string, right: string): number {
+  const leftParts = left.split(":");
+  const rightParts = right.split(":");
+  for (const [index, part] of leftParts.entries()) {
+    const other = rightParts[index];
+    if (other === undefined) return 1;
+    if (part !== other) return part < other ? -1 : 1;
+  }
+  return leftParts.length - rightParts.length;
+}
+
 /**
  * The chart of accounts: one group per root in the ledger's own order
- * (Assets, Liabilities, Equity, Income, Expenses), each sorted by name so a
- * parent sits right above its children.
+ * (Assets, Liabilities, Equity, Income, Expenses). Compare path components so
+ * a sibling like Bank-Reserve follows the whole Bank subtree.
  */
 function groupByType(
   accounts: AccountDirective[],
@@ -115,8 +126,8 @@ function groupByType(
     .filter(([, members]) => members.length > 0)
     .map(([type, members]) => ({
       type,
-      accounts: [...members].sort((a, b) =>
-        a.account < b.account ? -1 : a.account > b.account ? 1 : 0,
+      accounts: members.sort((a, b) =>
+        compareAccountPaths(a.account, b.account),
       ),
     }));
 }
@@ -709,38 +720,41 @@ export default function LedgerAccountsPage() {
     () => data?.getLedgerAccountDirectives ?? [],
     [data],
   );
+  const accountGroups = useMemo(
+    () => groupByType(accounts, accountTypes),
+    [accountTypes, accounts],
+  );
 
   // A pasted name often carries a space at either end; match on the name
   // alone, while the field and URL keep exactly what was typed (w2/108).
   const query = search.trim().toLowerCase();
-  const filtered = useMemo(() => {
-    return accounts.filter((a) => {
-      const matchesSearch = a.account.toLowerCase().includes(query);
-      const matchesType =
-        typeFilter === ACCOUNT_TYPE_ALL ||
-        getAccountType(a.account, accountTypes) === typeFilter;
-      return matchesSearch && matchesType;
-    });
-  }, [accountTypes, accounts, query, typeFilter]);
-
+  const matchingGroups = useMemo(
+    () =>
+      accountGroups.map((group) => ({
+        type: group.type,
+        accounts: group.accounts.filter((account) =>
+          account.account.toLowerCase().includes(query),
+        ),
+      })),
+    [accountGroups, query],
+  );
+  const groups = matchingGroups.filter(
+    (group) =>
+      group.accounts.length > 0 &&
+      (typeFilter === ACCOUNT_TYPE_ALL || group.type === typeFilter),
+  );
+  const filteredCount = groups.reduce(
+    (count, group) => count + group.accounts.length,
+    0,
+  );
   const hasActiveFilters = query.length > 0 || typeFilter !== ACCOUNT_TYPE_ALL;
 
   // Each type chip counts what the search leaves of that type.
-  const typeCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const account of accounts) {
-      if (!account.account.toLowerCase().includes(query)) continue;
-      const type = getAccountType(account.account, accountTypes);
-      counts.set(type, (counts.get(type) ?? 0) + 1);
-    }
-    return counts;
-  }, [accountTypes, accounts, query]);
+  const typeCounts = new Map(
+    matchingGroups.map((group) => [group.type, group.accounts.length]),
+  );
   const searchMatches = [...typeCounts.values()].reduce((a, b) => a + b, 0);
 
-  const groups = useMemo(
-    () => groupByType(filtered, accountTypes),
-    [accountTypes, filtered],
-  );
   const subtotals = useMemo(() => subAccountTotals(accounts), [accounts]);
 
   // The empty state's Clear leaves with its results; hand focus to the
@@ -895,12 +909,12 @@ export default function LedgerAccountsPage() {
               "shrink-0 text-sm text-muted-foreground tabular-nums @4xl:ms-auto",
               !(data && hasActiveFilters) && "sr-only",
             )}
-            aria-label={`${formatCount(filtered.length)} / ${formatCount(accounts.length)} ${t("page.accounts.accounts")}`}
+            aria-label={`${formatCount(filteredCount)} / ${formatCount(accounts.length)} ${t("page.accounts.accounts")}`}
             aria-live="polite"
             title={t("page.accounts.accounts")}
           >
             <span className="font-medium text-foreground">
-              {formatCount(filtered.length)}
+              {formatCount(filteredCount)}
             </span>{" "}
             / {formatCount(accounts.length)}
           </div>
@@ -976,7 +990,7 @@ export default function LedgerAccountsPage() {
           }
         >
           {() =>
-            filtered.length === 0 ? (
+            filteredCount === 0 ? (
               <div className="px-4">
                 <EmptyState
                   onClear={hasActiveFilters ? clearFilters : undefined}

@@ -23,18 +23,21 @@ import { formatSourceDecimal } from "@/common/lib/format/format-number";
 vi.unmock("react-i18next");
 vi.unmock("@/common/hooks/use-translations");
 
+const defaultRoots = {
+  nameAssets: "Assets",
+  nameLiabilities: "Liabilities",
+  nameEquity: "Equity",
+  nameIncome: "Income",
+  nameExpenses: "Expenses",
+};
+let accountRoots = defaultRoots;
+
 vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({
     ledgerName: "books",
     ledgerData: {
       permissions: null,
-      options: {
-        nameAssets: "Assets",
-        nameLiabilities: "Liabilities",
-        nameEquity: "Equity",
-        nameIncome: "Income",
-        nameExpenses: "Expenses",
-      },
+      options: accountRoots,
     },
   }),
 }));
@@ -71,7 +74,12 @@ const accounts = [
   },
 ];
 
-async function setup(language: SupportedLanguage, loading: boolean) {
+async function setup(
+  language: SupportedLanguage,
+  loading: boolean,
+  { rows = accounts, roots = defaultRoots } = {},
+) {
+  accountRoots = roots;
   const localization = createLocalization();
   await localization.changeLanguage(language);
   const root = createRootRoute({ component: () => <Outlet /> });
@@ -102,7 +110,7 @@ async function setup(language: SupportedLanguage, loading: boolean) {
               query: GetLedgerAccountDirectivesDocument,
               variables: { ledgerId: "alice/books" },
             },
-            result: { data: { getLedgerAccountDirectives: accounts } },
+            result: { data: { getLedgerAccountDirectives: rows } },
             delay: loading ? Infinity : 0,
             maxUsageCount: 2,
           },
@@ -197,6 +205,80 @@ describe("Accounts table identity", () => {
       await waitFor(() => {
         expect(screen.getByRole("table", { name })).toBeInTheDocument();
       });
+    },
+  );
+});
+
+describe("Chart of accounts order (w5/1157)", () => {
+  it.each([
+    ["standard", defaultRoots],
+    [
+      "renamed",
+      {
+        nameAssets: "Resources",
+        nameLiabilities: "Debts",
+        nameEquity: "Capital",
+        nameIncome: "Revenue",
+        nameExpenses: "Costs",
+      },
+    ],
+  ] as const)(
+    "groups %s roots in ledger order and keeps each account subtree together",
+    async (_label, roots) => {
+      const bank = `${roots.nameAssets}:Bank`;
+      const expected = [
+        bank,
+        `${bank}:Checking`,
+        `${bank}:Savings`,
+        `${bank}-Reserve`,
+        `${roots.nameAssets}:Cash`,
+        `${roots.nameLiabilities}:Bank:Loan`,
+        `${roots.nameEquity}:Opening-Balances`,
+        `${roots.nameIncome}:Salary`,
+        `${roots.nameExpenses}:Bank-Fees`,
+      ];
+      // The journal returns same-day Open directives in reverse file order.
+      // A hyphenated sibling must follow the whole Bank subtree.
+      const rows = [...expected].reverse().map((account, index) => ({
+        ...accounts[0],
+        account,
+        entryHash: `open-${index}`,
+        closedAt: account.endsWith(":Savings") ? "2024-12-31" : null,
+      }));
+      const { user } = await setup("en", false, { rows, roots });
+      const table = await screen.findByRole("table", { name: "Accounts" });
+      const visibleNames = () =>
+        [...table.querySelectorAll("tbody td:first-child div[title]")].map(
+          (name) => name.getAttribute("title"),
+        );
+      expect(visibleNames()).toEqual(expected);
+      expect(screen.getByLabelText("9 / 9 Accounts")).toBeInTheDocument();
+      const closed = within(table).getByRole("row", {
+        name: /Savings.*Closed/,
+      });
+      expect(within(closed).getByText("Closed")).toBeInTheDocument();
+
+      const search = screen.getByRole("textbox", {
+        name: "Search accounts...",
+      });
+      await user.type(search, "bank");
+      await waitFor(() =>
+        expect(screen.getByLabelText("6 / 9 Accounts")).toBeInTheDocument(),
+      );
+      expect(visibleNames()).toEqual(
+        expected.filter((account) => account.includes("Bank")),
+      );
+
+      const types = screen.getByRole("group", { name: "Type" });
+      const assets = within(types).getByRole("button", {
+        name: roots.nameAssets,
+      });
+      await user.click(assets);
+      await waitFor(() =>
+        expect(screen.getByLabelText("4 / 9 Accounts")).toBeInTheDocument(),
+      );
+      expect(assets).toHaveAttribute("aria-pressed", "true");
+      expect(visibleNames()).toEqual(expected.slice(0, 4));
     },
   );
 });
