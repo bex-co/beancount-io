@@ -123,6 +123,72 @@ describe("LedgerForm currency (w3/m62)", () => {
     );
   });
 
+  it.each([
+    ["EUR", "{Enter}", "EUR"],
+    ["eur", "{Tab}", "EUR"],
+    ["Swiss Franc", "{Enter}", "CHF"],
+  ])("submits %s committed with %s as %s", async (typed, key, currency) => {
+    const user = userEvent.setup();
+    render(<LedgerForm onSubmit={onSubmit} />);
+    const input = currencyInput();
+    await user.clear(input);
+    await user.type(input, typed);
+    await user.keyboard(key);
+    expect(input).toHaveValue(currency);
+    expect(input).toHaveAttribute("aria-expanded", "false");
+    expect(onSubmit).not.toHaveBeenCalled();
+    await submit(user);
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ currency }),
+      ),
+    );
+  });
+
+  it.each(["{Escape}", "{Tab}"])(
+    "commits a valid replacement after %s",
+    async (key) => {
+      const user = userEvent.setup();
+      render(<LedgerForm onSubmit={onSubmit} />);
+      const input = currencyInput();
+      await user.clear(input);
+      await user.type(input, "EUR");
+      await user.click(await screen.findByRole("option", { name: /^EUR/ }));
+      expect(input).toHaveValue("EUR");
+      await user.clear(input);
+      await user.type(input, "jpy");
+      await user.keyboard(key);
+      expect(input).toHaveValue("JPY");
+      await submit(user);
+      await waitFor(() =>
+        expect(onSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({ currency: "JPY" }),
+        ),
+      );
+    },
+  );
+
+  it.each(["{Escape}", "{Tab}", "{Enter}"])(
+    "restores the submitted value after invalid text and %s",
+    async (key) => {
+      mockProfile("EUR");
+      const user = userEvent.setup();
+      render(<LedgerForm onSubmit={onSubmit} />);
+      const input = currencyInput();
+      await waitFor(() => expect(input).toHaveValue("EUR"));
+      await user.clear(input);
+      await user.type(input, "NOT-A-CURRENCY");
+      await user.keyboard(key);
+      expect(input).toHaveValue("EUR");
+      await submit(user);
+      await waitFor(() =>
+        expect(onSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({ currency: "EUR" }),
+        ),
+      );
+    },
+  );
+
   it("leaves USD out, so the request is the one sent before the field", async () => {
     const user = userEvent.setup();
     render(<LedgerForm onSubmit={onSubmit} />);

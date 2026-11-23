@@ -98,6 +98,7 @@ export function Combobox({
     sentRef.current.push(next);
     onValueChange(next);
   };
+  const lastCommittedValue = () => sentRef.current.at(-1) ?? value;
   // Unique ID per instance to scope querySelector and avoid cross-instance conflicts
   const instanceId = React.useId().replace(/:/g, "");
   const listboxId = `${instanceId}-listbox`;
@@ -119,13 +120,36 @@ export function Combobox({
   const handleSelect = (selectedValue: string) => {
     committedRef.current = selectedValue;
     setInputValue(selectedValue);
-    send(selectedValue);
+    if (allowCustom || selectedValue !== lastCommittedValue()) {
+      send(selectedValue);
+    }
     setOpen(false);
     setHighlightedIndex(-1);
   };
 
+  const reconcileOption = (selectSoleOption = false) => {
+    if (!inputValue) {
+      handleSelect("");
+      return;
+    }
+    const search = inputValue.toLowerCase();
+    const matches = options.filter(
+      (option) => option.value.toLowerCase() === search,
+    );
+    // File names can differ only in case. Prefer the literal spelling and
+    // normalize case only when it identifies one option.
+    const option =
+      matches.find((match) => match.value === inputValue) ??
+      (matches.length === 1 ? matches[0] : undefined) ??
+      (selectSoleOption && filteredOptions.length === 1
+        ? filteredOptions[0]
+        : undefined);
+    handleSelect(option?.value ?? lastCommittedValue());
+  };
+
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!allowCustom) committedRef.current = "";
     setInputValue("");
     send("");
     inputRef.current?.focus();
@@ -155,8 +179,9 @@ export function Combobox({
     const committed = committedRef.current;
     committedRef.current = null;
     if (committed !== null && committed === inputValue) return;
-    // If triggerOn is "blur" and allowCustom is true, update the value on blur
-    if (allowCustom && triggerOn === "blur") {
+    if (!allowCustom) {
+      reconcileOption();
+    } else if (triggerOn === "blur") {
       send(inputValue);
     }
   };
@@ -174,6 +199,10 @@ export function Combobox({
       if (!open) return;
       e.preventDefault();
       e.stopPropagation();
+      if (!allowCustom) {
+        reconcileOption();
+        return;
+      }
       setOpen(false);
       setHighlightedIndex(-1);
     } else if (e.key === "Enter") {
@@ -186,6 +215,8 @@ export function Combobox({
         committedRef.current = inputValue;
         send(inputValue);
         setOpen(false);
+      } else {
+        reconcileOption(true);
       }
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -325,10 +356,13 @@ export function Combobox({
           }}
           align="start"
           onOpenAutoFocus={(e) => e.preventDefault()}
-          // Radix hears Escape before the input does; an IME's Escape only
-          // cancels its composition.
+          // Radix hears Escape before the input and can close the popup
+          // before React delivers the input's key handler.
           onEscapeKeyDown={(e) => {
-            if (isCompositionKey(e)) e.preventDefault();
+            if (allowCustom) return;
+            e.preventDefault();
+            e.stopPropagation();
+            reconcileOption();
           }}
           onInteractOutside={(e) => {
             // Prevent closing when interacting with the input or clear button

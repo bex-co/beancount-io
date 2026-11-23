@@ -17,6 +17,36 @@ const options = [
 ];
 
 describe("Combobox explicit selection vs blur", () => {
+  it("keeps exact file path case and restores a selection before its parent echoes it", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const filenames = ["main.bean", "Main.bean", "archive.bean"];
+    render(
+      <Combobox
+        options={filenames.map((value) => ({ value, label: value }))}
+        value="archive.bean"
+        onValueChange={onValueChange}
+        allowCustom={false}
+      />,
+    );
+    const input = screen.getByRole("combobox");
+    await user.clear(input);
+    await user.type(input, "MAIN.BEAN");
+    await user.keyboard("{Enter}");
+    expect(input).toHaveValue("archive.bean");
+    expect(onValueChange).not.toHaveBeenCalled();
+
+    await user.clear(input);
+    await user.type(input, "main.bean");
+    await user.keyboard("{Enter}");
+    expect(input).toHaveValue("main.bean");
+    await user.clear(input);
+    await user.type(input, "unknown.bean");
+    await user.tab();
+    expect(input).toHaveValue("main.bean");
+    expect(onValueChange).toHaveBeenCalledExactlyOnceWith("main.bean");
+  });
+
   it("keeps a keyboard-highlighted option after Enter in blur mode", async () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();
