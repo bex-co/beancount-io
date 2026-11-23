@@ -6,6 +6,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import {
   Outlet,
   RouterProvider,
@@ -14,7 +15,7 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
@@ -48,18 +49,27 @@ vi.mock("../text-editor", () => ({
     content,
     readOnly,
     setEditedContent,
+    onEditorMount,
   }: {
     content: string;
     readOnly?: boolean;
     setEditedContent?: (value: string) => void;
-  }) => (
-    <textarea
-      aria-label="file-source"
-      value={content}
-      readOnly={readOnly}
-      onChange={(event) => setEditedContent?.(event.target.value)}
-    />
-  ),
+    onEditorMount?: (editor: { focus: () => void }) => void;
+  }) => {
+    const input = useRef<HTMLTextAreaElement>(null);
+    useEffect(() => {
+      onEditorMount?.({ focus: () => input.current?.focus() });
+    }, [onEditorMount]);
+    return (
+      <textarea
+        ref={input}
+        aria-label="file-source"
+        value={content}
+        readOnly={readOnly}
+        onChange={(event) => setEditedContent?.(event.target.value)}
+      />
+    );
+  },
 }));
 
 /**
@@ -199,23 +209,34 @@ describe("TextFileView save conflict", () => {
     expect(editor()).toHaveValue(DRAFT);
   });
 
-  it("asks before Load latest replaces the draft, and Cancel keeps it", async () => {
-    const { onLoadLatest } = setup();
-    const notice = await conflictingSave();
-    fireEvent.click(
-      within(notice).getByRole("button", { name: "ledgerEditor.loadLatest" }),
-    );
-    const dialog = await screen.findByRole("dialog");
-    expect(dialog).toHaveTextContent("ledgerEditor.loadLatestTitle");
-
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "common.cancel" }),
-    );
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    expect(onLoadLatest).not.toHaveBeenCalled();
-    expect(editor()).toHaveValue(DRAFT);
-    expect(screen.getByRole("alert")).toBeInTheDocument();
-  });
+  it.each(["Cancel", "Escape", "Close"])(
+    "returns focus to Load latest and keeps the draft on %s",
+    async (dismissal) => {
+      const { onLoadLatest } = setup();
+      const user = userEvent.setup();
+      const notice = await conflictingSave();
+      const opener = within(notice).getByRole("button", {
+        name: "ledgerEditor.loadLatest",
+      });
+      await user.click(opener);
+      const dialog = await screen.findByRole("dialog", {
+        name: "ledgerEditor.loadLatestTitle",
+      });
+      if (dismissal === "Escape") {
+        await user.keyboard("{Escape}");
+      } else {
+        await user.click(
+          within(dialog).getByRole("button", {
+            name: dismissal === "Cancel" ? "common.cancel" : "Close",
+          }),
+        );
+      }
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+      expect(onLoadLatest).not.toHaveBeenCalled();
+      expect(editor()).toHaveValue(DRAFT);
+      await waitFor(() => expect(opener).toHaveFocus());
+    },
+  );
 
   it.each([
     { publishWithRead: true, when: "with the read" },
@@ -248,6 +269,7 @@ describe("TextFileView save conflict", () => {
       await waitFor(() => expect(editor()).toHaveValue(LATEST.content));
       expect(screen.queryByRole("alert")).toBeNull();
       await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+      await waitFor(() => expect(editor()).toHaveFocus());
 
       // The next save goes against the latest revision.
       onSave.mockResolvedValueOnce(undefined);

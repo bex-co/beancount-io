@@ -7,6 +7,7 @@ import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { base64Decode } from "@/common/lib/utils/encode";
 import { cn } from "@/common/lib/utils/utils";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { Button } from "@/common/components/ui/button";
 import {
@@ -121,6 +122,7 @@ export const TextFileView = ({
   // reader saves, discards, or loads the latest revision, which replaces the
   // draft only once that revision has reached this view.
   const [conflict, setConflict] = useState(false);
+  const loadLatestRef = useRef<HTMLButtonElement>(null);
   const [confirmLoadLatest, setConfirmLoadLatest] = useState(false);
   const [loadingLatest, setLoadingLatest] = useState(false);
   const [adoptSha, setAdoptSha] = useState<string | null>(null);
@@ -306,6 +308,7 @@ export const TextFileView = ({
                 {t("ledgerEditor.copyMyEdit")}
               </Button>
               <Button
+                ref={loadLatestRef}
                 type="button"
                 size="sm"
                 onClick={() => setConfirmLoadLatest(true)}
@@ -324,9 +327,12 @@ export const TextFileView = ({
           className="sm:max-w-md"
           busy={loadingLatest || adoptSha !== null}
           onCloseAutoFocus={(event) => {
+            if (loadLatestRef.current) {
+              restoreFocusOnDialogClose(event, loadLatestRef.current);
+              return;
+            }
             // Loading the latest revision removes the notice that opened
             // this; the editor is where the reader continues.
-            if (conflict) return;
             event.preventDefault();
             editorRef.current?.focus();
           }}
