@@ -37,7 +37,6 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { AccountCombobox } from "@/common/components/ledger-comboboxes";
 import { toast } from "sonner";
-import { formatImportReviewAmount } from "../../../utils/format-import-review-amount";
 import { formatImportDateForDisplay } from "../../../utils/format-import-date";
 
 interface TransactionFormData {
@@ -391,7 +390,7 @@ export function AccountMappingTable({
                     </TableCell>
                     <TableCell className="text-sm text-end font-medium">
                       {/* Sign before digits on a right-to-left page (w4/1047). */}
-                      <Amount>{formatImportReviewAmount(txn.amount)}</Amount>
+                      <Amount>{txn.amountDecimal}</Amount>
                     </TableCell>
                     <TableCell>
                       <FormField

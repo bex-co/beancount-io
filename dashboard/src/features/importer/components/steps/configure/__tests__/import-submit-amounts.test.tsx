@@ -101,10 +101,21 @@ function Workflow({ rows }: { rows: ReturnType<typeof parse> }) {
   );
 }
 
-async function importAll(csv: string) {
+async function importAll(csv: string, reviewedAmounts?: string[]) {
   const rows = parse(csv);
   const user = userEvent.setup();
   render(<Workflow rows={rows} />);
+  if (reviewedAmounts) {
+    const table = screen.getByRole("table", {
+      name: "importer.configure.assignTargetAccounts",
+    });
+    expect(
+      Array.from(
+        table.querySelectorAll("tbody bdi"),
+        (amount) => amount.textContent,
+      ),
+    ).toEqual(reviewedAmounts);
+  }
   await user.type(
     screen.getByLabelText("importer.configure.sourceAccountPlaceholder"),
     "Assets:Bank:Checking",
@@ -130,6 +141,34 @@ async function importAll(csv: string) {
 }
 
 describe("Smart Import writes the amount the preview showed (w3/564)", () => {
+  it("displays the exact posting decimals before submitting (w5/1162)", async () => {
+    expect(
+      await importAll(
+        [
+          "Date,Payee,Description,Amount",
+          "2026-09-01,Shop,Trailing zero,-4.50",
+          '2026-09-02,Shop,Grouped,"1,250.00"',
+          "2026-09-03,Shop,Parentheses,(12.00)",
+          "2026-09-04,Shop,Satoshi,0.00000001",
+          "2026-09-05,Shop,Tiny,0.000000000000000000000001",
+        ].join("\n"),
+        [
+          "-4.50",
+          "1250.00",
+          "-12.00",
+          "0.00000001",
+          "0.000000000000000000000001",
+        ],
+      ),
+    ).toEqual([
+      ["-4.50", "4.50"],
+      ["1250.00", "-1250.00"],
+      ["-12.00", "12.00"],
+      ["0.00000001", "-0.00000001"],
+      ["0.000000000000000000000001", "-0.000000000000000000000001"],
+    ]);
+  });
+
   it("normalizes US bank spellings, keeping the cell's digits", async () => {
     expect(
       await importAll(

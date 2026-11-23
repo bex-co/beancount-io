@@ -31,6 +31,7 @@ type Transaction = {
   description: string;
   amount: number;
   amountInput: string;
+  amountDecimal: string;
   targetAccount: string;
   selected: boolean;
 };
@@ -49,7 +50,8 @@ const defaultTransactions: Transaction[] = [
     payee: "QA Coffee",
     description: "Regular purchase",
     amount: -4.5,
-    amountInput: "-4.5",
+    amountInput: "-4.50",
+    amountDecimal: "-4.50",
     targetAccount: "Expenses:Coffee",
     selected: true,
   },
@@ -61,6 +63,7 @@ const defaultTransactions: Transaction[] = [
     description: "Regular purchase",
     amount: -45.67,
     amountInput: "-45.67",
+    amountDecimal: "-45.67",
     targetAccount: "Expenses:Food",
     selected: true,
   },
@@ -293,6 +296,7 @@ describe("AccountMappingTable bulk toggle", () => {
       description: "",
       amount: -1,
       amountInput: "-1",
+      amountDecimal: "-1",
       targetAccount: "Expenses:Food",
       selected: true,
     }));
@@ -333,6 +337,7 @@ describe("AccountMappingTable very small amounts", () => {
             description: "",
             amount: 1e-24,
             amountInput: "0.000000000000000000000001",
+            amountDecimal: "0.000000000000000000000001",
             targetAccount: "Expenses:Food",
             selected: true,
           },
@@ -344,6 +349,7 @@ describe("AccountMappingTable very small amounts", () => {
             description: "",
             amount: -1e-24,
             amountInput: "-0.000000000000000000000001",
+            amountDecimal: "-0.000000000000000000000001",
             targetAccount: "Expenses:Food",
             selected: true,
           },
@@ -354,16 +360,17 @@ describe("AccountMappingTable very small amounts", () => {
             payee: "Explicit zero",
             description: "",
             amount: 0,
-            amountInput: "0",
+            amountInput: "0.00",
+            amountDecimal: "0.00",
             targetAccount: "Expenses:Food",
             selected: true,
           },
         ]}
       />,
     );
-    expect(screen.getByText("1e-24")).toBeInTheDocument();
-    expect(screen.getByText("-1e-24")).toBeInTheDocument();
-    expect(screen.getByText("0")).toBeInTheDocument();
+    expect(screen.getByText("0.000000000000000000000001")).toBeInTheDocument();
+    expect(screen.getByText("-0.000000000000000000000001")).toBeInTheDocument();
+    expect(screen.getByText("0.00")).toBeInTheDocument();
   });
 });
 
@@ -375,7 +382,7 @@ describe("AccountMappingTable amounts on a right-to-left page", () => {
         <Harness />
       </div>,
     );
-    for (const text of ["-4.5", "-45.67"]) {
+    for (const text of ["-4.50", "-45.67"]) {
       const run = screen.getByText(text);
       expect(run.tagName).toBe("BDI");
       expect(run).toHaveAttribute("dir", "ltr");
