@@ -157,16 +157,23 @@ function LedgerAuthenticatedSwitcher({
       const currentPath = location.pathname;
       const pathMatch = currentPath.match(/^\/ledger\/[^/]+\/[^/]+(.*)$/);
       const pagePath = pathMatch?.[1] || "";
+      const fileSelection =
+        /^\/files\/(?:blob|tree|new|upload|content|create)(?:\/|$)/.test(
+          pagePath,
+        );
 
-      // Decode ledger ID to get owner and name
+      // Detail references belong to the current ledger. Open the destination's
+      // list or Files root in their place.
+      let destination = pagePath;
+      if (fileSelection) destination = "/files/tree/main";
+      else if (pagePath.startsWith("/account/")) destination = "/accounts";
+      else if (pagePath.startsWith("/entry/")) destination = "/journal";
+      else if (/^\/(?:commit|pull)\//.test(pagePath)) destination = "/commits";
+
       const { ledgerOwner, ledgerName } = decodeLedgerId(ledgerId);
+      const newPath = `/ledger/${ledgerOwner}/${ledgerName}${destination}`;
 
-      // Construct new path with same page but different ledger
-      const newPath = `/ledger/${ledgerOwner}/${ledgerName}${pagePath}`;
-
-      // Navigate to the same page on the other ledger. Shared account/filter/time
-      // must not leak across ledgers unless the destination URL supplies them —
-      // retainSearchParams would otherwise copy the previous ledger's selection.
+      // Clear the current ledger's filters and any file selection.
       void navigate({
         to: newPath,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -175,6 +182,13 @@ function LedgerAuthenticatedSwitcher({
           account: undefined,
           filter: undefined,
           time: undefined,
+          ...(fileSelection && {
+            path: undefined,
+            type: undefined,
+            editMode: undefined,
+            lineNumber: undefined,
+            dirPath: undefined,
+          }),
         }),
       });
     }

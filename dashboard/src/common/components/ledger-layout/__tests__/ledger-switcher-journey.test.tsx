@@ -74,7 +74,11 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-async function setup(language: "en" | "de", fullName?: string) {
+async function setup(
+  language: "en" | "de",
+  fullName?: string,
+  initialEntry = "/ledger/alice/books/journal?account=Expenses&filter=payee%3Acoffee&time=2026-10",
+) {
   vi.stubGlobal("innerWidth", 1440);
   vi.stubGlobal("matchMedia", (query: string) => ({
     matches: false,
@@ -147,6 +151,28 @@ async function setup(language: "en" | "de", fullName?: string) {
     path: "/journal",
     component: () => <h1>Journal destination</h1>,
   });
+  const ledgerPages = [
+    "/accounts",
+    "/account/$accountName",
+    "/entry/$entryHash",
+    "/commits",
+    "/commit/$commitSha",
+    "/pull/$prNumber",
+    "/files/tree/$branch/$",
+    "/files/blob/$branch/$",
+    "/files/new/$branch/$",
+    "/files/upload/$branch/$",
+    "/files/content",
+    "/files/create",
+    "/files/upload",
+    "/income-statement",
+  ].map((path) =>
+    createRoute({
+      getParentRoute: () => ledger,
+      path,
+      component: () => <h1>Ledger destination</h1>,
+    }),
+  );
   const profile = createRoute({
     getParentRoute: () => root,
     path: "/ledger/$username",
@@ -159,25 +185,62 @@ async function setup(language: "en" | "de", fullName?: string) {
   });
   const router = createRouter({
     routeTree: root.addChildren([
-      ledger.addChildren([journal]),
+      ledger.addChildren([journal, ...ledgerPages]),
       profile,
       dashboard,
     ]),
     history: createMemoryHistory({
-      initialEntries: [
-        "/ledger/alice/books/journal?account=Expenses&filter=payee%3Acoffee&time=2026-10",
-      ],
+      initialEntries: [initialEntry],
     }),
     context: { userProfile: { username: "alice" } },
     isServer: false,
   });
   await router.load();
   render(<RouterProvider router={router} />);
-  await screen.findByRole("heading", { name: "Journal destination" });
+  await screen.findByRole("heading", { name: /destination$/ });
   return { router, requests, localization };
 }
 
 describe("ledger switcher names and real navigation", () => {
+  it.each([
+    ["/account/Assets:Bank:Checking", "/accounts"],
+    ["/entry/entry-hash", "/journal"],
+    ["/commit/abc123", "/commits"],
+    ["/pull/17", "/commits"],
+    ["/files/tree/main/2026", "/files/tree/main"],
+    ["/files/blob/main/main.bean", "/files/tree/main"],
+    ["/files/new/main/2026", "/files/tree/main"],
+    ["/files/upload/main/2026", "/files/tree/main"],
+    ["/files/content", "/files/tree/main"],
+    ["/files/create", "/files/tree/main"],
+    ["/files/upload", "/files/tree/main"],
+    ["/income-statement", "/income-statement"],
+  ])("switches %s to %s on the other ledger", async (source, destination) => {
+    const filters = "account=Expenses&filter=payee%3Acoffee&time=2026-10";
+    const fileParams =
+      "&path=2026%2Fmain.bean&type=file&editMode=true&lineNumber=8&dirPath=2026";
+    const { router } = await setup(
+      "en",
+      undefined,
+      `/ledger/alice/books${source}?${filters}${source.startsWith("/files/") ? fileParams : ""}`,
+    );
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole("combobox", { name: "books — switch ledger" }),
+    );
+    const dialog = await screen.findByRole("dialog", {
+      name: "Select a ledger",
+    });
+    await user.click(
+      await within(dialog).findByRole("option", { name: /^business/ }),
+    );
+
+    await screen.findByRole("combobox", { name: "business — switch ledger" });
+    expect(router.state.location.href).toBe(
+      `/ledger/alice/business${destination}`,
+    );
+  });
+
   it.each(["en", "de"] as const)(
     "%s names the ledger and dialog while preserving keyboard switching and owner navigation",
     async (language) => {
