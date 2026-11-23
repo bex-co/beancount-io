@@ -1,6 +1,11 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DirectiveType, type JournalBalance } from "@/common/types/journal";
+import {
+  DirectiveType,
+  type JournalBalance,
+  type JournalPosting,
+  type JournalTransaction,
+} from "@/common/types/journal";
 import { createLocalization } from "@/i18n/init";
 import { LocalizationProvider } from "@/i18n/provider";
 import {
@@ -23,8 +28,9 @@ async function renderTable(
   layout: "lines" | "days",
   data: JournalTableItem[],
   language: "en" | "de" | "fa",
-  registerAccount?: string,
+  options: { registerAccount?: string; accountFilter?: string } = {},
 ) {
+  const { registerAccount, accountFilter = "" } = options;
   const localization = createLocalization();
   await localization.changeLanguage(language);
   render(
@@ -37,7 +43,7 @@ async function renderTable(
               primaryCurrency: "USD",
               incomeRoot: "Income",
               expensesRoot: "Expenses",
-              accountFilter: "",
+              accountFilter,
             }}
             data={data}
             showPostings={false}
@@ -101,7 +107,7 @@ describe.each(["lines", "days"] as const)(
         layout,
         [{ directive: balance("100.004", "-0.004", "0.001") }],
         "en",
-        wallet,
+        { registerAccount: wallet },
       );
       const entry = screen.getByRole("button", {
         name: /^Open entry 2024-03-03 Balance/,
@@ -164,6 +170,108 @@ function expectIsolatedAmount(container: HTMLElement, text: string) {
   expect(run).toHaveAttribute("dir", "ltr");
   expect(run?.textContent).toBe(text);
 }
+
+const cash = "Assets:Brokerage:Cash";
+const commission = "Expenses:Brokerage:Commissions";
+const posting = (
+  account: string,
+  number: string,
+  currency = "USD",
+): JournalPosting => ({ account, units: { number, currency } });
+const position = (number: string, currency: string): JournalPosting => ({
+  ...posting(`Assets:Brokerage:${currency}`, number, currency),
+  cost: { number: "84.60", currency: "USD", date: "2024-03-01" },
+});
+const transaction = (
+  narration: string,
+  postings: JournalPosting[],
+): JournalTransaction => ({
+  directive_type: DirectiveType.TRANSACTION,
+  entry_hash: narration,
+  date: "2024-03-03",
+  flag: "*",
+  narration,
+  postings,
+  tags: [],
+  links: [],
+});
+
+const gainSale = transaction("Sell ACME at a gain", [
+  position("-40", "ACME"),
+  posting(cash, "3670.00"),
+  posting(commission, "4.95"),
+  posting(cash, "-4.95"),
+  posting("Income:CapitalGains:ShortTerm", "-286.00"),
+]);
+
+const lossSale = transaction("Sell ACME at a loss", [
+  position("-10", "ACME"),
+  posting(cash, "711.00"),
+  posting(commission, "4.95"),
+  posting(cash, "-4.95"),
+  posting("Expenses:CapitalLoss:LongTerm", "135.00"),
+]);
+
+describe.each(["lines", "days"] as const)(
+  "transaction amounts in %s",
+  (layout) => {
+    const row = (narration: string) =>
+      screen
+        .getByRole("button", { name: new RegExp(`^Open entry .*${narration}`) })
+        .closest("tr")!;
+
+    it.each([
+      gainSale,
+      lossSale,
+      transaction("Sell ACME without a commission", [
+        position("-40", "ACME"),
+        posting(cash, "3670.00"),
+        posting("Income:CapitalGains:ShortTerm", "-286.00"),
+      ]),
+      transaction("Exchange ACME for NWRB", [
+        position("-1", "ACME"),
+        position("1", "NWRB"),
+      ]),
+    ])("shows multiple postings for $narration", async (sale) => {
+      await renderTable(layout, [{ directive: sale }], "en");
+      expect(row(sale.narration!)).toHaveTextContent("Multiple postings");
+    });
+
+    it("shows exact sale cash movement when filtered to cash", async () => {
+      await renderTable(layout, [{ directive: gainSale }], "en", {
+        accountFilter: cash,
+      });
+      expectIsolatedAmount(row(gainSale.narration!), "+3,665.05 USD");
+    });
+
+    it("shows payroll earnings and unsigned purchases and transfers", async () => {
+      const directives = [
+        transaction("Payroll", [
+          posting(cash, "2700.00"),
+          posting("Income:Salary", "-4000.00"),
+          posting("Expenses:Payroll:Tax", "1300.00"),
+        ]),
+        transaction("Buy ACME", [
+          position("100", "ACME"),
+          posting(commission, "4.95"),
+          posting(cash, "-8464.95"),
+        ]),
+        transaction("Transfer to savings", [
+          posting("Assets:Savings", "300.00"),
+          posting(cash, "-300.00"),
+        ]),
+      ];
+      await renderTable(
+        layout,
+        directives.map((directive) => ({ directive })),
+        "en",
+      );
+      expectIsolatedAmount(row("Payroll"), "+4,000.00 USD");
+      expectIsolatedAmount(row("Buy ACME"), "8,464.95 USD");
+      expectIsolatedAmount(row("Transfer to savings"), "300.00 USD");
+    });
+  },
+);
 
 // An account's change, units and balance: journal-register.test.tsx.
 describe.each(["lines", "days"] as const)(

@@ -154,7 +154,16 @@ export function TransactionAmount({
 }) {
   const { t } = useTranslations();
   const formatNumber = useFormatNumber();
-  let amounts = summary.amounts;
+  // A sale's proceeds, gain or loss, and fees tell different stories. Leave
+  // them to the posting list, except when a filter gives the amount a scope.
+  const reducesCostedPosition =
+    !money.accountFilter &&
+    transaction.postings?.some(
+      (posting) =>
+        posting.cost != null &&
+        parseDecimalNumber(String(posting.units?.number))?.startsWith("-"),
+    );
+  let amounts = reducesCostedPosition ? [] : summary.amounts;
   // Filtered to an account, each row is that account's change, signed as a
   // statement prints it: money in with "+" and in green, money out with "−".
   let tone: "in" | "out" | "moved" | "change" =
@@ -165,7 +174,7 @@ export function TransactionAmount({
         : summary.kind === "expense"
           ? "out"
           : "moved";
-  if (amounts.length === 0) {
+  if (!reducesCostedPosition && amounts.length === 0) {
     const earned = incomeAmounts(
       transaction,
       money.incomeRoot,
