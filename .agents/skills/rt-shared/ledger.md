@@ -45,8 +45,6 @@ newest first.
 
 ### Deferred
 
-- 2026-11-21 `FORMULA_TRIGGERS` (`cli/report_csv.py:34` vs `bea_engine/query.py:2194`) — the comment says the tuples must agree, the sets agree today, but no drift guard pins them (unlike the #248/#249 pairs); add one next run.
-- 2026-11-21 `JSON_FLOAT_MARKER` transport marker (`cli/amounts.py:36` "must match `bea_engine.amounts`" vs `bea_engine/amounts.py:197`) — string literal both sides must share, no test pins it; add a drift guard next run.
 
 ### Skipped
 
