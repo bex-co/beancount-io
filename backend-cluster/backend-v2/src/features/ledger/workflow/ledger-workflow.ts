@@ -1488,6 +1488,25 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       (cause) =>
         operationNotAllowedFromCause("read ledger file for rename", cause),
     );
+    if (
+      oldFile?.type === "dir" ||
+      (!oldFile &&
+        (await this.isExistingDirectory(
+          favaApiClient,
+          ledgerOwner,
+          ledgerName,
+          input.oldPath,
+          "read ledger file for rename",
+          (cause) =>
+            operationNotAllowedFromCause("read ledger file for rename", cause),
+        )))
+    ) {
+      throw new BadUserInputError(
+        `${input.oldPath} is a directory, not a file`,
+        "oldPath",
+        "Rename files individually, or list the directory first with `listLedgerFiles`.",
+      );
+    }
     if (!oldFile) {
       // NOT_FOUND, as a missing file is on every read and edit path; it was
       // BAD_USER_INPUT here alone (w5/051).
@@ -2244,6 +2263,32 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     return ledger;
   }
 
+  /**
+   * `GET /ledgers/:owner/:repo/files` collapses Gitea's directory array to
+   * `null`, making an existing directory look missing. Probe the batched
+   * contents endpoint — which preserves `type: "dir"` — before answering
+   * NOT_FOUND so callers get BAD_USER_INPUT for directories (w31/087).
+   */
+  private async isExistingDirectory(
+    favaApiClient: FavaApiClient,
+    ledgerOwner: string,
+    ledgerName: string,
+    path: string,
+    operation: string,
+    makeError?: (cause?: unknown) => Error,
+  ): Promise<boolean> {
+    const entries = await unwrapFavaResponse(
+      favaApiClient.ledgers.getLedgerFilesContent(ledgerOwner, ledgerName, {
+        files: [path],
+      }),
+      operation,
+      makeError,
+    );
+    return (entries ?? []).some(
+      (entry) => entry.path === path && entry.type === "dir",
+    );
+  }
+
   async getLedgerFile({
     ledgerId,
     identity,
@@ -2274,16 +2319,26 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       );
 
       if (args.missingAsError) {
-        if (!data) throw new NotFoundError("File", args.path);
-        if (data.type === "dir") {
+        if (
+          data?.type === "dir" ||
+          (!data &&
+            (await this.isExistingDirectory(
+              favaApiClient,
+              ledgerOwner,
+              ledgerName,
+              args.path,
+              "get ledger file",
+            )))
+        ) {
           throw new BadUserInputError(
-            `${data.path} is a directory, not a file`,
+            `${data?.path ?? args.path} is a directory, not a file`,
             "path",
             "List a directory instead of reading it: `getLedgerDirContent`.",
           );
         }
+        if (!data) throw new NotFoundError("File", args.path);
       }
-      if (!data) {
+      if (!data || data.type === "dir") {
         return null;
       }
 

@@ -150,7 +150,9 @@ describe("LedgerWorkflow", () => {
         deleteLedgerFile: jest.fn(),
         getLedgerFile: jest.fn(),
         getLedgerDirContent: jest.fn(),
-        getLedgerFilesContent: jest.fn(),
+        getLedgerFilesContent: jest.fn().mockResolvedValue({
+          data: { success: true, data: [] },
+        }),
         changeLedgerFiles: jest.fn(),
       },
       reports: {
@@ -2331,6 +2333,37 @@ describe("LedgerWorkflow", () => {
         await expect(read(true)).rejects.toThrow(BadUserInputError);
       });
 
+      it("fails a directory path with BAD_USER_INPUT when upstream getLedgerFile returns null (w31/087)", async () => {
+        mockFavaApiClient.ledgers.getLedgerFile.mockResolvedValue({
+          data: { success: true, data: null },
+        });
+        mockFavaApiClient.ledgers.getLedgerFilesContent.mockResolvedValue({
+          data: {
+            success: true,
+            data: [{ path: "reports", type: "dir", sha: "d1", size: 0 }],
+          },
+        });
+
+        await expect(
+          workflow.getLedgerFile({
+            ledgerId,
+            identity: IDENTITY,
+            args: { path: "reports", missingAsError: true },
+          }),
+        ).rejects.toMatchObject({
+          category: ErrorCategory.BAD_USER_INPUT,
+          message: "reports is a directory, not a file",
+        });
+
+        await expect(
+          workflow.getLedgerFile({
+            ledgerId,
+            identity: IDENTITY,
+            args: { path: "reports", missingAsError: false },
+          }),
+        ).resolves.toBeNull();
+      });
+
       it("passes a coded upstream failure through instead of INTERNAL_SERVER_ERROR", async () => {
         mockFavaApiClient.ledgers.getLedgerFile.mockRejectedValue(
           new NotFoundError("File", "nope.bean"),
@@ -2648,6 +2681,53 @@ describe("LedgerWorkflow", () => {
           message: "Rename old.bean → new.bean",
         },
       );
+    });
+
+    it("should refuse when oldPath is an existing directory (w31/087)", async () => {
+      mockFavaApiClient.ledgers.getLedgerFile.mockResolvedValue({
+        data: { success: true, data: null },
+      });
+      mockFavaApiClient.ledgers.getLedgerFilesContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [{ path: "reports", type: "dir", sha: "d1", size: 0 }],
+        },
+      });
+
+      await expect(
+        workflow.renameLedgerFile({
+          identity: IDENTITY,
+          ledgerId,
+          input: { oldPath: "reports", newPath: "reports2" },
+        }),
+      ).rejects.toMatchObject({
+        category: ErrorCategory.BAD_USER_INPUT,
+        message: "reports is a directory, not a file",
+        metadata: expect.objectContaining({ field: "oldPath" }),
+      });
+      expect(
+        mockFavaApiClient.ledgers.changeLedgerFiles,
+      ).not.toHaveBeenCalled();
+    });
+
+    it("should throw NOT_FOUND when oldPath does not exist", async () => {
+      mockFavaApiClient.ledgers.getLedgerFile.mockResolvedValue({
+        data: { success: true, data: null },
+      });
+      mockFavaApiClient.ledgers.getLedgerFilesContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+
+      await expect(
+        workflow.renameLedgerFile({
+          identity: IDENTITY,
+          ledgerId,
+          input: { oldPath: "missing.bean", newPath: "new.bean" },
+        }),
+      ).rejects.toThrow(NotFoundError);
+      expect(
+        mockFavaApiClient.ledgers.changeLedgerFiles,
+      ).not.toHaveBeenCalled();
     });
 
     it("should throw error when rename fails", async () => {

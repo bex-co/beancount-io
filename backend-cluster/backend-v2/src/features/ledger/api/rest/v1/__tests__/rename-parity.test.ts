@@ -102,6 +102,25 @@ async function fixture(
       encoding: entry.encoding ?? null,
     };
   };
+  // Matches ledger/src/api/files.ts: GET /files collapses directories to null,
+  // while POST /files-content preserves `{ type: "dir" }` entries (w31/087).
+  const toContentEntry = (path: string) => {
+    const file = toPublic(path);
+    if (file) return file;
+    const prefix = `${path}/`;
+    if ([...files.keys()].some((candidate) => candidate.startsWith(prefix))) {
+      return {
+        name: path.split("/").pop(),
+        path,
+        type: "dir",
+        sha: shaOf(`dir-${path}`),
+        size: 0,
+        content: null,
+        encoding: null,
+      };
+    }
+    return null;
+  };
   const change = jest.fn(async (_owner, _name, options) => {
     for (const op of options.files) {
       if (op.operation === "create" && files.has(op.path)) {
@@ -181,7 +200,7 @@ async function fixture(
           _o: string,
           _n: string,
           body: { files: string[] },
-        ) => envelope(body.files.map(toPublic).filter(Boolean)),
+        ) => envelope(body.files.map(toContentEntry).filter(Boolean)),
         getLedgerDirContent: async (
           _o: string,
           _n: string,
@@ -303,6 +322,13 @@ async function fixture(
           success: response.status === 200,
           result: body,
           code: (body as { error?: { code?: string } }).error?.code,
+          ...(response.status === 200
+            ? {}
+            : {
+                status: response.status,
+                message: (body as { error?: { message?: string } }).error
+                  ?.message,
+              }),
         };
       }
       if (surface === "gql") {
@@ -530,14 +556,66 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
     const f = await fixture();
     try {
       const outcome = await f.call(surface, "ghost.bean", "new.bean");
-      expect(outcome.success).toBe(false);
-      // The category is the shared workflow's; REST is where this helper
-      // exposes it. It was BAD_USER_INPUT here alone (w5/051).
+      expect(outcome).toMatchObject({ success: false, code: "NOT_FOUND" });
       if (surface === "rest") {
-        expect(outcome.result).toMatchObject({
-          ok: false,
-          error: { code: "NOT_FOUND" },
+        expect(outcome).toMatchObject({ status: 404 });
+      }
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+  // w31/087: GET /files collapses directories to null; rename must still
+  // distinguish an existing directory from a missing file on every surface.
+  it.each([false, true])(
+    "refuses renaming an existing directory as BAD_USER_INPUT (dryRun=%s)",
+    async (dryRun) => {
+      const f = await fixture(identity, {
+        "old.bean": "; Café\n",
+        "reports/q1.bean": "; q1\n",
+      });
+      try {
+        const previewFlag = dryRun
+          ? surface === "mcp"
+            ? { dry_run: true }
+            : { dryRun: true }
+          : {};
+        const outcome = await f.call(
+          surface,
+          "reports",
+          "reports2",
+          previewFlag,
+        );
+        expect(outcome).toMatchObject({
+          success: false,
+          code: "BAD_USER_INPUT",
+          message: "reports is a directory, not a file",
         });
+        if (surface === "rest") {
+          expect(outcome).toMatchObject({ status: 400 });
+        }
+        expect(f.change).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+  it("refuses renaming onto an existing directory as CONFLICT and writes nothing", async () => {
+    const f = await fixture(identity, {
+      "old.bean": "; Café\n",
+      "reports/q1.bean": "; q1\n",
+    });
+    try {
+      const outcome = await f.call(surface, "old.bean", "reports");
+      expect(outcome).toMatchObject({
+        success: false,
+        code: "CONFLICT",
+        message: expect.stringContaining(
+          "reports cannot be created: it is an existing folder",
+        ),
+      });
+      if (surface === "rest") {
+        expect(outcome).toMatchObject({ status: 409 });
       }
       expect(f.change).not.toHaveBeenCalled();
     } finally {
