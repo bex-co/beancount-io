@@ -996,6 +996,92 @@ describe("LedgerRepoService", () => {
       expect(mockGetLedgerDirContent.mock.calls.length).toBeLessThanOrEqual(2);
     });
 
+    // w31/085: case-, Unicode-, and invisible-character-colliding parent
+    // folders in one batch must be refused upfront on dry-run and commit alike.
+    it.each([
+      [
+        "Reports/q1.bean",
+        "reports/q2.bean",
+        "reports/q2.bean already exists as Reports",
+      ],
+      ["a/Sub/x.bean", "a/sub/y.bean", "a/sub/y.bean already exists as a/Sub"],
+      [
+        "Caf\u00e9/a.bean",
+        "Cafe\u0301/b.bean",
+        "Cafe\u0301/b.bean already exists as Caf\u00e9",
+      ],
+      [
+        "dir\u200b/a.bean",
+        "dir/b.bean",
+        "dir/b.bean already exists as dir\u200b",
+      ],
+    ])(
+      "refuses colliding parent folders %j and %j on dry-run and commit without calling Gitea (w31/085)",
+      async (first, second, expectedMessage) => {
+        for (const dryRun of [true, false]) {
+          await expect(
+            service.changeFiles({
+              ledgerId: LEDGER_ID,
+              identity: IDENTITY,
+              operations: [
+                { operation: "create", path: first, content: "; a\n" },
+                { operation: "create", path: second, content: "; b\n" },
+              ],
+              message: "create colliding folders",
+              dryRun,
+            }),
+          ).rejects.toMatchObject({
+            category: "CONFLICT",
+            message: expect.stringContaining(expectedMessage),
+            metadata: {
+              hint: "macOS and Windows keep one of two names that differ only by letter case, accents or an invisible character.",
+            },
+          });
+        }
+        expect(mockGetLedgerDirContent).not.toHaveBeenCalled();
+        expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+      },
+    );
+
+    it("still refuses file-vs-folder case-variant collision with file/folder conflict message (w31/085)", async () => {
+      await expect(
+        service.changeFiles({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          operations: [
+            { operation: "create", path: "qa-dir", content: "; a\n" },
+            { operation: "create", path: "QA-DIR/sub.bean", content: "; b\n" },
+          ],
+          message: "file vs folder",
+          dryRun: true,
+        }),
+      ).rejects.toMatchObject({
+        category: "CONFLICT",
+        message: expect.stringContaining("would be both a file and a folder"),
+      });
+      expect(mockGetLedgerDirContent).not.toHaveBeenCalled();
+      expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+    });
+
+    it("allows creating multiple files in the same new folder spelling (w31/085)", async () => {
+      mockGetLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+      mockChangeLedgerFiles.mockResolvedValue({ data: { success: true } });
+
+      await service.changeFiles({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        operations: [
+          { operation: "create", path: "Reports/q1.bean", content: "; a\n" },
+          { operation: "create", path: "Reports/q2.bean", content: "; b\n" },
+        ],
+        message: "create quarterly files",
+      });
+
+      expect(mockChangeLedgerFiles).toHaveBeenCalledTimes(1);
+    });
+
     it("refuses an unsafe path on a dry run exactly like the commit", async () => {
       await expect(
         service.changeFiles({

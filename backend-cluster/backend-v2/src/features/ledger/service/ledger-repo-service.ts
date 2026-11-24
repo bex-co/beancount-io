@@ -377,8 +377,8 @@ export class LedgerRepoService
       )
       .map((operation) => operation.path);
     if (creates.length === 0) return;
-    assertNoTwinsAmong(creates);
     assertNoPrefixAmong(creates);
+    assertNoTwinsAmong(creates);
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,

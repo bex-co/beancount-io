@@ -91,6 +91,56 @@ describe("assertNoTwinsAmong", () => {
     expect(() => assertNoTwinsAmong(["a.bean", "b.bean"])).not.toThrow();
     expect(portablePathKey("Cafe\u0301\u200b.Bean")).toBe("caf\u00e9.bean");
   });
+
+  // w31/085: case-, Unicode-, or invisible-character-colliding parent folders
+  // in one batch collapse on macOS and Windows just like colliding files do.
+  it.each([
+    [
+      "Reports/q1.bean",
+      "reports/q2.bean",
+      "reports/q2.bean already exists as Reports",
+    ],
+    ["a/Sub/x.bean", "a/sub/y.bean", "a/sub/y.bean already exists as a/Sub"],
+    [
+      "Caf\u00e9/a.bean",
+      "Cafe\u0301/b.bean",
+      "Cafe\u0301/b.bean already exists as Caf\u00e9",
+    ],
+    [
+      "dir\u200b/a.bean",
+      "dir/b.bean",
+      "dir/b.bean already exists as dir\u200b",
+    ],
+  ])(
+    "refuses colliding parent folders %j and %j with ConflictError",
+    (first, second, expectedMessage) => {
+      let caught: unknown;
+      try {
+        assertNoTwinsAmong([first, second]);
+      } catch (error) {
+        caught = error;
+      }
+      expect(caught).toBeInstanceOf(ConflictError);
+      expect(caught).toMatchObject({
+        category: "CONFLICT",
+        message: expect.stringContaining(expectedMessage),
+        metadata: {
+          hint: "macOS and Windows keep one of two names that differ only by letter case, accents or an invisible character.",
+        },
+      });
+    },
+  );
+
+  it("allows multiple files inside the same folder spelling", () => {
+    expect(() =>
+      assertNoTwinsAmong([
+        "Reports/q1.bean",
+        "Reports/q2.bean",
+        "a/Sub/x.bean",
+        "a/Sub/y.bean",
+      ]),
+    ).not.toThrow();
+  });
 });
 
 describe("file versus folder (w23/204)", () => {

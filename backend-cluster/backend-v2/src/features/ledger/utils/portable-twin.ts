@@ -100,18 +100,27 @@ export function listingOf(
   };
 }
 
-/** Refuses a batch that creates two paths with one portable key. */
+/**
+ * Refuses a batch that creates two paths — or two parent folders — with one
+ * portable key (w21/770, w31/085).
+ */
 export function assertNoTwinsAmong(paths: readonly string[]): void {
   const seen = new Map<string, string>();
   for (const path of paths) {
-    const key = portablePathKey(path);
-    const other = seen.get(key);
-    if (other !== undefined && other !== path) {
-      throw new ConflictError("File", `${path} already exists as ${other}`, {
-        hint: "macOS and Windows keep one of two names that differ only by letter case, accents or an invisible character.",
-      });
+    const segments = path.split("/");
+    for (let depth = 1; depth <= segments.length; depth += 1) {
+      const prefix = segments.slice(0, depth).join("/");
+      const key = portablePathKey(prefix);
+      const other = seen.get(key);
+      if (other !== undefined && other !== prefix) {
+        throw new ConflictError("File", `${path} already exists as ${other}`, {
+          hint: "macOS and Windows keep one of two names that differ only by letter case, accents or an invisible character.",
+        });
+      }
+      if (other === undefined) {
+        seen.set(key, prefix);
+      }
     }
-    seen.set(key, path);
   }
 }
 

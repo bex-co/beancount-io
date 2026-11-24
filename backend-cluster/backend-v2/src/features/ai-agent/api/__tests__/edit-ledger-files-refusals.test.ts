@@ -1040,3 +1040,101 @@ describe("amounts past 28 digits in file writes", () => {
     }
   });
 });
+
+/**
+ * w31/085. A batch creating files inside case-, Unicode-, or
+ * invisible-character-colliding parent folders must be refused upfront on both
+ * dry-run and commit, while multiple files in the exact same new folder remain
+ * allowed.
+ */
+describe("colliding parent folders in createLedgerFiles (w31/085)", () => {
+  it.each([
+    [
+      "Reports/q1.bean",
+      "reports/q2.bean",
+      "reports/q2.bean already exists as Reports",
+    ],
+    [
+      "Caf\u00e9/a.bean",
+      "Cafe\u0301/b.bean",
+      "Cafe\u0301/b.bean already exists as Caf\u00e9",
+    ],
+    [
+      "dir\u200b/a.bean",
+      "dir/b.bean",
+      "dir/b.bean already exists as dir\u200b",
+    ],
+  ])(
+    "refuses %j and %j with CONFLICT on dry_run and commit",
+    async (first, second, expectedMessage) => {
+      const f = await fixture();
+      try {
+        for (const dry_run of [true, false]) {
+          const result = await f.client.callTool({
+            name: "createLedgerFiles",
+            arguments: {
+              ledger: "alice/main",
+              description: "create quarterly files",
+              dry_run,
+              files: [
+                { path: first, content: "; a\n" },
+                { path: second, content: "; b\n" },
+              ],
+            },
+          });
+          expect(result.isError).toBe(true);
+          expect(result.structuredContent).toMatchObject({
+            error: {
+              code: "CONFLICT",
+              message: expect.stringContaining(expectedMessage),
+              hint: "macOS and Windows keep one of two names that differ only by letter case, accents or an invisible character.",
+            },
+          });
+        }
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it("allows creating multiple files inside the exact same new folder spelling", async () => {
+    const f = await fixture();
+    f.changeLedgerFiles.mockResolvedValue({
+      data: { success: true, data: {} },
+    });
+    try {
+      const preview = await f.client.callTool({
+        name: "createLedgerFiles",
+        arguments: {
+          ledger: "alice/main",
+          description: "create quarterly files",
+          dry_run: true,
+          files: [
+            { path: "Reports/q1.bean", content: "; a\n" },
+            { path: "Reports/q2.bean", content: "; b\n" },
+          ],
+        },
+      });
+      expect(preview.isError).toBeFalsy();
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+
+      const committed = await f.client.callTool({
+        name: "createLedgerFiles",
+        arguments: {
+          ledger: "alice/main",
+          description: "create quarterly files",
+          dry_run: false,
+          files: [
+            { path: "Reports/q1.bean", content: "; a\n" },
+            { path: "Reports/q2.bean", content: "; b\n" },
+          ],
+        },
+      });
+      expect(committed.isError).toBeFalsy();
+      expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+    } finally {
+      await f.close();
+    }
+  });
+});

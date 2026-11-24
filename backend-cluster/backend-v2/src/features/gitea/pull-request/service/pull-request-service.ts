@@ -393,8 +393,8 @@ export class PullRequestService implements IPullRequestService {
         operations.push({ operation: "create", path: change.path, content });
       }
       if (created.length > 0) {
-        assertNoTwinsAmong(created);
         assertNoPrefixAmong(created);
+        assertNoTwinsAmong(created);
         const listFolder = async (dir: string | undefined) => {
           const listing = await step<{ data: unknown }>(
             `listing ${dir ?? "/"}`,

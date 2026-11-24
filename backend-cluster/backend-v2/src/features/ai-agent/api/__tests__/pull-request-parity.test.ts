@@ -742,6 +742,24 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
         "would be both a file and a folder",
         "Create only one of the two, or rename one of them.",
       ],
+      [
+        "case-colliding new parent folders in one PR (w31/085)",
+        [
+          { path: "Reports/q1.bean", content: "; a\n" },
+          { path: "reports/q2.bean", content: "; b\n" },
+        ],
+        "reports/q2.bean already exists as Reports",
+        "macOS and Windows keep one of two names that differ only by letter case, accents or an invisible character.",
+      ],
+      [
+        "Unicode NFC/NFD-colliding new parent folders in one PR (w31/085)",
+        [
+          { path: "Caf\u00e9/a.bean", content: "; a\n" },
+          { path: "Cafe\u0301/b.bean", content: "; b\n" },
+        ],
+        "Cafe\u0301/b.bean already exists as Caf\u00e9",
+        "macOS and Windows keep one of two names that differ only by letter case, accents or an invisible character.",
+      ],
     ])(
       "refuses creating %s as CONFLICT on REST (409), MCP, and GraphQL before committing",
       async (_label, collisionChanges, expectedMessage, expectedHint) => {
