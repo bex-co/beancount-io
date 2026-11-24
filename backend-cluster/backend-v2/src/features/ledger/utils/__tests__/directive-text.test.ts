@@ -864,3 +864,226 @@ describe("insertDirectives into a CRLF file", () => {
     );
   });
 });
+
+// w31/098: every scanner over the existing target file in `insertDirectives`
+// must track multiline `"..."` string state so column-0 continuation lines
+// never split an existing entry, corrupt sort order, or spoof push/pop scopes.
+describe("insertDirectives with multiline strings in the existing file", () => {
+  const multilineTxn = [
+    '2026-08-30 * "Landlord" "Monthly rent',
+    "line two at column 0",
+    'end of memo"',
+    "  Expenses:Food:Groceries  1.00 USD",
+    "  Assets:Bank:Checking",
+  ].join("\n");
+
+  const coffeeTxn = [
+    '2026-08-31 * "Coffee" "Latte"',
+    "  Expenses:Food:Groceries  5.00 USD",
+    "  Assets:Bank:Checking",
+  ].join("\n");
+
+  it("inserts after a multiline-narration transaction without splicing into the string", () => {
+    const file = `${txn("2026-08-29", "Earlier")}\n\n${multilineTxn}\n`;
+    const result = insertDirectives(file, parseDirectiveText(coffeeTxn));
+    expect(result.appended).toBe(false);
+    expect(result.content).toBe(`${file}\n${coffeeTxn}\n`);
+    expect(result.content.split("\n")[result.inserted[0]!.line - 1]).toBe(
+      '2026-08-31 * "Coffee" "Latte"',
+    );
+  });
+
+  it("ignores date, keyword, and blank lines inside a multiline string for sorting and placement", () => {
+    const note = [
+      '2026-08-30 note Assets:Cash "Summary:',
+      "",
+      "2020-01-01 open Assets:Fake USD",
+      'include "other.bean"',
+      "2026-09-01 balance Assets:Cash 0 USD",
+      'end of note"',
+    ].join("\n");
+    const file = `${note}\n\n${txn("2026-09-10", "Later")}\n`;
+
+    const after = insertDirectives(file, parseDirectiveText(coffeeTxn));
+    expect(after.appended).toBe(false);
+    expect(after.content).toBe(
+      `${note}\n\n${coffeeTxn}\n\n${txn("2026-09-10", "Later")}\n`,
+    );
+
+    const before = insertDirectives(
+      file,
+      parseDirectiveText(txn("2026-08-29", "Before")),
+    );
+    expect(before.appended).toBe(false);
+    expect(before.content).toBe(`${txn("2026-08-29", "Before")}\n${file}`);
+  });
+
+  it("keeps indented multiline metadata strings and following postings intact", () => {
+    const entry = [
+      '2026-08-30 * "Landlord" "Rent"',
+      '  memo: "first line',
+      "2020-01-01 open Assets:Oops USD",
+      'last line"',
+      "  Expenses:Food:Groceries  1.00 USD",
+      "  Assets:Bank:Checking",
+    ].join("\n");
+    const result = insertDirectives(
+      `${entry}\n`,
+      parseDirectiveText(coffeeTxn),
+    );
+    expect(result.appended).toBe(false);
+    expect(result.content).toBe(`${entry}\n\n${coffeeTxn}\n`);
+  });
+
+  it("does not treat pushtag/pushmeta inside a multiline string as open scopes", () => {
+    const entry = [
+      '2026-08-30 * "Landlord" "Rent',
+      "pushtag #fake",
+      'pushmeta fake: "1"',
+      'end of memo"',
+      "  Expenses:Food:Groceries  1.00 USD",
+      "  Assets:Bank:Checking",
+    ].join("\n");
+    const result = insertDirectives(
+      `${entry}\n`,
+      parseDirectiveText(coffeeTxn),
+    );
+    expect(result.appended).toBe(false);
+    expect(result.content).toBe(`${entry}\n\n${coffeeTxn}\n`);
+    expect(result.content).not.toContain("poptag #fake");
+    expect(result.content).not.toContain("popmeta fake:");
+  });
+
+  it("does not let a poptag inside a multiline string close a real enclosing scope", () => {
+    const scoped = [
+      "pushtag #real",
+      '2026-08-30 * "Landlord" "Rent',
+      "poptag #real",
+      'end of memo"',
+      "  Expenses:Food:Groceries  1.00 USD",
+      "  Assets:Bank:Checking",
+      "",
+      txn("2026-09-05", "Later"),
+      "poptag #real",
+    ].join("\n");
+    const result = insertDirectives(
+      `${scoped}\n`,
+      parseDirectiveText(coffeeTxn),
+    );
+    expect(result.appended).toBe(false);
+    expect(result.content).toBe(
+      [
+        "pushtag #real",
+        '2026-08-30 * "Landlord" "Rent',
+        "poptag #real",
+        'end of memo"',
+        "  Expenses:Food:Groceries  1.00 USD",
+        "  Assets:Bank:Checking",
+        "",
+        "poptag #real",
+        coffeeTxn,
+        "pushtag #real",
+        "",
+        txn("2026-09-05", "Later"),
+        "poptag #real",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  it("never lets outsideScopes step back into a multiline string ending with a semicolon line", () => {
+    const file = [
+      '2026-08-29 note Assets:Cash "first line',
+      '; closes string"',
+      "pushtag #trip",
+      txn("2026-09-02", "Scoped"),
+      "poptag #trip",
+    ].join("\n");
+    const result = insertDirectives(`${file}\n`, parseDirectiveText(coffeeTxn));
+    expect(result.appended).toBe(false);
+    expect(result.content).toBe(
+      [
+        '2026-08-29 note Assets:Cash "first line',
+        '; closes string"',
+        "",
+        coffeeTxn,
+        "",
+        "pushtag #trip",
+        txn("2026-09-02", "Scoped"),
+        "poptag #trip",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  it("handles multiline pushmeta scopes both when stepping above and when wrapping inside", () => {
+    const scoped = [
+      'pushmeta memo: "line one',
+      'line two"',
+      txn("2026-09-02", "First"),
+      "",
+      txn("2026-09-05", "Last"),
+      "popmeta memo:",
+    ].join("\n");
+    const before = insertDirectives(
+      `${scoped}\n`,
+      parseDirectiveText(txn("2026-09-01", "Before")),
+    );
+    expect(before.content).toBe(
+      `${txn("2026-09-01", "Before")}\n\n${scoped}\n`,
+    );
+
+    const inside = insertDirectives(
+      `${scoped}\n`,
+      parseDirectiveText(txn("2026-09-03", "Mid")),
+    );
+    expect(inside.content).toBe(
+      [
+        'pushmeta memo: "line one',
+        'line two"',
+        txn("2026-09-02", "First"),
+        "",
+        "popmeta memo:",
+        txn("2026-09-03", "Mid"),
+        'pushmeta memo: "line one',
+        'line two"',
+        "",
+        txn("2026-09-05", "Last"),
+        "popmeta memo:",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  it("ignores an unmatched quote in an org heading and degrades safely on an unclosed string at EOF", () => {
+    const withHeading = [
+      '* Section "Unclosed',
+      "",
+      txn("2026-08-29", "First"),
+      "",
+      txn("2026-09-05", "Last"),
+      "",
+    ].join("\n");
+    const threaded = insertDirectives(
+      withHeading,
+      parseDirectiveText(coffeeTxn),
+    );
+    expect(threaded.appended).toBe(false);
+    expect(threaded.content).toBe(
+      [
+        '* Section "Unclosed',
+        "",
+        txn("2026-08-29", "First"),
+        "",
+        coffeeTxn,
+        "",
+        txn("2026-09-05", "Last"),
+        "",
+      ].join("\n"),
+    );
+
+    const unclosed = '2026-08-30 note Assets:Cash "unclosed\nline two\n';
+    const appended = insertDirectives(unclosed, parseDirectiveText(coffeeTxn));
+    expect(appended.content).toBe(`${unclosed}\n${coffeeTxn}\n`);
+  });
+});

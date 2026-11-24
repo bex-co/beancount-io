@@ -458,9 +458,16 @@ export function insertDirectives(
   const lines = normalized === "" ? [] : normalized.split("\n");
 
   // Where each existing directive starts, and on what date.
+  const initialInString = lineStartsInString(lines);
   const heads: { index: number; date: string | null }[] = [];
   lines.forEach((line, index) => {
-    if (isBlank(line) || isComment(line) || isContinuation(line)) return;
+    if (
+      initialInString[index] ||
+      isBlank(line) ||
+      isComment(line) ||
+      isContinuation(line)
+    )
+      return;
     const head = directiveHead(line);
     if (head) heads.push({ index, date: head.date });
   });
@@ -480,9 +487,13 @@ export function insertDirectives(
     const lines = directive.text.split("\n");
     const first = lines.findIndex((line) => !isBlank(line));
     const block = first > 0 ? lines.slice(first) : lines;
+    const startsInString = lineStartsInString(working);
     const { at, open, stepped } = outsideScopes(
       working,
-      sorted ? placeUnderHeading(working, directive) : working.length,
+      sorted
+        ? placeUnderHeading(working, directive, startsInString)
+        : working.length,
+      startsInString,
     );
     // `at > 0` already implies the file is non-empty and that `working[at-1]`
     // exists, so this is the whole condition.
@@ -494,7 +505,7 @@ export function insertDirectives(
       ...prefix,
       ...open.map((push) => push.pop).reverse(),
       ...block,
-      ...open.map((push) => push.push),
+      ...open.flatMap((push) => push.push),
       ...suffix,
     ];
     working.splice(at, 0, ...written);
@@ -508,6 +519,22 @@ export function insertDirectives(
 
   const content = `${working.join(eol).replace(/(?:\r?\n)+$/, "")}${eol}`;
   return { content, inserted, appended: !sorted };
+}
+
+/**
+ * Whether each line in `lines` begins inside a quoted string opened on an
+ * earlier line (w31/098). Outside strings, a column-0 `*` starts an org-mode
+ * heading ignored to end of line, and `;` starts a comment via `scanLine`.
+ */
+function lineStartsInString(lines: readonly string[]): boolean[] {
+  const starts: boolean[] = new Array(lines.length);
+  let inString = false;
+  for (let i = 0; i < lines.length; i += 1) {
+    starts[i] = inString;
+    if (!inString && lines[i].startsWith("*")) continue;
+    inString = scanLine(lines[i], inString).inString;
+  }
+  return starts;
 }
 
 /** CRLF when the file's first line ends that way, else LF. */
@@ -525,12 +552,14 @@ function lineEndingOf(content: string): "\r\n" | "\n" {
 function insertionPoint(
   lines: readonly string[],
   date: string | null,
+  startsInString: readonly boolean[],
 ): { at: number; after: DirectiveKind | null } {
   if (date === null) return { at: lines.length, after: null };
   // The end of the last directive dated on or before this one. Null until we
   // have seen one, which is also what "insert at the top" looks like.
   let last: { end: number; kind: DirectiveKind } | null = null;
   for (let index = 0; index < lines.length; index += 1) {
+    if (startsInString[index]) continue;
     const line = lines[index];
     if (isBlank(line) || isComment(line) || isContinuation(line)) continue;
     const head = directiveHead(line);
@@ -540,7 +569,7 @@ function insertionPoint(
         ? { at: last.end, after: last.kind }
         : { at: index, after: null };
     }
-    last = { end: endOfBlock(lines, index), kind: head.kind };
+    last = { end: endOfBlock(lines, index, startsInString), kind: head.kind };
   }
   return last
     ? { at: last.end, after: last.kind }
@@ -560,11 +589,13 @@ function insertionPoint(
 function placeUnderHeading(
   lines: readonly string[],
   directive: ParsedDirective,
+  startsInString: readonly boolean[],
 ): number {
-  const { at, after } = insertionPoint(lines, directive.date);
+  const { at, after } = insertionPoint(lines, directive.date, startsInString);
   if (after === null || after === directive.kind) return at;
   let end = at;
   for (let index = at; index < lines.length; index += 1) {
+    if (startsInString[index]) break;
     if (isBlank(lines[index])) continue;
     if (!ORG_HEADING.test(lines[index])) break;
     end = index + 1;
@@ -573,9 +604,17 @@ function placeUnderHeading(
 }
 
 /** One past the last line belonging to the directive starting at `start`. */
-function endOfBlock(lines: readonly string[], start: number): number {
+function endOfBlock(
+  lines: readonly string[],
+  start: number,
+  startsInString: readonly boolean[],
+): number {
   let end = start + 1;
   for (let index = start + 1; index < lines.length; index += 1) {
+    if (startsInString[index]) {
+      end = index + 1;
+      continue;
+    }
     const line = lines[index];
     if (isContinuation(line) && !isBlank(line)) {
       end = index + 1;
@@ -589,11 +628,11 @@ function endOfBlock(lines: readonly string[], start: number): number {
 
 /**
  * A push the file has opened and not closed: the line that closes it, and
- * the line, as the file wrote it, that opens it again.
+ * the lines, as the file wrote them, that open it again.
  */
 interface OpenPush {
   readonly pop: string;
-  readonly push: string;
+  readonly push: readonly string[];
 }
 
 /** A well-formed stack statement in an existing file; anything else is null. */
@@ -607,9 +646,15 @@ function fileStatement(line: string): StackStatement | null {
  * A pop closes the latest push of its tag or key, as in Beancount; one that
  * closes nothing is the file's own error and changes nothing here.
  */
-function openPushes(lines: readonly string[], end: number): OpenPush[] {
+function openPushes(
+  lines: readonly string[],
+  end: number,
+  startsInString: readonly boolean[],
+): OpenPush[] {
   const open: OpenPush[] = [];
-  for (const line of lines.slice(0, end)) {
+  for (let index = 0; index < end; index += 1) {
+    if (startsInString[index]) continue;
+    const line = lines[index];
     const statement = fileStatement(line);
     if (!statement) continue;
     const pop =
@@ -617,7 +662,21 @@ function openPushes(lines: readonly string[], end: number): OpenPush[] {
         ? `poptag #${statement.tag}`
         : `popmeta ${statement.key}:`;
     if (statement.keyword.startsWith("push")) {
-      open.push({ pop, push: line.slice(0, commentStart(line)).trimEnd() });
+      let scan = scanLine(line);
+      const push = [
+        scan.inString ? line : line.slice(0, scan.comment).trimEnd(),
+      ];
+      while (scan.inString && index + 1 < end) {
+        index += 1;
+        const continuation = lines[index];
+        scan = scanLine(continuation, true);
+        push.push(
+          scan.inString
+            ? continuation
+            : continuation.slice(0, scan.comment).trimEnd(),
+        );
+      }
+      open.push({ pop, push });
     } else {
       const at = open.map((push) => push.pop).lastIndexOf(pop);
       if (at !== -1) open.splice(at, 1);
@@ -648,12 +707,25 @@ const precedesScope = (line: string) =>
 function outsideScopes(
   lines: readonly string[],
   at: number,
+  startsInString: readonly boolean[],
 ): { at: number; open: OpenPush[]; stepped: boolean } {
-  const open = openPushes(lines, at);
+  const open = openPushes(lines, at, startsInString);
   if (open.length === 0) return { at, open, stepped: false };
   let start = at;
-  while (start > 0 && precedesScope(lines[start - 1])) start -= 1;
-  const outer = start < at ? openPushes(lines, start) : open;
+  while (start > 0) {
+    if (startsInString[start - 1]) {
+      let head = start - 1;
+      while (head > 0 && startsInString[head]) head -= 1;
+      if (fileStatement(lines[head])?.keyword === "pushmeta") {
+        start = head;
+        continue;
+      }
+      break;
+    }
+    if (!precedesScope(lines[start - 1])) break;
+    start -= 1;
+  }
+  const outer = start < at ? openPushes(lines, start, startsInString) : open;
   return outer.length < open.length
     ? { at: start, open: outer, stepped: true }
     : { at, open, stepped: false };

@@ -1499,3 +1499,118 @@ describe.each(["rest", "gql", "mcp"] as const)(
     });
   },
 );
+
+// w31/098: inserting into an existing file containing multiline quoted strings
+// must never split the string, misread inner date/keyword lines as directives,
+// or inject spurious pushtag/pushmeta wrappers on any surface.
+describe.each(["rest", "gql", "mcp"] as const)(
+  "multiline strings in existing files via %s (w31/098)",
+  (surface) => {
+    const plainMultilineExisting = [
+      'option "title" "T"',
+      "",
+      '2026-08-29 * "Earlier" "note"',
+      "  Expenses:Food:Groceries  2.00 USD",
+      "  Assets:Cash",
+      "",
+      '2026-08-30 * "Landlord" "Monthly rent',
+      "line two at column 0",
+      'end of memo"',
+      "  Expenses:Food:Groceries  1.00 USD",
+      "  Assets:Cash",
+      "",
+    ].join("\n");
+
+    const keywordMultilineExisting = [
+      'option "title" "T"',
+      "",
+      '2026-08-29 * "Earlier" "note"',
+      "  Expenses:Food:Groceries  2.00 USD",
+      "  Assets:Cash",
+      "",
+      '2026-08-30 * "Landlord" "Monthly rent',
+      "line two at column 0",
+      "2020-01-01 open Assets:Fake USD",
+      "pushtag #fake",
+      'pushmeta fake: "x"',
+      'end of memo"',
+      "  Expenses:Food:Groceries  1.00 USD",
+      "  Assets:Cash",
+      "",
+    ].join("\n");
+
+    const coffeeTxn = [
+      '2026-08-31 * "Coffee" "Latte"',
+      "  Expenses:Food:Groceries  5.00 USD",
+      "  Assets:Cash",
+    ].join("\n");
+
+    it.each([
+      ["plain multiline narration", plainMultilineExisting],
+      [
+        "multiline narration with date and push lines",
+        keywordMultilineExisting,
+      ],
+    ])(
+      "inserts cleanly after a %s on dryRun and commit",
+      async (_label, existingFile) => {
+        const f = await fixture();
+        f.state.files.set("main.bean", existingFile);
+        try {
+          const dry = await f.call(surface, { text: coffeeTxn, dryRun: true });
+          expect(dry.ok).toBe(true);
+          const preview = dry.ok ? (dry.data as Record<string, never>) : {};
+          const [{ diff }] = preview.diff as { path: string; diff: string }[];
+          expect(diff).toContain('+2026-08-31 * "Coffee" "Latte"\n');
+          expect(diff).not.toMatch(/^[+-](push|pop)(tag|meta)/m);
+          // The appended block must land after the existing entry's postings,
+          // never before the closing quote.
+          expect(diff.indexOf('end of memo"')).toBeLessThan(
+            diff.indexOf('+2026-08-31 * "Coffee" "Latte"'),
+          );
+          expect(preview.appendedUnsorted).toEqual([]);
+          expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+
+          const res = await f.call(surface, { text: coffeeTxn });
+          expect(res.ok).toBe(true);
+          const data = res.ok ? (res.data as Record<string, never>) : {};
+          expect(data.appendedUnsorted).toEqual([]);
+          const written = f.state.files.get("main.bean")!;
+          expect(written).toBe(`${existingFile}\n${coffeeTxn}\n`);
+          const lines = written.split("\n");
+          expect(
+            (data.wrote as { line: number }[]).map(
+              ({ line }) => lines[line - 1],
+            ),
+          ).toEqual(['2026-08-31 * "Coffee" "Latte"']);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("inserts cleanly before a multiline-narration entry without corrupting date order", async () => {
+      const f = await fixture();
+      f.state.files.set("main.bean", keywordMultilineExisting);
+      const earlierTxn = [
+        '2026-08-29 * "Bakery" "Bread"',
+        "  Expenses:Food:Groceries  3.00 USD",
+        "  Assets:Cash",
+      ].join("\n");
+      try {
+        const res = await f.call(surface, { text: earlierTxn });
+        expect(res.ok).toBe(true);
+        const data = res.ok ? (res.data as Record<string, never>) : {};
+        expect(data.appendedUnsorted).toEqual([]);
+        const written = f.state.files.get("main.bean")!;
+        expect(written.indexOf('2026-08-29 * "Bakery" "Bread"')).toBeLessThan(
+          written.indexOf('2026-08-30 * "Landlord" "Monthly rent'),
+        );
+        expect(written).not.toContain("poptag #fake");
+        expect(written).not.toContain("popmeta fake:");
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
