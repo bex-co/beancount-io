@@ -246,6 +246,202 @@ describe("PullRequestService", () => {
       expect(mockClient.repos.repoDeleteBranch).not.toHaveBeenCalled();
     });
 
+    describe("file-vs-folder and in-batch prefix collisions (w31/084)", () => {
+      it.each([
+        ["file", "main.bean"],
+        ["symlink", "link.bean"],
+        ["submodule", "submod"],
+      ] as const)(
+        "refuses creating a path beneath an existing %s (%s) before committing",
+        async (type, existingPath) => {
+          mockSuccessfulCreate();
+          mockClient.repos.repoGetContentsList.mockResolvedValue({
+            data: [{ path: existingPath, type }],
+          });
+
+          const failure = await service
+            .createPRFromPatch(identity, owner, repo, {
+              ...input,
+              changes: [
+                { path: `${existingPath}/sub.bean`, content: "; test\n" },
+              ],
+            })
+            .catch((error: unknown) => error);
+
+          expect(failure).toMatchObject({
+            category: "CONFLICT",
+            message: expect.stringContaining(
+              `${existingPath} is a file, not a folder`,
+            ),
+            metadata: {
+              hint: "Choose another path, or delete the file first.",
+            },
+          });
+          expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
+          expect(mockClient.repos.repoDeleteBranch).not.toHaveBeenCalled();
+          // Must fail at depth 1 without a wasted repoGetContents(existingPath) listing call.
+          expect(mockClient.repos.repoGetContents).toHaveBeenCalledTimes(1);
+          expect(mockClient.repos.repoGetContents).toHaveBeenCalledWith(
+            owner,
+            repo,
+            `${existingPath}/sub.bean`,
+            { ref: "main" },
+            { format: "json" },
+          );
+        },
+      );
+
+      it("refuses creating a file at an existing folder path before committing", async () => {
+        mockSuccessfulCreate();
+        mockClient.repos.repoGetContents.mockImplementation(
+          async (_o: string, _r: string, path: string) => {
+            if (path === "txns") {
+              return { data: [{ path: "txns/2026.bean", type: "file" }] };
+            }
+            throw { status: 404 };
+          },
+        );
+        mockClient.repos.repoGetContentsList.mockResolvedValue({
+          data: [
+            { path: "main.bean", type: "file" },
+            { path: "txns", type: "dir" },
+          ],
+        });
+
+        const failure = await service
+          .createPRFromPatch(identity, owner, repo, {
+            ...input,
+            changes: [{ path: "txns", content: "; collide with folder\n" }],
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toMatchObject({
+          category: "CONFLICT",
+          message: expect.stringContaining("existing folder"),
+          metadata: {
+            hint: "Choose another path, or delete the folder's files first.",
+          },
+        });
+        expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
+        expect(mockClient.repos.repoDeleteBranch).not.toHaveBeenCalled();
+      });
+
+      it("refuses creating a file at a nested existing folder path before committing", async () => {
+        mockSuccessfulCreate();
+        mockClient.repos.repoGetContents.mockImplementation(
+          async (_o: string, _r: string, path: string) => {
+            if (path === "txns") {
+              return { data: [{ path: "txns/sub", type: "dir" }] };
+            }
+            if (path === "txns/sub") {
+              return { data: [{ path: "txns/sub/2026.bean", type: "file" }] };
+            }
+            throw { status: 404 };
+          },
+        );
+        mockClient.repos.repoGetContentsList.mockResolvedValue({
+          data: [{ path: "txns", type: "dir" }],
+        });
+
+        const failure = await service
+          .createPRFromPatch(identity, owner, repo, {
+            ...input,
+            changes: [
+              { path: "txns/sub", content: "; collide with nested folder\n" },
+            ],
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toMatchObject({
+          category: "CONFLICT",
+          message: expect.stringContaining("existing folder"),
+        });
+        expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
+      });
+
+      it.each([
+        [
+          { path: "qa-dir", content: "; a\n" },
+          { path: "qa-dir/sub.bean", content: "; b\n" },
+        ],
+        [
+          { path: "qa-dir/sub.bean", content: "; b\n" },
+          { path: "qa-dir", content: "; a\n" },
+        ],
+        [
+          { path: "qa-dir", content: "; a\n" },
+          { path: "QA-DIR/sub.bean", content: "; b\n" },
+        ],
+      ])(
+        "refuses a single PR batch creating both %j and %j before committing",
+        async (first, second) => {
+          mockSuccessfulCreate();
+
+          const failure = await service
+            .createPRFromPatch(identity, owner, repo, {
+              ...input,
+              changes: [first, second],
+            })
+            .catch((error: unknown) => error);
+
+          expect(failure).toMatchObject({
+            category: "CONFLICT",
+            message: expect.stringContaining(
+              "would be both a file and a folder",
+            ),
+          });
+          expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
+          expect(mockClient.repos.repoDeleteBranch).not.toHaveBeenCalled();
+          expect(mockClient.repos.repoGetContentsList).not.toHaveBeenCalled();
+        },
+      );
+
+      it("memoizes directory listings across multiple new files sharing a folder", async () => {
+        mockSuccessfulCreate();
+        mockClient.repos.repoGetContents.mockImplementation(
+          async (_o: string, _r: string, path: string) => {
+            if (path === "txns") {
+              return { data: [{ path: "txns/2026.bean", type: "file" }] };
+            }
+            throw { status: 404 };
+          },
+        );
+        mockClient.repos.repoGetContentsList.mockResolvedValue({
+          data: [{ path: "txns", type: "dir" }],
+        });
+
+        await service.createPRFromPatch(identity, owner, repo, {
+          ...input,
+          changes: [
+            { path: "txns/a.bean", content: "; a\n" },
+            { path: "txns/b.bean", content: "; b\n" },
+          ],
+        });
+
+        expect(mockClient.repos.repoGetContentsList).toHaveBeenCalledTimes(1);
+        const dirListCalls = mockClient.repos.repoGetContents.mock.calls.filter(
+          (call) => call[2] === "txns",
+        );
+        expect(dirListCalls).toHaveLength(1);
+        expect(mockClient.repos.repoChangeFiles).toHaveBeenCalledTimes(1);
+      });
+
+      it("still allows creating a file inside a brand-new folder", async () => {
+        mockSuccessfulCreate();
+        mockClient.repos.repoGetContentsList.mockResolvedValue({
+          data: [{ path: "main.bean", type: "file" }],
+        });
+
+        const result = await service.createPRFromPatch(identity, owner, repo, {
+          ...input,
+          changes: [{ path: "newdir/sub.bean", content: "; ok\n" }],
+        });
+
+        expect(result.prNumber).toBe(42);
+        expect(mockClient.repos.repoChangeFiles).toHaveBeenCalledTimes(1);
+      });
+    });
+
     it("should route the created PR's actual refs through", async () => {
       mockSuccessfulCreate();
       mockClient.repos.repoCreatePullRequest.mockResolvedValue({

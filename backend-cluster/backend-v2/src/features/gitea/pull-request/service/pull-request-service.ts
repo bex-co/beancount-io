@@ -5,12 +5,12 @@ import {
 } from "@/features/ledger/utils/safe-repo-path";
 import {
   assertNoPortableTwin,
-  portablePathKey,
+  assertNoPrefixAmong,
+  assertNoTwinsAmong,
 } from "@/features/ledger/utils/portable-twin";
 import { logger } from "@/shared/logger";
 import {
   BadUserInputError,
-  ConflictError,
   DomainError,
   ErrorCategory,
   InternalServerError,
@@ -369,9 +369,12 @@ export class PullRequestService implements IPullRequestService {
               throw error;
             }),
         );
-        // Type assertion: repoGetContents returns ContentsResponse
-        const fileSha = (fileContents?.data as ContentsResponse | undefined)
-          ?.sha;
+        // Type assertion: repoGetContents returns ContentsResponse (or an array
+        // for an existing folder, which has no file sha and falls through to
+        // the conflict check below).
+        const fileSha = Array.isArray(fileContents?.data)
+          ? undefined
+          : (fileContents?.data as ContentsResponse | undefined)?.sha;
         const content = Buffer.from(change.content).toString("base64");
         if (fileSha) {
           operations.push({
@@ -382,23 +385,17 @@ export class PullRequestService implements IPullRequestService {
           });
           continue;
         }
-        // A new file's name has to be portable, and not be one the base
-        // branch has already on macOS and Windows (w23/068), nor one this
-        // request creates; nothing is written if it is not.
+        // A new file's name has to be portable, and not collide with another
+        // path this request creates or with the base branch on macOS and
+        // Windows (w23/068, w31/084); nothing is written if it is not.
         assertPortableRepoPath(change.path);
-        const sibling = created.find(
-          (path) => portablePathKey(path) === portablePathKey(change.path),
-        );
-        if (sibling) {
-          throw new ConflictError(
-            "File",
-            `${change.path} already exists as ${sibling}`,
-            {
-              hint: "macOS and Windows keep one of two names like these. Choose another name, or edit the existing file.",
-            },
-          );
-        }
-        await assertNoPortableTwin(change.path, async (dir) => {
+        created.push(change.path);
+        operations.push({ operation: "create", path: change.path, content });
+      }
+      if (created.length > 0) {
+        assertNoTwinsAmong(created);
+        assertNoPrefixAmong(created);
+        const listFolder = async (dir: string | undefined) => {
           const listing = await step<{ data: unknown }>(
             `listing ${dir ?? "/"}`,
             () =>
@@ -418,13 +415,29 @@ export class PullRequestService implements IPullRequestService {
                   ),
           );
           return Array.isArray(listing.data)
-            ? (listing.data as ContentsResponse[]).flatMap((entry) =>
-                entry.path ? [{ path: entry.path }] : [],
-              )
+            ? (listing.data as ContentsResponse[]).flatMap((entry) => {
+                if (!entry.path) return [];
+                const type = toDirectoryType(entry.type);
+                return [
+                  type ? { path: entry.path, type } : { path: entry.path },
+                ];
+              })
             : [];
-        });
-        created.push(change.path);
-        operations.push({ operation: "create", path: change.path, content });
+        };
+        // One lookup per folder, however many new files share it (w31/084).
+        const listings = new Map<string, ReturnType<typeof listFolder>>();
+        const list = (dir: string | undefined) => {
+          const key = dir ?? "";
+          let listing = listings.get(key);
+          if (!listing) {
+            listing = listFolder(dir);
+            listings.set(key, listing);
+          }
+          return listing;
+        };
+        for (const path of created) {
+          await assertNoPortableTwin(path, list);
+        }
       }
 
       // 4. One request makes the branch and the commit together. The branch
@@ -743,6 +756,19 @@ function assertPullRequestNumber(prNumber: number): void {
       "prNumber",
     );
   }
+}
+
+/**
+ * Map Gitea's ContentsResponse `type` to the file/dir classification
+ * `assertNoPortableTwin` uses. Symlinks and submodules occupy a file slot in
+ * Git trees and cannot host children beneath them.
+ */
+function toDirectoryType(type: string | undefined): "file" | "dir" | undefined {
+  if (type === "dir") return "dir";
+  if (type === "file" || type === "symlink" || type === "submodule") {
+    return "file";
+  }
+  return undefined;
 }
 
 /**

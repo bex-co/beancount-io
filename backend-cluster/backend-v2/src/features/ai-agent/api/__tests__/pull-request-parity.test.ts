@@ -708,6 +708,149 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
       }
     },
   );
+  describe("file-vs-folder and in-batch prefix collisions on every surface (w31/084)", () => {
+    const createMutation = `mutation($input:CreatePRFromPatchInput!){createPullRequestFromPatch(input:$input){${resultFields}}}`;
+
+    it.each([
+      [
+        "a file beneath an existing file",
+        [{ path: "main.bean/sub.bean", content: "; test\n" }],
+        "main.bean is a file, not a folder",
+        "Choose another path, or delete the file first.",
+      ],
+      [
+        "a file at an existing folder",
+        [{ path: "existingDir", content: "; test\n" }],
+        "existing folder",
+        "Choose another path, or delete the folder's files first.",
+      ],
+      [
+        "a file and a nested path beneath it in one PR",
+        [
+          { path: "qa-dir", content: "; a\n" },
+          { path: "qa-dir/sub.bean", content: "; b\n" },
+        ],
+        "would be both a file and a folder",
+        "Create only one of the two, or rename one of them.",
+      ],
+      [
+        "a file and a case-variant nested path beneath it in one PR",
+        [
+          { path: "qa-dir", content: "; a\n" },
+          { path: "QA-DIR/sub.bean", content: "; b\n" },
+        ],
+        "would be both a file and a folder",
+        "Create only one of the two, or rename one of them.",
+      ],
+    ])(
+      "refuses creating %s as CONFLICT on REST (409), MCP, and GraphQL before committing",
+      async (_label, collisionChanges, expectedMessage, expectedHint) => {
+        const f = await fixture();
+        f.branches.get("main")!.set("existingDir/2026.bean", "; existing\n");
+        const input = {
+          title: "Collision patch",
+          ...validCreate,
+          changes: collisionChanges,
+        };
+        try {
+          const restRes = await fetch(
+            `${f.restUrl}/api-gateway/v1/ledgers/alice/main/pull-requests`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(input),
+            },
+          );
+          expect(restRes.status).toBe(409);
+          expect(await restRes.json()).toMatchObject({
+            error: {
+              code: "CONFLICT",
+              message: expect.stringContaining(expectedMessage),
+              metadata: { hint: expectedHint },
+            },
+          });
+
+          const mcpRes = await f.client.callTool(
+            perOperation({
+              operation: "create",
+              ledger: "alice/main",
+              ...input,
+            }),
+          );
+          expect(mcpRes.isError).toBe(true);
+          expect(mcpRes.structuredContent).toMatchObject({
+            error: {
+              code: "CONFLICT",
+              message: expect.stringContaining(expectedMessage),
+              hint: expectedHint,
+            },
+          });
+
+          const gqlRes = await f.gql(createMutation, {
+            input: { ledgerOwner: "alice", ledgerName: "main", ...input },
+          });
+          expect(gqlRes.errors?.[0]).toMatchObject({
+            message: expect.stringContaining(expectedMessage),
+            originalError: {
+              category: "CONFLICT",
+              metadata: { hint: expectedHint },
+            },
+          });
+
+          expect(f.repos.repoChangeFiles).not.toHaveBeenCalled();
+          expect(f.repos.repoCreatePullRequest).not.toHaveBeenCalled();
+          expect([...f.branches.keys()]).toEqual(["main", "feature/base"]);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("still refuses a read-only token as FORBIDDEN before path collision checks", async () => {
+      const f = await fixture({
+        ...identity,
+        scopes: new Set(["ledger.read"]),
+      });
+      const input = {
+        title: "Collision patch",
+        ...validCreate,
+        changes: [{ path: "main.bean/sub.bean", content: "; test\n" }],
+      };
+      try {
+        const restRes = await fetch(
+          `${f.restUrl}/api-gateway/v1/ledgers/alice/main/pull-requests`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(input),
+          },
+        );
+        expect(restRes.status).toBe(403);
+
+        const mcpRes = await f.client.callTool(
+          perOperation({
+            operation: "create",
+            ledger: "alice/main",
+            ...input,
+          }),
+        );
+        expect(mcpRes.isError).toBe(true);
+        expect(mcpRes.structuredContent).toMatchObject({
+          error: { code: "FORBIDDEN" },
+        });
+
+        const gqlRes = await f.gql(createMutation, {
+          input: { ledgerOwner: "alice", ledgerName: "main", ...input },
+        });
+        expect(gqlRes.errors?.[0]).toMatchObject({
+          originalError: { category: "FORBIDDEN" },
+        });
+        expect(f.getUserApiClient).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  });
   it("answers reading an unknown pull request as NOT_FOUND on every surface", async () => {
     const f = await fixture();
     // What the generated client throws for a number Gitea does not know.
