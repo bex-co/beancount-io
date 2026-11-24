@@ -1541,7 +1541,10 @@ accepts `--allow-errors` for a semantic error already in the books, such as a
 balance assertion that still fails; without the flag the write refuses and
 names the existing errors. A write refused only for errors the books
 already had says `The ledger already has N error(s); nothing was written.
-Pass --allow-errors to write anyway.` When those errors include a syntax
+Pass --allow-errors to write anyway.` It quotes those errors as the books
+hold them, as `bea check` does; when the write would move a failing balance
+assertion, a hint starting `With the proposed write (not written)` says what
+the assertion would read instead. When those errors include a syntax
 error, it says instead to fix the syntax first; when they include a pad that
 names an unknown or inactive account, to open the account or correct the pad
 first. Neither yields to the flag, and the refusal says so whether or not you

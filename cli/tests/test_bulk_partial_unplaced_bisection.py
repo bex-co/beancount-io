@@ -117,8 +117,9 @@ def test_a_ledger_refusing_every_write_reports_once_not_per_row(tmp_path: Path, 
     """Without --allow-errors a batch that adds nothing wrong reports the ledger's failure once (w5/725).
 
     w5/537 judged each row with its own trial; the rows that changed nothing
-    were still named with the pre-existing error. The combined total still
-    shows the batch's effect; no row is judged.
+    were still named with the pre-existing error. The error is quoted as the
+    books hold it, and the batch's effect follows as a hint labelled as the
+    proposal's (w1/376); no row is judged.
     """
     ledger = tmp_path / "main.bean"
     ledger.write_text(LEDGER.replace("Checking 0 USD", "Checking 5 USD"))
@@ -129,7 +130,10 @@ def test_a_ledger_refusing_every_write_reports_once_not_per_row(tmp_path: Path, 
 
     assert str(error).startswith("The ledger already has 1 error(s); nothing was written.")
     assert [detail.startswith("Row ") for detail in error.details] == [False] * len(error.details)
-    assert any("accumulated -1 USD" in detail for detail in error.details)
+    assert any("expected 5 USD != accumulated 0 USD (5 too little)" in detail for detail in error.details)
+    assert "With the proposed write (not written), it would read: expected 5 USD != accumulated -1 USD" in " ".join(
+        error.details
+    )
     assert error.result == {"written": 0, "written_rows": [], "rejected_rows": list(range(count))}
     assert ledger.read_text().count(" * ") == 0
     assert len(loads) <= 6, len(loads)

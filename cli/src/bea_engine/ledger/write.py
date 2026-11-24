@@ -2723,9 +2723,10 @@ def validate_candidate(
     # append reads as the same error. Appends land at end of file over
     # verbatim existing bytes, so a pre-existing error keeps its file and
     # line; anything unmatched in the after set is newly introduced.
-    tolerated: set[int] = set()
+    tolerated: dict[int, int] = {}
+    before_entries: list[Any] = []
     before_errors: list[Any] | None = None
-    existing_plugin_errors: set[int] | None = None
+    existing_plugin_errors: dict[int, int] | None = None
 
     def _own_lifecycle_accounts() -> set[str]:
         # Accounts this write itself opens or closes, walked only when an
@@ -2738,7 +2739,7 @@ def validate_candidate(
         }
 
     if allow_errors:
-        _, before_errors, _ = managed_load.load_file(ledger, snapshot=snapshot, check_types=True)
+        before_entries, before_errors, _ = managed_load.load_file(ledger, snapshot=snapshot, check_types=True)
         tolerated = _preexisting_errors(errors, before_errors, filenames, original_lines, _own_lifecycle_accounts)
         existing_plugin_errors = tolerated
     accounts = [entry.account for entry in entries if isinstance(entry, Open)]
@@ -2763,12 +2764,12 @@ def validate_candidate(
         # The ledger as it stands, loaded once and shared by every
         # new-vs-pre-existing judgment below: two baselines that disagreed
         # would misclassify an error either way.
-        nonlocal before_errors
+        nonlocal before_entries, before_errors
         if before_errors is None:
             root = snapshot.root if snapshot else file
-            before_errors = (
-                managed_load.load_file(root, snapshot=snapshot, check_types=True)[1] if root.exists() else []
-            )
+            before_errors = []
+            if root.exists():
+                before_entries, before_errors, _ = managed_load.load_file(root, snapshot=snapshot, check_types=True)
         return before_errors
 
     # What the per-error hints below look up, each built on first use and then
@@ -2786,6 +2787,11 @@ def validate_candidate(
     source_line_counts: dict[Path, int] = {}
     roots = ledger_roots(options)
     records: list[_ErrorRecord] = []
+    # Each record's text as the loader worded it, before any hint joined it,
+    # and where its balance recovery hints sit: what a refusal swaps for the
+    # ledger's own wording (w1/376).
+    worded: list[str] = []
+    recovery_spans: dict[int, tuple[int, int]] = {}
     locations: list[tuple[Path, int | None]] = []
     introduced: list[bool] = []
     invalid_pad_accounts = False
@@ -2822,6 +2828,7 @@ def validate_candidate(
         message = format_error(error, ledger_file=ledger)
         for staged, original in filenames.items():
             message = message.replace(str(staged), str(original))
+        worded.append(message)
         metadata = error.source or {}
         source = Path(metadata.get("filename", str(candidate)))
         source = filenames.get(source, source)
@@ -3296,6 +3303,7 @@ def validate_candidate(
                     "an opening adjustment cannot resolve conflicting same-day assertions."
                 )
             else:
+                start = len(hints)
                 hints.extend(
                     _balance_recovery_hints(
                         error.entry,
@@ -3308,28 +3316,78 @@ def validate_candidate(
                         filenames,
                     )
                 )
+                recovery_spans[index] = (start, len(hints))
         records.append(_ErrorRecord(getattr(error, "message", str(error)), message, lineno, hints, source))
         locations.append((source, lineno if isinstance(lineno, int) else None))
     messages = _collapse_repeats(records)
     syntax_errors = [err for err in errors if is_syntax_error(err)]
+
+    def _on_disk(pairs: dict[int, int]) -> list[_ErrorRecord]:
+        # A refusal of errors the ledger already had quotes them as it holds
+        # them: read from the proposal, a failing assertion the refused row
+        # moved said 95.00 USD where the books hold 100.00 (w1/376). Where
+        # the write moves an assertion, a hint labelled as the proposal's
+        # says by how much. The other hints stay, except an assertion's
+        # recovery advice, which weighed the proposal's balance and is taken
+        # again from the books.
+        before = _before_errors()
+        described = list(records)
+        for index, position in pairs.items():
+            current, record = before[position], records[index]
+            text = format_error(current, ledger_file=ledger)
+            if text == worded[index] or worded[index] not in record.message:
+                continue
+            failing = isinstance(current.entry, Balance) and "Balance failed" in current.message
+            hints = record.hints
+            if index in recovery_spans:
+                start, end = recovery_spans[index]
+                recovery = []
+                if failing:
+                    recovery = _balance_recovery_hints(
+                        current.entry,
+                        record.source,
+                        ledger,
+                        before_entries,
+                        options,
+                        snapshot,
+                        source_line_counts,
+                        filenames,
+                    )
+                hints = [*hints[:start], *recovery, *hints[end:]]
+            if failing and "Balance failed" in record.kind:
+                moved = record.kind.split("': ", 1)[-1]
+                hints = [f"With the proposed write (not written), it would read: {moved}.", *hints]
+            source = (current.source or {}).get("filename")
+            described[index] = replace(
+                record,
+                kind=getattr(current, "message", str(current)),
+                message=record.message.replace(worded[index], text, 1),
+                lineno=(current.source or {}).get("lineno"),
+                hints=hints,
+                source=Path(source) if source else record.source,
+            )
+        return described
+
     new_records = [record for record, is_new in zip(records, introduced, strict=True) if is_new]
     if errors and (not allow_errors or syntax_errors or invalid_pad_accounts or new_records):
         if not allow_errors and type_errors and not (syntax_errors or invalid_pad_accounts):
             if _preexisting_errors(type_errors, _before_errors(), filenames, original_lines, _own_lifecycle_accounts):
+                described = _on_disk(
+                    _preexisting_errors(errors, _before_errors(), filenames, original_lines, _own_lifecycle_accounts)
+                )
                 raise CandidateRejected(
                     f"The ledger already has {len(_before_errors())} error(s); nothing was written. "
                     "Pass --allow-errors to tolerate existing errors; new errors are still refused.",
-                    details=messages,
+                    details=_collapse_repeats(described),
                     locations=locations,
-                    records=records,
+                    records=described,
                     preexisting_only=True,
                 )
         # An error on an appended line is the write's own; only books whose
         # every error sits elsewhere are worth a load of the version before.
         if not allow_errors and not any_appended:
-            if len(
-                _preexisting_errors(errors, _before_errors(), filenames, original_lines, _own_lifecycle_accounts)
-            ) == len(errors):
+            pairs = _preexisting_errors(errors, _before_errors(), filenames, original_lines, _own_lifecycle_accounts)
+            if len(pairs) == len(errors):
                 # The write adds nothing wrong; the books were already broken,
                 # which is the case --allow-errors exists for, unless a syntax
                 # error or an inactive pad is among them (w1/282). The repair
@@ -3337,7 +3395,7 @@ def validate_candidate(
                 # assertion does not (w5/396).
                 plain = [
                     replace(record, hints=[hint for hint in record.hints if hint != _BALANCE_DATE_HINT])
-                    for record in records
+                    for record in _on_disk(pairs)
                 ]
                 raise CandidateRejected(
                     _preexisting_headline(errors, len(errors)),
@@ -4272,11 +4330,12 @@ def _preexisting_errors(
     filenames: dict[Path, Path],
     original_lines: dict[Path, list[bytes]],
     own_accounts: Callable[[], set[str]] | None = None,
-) -> set[int]:
-    """Positions in `after` of the errors the ledger already had in `before`.
+) -> dict[int, int]:
+    """Positions in `after` of the errors the ledger already had in `before`, each to the one it matched there.
 
     Multiset consumption: each after-error spends one matching before-error,
-    so duplicates are only tolerated while they last.
+    so duplicates are only tolerated while they last. The matched position
+    lets a refusal quote the error as the ledger holds it (w1/376).
 
     An identical key matches first. What is left is matched by anchor — the
     same kind of error on the same pre-existing directive. Some messages
@@ -4302,11 +4361,11 @@ def _preexisting_errors(
             lineno -= 1
         return (name, lineno, _error_kind(error))
 
-    remaining: dict[tuple[str, int | None, str], list[tuple[tuple[str, int, str] | None, tuple[str, str]]]] = {}
-    for error in before:
+    remaining: dict[tuple[str, int | None, str], list[tuple[int, tuple[str, int, str] | None, tuple[str, str]]]] = {}
+    for position, error in enumerate(before):
         key = _error_key(error, {})
-        remaining.setdefault(key, []).append((anchor(error, key), _moved_error_key(error)))
-    matched: set[int] = set()
+        remaining.setdefault(key, []).append((position, anchor(error, key), _moved_error_key(error)))
+    matched: dict[int, int] = {}
     unmatched: list[tuple[int, tuple[str, int, str]]] = []
     unanchored: list[tuple[int, tuple[str, str]]] = []
     own: set[str] | None = None
@@ -4322,30 +4381,28 @@ def _preexisting_errors(
                 continue
         key = _error_key(error, filenames)
         if remaining.get(key):
-            remaining[key].pop()
-            matched.add(index)
+            matched[index] = remaining[key].pop()[0]
         elif (anchored := anchor(error, key)) is not None:
             unmatched.append((index, anchored))
         else:
             unanchored.append((index, _moved_error_key(error)))
-    left = [pair for pairs in remaining.values() for pair in pairs]
-    anchors = Counter(anchored for anchored, _ in left if anchored is not None)
+    left = [entry for entries in remaining.values() for entry in entries]
+    anchors: dict[tuple[str, int, str], list[int]] = {}
+    for position, anchored, _ in left:
+        if anchored is not None:
+            anchors.setdefault(anchored, []).append(position)
     for index, anchored in unmatched:
-        if anchors[anchored] > 0:
-            anchors[anchored] -= 1
-            matched.add(index)
+        if anchors.get(anchored):
+            matched[index] = anchors[anchored].pop()
     # Only a before-error no anchored after-error spent can have moved.
-    moved: Counter[tuple[str, str]] = Counter()
-    for anchored, moved_key in left:
-        if anchored is None:
-            moved[moved_key] += 1
-        elif anchors[anchored] > 0:
-            anchors[anchored] -= 1
-            moved[moved_key] += 1
+    unspent = {position for positions in anchors.values() for position in positions}
+    moved: dict[tuple[str, str], list[int]] = {}
+    for position, anchored, moved_key in left:
+        if anchored is None or position in unspent:
+            moved.setdefault(moved_key, []).append(position)
     for index, moved_key in unanchored:
-        if moved[moved_key] > 0:
-            moved[moved_key] -= 1
-            matched.add(index)
+        if moved.get(moved_key):
+            matched[index] = moved[moved_key].pop()
     return matched
 
 
