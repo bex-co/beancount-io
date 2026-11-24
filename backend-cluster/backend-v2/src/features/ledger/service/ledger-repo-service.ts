@@ -522,22 +522,26 @@ export class LedgerRepoService
       // The commit refuses a `create` over a file that is already there, so
       // the preview has to as well — otherwise it approves a write that will
       // then fail, or tempts the caller to believe it overwrote something.
-      // The same holds for an update or delete whose `sha` is not the file's
-      // current one, which REST previewed as valid (w1/219).
+      // The same holds for an update or delete whose target does not exist,
+      // is a directory, or carries a stale `sha` (w1/219, w31/075).
       const created = new Set<string>();
       const freed = new Set<string>();
-      const versioned = new Map<string, string>();
+      const versioned = new Map<string, string | null>();
       for (const operation of operations) {
         const touched =
           created.has(operation.path) || freed.has(operation.path);
-        if (
-          operation.operation !== "create" &&
-          operation.sha !== undefined &&
-          operation.sha !== null &&
-          !touched &&
-          !versioned.has(operation.path)
-        )
-          versioned.set(operation.path, operation.sha);
+        if (operation.operation !== "create" && !touched) {
+          const prior = versioned.get(operation.path);
+          if (prior === undefined) {
+            versioned.set(operation.path, operation.sha ?? null);
+          } else if (
+            prior === null &&
+            operation.sha !== undefined &&
+            operation.sha !== null
+          ) {
+            versioned.set(operation.path, operation.sha);
+          }
+        }
         if (operation.operation === "delete") freed.add(operation.path);
         // A file this same batch deletes first is free to create again.
         else if (operation.operation === "create" && !freed.has(operation.path))
@@ -557,7 +561,15 @@ export class LedgerRepoService
         for (const [path, sha] of versioned) {
           const current = existing.find((file) => file.path === path);
           if (!current) throw new NotFoundError("File", path);
-          if (current.sha !== sha) throw staleFileConflict(path);
+          if (current.type === "dir") {
+            throw new BadUserInputError(
+              `${path} is a directory, not a file`,
+              "path",
+              "Pass a file path; list a directory with `listLedgerFiles` (`dir_path`) or `GET …/files?dir=`.",
+            );
+          }
+          if (sha !== null && current.sha !== sha)
+            throw staleFileConflict(path);
         }
       }
       return {};

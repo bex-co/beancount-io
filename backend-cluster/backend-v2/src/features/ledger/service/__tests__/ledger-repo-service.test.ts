@@ -671,15 +671,212 @@ describe("LedgerRepoService", () => {
       expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
     });
 
-    it("reads nothing on a dry run with no create and no sha", async () => {
+    it("reads nothing on an auth-only dry run with no operations", async () => {
       await service.changeFiles({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
-        operations: [{ operation: "delete", path: "old.bean" }],
-        message: "drop",
+        operations: [],
+        message: "",
         dryRun: true,
       });
+      expect(mockFavaClientFactory.getPublicApiClient).not.toHaveBeenCalled();
       expect(mockGetLedgerFilesContent).not.toHaveBeenCalled();
+    });
+
+    // w31/075: SHA-less updates and deletes still target an existing file, so a
+    // dry run must verify existence and file type instead of skipping the read.
+    it.each(["update", "delete"] as const)(
+      "refuses a dry-run %s without sha when the file does not exist",
+      async (operation) => {
+        mockGetLedgerDirContent.mockResolvedValue({
+          data: { success: true, data: [] },
+        });
+        mockGetLedgerFilesContent.mockResolvedValue({
+          data: { success: true, data: [] },
+        });
+        await expect(
+          service.changeFiles({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            operations: [
+              {
+                operation,
+                path: "missing.bean",
+                ...(operation === "update" ? { content: "; x\n" } : {}),
+              },
+            ],
+            message: "missing",
+            dryRun: true,
+          }),
+        ).rejects.toMatchObject({
+          category: "NOT_FOUND",
+          message: "File with ID 'missing.bean' not found",
+        });
+        expect(mockGetLedgerFilesContent).toHaveBeenCalledWith(
+          "testowner",
+          "testledger",
+          { files: ["missing.bean"] },
+        );
+        expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(["update", "delete"] as const)(
+      "refuses a dry-run %s without sha targeting a directory",
+      async (operation) => {
+        mockGetLedgerDirContent.mockResolvedValue({
+          data: { success: true, data: [] },
+        });
+        mockGetLedgerFilesContent.mockResolvedValue({
+          data: {
+            success: true,
+            data: [
+              { path: "FY2026", type: "dir", sha: BLOB_SHA_1, content: null },
+            ],
+          },
+        });
+        await expect(
+          service.changeFiles({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            operations: [
+              {
+                operation,
+                path: "FY2026",
+                ...(operation === "update" ? { content: "; x\n" } : {}),
+              },
+            ],
+            message: "dir",
+            dryRun: true,
+          }),
+        ).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          message: "FY2026 is a directory, not a file",
+          metadata: { field: "path" },
+        });
+        expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(["update", "delete"] as const)(
+      "accepts a dry-run %s without sha when the target file exists",
+      async (operation) => {
+        mockGetLedgerDirContent.mockResolvedValue({
+          data: { success: true, data: [] },
+        });
+        mockGetLedgerFilesContent.mockResolvedValue({
+          data: {
+            success: true,
+            data: [
+              { path: "old.bean", type: "file", sha: BLOB_SHA_1, content: "" },
+            ],
+          },
+        });
+        await service.changeFiles({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          operations: [
+            {
+              operation,
+              path: "old.bean",
+              ...(operation === "update" ? { content: "; x\n" } : {}),
+            },
+          ],
+          message: "valid",
+          dryRun: true,
+        });
+        expect(mockGetLedgerFilesContent).toHaveBeenCalledWith(
+          "testowner",
+          "testledger",
+          { files: ["old.bean"] },
+        );
+        expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+      },
+    );
+
+    it("checks existence for delete-then-create without sha and allows recreating an existing file", async () => {
+      mockGetLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+      mockGetLedgerFilesContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            { path: "main.bean", type: "file", sha: BLOB_SHA_1, content: "" },
+          ],
+        },
+      });
+      await service.changeFiles({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        operations: [
+          { operation: "delete", path: "main.bean" },
+          { operation: "create", path: "main.bean", content: "; fresh\n" },
+        ],
+        message: "recreate",
+        dryRun: true,
+      });
+      expect(mockGetLedgerFilesContent).toHaveBeenCalledWith(
+        "testowner",
+        "testledger",
+        { files: ["main.bean"] },
+      );
+      expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+    });
+
+    it("does not require a path created earlier in the same batch to pre-exist on dry run", async () => {
+      mockGetLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+      mockGetLedgerFilesContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+      await service.changeFiles({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        operations: [
+          { operation: "create", path: "fresh.bean", content: "; a\n" },
+          { operation: "update", path: "fresh.bean", content: "; b\n" },
+        ],
+        message: "create then update",
+        dryRun: true,
+      });
+      expect(mockGetLedgerFilesContent).toHaveBeenCalledWith(
+        "testowner",
+        "testledger",
+        { files: ["fresh.bean"] },
+      );
+      expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+    });
+
+    it("still checks a later sha when an earlier update on the same path omitted sha", async () => {
+      mockGetLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+      mockGetLedgerFilesContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            { path: "sub.bean", type: "file", sha: BLOB_SHA_2, content: "" },
+          ],
+        },
+      });
+      await expect(
+        service.changeFiles({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          operations: [
+            { operation: "update", path: "sub.bean", content: "; a\n" },
+            { operation: "delete", path: "sub.bean", sha: BLOB_SHA_1 },
+          ],
+          message: "stale later sha",
+          dryRun: true,
+        }),
+      ).rejects.toMatchObject({
+        category: "CONFLICT",
+        message: expect.stringContaining("sub.bean changed since you read it"),
+      });
+      expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
     });
 
     // w1/219: the commit refuses an update or delete from a stale read, and

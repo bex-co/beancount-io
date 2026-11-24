@@ -65,13 +65,23 @@ async function fixture(opts: {
                 success: true,
                 data: files
                   .filter((path) => !path.startsWith("n"))
-                  .map((path) => ({
-                    path,
-                    name: path,
-                    type: "file",
-                    sha: shaOf(path),
-                    content: "; content\n",
-                  })),
+                  .map((path) =>
+                    path === "FY2026"
+                      ? {
+                          path,
+                          name: path,
+                          type: "dir",
+                          sha: shaOf(path),
+                          content: null,
+                        }
+                      : {
+                          path,
+                          name: path,
+                          type: "file",
+                          sha: shaOf(path),
+                          content: "; content\n",
+                        },
+                  ),
               },
             }),
             getLedgerDirContent: async () => ({
@@ -355,5 +365,93 @@ describe("a stale sha is refused as CONFLICT on preview and commit", () => {
         dryRun: true,
         valid: true,
       });
+    }));
+});
+
+// w31/075: REST DELETE with dryRun: true and no sha skipped the repository
+// lookup and returned 200 OK for a nonexistent file or directory, diverging
+// from dryRun: false and MCP deleteLedgerFiles.
+describe("a SHA-less delete checks target existence and file type on preview (w31/075)", () => {
+  it("refuses deleting a nonexistent file without sha as 404 NOT_FOUND on REST dryRun and MCP dry_run", () =>
+    withFixture({ projected: [] }, async (f) => {
+      for (const dryRun of [true, false]) {
+        const response = await f.send("DELETE", "nonexistent.bean", {
+          message: "test",
+          dryRun,
+        });
+        expect(response.status).toBe(404);
+        expect(await response.json()).toMatchObject({
+          ok: false,
+          error: {
+            code: "NOT_FOUND",
+            message: "File with ID 'nonexistent.bean' not found",
+          },
+        });
+
+        const mcpResult = await f.mcp("deleteLedgerFiles", {
+          dry_run: dryRun,
+          files: [{ path: "nonexistent.bean" }],
+        });
+        expect(mcpResult.isError).toBe(true);
+        expect(mcpResult.structuredContent).toMatchObject({
+          error: {
+            code: "NOT_FOUND",
+            message: expect.stringContaining(
+              "File with ID 'nonexistent.bean' not found",
+            ),
+          },
+        });
+      }
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    }));
+
+  it("refuses deleting a directory without sha as 400 BAD_USER_INPUT on REST dryRun and MCP dry_run", () =>
+    withFixture({ projected: [] }, async (f) => {
+      for (const dryRun of [true, false]) {
+        const response = await f.send("DELETE", "FY2026", {
+          message: "test",
+          dryRun,
+        });
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({
+          ok: false,
+          error: {
+            code: "BAD_USER_INPUT",
+            message: "FY2026 is a directory, not a file",
+          },
+        });
+
+        const mcpResult = await f.mcp("deleteLedgerFiles", {
+          dry_run: dryRun,
+          files: [{ path: "FY2026" }],
+        });
+        expect(mcpResult.isError).toBe(true);
+        expect(mcpResult.structuredContent).toMatchObject({
+          error: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining(
+              "FY2026 is a directory, not a file",
+            ),
+          },
+        });
+      }
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    }));
+
+  it("still previews deleting an existing file without sha as 200 OK", () =>
+    withFixture({ projected: [] }, async (f) => {
+      const response = await f.send("DELETE", "old.bean", {
+        message: "test",
+        dryRun: true,
+      });
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({
+        ok: true,
+        path: "old.bean",
+        dryRun: true,
+        valid: true,
+        newErrors: [],
+      });
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
     }));
 });
