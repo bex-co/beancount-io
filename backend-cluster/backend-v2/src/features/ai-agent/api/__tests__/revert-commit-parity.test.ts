@@ -444,4 +444,163 @@ describe.each(["rest", "gql", "mcp"])("revertCommit via %s", (surface) => {
       await f.close();
     }
   });
+
+  // w31/088: reverting a commit that deleted a file must run
+  // assertNoPortableTwin before returning a dry-run preview or committing,
+  // refusing case/Unicode/invisible-character twins and file-vs-folder
+  // collisions with CONFLICT (HTTP 409 on REST) across all three surfaces.
+  describe("portable-twin and file-vs-folder conflict guards (w31/088)", () => {
+    it.each([
+      [
+        "case twin",
+        { ...FINE, "notes.bean": "; v1\n" },
+        FINE,
+        { ...FINE, "Notes.bean": "; v2\n" },
+        "notes.bean already exists as Notes.bean",
+      ],
+      [
+        "Unicode NFD twin",
+        { ...FINE, "café.bean": "; v1\n" },
+        FINE,
+        { ...FINE, "cafe\u0301.bean": "; v2\n" },
+        "café.bean already exists as cafe\u0301.bean",
+      ],
+      [
+        "invisible-character twin",
+        { ...FINE, "notes.bean": "; v1\n" },
+        FINE,
+        { ...FINE, "notes\u200b.bean": "; v2\n" },
+        "notes.bean already exists as notes\u200b.bean",
+      ],
+      [
+        "nested file beneath existing regular file",
+        { ...FINE, "reports/sub.bean": "; v1\n" },
+        FINE,
+        { ...FINE, reports: "; now a file\n" },
+        "reports/sub.bean cannot be created: reports is a file, not a folder",
+      ],
+      [
+        "nested file beneath case-colliding folder",
+        { ...FINE, "Reports/sub.bean": "; v1\n" },
+        FINE,
+        { ...FINE, "reports/other.bean": "; v2\n" },
+        "Reports/sub.bean already exists as reports",
+      ],
+    ])(
+      "refuses %s with CONFLICT on dryRun=true and dryRun=false, writing nothing",
+      async (_label, c0, c1, c2, expectedMessage) => {
+        for (const dryRun of [true, false]) {
+          const f = await fixture([c0, c1, c2]);
+          try {
+            const answer = await f.call(surface, { sha: "c1", dryRun });
+            expect(answer.ok).toBe(false);
+            expect(answer.code).toBe("CONFLICT");
+            expect(answer.message).toContain(expectedMessage);
+            if (surface === "rest") {
+              expect(answer.status).toBe(409);
+            }
+            expect(f.snapshot()).toEqual(c2);
+            expect(f.shas()).toEqual(["c0", "c1", "c2"]);
+          } finally {
+            await f.close();
+          }
+        }
+      },
+    );
+
+    it("allows reverting a case-only file rename commit on dryRun=true and dryRun=false", async () => {
+      const before: Snapshot = { ...FINE, "notes.bean": "; notes\n" };
+      const after: Snapshot = { ...FINE, "Notes.bean": "; notes\n" };
+      const f = await fixture([before, after]);
+      try {
+        const preview = await f.call(surface, { sha: "c1", dryRun: true });
+        expect(common(preview)).toMatchObject({
+          ok: true,
+          sha: "c1",
+          files: expect.arrayContaining([
+            { path: "notes.bean", change: "created" },
+            { path: "Notes.bean", change: "deleted" },
+          ]),
+          commit: undefined,
+        });
+        expect(f.snapshot()).toEqual(after);
+
+        const committed = await f.call(surface, { sha: "c1", dryRun: false });
+        expect(common(committed)).toMatchObject({
+          ok: true,
+          sha: "c1",
+          commit: "c2",
+        });
+        expect(f.snapshot()).toEqual(before);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("allows reverting a case-only folder rename when emptied, and refuses when another file remains", async () => {
+      const before: Snapshot = { ...FINE, "Reports/sub.bean": "; sub\n" };
+      const renamed: Snapshot = { ...FINE, "reports/sub.bean": "; sub\n" };
+      const withSibling: Snapshot = {
+        ...renamed,
+        "reports/other.bean": "; other\n",
+      };
+
+      const emptyDirFixture = await fixture([before, renamed]);
+      try {
+        const committed = await emptyDirFixture.call(surface, {
+          sha: "c1",
+          dryRun: false,
+        });
+        expect(common(committed)).toMatchObject({
+          ok: true,
+          sha: "c1",
+          commit: "c2",
+        });
+        expect(emptyDirFixture.snapshot()).toEqual(before);
+      } finally {
+        await emptyDirFixture.close();
+      }
+
+      const survivingDirFixture = await fixture([before, renamed, withSibling]);
+      try {
+        const answer = await survivingDirFixture.call(surface, {
+          sha: "c1",
+          dryRun: true,
+        });
+        expect(answer.ok).toBe(false);
+        expect(answer.code).toBe("CONFLICT");
+        expect(answer.message).toContain(
+          "Reports/sub.bean already exists as reports",
+        );
+        if (surface === "rest") {
+          expect(answer.status).toBe(409);
+        }
+        expect(survivingDirFixture.snapshot()).toEqual(withSibling);
+      } finally {
+        await survivingDirFixture.close();
+      }
+    });
+
+    it("refuses read-only credentials with FORBIDDEN before checking twins", async () => {
+      const f = await fixture(
+        [
+          { ...FINE, "notes.bean": "; v1\n" },
+          FINE,
+          { ...FINE, "Notes.bean": "; v2\n" },
+        ],
+        reader,
+      );
+      try {
+        const answer = await f.call(surface, { sha: "c1", dryRun: true });
+        expect(answer.ok).toBe(false);
+        expect(answer.code).toBe("FORBIDDEN");
+        if (surface === "rest") {
+          expect(answer.status).toBe(403);
+        }
+        expect(f.getUserApiClient).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  });
 });

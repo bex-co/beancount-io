@@ -3,6 +3,8 @@ import { assertPageArgs } from "@/shared/page-info";
 import { isUtf8 } from "buffer";
 import {
   assertNoPortableTwin,
+  assertNoPrefixAmong,
+  assertNoTwinsAmong,
   listingOf,
 } from "@/features/ledger/utils/portable-twin";
 import { enhanceLegacyJournal } from "@/features/ledger/utils/legacy-journal";
@@ -165,6 +167,7 @@ import {
   revertChanges,
   revertedStatus,
   type GitBlob,
+  type RevertOperation,
 } from "@/features/ledger/utils/commit-revert";
 import { findCommit } from "@/features/gitea/commits/service/commits-service";
 import { assertCommitRef } from "@/shared/commit-ref";
@@ -1849,6 +1852,12 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         },
       );
     }
+    await this.assertRevertCreatesPortable(
+      favaApiClient,
+      ledgerOwner,
+      ledgerName,
+      plan.operations,
+    );
     const subject = commitSubject(commit.commit?.message);
     const message =
       input.message?.trim() || defaultRevertMessage(commitSha, subject);
@@ -1872,6 +1881,93 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       (cause) => operationNotAllowedFromCause("revert commit", cause),
     );
     return { ...summary, ...(changed?.commit && { commit: changed.commit }) };
+  }
+
+  /**
+   * Refuses re-creating a path that collides with an existing file or folder
+   * by letter case, Unicode form, invisible characters, or file-vs-folder
+   * shape (w31/088). Entries the same revert deletes — and folders emptied by
+   * those deletes — are excluded so reverting a case-only rename or
+   * file-to-folder swap continues to work.
+   */
+  private async assertRevertCreatesPortable(
+    favaApiClient: FavaApiClient,
+    ledgerOwner: string,
+    ledgerName: string,
+    operations: readonly RevertOperation[],
+  ): Promise<void> {
+    const deleted = new Set(
+      operations
+        .filter((operation) => operation.operation === "delete")
+        .map((operation) => operation.path),
+    );
+    const creates = operations
+      .filter(
+        (operation) =>
+          operation.operation === "create" && !deleted.has(operation.path),
+      )
+      .map((operation) => operation.path);
+    if (creates.length === 0) return;
+
+    assertNoPrefixAmong(creates);
+    assertNoTwinsAmong(creates);
+
+    const hasDeletedUnder = (dirPath: string) => {
+      const prefix = `${dirPath}/`;
+      for (const path of deleted) {
+        if (path.startsWith(prefix)) return true;
+      }
+      return false;
+    };
+
+    // One lookup per folder, however many re-created files share it.
+    const listings = new Map<
+      string,
+      Promise<{ path: string; type: "file" | "dir" }[]>
+    >();
+    const listFolder = async (
+      dir: string | undefined,
+    ): Promise<{ path: string; type: "file" | "dir" }[]> => {
+      const raw = await unwrapFavaResponse(
+        favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
+          ...(dir === undefined ? {} : { dir_path: dir }),
+        }),
+        "check new file path",
+      );
+      const kept: { path: string; type: "file" | "dir" }[] = [];
+      for (const entry of raw) {
+        if (deleted.has(entry.path)) continue;
+        const type =
+          entry.type === "dir" ? ("dir" as const) : ("file" as const);
+        if (type === "dir" && hasDeletedUnder(entry.path)) {
+          try {
+            if ((await list(entry.path)).length === 0) continue;
+          } catch (error) {
+            if (
+              error instanceof DomainError &&
+              error.category === ErrorCategory.NOT_FOUND
+            ) {
+              continue;
+            }
+            throw error;
+          }
+        }
+        kept.push({ path: entry.path, type });
+      }
+      return kept;
+    };
+    const list = (dir: string | undefined) => {
+      const key = dir ?? "";
+      let listing = listings.get(key);
+      if (!listing) {
+        listing = listFolder(dir);
+        listings.set(key, listing);
+      }
+      return listing;
+    };
+    for (const path of creates) {
+      await assertNoPortableTwin(path, list);
+    }
   }
 
   /**

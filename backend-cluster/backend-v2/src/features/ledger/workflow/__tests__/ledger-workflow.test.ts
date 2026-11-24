@@ -3192,4 +3192,349 @@ describe("LedgerWorkflow", () => {
       expect(giteaClientFactory.getUserApiClient).not.toHaveBeenCalled();
     });
   });
+
+  // w31/088: revertLedgerCommit runs assertNoPortableTwin on every create
+  // operation before dry-run validation or changeLedgerFiles, while ignoring
+  // files and emptied directories removed by the same revert.
+  describe("revertLedgerCommit", () => {
+    const ledgerId = "testuser/test-ledger";
+    const parentSha = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const commitSha = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+    const setupRevert = ({
+      commitFiles,
+      currentFiles = [],
+      blobs = {},
+      dirs = {},
+    }: {
+      commitFiles: { filename: string; status: string }[];
+      currentFiles?: { path: string; sha: string }[];
+      blobs?: Record<string, { sha: string; content: string }>;
+      dirs?: Record<string, { path: string; type: "file" | "dir" }[]>;
+    }) => {
+      const repoGetAllCommits = jest.fn().mockResolvedValue({
+        data: [
+          {
+            sha: commitSha,
+            commit: { message: "Commit subject" },
+            parents: [{ sha: parentSha }],
+            files: commitFiles,
+          },
+        ],
+      });
+      const repoGetContents = jest
+        .fn()
+        .mockImplementation(
+          async (
+            _owner: string,
+            _repo: string,
+            encodedPath: string,
+            query?: { ref?: string },
+          ) => {
+            const path = encodedPath
+              .split("/")
+              .map(decodeURIComponent)
+              .join("/");
+            const key = `${query?.ref}:${path}`;
+            const blob = blobs[key];
+            if (!blob) throw new Response(null, { status: 404 });
+            return {
+              data: {
+                sha: blob.sha,
+                content: Buffer.from(blob.content, "utf-8").toString("base64"),
+                encoding: "base64",
+              },
+            };
+          },
+        );
+      giteaClientFactory.getUserApiClient.mockResolvedValue({
+        repos: { repoGetAllCommits, repoGetContents },
+      });
+      mockFavaApiClient.ledgers.getLedgerFilesContent.mockResolvedValue({
+        data: { success: true, data: currentFiles },
+      });
+      mockFavaApiClient.ledgers.getLedgerDirContent.mockImplementation(
+        async (_o: string, _n: string, query?: { dir_path?: string }) => ({
+          data: {
+            success: true,
+            data: dirs[query?.dir_path ?? ""] ?? [],
+          },
+        }),
+      );
+      mockFavaApiClient.ledgers.changeLedgerFiles.mockResolvedValue({
+        data: { success: true, data: { commit: "cccccccccccc" } },
+      });
+      (
+        mockFavaApiClient.reports as unknown as Record<string, jest.Mock>
+      ).checkProjectedErrors = jest.fn().mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+    };
+
+    it.each([
+      [
+        "case twin",
+        "notes.bean",
+        [{ path: "Notes.bean", type: "file" as const }],
+        /notes\.bean already exists as Notes\.bean/,
+      ],
+      [
+        "Unicode NFD twin",
+        "café.bean",
+        [{ path: "cafe\u0301.bean", type: "file" as const }],
+        /café\.bean already exists as cafe\u0301\.bean/,
+      ],
+      [
+        "invisible-character twin",
+        "notes.bean",
+        [{ path: "notes\u200b.bean", type: "file" as const }],
+        /notes\.bean already exists as notes\u200b\.bean/,
+      ],
+      [
+        "nested file under existing regular file",
+        "reports/sub.bean",
+        [{ path: "reports", type: "file" as const }],
+        /reports\/sub\.bean cannot be created: reports is a file, not a folder/,
+      ],
+      [
+        "nested file under case-colliding folder",
+        "Reports/sub.bean",
+        [{ path: "reports", type: "dir" as const }],
+        /Reports\/sub\.bean already exists as reports/,
+      ],
+    ])(
+      "refuses %s with CONFLICT on both dryRun=true and dryRun=false without writing",
+      async (_label, restoredPath, rootEntries, expectedMessage) => {
+        for (const dryRun of [true, false]) {
+          jest.clearAllMocks();
+          setupRevert({
+            commitFiles: [{ filename: restoredPath, status: "removed" }],
+            blobs: {
+              [`${parentSha}:${restoredPath}`]: {
+                sha: "blob-1",
+                content: "; restored\n",
+              },
+            },
+            dirs: {
+              "": [{ path: "main.bean", type: "file" }, ...rootEntries],
+            },
+          });
+
+          await expect(
+            workflow.revertLedgerCommit({
+              identity: IDENTITY,
+              ledgerId,
+              input: { sha: commitSha, dryRun },
+            }),
+          ).rejects.toMatchObject({
+            category: ErrorCategory.CONFLICT,
+            message: expect.stringMatching(expectedMessage),
+          });
+          expect(
+            mockFavaApiClient.ledgers.changeLedgerFiles,
+          ).not.toHaveBeenCalled();
+        }
+      },
+    );
+
+    it.each([
+      [
+        "two twin files",
+        ["notes.bean", "Notes.bean"],
+        /Notes\.bean already exists as notes\.bean/,
+      ],
+      [
+        "a file and a path beneath it",
+        ["reports", "reports/sub.bean"],
+        /reports\/sub\.bean cannot be created beside reports/,
+      ],
+    ])(
+      "refuses a legacy commit that deleted %s before any directory lookup",
+      async (_label, paths, expectedMessage) => {
+        setupRevert({
+          commitFiles: paths.map((filename) => ({
+            filename,
+            status: "removed",
+          })),
+          blobs: Object.fromEntries(
+            paths.map((path, index) => [
+              `${parentSha}:${path}`,
+              { sha: `blob-${index}`, content: "; restored\n" },
+            ]),
+          ),
+        });
+
+        await expect(
+          workflow.revertLedgerCommit({
+            identity: IDENTITY,
+            ledgerId,
+            input: { sha: commitSha, dryRun: true },
+          }),
+        ).rejects.toMatchObject({
+          category: ErrorCategory.CONFLICT,
+          message: expect.stringMatching(expectedMessage),
+        });
+        expect(
+          mockFavaApiClient.ledgers.getLedgerDirContent,
+        ).not.toHaveBeenCalled();
+        expect(
+          mockFavaApiClient.ledgers.changeLedgerFiles,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it("allows reverting a case-only file rename commit in one batch", async () => {
+      setupRevert({
+        commitFiles: [
+          { filename: "notes.bean", status: "removed" },
+          { filename: "Notes.bean", status: "added" },
+        ],
+        currentFiles: [{ path: "Notes.bean", sha: "blob-same" }],
+        blobs: {
+          [`${parentSha}:notes.bean`]: {
+            sha: "blob-same",
+            content: "; notes\n",
+          },
+          [`${commitSha}:Notes.bean`]: {
+            sha: "blob-same",
+            content: "; notes\n",
+          },
+        },
+        dirs: {
+          "": [
+            { path: "main.bean", type: "file" },
+            { path: "Notes.bean", type: "file" },
+          ],
+        },
+      });
+
+      const result = await workflow.revertLedgerCommit({
+        identity: IDENTITY,
+        ledgerId,
+        input: { sha: commitSha, dryRun: false },
+      });
+
+      expect(result.commit).toBe("cccccccccccc");
+      expect(mockFavaApiClient.ledgers.changeLedgerFiles).toHaveBeenCalledTimes(
+        1,
+      );
+    });
+
+    it("allows reverting a case-only folder rename when the folder is emptied, and refuses when another file remains", async () => {
+      setupRevert({
+        commitFiles: [
+          { filename: "Reports/sub.bean", status: "removed" },
+          { filename: "reports/sub.bean", status: "added" },
+        ],
+        currentFiles: [{ path: "reports/sub.bean", sha: "blob-sub" }],
+        blobs: {
+          [`${parentSha}:Reports/sub.bean`]: {
+            sha: "blob-sub",
+            content: "; sub\n",
+          },
+          [`${commitSha}:reports/sub.bean`]: {
+            sha: "blob-sub",
+            content: "; sub\n",
+          },
+        },
+        dirs: {
+          "": [
+            { path: "main.bean", type: "file" },
+            { path: "reports", type: "dir" },
+          ],
+          reports: [{ path: "reports/sub.bean", type: "file" }],
+        },
+      });
+
+      const allowed = await workflow.revertLedgerCommit({
+        identity: IDENTITY,
+        ledgerId,
+        input: { sha: commitSha, dryRun: true },
+      });
+      expect(allowed.files).toEqual([
+        { path: "Reports/sub.bean", change: "created" },
+        { path: "reports/sub.bean", change: "deleted" },
+      ]);
+
+      // A surviving sibling keeps `reports/` alive, so restoring `Reports/sub.bean`
+      // would create colliding folders `Reports/` and `reports/`.
+      setupRevert({
+        commitFiles: [
+          { filename: "Reports/sub.bean", status: "removed" },
+          { filename: "reports/sub.bean", status: "added" },
+        ],
+        currentFiles: [{ path: "reports/sub.bean", sha: "blob-sub" }],
+        blobs: {
+          [`${parentSha}:Reports/sub.bean`]: {
+            sha: "blob-sub",
+            content: "; sub\n",
+          },
+          [`${commitSha}:reports/sub.bean`]: {
+            sha: "blob-sub",
+            content: "; sub\n",
+          },
+        },
+        dirs: {
+          "": [
+            { path: "main.bean", type: "file" },
+            { path: "reports", type: "dir" },
+          ],
+          reports: [
+            { path: "reports/sub.bean", type: "file" },
+            { path: "reports/other.bean", type: "file" },
+          ],
+        },
+      });
+
+      await expect(
+        workflow.revertLedgerCommit({
+          identity: IDENTITY,
+          ledgerId,
+          input: { sha: commitSha, dryRun: true },
+        }),
+      ).rejects.toMatchObject({
+        category: ErrorCategory.CONFLICT,
+        message: expect.stringMatching(
+          /Reports\/sub\.bean already exists as reports/,
+        ),
+      });
+    });
+
+    it("skips directory lookups when a revert creates no files", async () => {
+      setupRevert({
+        commitFiles: [{ filename: "main.bean", status: "modified" }],
+        currentFiles: [{ path: "main.bean", sha: "blob-new" }],
+        blobs: {
+          [`${parentSha}:main.bean`]: { sha: "blob-old", content: "; old\n" },
+          [`${commitSha}:main.bean`]: { sha: "blob-new", content: "; new\n" },
+        },
+      });
+
+      await workflow.revertLedgerCommit({
+        identity: IDENTITY,
+        ledgerId,
+        input: { sha: commitSha, dryRun: true },
+      });
+      expect(
+        mockFavaApiClient.ledgers.getLedgerDirContent,
+      ).not.toHaveBeenCalled();
+    });
+
+    it("denies unauthorized callers before touching Gitea or directory listings", async () => {
+      authorization.authorizeOrThrow.mockRejectedValueOnce(
+        new ForbiddenError("write required"),
+      );
+      await expect(
+        workflow.revertLedgerCommit({
+          identity: IDENTITY,
+          ledgerId,
+          input: { sha: commitSha, dryRun: true },
+        }),
+      ).rejects.toThrow(ForbiddenError);
+      expect(giteaClientFactory.getUserApiClient).not.toHaveBeenCalled();
+      expect(
+        mockFavaApiClient.ledgers.getLedgerDirContent,
+      ).not.toHaveBeenCalled();
+    });
+  });
 });
