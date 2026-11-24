@@ -442,6 +442,189 @@ describe("PullRequestService", () => {
       });
     });
 
+    describe("percent-encoded repoGetContents paths (w31/090)", () => {
+      // Model gitea-api.ts URL interpolation (`/contents/${filepath}?ref=...`):
+      // unencoded `#` or `?` truncates the path and drops `ref`, and a bare `%`
+      // triggers Gitea's 400 Bad Request before any repository lookup.
+      function mockUrlAwareGetContents(
+        files: ReadonlyMap<string, string>,
+        dirs: ReadonlyMap<
+          string,
+          Array<{ path: string; type: "file" | "dir" }>
+        > = new Map(),
+      ) {
+        mockClient.repos.repoGetContents.mockImplementation(
+          async (
+            _o: string,
+            _r: string,
+            filepath: string,
+            query?: { ref?: string },
+          ) => {
+            const url = new URL(
+              `/api/v1/repos/o/r/contents/${filepath}?ref=${encodeURIComponent(query?.ref ?? "")}`,
+              "https://git.test",
+            );
+            const rawPath = url.pathname.replace(
+              /^\/api\/v1\/repos\/o\/r\/contents\//,
+              "",
+            );
+            let decoded: string;
+            try {
+              decoded = rawPath.split("/").map(decodeURIComponent).join("/");
+            } catch {
+              throw { status: 400, error: { message: "400 Bad Request" } };
+            }
+            const sha = files.get(decoded);
+            if (sha !== undefined) return { data: { sha, path: decoded } };
+            const entries = dirs.get(decoded);
+            if (entries) return { data: entries };
+            throw { status: 404 };
+          },
+        );
+      }
+
+      it("encodes each path segment for repoGetContents while sending raw paths to repoChangeFiles", async () => {
+        mockSuccessfulCreate();
+        mockUrlAwareGetContents(new Map([["main.bean", "main-sha"]]));
+        mockClient.repos.repoGetContentsList.mockResolvedValue({
+          data: [{ path: "main.bean", type: "file" }],
+        });
+
+        const result = await service.createPRFromPatch(identity, owner, repo, {
+          ...input,
+          changes: [
+            { path: "100%.bean", content: "; pct\n" },
+            { path: "main.bean#note", content: "; hash\n" },
+            { path: "dir%1/sub#2.bean", content: "; nested\n" },
+          ],
+        });
+
+        expect(result.prNumber).toBe(42);
+        expect(
+          mockClient.repos.repoGetContents.mock.calls.map((call) => call[2]),
+        ).toEqual(["100%25.bean", "main.bean%23note", "dir%251/sub%232.bean"]);
+        const body = mockClient.repos.repoChangeFiles.mock.calls[0][2];
+        expect(body.files).toEqual([
+          {
+            operation: "create",
+            path: "100%.bean",
+            content: Buffer.from("; pct\n").toString("base64"),
+          },
+          {
+            operation: "create",
+            path: "main.bean#note",
+            content: Buffer.from("; hash\n").toString("base64"),
+          },
+          {
+            operation: "create",
+            path: "dir%1/sub#2.bean",
+            content: Buffer.from("; nested\n").toString("base64"),
+          },
+        ]);
+      });
+
+      it("looks up and updates existing files whose paths contain % or #", async () => {
+        mockSuccessfulCreate();
+        mockUrlAwareGetContents(
+          new Map([
+            ["100%.bean", "pct-sha"],
+            ["dir%1/main.bean#note", "hash-sha"],
+          ]),
+        );
+
+        const result = await service.createPRFromPatch(identity, owner, repo, {
+          ...input,
+          changes: [
+            { path: "100%.bean", content: "; updated pct\n" },
+            { path: "dir%1/main.bean#note", content: "; updated hash\n" },
+          ],
+        });
+
+        expect(result.prNumber).toBe(42);
+        expect(
+          mockClient.repos.repoGetContents.mock.calls.map((call) => call[2]),
+        ).toEqual(["100%25.bean", "dir%251/main.bean%23note"]);
+        const body = mockClient.repos.repoChangeFiles.mock.calls[0][2];
+        expect(body.files).toEqual([
+          {
+            operation: "update",
+            path: "100%.bean",
+            content: Buffer.from("; updated pct\n").toString("base64"),
+            sha: "pct-sha",
+          },
+          {
+            operation: "update",
+            path: "dir%1/main.bean#note",
+            content: Buffer.from("; updated hash\n").toString("base64"),
+            sha: "hash-sha",
+          },
+        ]);
+      });
+
+      it("encodes nested dir segments when listFolder walks existing %/# directories", async () => {
+        mockSuccessfulCreate();
+        mockUrlAwareGetContents(
+          new Map([["dir%1/sub#2/existing.bean", "existing-sha"]]),
+          new Map([
+            ["dir%1", [{ path: "dir%1/sub#2", type: "dir" }]],
+            [
+              "dir%1/sub#2",
+              [{ path: "dir%1/sub#2/existing.bean", type: "file" }],
+            ],
+          ]),
+        );
+        mockClient.repos.repoGetContentsList.mockResolvedValue({
+          data: [{ path: "dir%1", type: "dir" }],
+        });
+
+        const result = await service.createPRFromPatch(identity, owner, repo, {
+          ...input,
+          changes: [{ path: "dir%1/sub#2/new.bean", content: "; ok\n" }],
+        });
+
+        expect(result.prNumber).toBe(42);
+        expect(
+          mockClient.repos.repoGetContents.mock.calls.map((call) => call[2]),
+        ).toEqual(["dir%251/sub%232/new.bean", "dir%251", "dir%251/sub%232"]);
+
+        // Portable-twin detection still catches case collisions inside %/# dirs.
+        mockClient.repos.repoChangeFiles.mockClear();
+        await expect(
+          service.createPRFromPatch(identity, owner, repo, {
+            ...input,
+            changes: [
+              { path: "dir%1/sub#2/Existing.bean", content: "; twin\n" },
+            ],
+          }),
+        ).rejects.toMatchObject({ category: "CONFLICT" });
+        expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
+      });
+
+      it("does not let main.bean#aux?bad bypass assertPortableRepoPath via fragment truncation", async () => {
+        mockSuccessfulCreate();
+        mockUrlAwareGetContents(new Map([["main.bean", "main-sha"]]));
+
+        await expect(
+          service.createPRFromPatch(identity, owner, repo, {
+            ...input,
+            changes: [{ path: "main.bean#aux?bad", content: "; probe\n" }],
+          }),
+        ).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          message: expect.stringContaining('<>:"|?*'),
+        });
+        expect(mockClient.repos.repoGetContents).toHaveBeenCalledWith(
+          owner,
+          repo,
+          "main.bean%23aux%3Fbad",
+          { ref: "main" },
+          { format: "json" },
+        );
+        expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
+        expect(mockClient.repos.repoDeleteBranch).not.toHaveBeenCalled();
+      });
+    });
+
     it("should route the created PR's actual refs through", async () => {
       mockSuccessfulCreate();
       mockClient.repos.repoCreatePullRequest.mockResolvedValue({

@@ -2,6 +2,7 @@ import { BadUserInputError } from "@/shared/errors";
 import {
   assertPortableRepoPath,
   assertSafeRepoPath,
+  encodeRepoPath,
 } from "@/features/ledger/utils/safe-repo-path";
 import {
   archiveRef,
@@ -121,5 +122,18 @@ describe("portable paths for new files", () => {
 
   it("leaves reads of an existing odd name to the safe-path rule", () => {
     expect(() => assertSafeRepoPath("aux.bean")).not.toThrow();
+  });
+});
+
+describe("encodeRepoPath", () => {
+  it.each([
+    ["main.bean", "main.bean"],
+    ["100%.bean", "100%25.bean"],
+    ["main.bean#probe", "main.bean%23probe"],
+    ["main.bean#aux?bad", "main.bean%23aux%3Fbad"],
+    ["dir%1/sub#2/my file.bean", "dir%251/sub%232/my%20file.bean"],
+    ["café.bean", "caf%C3%A9.bean"],
+  ])("encodes %j as %j while keeping / separators", (raw, encoded) => {
+    expect(encodeRepoPath(raw)).toBe(encoded);
   });
 });

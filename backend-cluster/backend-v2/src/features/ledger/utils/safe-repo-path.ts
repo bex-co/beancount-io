@@ -64,3 +64,12 @@ export function assertPortableRepoPath(path: unknown, field = "path"): void {
       refuse("has a part longer than 255 bytes");
   }
 }
+
+/**
+ * Percent-encode each segment of a repository-relative path while keeping `/`
+ * separators, for URL templates such as Gitea's `repoGetContents` that
+ * interpolate `filepath` directly into the request path.
+ */
+export function encodeRepoPath(path: string): string {
+  return path.split("/").map(encodeURIComponent).join("/");
+}

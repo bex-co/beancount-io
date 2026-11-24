@@ -2,6 +2,7 @@ import { PULL_REQUEST_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import {
   assertPortableRepoPath,
   assertSafeRepoPath,
+  encodeRepoPath,
 } from "@/features/ledger/utils/safe-repo-path";
 import {
   assertNoPortableTwin,
@@ -360,7 +361,7 @@ export class PullRequestService implements IPullRequestService {
             .repoGetContents(
               owner,
               repo,
-              change.path,
+              encodeRepoPath(change.path),
               { ref: baseBranch },
               { format: "json" },
             )
@@ -409,7 +410,7 @@ export class PullRequestService implements IPullRequestService {
                 : client.repos.repoGetContents(
                     owner,
                     repo,
-                    dir,
+                    encodeRepoPath(dir),
                     { ref: baseBranch },
                     { format: "json" },
                   ),

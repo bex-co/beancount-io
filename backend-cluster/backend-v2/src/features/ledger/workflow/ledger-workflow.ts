@@ -131,6 +131,7 @@ import {
 import {
   assertPortableRepoPath,
   assertSafeRepoPath,
+  encodeRepoPath,
 } from "@/features/ledger/utils/safe-repo-path";
 import { toBeanCheckErrors } from "@/features/ledger/utils/bean-check-errors";
 import { assertKeepsEntryPoint } from "@/features/ledger/utils/ledger-entry-point";
@@ -1790,14 +1791,12 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       ledgerId,
       identity.userId,
     );
-    const encoded = (path: string) =>
-      path.split("/").map(encodeURIComponent).join("/");
     const blobAt = async (path: string, ref: string): Promise<GitBlob> => {
       try {
         const found = await gitea.repos.repoGetContents(
           ledgerOwner,
           ledgerName,
-          encoded(path),
+          encodeRepoPath(path),
           { ref },
           { format: "json" },
         );

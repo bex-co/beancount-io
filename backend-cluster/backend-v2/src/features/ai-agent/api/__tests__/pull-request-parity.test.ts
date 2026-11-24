@@ -148,12 +148,30 @@ async function fixture(caller = identity, appConfig = config) {
       async (
         _o: string,
         _n: string,
-        path: string,
+        filepath: string,
         { ref }: { ref: string },
       ) => {
-        if (branches.get(ref)?.has(path))
+        // Model gitea-api.ts URL interpolation (`/contents/${filepath}?ref=...`):
+        // unencoded `#` or `?` truncates the path and drops `ref`, and a bare `%`
+        // sequence fails with 400 Bad Request before lookup.
+        const url = new URL(
+          `/api/v1/repos/o/r/contents/${filepath}?ref=${encodeURIComponent(ref)}`,
+          "https://git.test",
+        );
+        const rawPath = url.pathname.replace(
+          /^\/api\/v1\/repos\/o\/r\/contents\//,
+          "",
+        );
+        let path: string;
+        try {
+          path = rawPath.split("/").map(decodeURIComponent).join("/");
+        } catch {
+          throw { status: 400, error: { message: "400 Bad Request" } };
+        }
+        const resolvedRef = url.searchParams.get("ref") ?? "main";
+        if (branches.get(resolvedRef)?.has(path))
           return { data: { sha: "sha-original" } };
-        const folder = listing(ref, path);
+        const folder = listing(resolvedRef, path);
         if (folder.length === 0) throw { status: 404 };
         return { data: folder };
       },
@@ -1432,5 +1450,124 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
         }
       },
     );
+  });
+
+  describe("percent-encoded repoGetContents paths across REST, MCP, and GraphQL (w31/090)", () => {
+    const createMutation = `mutation($input:CreatePRFromPatchInput!){createPullRequestFromPatch(input:$input){${resultFields}}}`;
+
+    it.each(surfaces)(
+      "creates files with %% and # paths and nested %%/# directories via %s",
+      async (surface) => {
+        const f = await fixture();
+        f.branches
+          .get("main")!
+          .set("dir%1/sub#2/existing.bean", "; existing\n");
+        try {
+          const created = await f.call(surface, "create", {
+            title: "Special path patch",
+            ...validCreate,
+            baseBranch: "main",
+            changes: [
+              { path: "qa-100%.bean", content: "; pct\n" },
+              { path: "main.bean#probe", content: "; hash\n" },
+              { path: "dir%1/sub#2/note.bean", content: "; nested\n" },
+            ],
+          });
+          expect(created.failed).toBe(false);
+          expect(created.data).toMatchObject({ success: true, prNumber: 1 });
+          expect(
+            f.repos.repoGetContents.mock.calls.map((call) => call[2]),
+          ).toEqual([
+            "qa-100%25.bean",
+            "main.bean%23probe",
+            "dir%251/sub%232/note.bean",
+            "dir%251",
+            "dir%251/sub%232",
+          ]);
+          const body = f.repos.repoChangeFiles.mock.calls[0][2];
+          expect(body.files).toEqual([
+            expect.objectContaining({
+              operation: "create",
+              path: "qa-100%.bean",
+            }),
+            expect.objectContaining({
+              operation: "create",
+              path: "main.bean#probe",
+            }),
+            expect.objectContaining({
+              operation: "create",
+              path: "dir%1/sub#2/note.bean",
+            }),
+          ]);
+          const pr = f.prs.get(1)!;
+          expect(f.branches.get(pr.head.ref)!.get("qa-100%.bean")).toBe(
+            "; pct\n",
+          );
+          expect(f.branches.get(pr.head.ref)!.get("main.bean#probe")).toBe(
+            "; hash\n",
+          );
+          expect(
+            f.branches.get(pr.head.ref)!.get("dir%1/sub#2/note.bean"),
+          ).toBe("; nested\n");
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("refuses main.bean#aux?bad as BAD_USER_INPUT on REST, MCP, and GraphQL without writing", async () => {
+      const f = await fixture();
+      const input = {
+        title: "Bypass check",
+        ...validCreate,
+        baseBranch: "main",
+        changes: [{ path: "main.bean#aux?bad", content: "; probe\n" }],
+      };
+      try {
+        const restRes = await fetch(
+          `${f.restUrl}/api-gateway/v1/ledgers/alice/main/pull-requests`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(input),
+          },
+        );
+        expect(restRes.status).toBe(400);
+        expect(await restRes.json()).toMatchObject({
+          error: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining('<>:"|?*'),
+          },
+        });
+
+        const mcpRes = await f.client.callTool(
+          perOperation({
+            operation: "create",
+            ledger: "alice/main",
+            ...input,
+          }),
+        );
+        expect(mcpRes.isError).toBe(true);
+        expect(mcpRes.structuredContent).toMatchObject({
+          error: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining('<>:"|?*'),
+          },
+        });
+
+        const gqlRes = await f.gql(createMutation, {
+          input: { ledgerOwner: "alice", ledgerName: "main", ...input },
+        });
+        expect(gqlRes.errors?.[0]).toMatchObject({
+          message: expect.stringContaining('<>:"|?*'),
+          originalError: { category: "BAD_USER_INPUT" },
+        });
+
+        expect(f.repos.repoChangeFiles).not.toHaveBeenCalled();
+        expect(f.branches.size).toBe(2);
+      } finally {
+        await f.close();
+      }
+    });
   });
 });
