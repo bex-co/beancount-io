@@ -1288,10 +1288,14 @@ def _transactions(
             message += f" {len(unchanged_rows)} {alone} already up to date."
         details = list(rejected)
         if schema_rejects:
-            details.append(
-                'Example row: {"id": "9f2c", "account": "Expenses:Groceries", "flag": "*"}. '
-                "Use bea update transactions --help for the full row shape."
+            # The example follows the mapping's form: a JSON object was no
+            # row a user editing a CSV could paste (w1/381).
+            example = (
+                "Example row: 9f2c,Expenses:Groceries,* under the header id,account,flag."
+                if csv
+                else 'Example row: {"id": "9f2c", "account": "Expenses:Groceries", "flag": "*"}.'
             )
+            details.append(f"{example} Use bea update transactions --help for the full row shape.")
         return protocol.LedgerError(
             message,
             details=details,

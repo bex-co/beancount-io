@@ -249,7 +249,7 @@ def _load_mapping(from_file: str) -> dict[str, Any]:
     read as CSV, it came back quoted as column names (w1/378). The form rides
     along so a CSV row that changes nothing is told to fill its account or
     flag cell, not to pass `tags` or `narration`, which the CSV form refuses
-    (w1/380).
+    (w1/380), and a refused apply's example row is a CSV row (w1/381).
     """
     text, name = read_text(from_file, noun="Mappings", json_only=False)
     if not text.strip():

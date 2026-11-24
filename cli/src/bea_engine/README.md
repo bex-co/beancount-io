@@ -203,9 +203,10 @@ runs is refused as `conflict`. A request that changes nothing answers
 
 `--type transactions` carries `rows` of the single-row shape, plus an optional
 `form`: `"json"` (the default) or `"csv"` when the rows came from a CSV
-mapping. The form changes only the wording of a row that changes nothing: a CSV
-row is told to fill its account or flag cell, the only cells CSV carries,
-rather than to pass `tags` or `narration`. The batch answers one
+mapping. The form changes only wording: a CSV row that changes nothing is told
+to fill its account or flag cell, the only cells CSV carries, rather than to
+pass `tags` or `narration`, and a refused apply's example row is a CSV row
+rather than a JSON object. The batch answers one
 JSON object per row: `{"rows": [{"row", "id", "status", ...}], "diff", ...}`,
 where a row is `ok` (with its `target`, `lineno`, `changes`, and own `diff`),
 `unchanged` (it already matches), or `rejected` (with a `reason`). Unlike `add
