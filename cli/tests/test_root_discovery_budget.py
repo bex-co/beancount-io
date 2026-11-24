@@ -290,7 +290,7 @@ def test_a_growing_candidate_is_read_only_up_to_the_remaining_budget(
     assert reads == [17]
 
 
-@pytest.mark.parametrize("resolver", ["defining", "defines", "nearest"])
+@pytest.mark.parametrize("resolver", ["defining", "hints", "nearest"])
 def test_incomplete_closure_cannot_be_swallowed_by_root_classification(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, resolver: str
 ) -> None:
@@ -305,8 +305,8 @@ def test_incomplete_closure_cannot_be_swallowed_by_root_classification(
     with pytest.raises(write.UsageError, match="incomplete"):
         if resolver == "defining":
             write.defining_root(leaf)
-        elif resolver == "defines":
-            write.defines_for(leaf, root)
+        elif resolver == "hints":
+            write.root_ledger_hints(leaf)
         else:
             write._nearest_includers(leaf)
 

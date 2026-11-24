@@ -1458,7 +1458,10 @@ never opens, or an option the file does not already set (beyond its title). A Fa
 or forecast overlay that includes a working ledger and only adds entries is
 not its root even when it repeats an option or names the forecast plugin, so
 writes and failing reads stay with the ledger named, and a leaf below the
-working ledger stops its climb there rather than at the overlay above.
+working ledger stops its climb there rather than at the overlay above. An
+includer that defines nothing and cannot load on its own, such as a year index
+whose month files post to accounts the root opens, is passed through instead:
+a write on any month file runs through the root above it.
 
 `update` uses the same governing-root discovery, then locates entries across
 that whole ledger and edits each in its existing file. It does not infer an

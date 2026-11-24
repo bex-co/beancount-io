@@ -3,7 +3,8 @@
 `--file` on `sub dir/nested/deep.bean` validated that leaf alone (or, after
 w5/343, its nearest includer), so a balance or close that contradicts the
 root's own transactions succeeded, and import dedupe missed rows booked in
-the root. The climb now reaches the file nothing includes.
+the root. The climb now reaches the file nothing includes, also when the
+intermediate includes a sibling that holds entries of its own (w1/375).
 """
 
 from __future__ import annotations
@@ -31,15 +32,21 @@ include "sub dir/extra.bean"
   Assets:Bank
 """
 LEAF = "2026-01-01 open Assets:Bank USD\n"
+SIBLING = '2026-01-10 * "Cash lunch"\n  Expenses:Food  2 USD\n  Assets:Cash\n'
 
 
-@pytest.fixture
-def books(tmp_path: Path) -> Path:
+@pytest.fixture(params=["alone", "sibling"])
+def books(tmp_path: Path, request: pytest.FixtureRequest) -> Path:
     books = tmp_path / "my books"
     (books / "sub dir" / "nested").mkdir(parents=True)
     (books / "main.bean").write_text(MAIN)
     (books / "sub dir" / "extra.bean").write_text('include "nested/deep.bean"\n')
     (books / "sub dir" / "nested" / "deep.bean").write_text(LEAF)
+    if request.param == "sibling":
+        # A sibling's entries post to accounts only the root opens: the
+        # intermediate is no overlay, so the climb continues past it (w1/375).
+        (books / "sub dir" / "extra.bean").write_text('include "nested/deep.bean"\ninclude "nested/other.bean"\n')
+        (books / "sub dir" / "nested" / "other.bean").write_text(SIBLING)
     (tmp_path / "elsewhere").mkdir()
     (tmp_path / "elsewhere" / "s.csv").write_text(
         "Date,Payee,Narration,Amount\n2026-02-01,Spend,x,-3.00\n2026-02-05,Cafe,y,-4.00\n"

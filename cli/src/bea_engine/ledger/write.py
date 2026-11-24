@@ -2285,8 +2285,13 @@ def defining_root(file: Path, first: Path | None = None) -> Path | None:
     overlay ends the climb: climbing past the nearest includer to the topmost
     one put a leaf under a working ledger below a forecast overlay through the
     overlay, whose forecast entries then counted (w5/774). A step that defines
-    nothing and adds no entries is a pass-through intermediate, which the
-    climb continues past to the root above it (w5/346). A climb that comes
+    nothing is a pass-through intermediate, which the climb continues past to
+    the root above it (w5/346), unless it adds entries to a closure that loads
+    on its own: an overlay. A year index whose month files post to accounts
+    the root opens adds entries too, but they cannot load without the root, so
+    it is still an intermediate; judged an overlay, a write on one month was
+    checked against that month alone once a sibling month held an entry
+    (w1/375). A climb that comes
     back to `file` (an include cycle through it) has no other root to name:
     the hint told the user to run the command they had just run (w5/566).
     """
@@ -2309,7 +2314,7 @@ def defining_root(file: Path, first: Path | None = None) -> Path | None:
             except Exception:  # noqa: BLE001 - unreadable here is reported by the load itself
                 break
             if not _defines_in(around, own):
-                if _step_adds_entries(around, own):
+                if _step_adds_entries(around, own) and not _needs_root_above(around):
                     break
                 current = above
                 above = None
@@ -2362,31 +2367,18 @@ def _posts_unopened(own: dict[Path, bytes]) -> bool:
     return False
 
 
-def defines_for(file: Path, root: Path) -> bool:
-    """Whether the ledger including `file` defines what `file` reads, which makes `file` its leaf.
+def _defines_in(around: dict[Path, bytes], own: dict[Path, bytes]) -> bool:
+    """Whether the files around a closure define what it reads, which makes the closure their leaf.
 
     A per-year file reads the accounts its root opens. A working ledger that a
     Fava or forecast overlay includes reads nothing from the overlay, which
     only adds to it: taken for its root, the overlay's forecast entries
     counted in validation and dedupe, a wrong balance was written and a real
-    bank row skipped as a duplicate (w5/578). Only what the file needs counts:
-    an option or plugin the file already sets is a repeat, not a definition,
-    and a plugin counts only when the file posts to an account it never opens
-    (w5/774). When the closures cannot be read, the leaf answer stands.
+    bank row skipped as a duplicate (w5/578). Only what the closure needs
+    counts: an option or plugin it already sets is a repeat, not a
+    definition, and a plugin counts only when it posts to an account it never
+    opens (w5/774).
     """
-    with _includer_search(file) as budget:
-        try:
-            around = budget.capture(root).contents
-            own = budget.capture(file).contents
-        except IncompleteRootSearch:
-            raise
-        except Exception:  # noqa: BLE001 - unreadable here is reported by the load itself
-            return True
-        return _defines_in(around, own)
-
-
-def _defines_in(around: dict[Path, bytes], own: dict[Path, bytes]) -> bool:
-    """Whether the files around a closure define what it reads (see `defines_for`)."""
     extra = [content for path, content in around.items() if path not in own]
     if any(_OPEN_LINE.search(content) for content in extra):
         return True
@@ -2411,6 +2403,15 @@ def _step_adds_entries(around: dict[Path, bytes], own: dict[Path, bytes]) -> boo
         for path, content in around.items()
         if path not in own
     )
+
+
+def _needs_root_above(closure: dict[Path, bytes]) -> bool:
+    """Whether a closure posts to an account it never opens and has no plugin that could open it.
+
+    Such a closure cannot load on its own, so a ledger above it opens what it
+    reads: it is no overlay, whatever entries it adds.
+    """
+    return not any(_PLUGIN_NAME.search(content) for content in closure.values()) and _posts_unopened(closure)
 
 
 def root_read_hint(file: Path) -> str | None:
@@ -2511,10 +2512,15 @@ def write_through_root(file: Path, into: Path | None) -> tuple[Path, Path | None
 
 
 def root_ledger_hints(file: Path) -> list[str]:
-    """The `--into` recipe when the invoked entry file is an included leaf."""
+    """The `--into` recipe when the invoked entry file is an included leaf.
+
+    It names the root a write through the leaf is checked against. Judging
+    only the nearest includer, a month file under a year index got no recipe
+    at all (w1/375).
+    """
     with _includer_search(file):
-        root = including_root(file)
-        if root is None or not defines_for(file, root):
+        root = defining_root(file)
+        if root is None:
             return []
         relative = os.path.relpath(file.resolve(), root.parent)
         return [

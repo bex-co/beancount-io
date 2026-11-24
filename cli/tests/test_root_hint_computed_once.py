@@ -64,7 +64,8 @@ def test_an_included_leaf_still_gets_the_root_hint_once(tmp_path: Path, lookups:
     with pytest.raises(ledger_write.CandidateRejected) as refused:
         ledger_write.append(leaf, ['2021-03-01 note Expenses:Food "hi"'])
 
-    assert lookups == [leaf]
+    # One climb for the whole write: the leaf's includer, then whether anything includes that root (w1/375).
+    assert lookups == [leaf, tmp_path / "main.bean"]
     hints = [line for line in refused.value.details if "is included by" in line]
     # One per distinct unknown account (Expenses:Food, Assets:Bank), all alike.
     assert len(hints) == 2
