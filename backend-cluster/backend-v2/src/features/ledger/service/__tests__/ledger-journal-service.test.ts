@@ -5,6 +5,7 @@ import {
   ForbiddenError,
   InternalServerError,
   NotFoundError,
+  ValidationError,
 } from "@/shared/errors";
 import { FavaApiError } from "@/foundation/fava";
 import {
@@ -31,6 +32,7 @@ const mockDeleteMultiSourceSlices = jest.fn();
 const mockMoveSourceSlices = jest.fn();
 const mockUpdateSourceSlice = jest.fn();
 const mockGetLedgerDirContent = jest.fn();
+const mockGetLedgerAccounts = jest.fn();
 
 const mockFavaApiClient = {
   journal: {
@@ -45,6 +47,9 @@ const mockFavaApiClient = {
   },
   ledgers: {
     getLedgerDirContent: mockGetLedgerDirContent,
+  },
+  reports: {
+    getLedgerAccounts: mockGetLedgerAccounts,
   },
 };
 
@@ -71,6 +76,9 @@ describe("LedgerJournalService", () => {
     });
     mockGetLedgerDirContent.mockResolvedValue({
       data: { success: true, data: [] },
+    });
+    mockGetLedgerAccounts.mockResolvedValue({
+      data: { success: true, data: {} },
     });
     service = new LedgerJournalService(mockFavaClientFactory as any, {} as any);
   });
@@ -1239,6 +1247,256 @@ describe("LedgerJournalService", () => {
           newContent: "x",
         }),
       ).rejects.toThrow(ConflictError);
+    });
+
+    describe("custom budget account validation (w31/096)", () => {
+      const UNOPENED_BUDGET =
+        '2026-02-10 custom "budget" Expenses:DoesNotExist "monthly" 100 USD\n';
+      const OPENED_PARENT_BUDGET =
+        '2026-02-10 custom "budget" Expenses:Food "monthly" 100 USD\n';
+
+      const stubAccounts = (accounts: string[]) => {
+        mockGetLedgerAccounts.mockResolvedValue({
+          data: {
+            success: true,
+            data: Object.fromEntries(accounts.map((a) => [a, {}])),
+          },
+        });
+      };
+
+      const okSliceResponse = (extra: Record<string, unknown> = {}) => ({
+        data: {
+          success: true,
+          data: {
+            message: "Updated",
+            entry_hash: HASH_NEW,
+            new_sha256sum: SHA_NEW,
+            new_entry_hash: HASH_NEW,
+            errors_before: 0,
+            errors_after: 0,
+            new_errors: [],
+            preview: [{ path: "main.bean", text: UNOPENED_BUDGET }],
+            ...extra,
+          },
+        },
+      });
+
+      it("marks dryRun preview invalid with nearest opened accounts for an unopened budget", async () => {
+        stubAccounts([
+          "Assets:Cash",
+          "Expenses:Food:Coffee",
+          "Expenses:Food:Groceries",
+        ]);
+        mockUpdateSourceSlice.mockResolvedValue(okSliceResponse());
+
+        const result = await service.updateSourceSlice({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          entryHash: HASH_OLD,
+          sha256sum: SHA_OLD,
+          newContent: UNOPENED_BUDGET,
+          dryRun: true,
+        });
+
+        expect(result.validation).toEqual({
+          errorsBefore: 0,
+          errorsAfter: 1,
+          newErrors: [
+            {
+              message: expect.stringContaining(
+                "entry 0: budget account Expenses:DoesNotExist is not opened in this ledger, nor is any account under it; nearest: Expenses:Food:Coffee, Expenses:Food:Groceries",
+              ),
+            },
+          ],
+          valid: false,
+        });
+        expect(mockUpdateSourceSlice).toHaveBeenCalledWith(
+          "testowner",
+          "testledger",
+          expect.objectContaining({ dryRun: true, allowInvalid: true }),
+          {},
+        );
+      });
+
+      it("probes with dryRun and refuses commit with ValidationError for an unopened budget", async () => {
+        stubAccounts(["Expenses:Food:Coffee", "Expenses:Food:Groceries"]);
+        mockUpdateSourceSlice.mockResolvedValue(okSliceResponse());
+
+        const failure = await service
+          .updateSourceSlice({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entryHash: HASH_OLD,
+            sha256sum: SHA_OLD,
+            newContent: UNOPENED_BUDGET,
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(ValidationError);
+        expect(failure).toMatchObject({
+          category: "VALIDATION_FAILED",
+          message: expect.stringContaining(
+            "entry 0: budget account Expenses:DoesNotExist is not opened in this ledger, nor is any account under it; nearest: Expenses:Food:Coffee, Expenses:Food:Groceries",
+          ),
+          metadata: expect.objectContaining({
+            field: "newContent",
+            entry: 0,
+            account: "Expenses:DoesNotExist",
+            hint: expect.stringContaining("allowInvalid: true"),
+          }),
+        });
+        // Probed without mutating and without suppressing bean-check errors.
+        expect(mockUpdateSourceSlice).toHaveBeenCalledTimes(1);
+        expect(mockUpdateSourceSlice).toHaveBeenCalledWith(
+          "testowner",
+          "testledger",
+          {
+            entry_hash: HASH_OLD,
+            sha256sum: SHA_OLD,
+            new_content: UNOPENED_BUDGET,
+            dryRun: true,
+          },
+          {},
+        );
+      });
+
+      it("commits unopened budget when allowInvalid is true without reading accounts", async () => {
+        mockUpdateSourceSlice.mockResolvedValue(okSliceResponse());
+
+        const result = await service.updateSourceSlice({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          entryHash: HASH_OLD,
+          sha256sum: SHA_OLD,
+          newContent: UNOPENED_BUDGET,
+          allowInvalid: true,
+        });
+
+        expect(result.validation.valid).toBe(true);
+        expect(mockGetLedgerAccounts).not.toHaveBeenCalled();
+        expect(mockUpdateSourceSlice).toHaveBeenCalledWith(
+          "testowner",
+          "testledger",
+          {
+            entry_hash: HASH_OLD,
+            sha256sum: SHA_OLD,
+            new_content: UNOPENED_BUDGET,
+            allowInvalid: true,
+          },
+          {},
+        );
+      });
+
+      it("allows a budget on an opened parent account and commits directly", async () => {
+        stubAccounts(["Expenses:Food:Coffee"]);
+        mockUpdateSourceSlice.mockResolvedValue(okSliceResponse());
+
+        const result = await service.updateSourceSlice({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          entryHash: HASH_OLD,
+          sha256sum: SHA_OLD,
+          newContent: OPENED_PARENT_BUDGET,
+        });
+
+        expect(result.validation.valid).toBe(true);
+        expect(mockGetLedgerAccounts).toHaveBeenCalledTimes(1);
+        expect(mockUpdateSourceSlice).toHaveBeenCalledWith(
+          "testowner",
+          "testledger",
+          {
+            entry_hash: HASH_OLD,
+            sha256sum: SHA_OLD,
+            new_content: OPENED_PARENT_BUDGET,
+          },
+          {},
+        );
+      });
+
+      it("does not read accounts for non-budget edits or non-budget custom directives", async () => {
+        mockUpdateSourceSlice.mockResolvedValue(okSliceResponse());
+
+        await service.updateSourceSlice({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          entryHash: HASH_OLD,
+          sha256sum: SHA_OLD,
+          newContent:
+            '2026-02-10 custom "fava-option" "default-file" "main.bean"\n',
+        });
+
+        expect(mockGetLedgerAccounts).not.toHaveBeenCalled();
+      });
+
+      it.each([
+        [
+          "stale sha256sum (CONFLICT)",
+          new FavaApiError("Entry conflict", 409, { error: "Entry conflict" }),
+          ConflictError,
+        ],
+        [
+          "missing entryHash (NOT_FOUND)",
+          new FavaApiError("Entry not found", 404, {
+            error: "Entry not found",
+          }),
+          NotFoundError,
+        ],
+        [
+          "multi-directive or malformed newContent (BAD_USER_INPUT)",
+          new FavaApiError("newContent holds 2 entries", 400, {
+            error: "newContent holds 2 entries",
+          }),
+          BadUserInputError,
+        ],
+      ])(
+        "preserves %s precedence over unopened budget errors on commit and preview",
+        async (_label, ledgerError, expectedClass) => {
+          stubAccounts(["Expenses:Food:Coffee"]);
+          for (const dryRun of [false, true]) {
+            mockUpdateSourceSlice.mockRejectedValueOnce(ledgerError);
+            await expect(
+              service.updateSourceSlice({
+                ledgerId: LEDGER_ID,
+                identity: IDENTITY,
+                entryHash: HASH_OLD,
+                sha256sum: SHA_OLD,
+                newContent: UNOPENED_BUDGET,
+                dryRun,
+              }),
+            ).rejects.toBeInstanceOf(expectedClass);
+          }
+        },
+      );
+
+      it.each([false, true])(
+        "keeps unchanged no-op edits valid without throwing (dryRun: %s)",
+        async (dryRun) => {
+          stubAccounts(["Expenses:Food:Coffee"]);
+          mockUpdateSourceSlice.mockResolvedValue(
+            okSliceResponse({ unchanged: true }),
+          );
+
+          const result = await service.updateSourceSlice({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entryHash: HASH_OLD,
+            sha256sum: SHA_OLD,
+            newContent: UNOPENED_BUDGET,
+            dryRun,
+          });
+
+          expect(result.unchanged).toBe(true);
+          expect(result.validation.valid).toBe(true);
+          expect(result.validation.newErrors).toEqual([]);
+          expect(result.files).toEqual([]);
+          expect(result.preview).toEqual(
+            dryRun ? [{ path: "main.bean", text: UNOPENED_BUDGET }] : [],
+          );
+          if (dryRun) {
+            expect(mockGetLedgerAccounts).not.toHaveBeenCalled();
+          }
+        },
+      );
     });
   });
 });

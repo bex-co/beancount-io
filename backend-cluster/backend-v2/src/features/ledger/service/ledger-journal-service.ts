@@ -29,6 +29,11 @@ import {
 import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
 import { assertLiteralIncludePath } from "@/features/ledger/utils/include-target";
 import { assertNoPortableTwin } from "@/features/ledger/utils/portable-twin";
+import {
+  checkBudgetAccountsExist,
+  extractSingleBudgetAccount,
+  withBudgetIssues,
+} from "@/features/ledger/utils/budget-account-check";
 
 /**
  * The page a journal read asks for: limit 1–1000 (default 20), offset 0 or
@@ -694,6 +699,33 @@ export class LedgerJournalService
     // read back rounded with no check failing (w23/081).
     assertAmountsFitEngineDecimal(newContent);
 
+    // bean-check ignores `custom "budget"` account tokens, so editing an entry
+    // into (or modifying) a budget for an unopened account must match
+    // addLedgerEntries / appendLedgerText (w23/071, w31/094, w31/096).
+    const budgetAccount = allowInvalid
+      ? undefined
+      : extractSingleBudgetAccount(newContent);
+    const checkBudget = () =>
+      budgetAccount === undefined
+        ? Promise.resolve([])
+        : checkBudgetAccountsExist({
+            favaApiClient,
+            ledgerOwner,
+            ledgerName,
+            budgets: [{ index: 0, account: budgetAccount }],
+            openedInCall: [],
+            field: "newContent",
+            itemLabel: "entry",
+          });
+
+    // On a commit with an unopened budget account, probe with `dryRun: true`
+    // (without `allowInvalid`) first so missing entryHash (NOT_FOUND), stale
+    // sha256sum (CONFLICT), malformed/multi-directive text (BAD_USER_INPUT),
+    // bean-check errors, and unchanged no-ops keep their exact precedence
+    // without mutating the repository.
+    const commitBudgetIssues = dryRun ? [] : await checkBudget();
+    const probingForBudgetRefusal = !dryRun && commitBudgetIssues.length > 0;
+
     const data = await unwrapFavaResponse(
       favaApiClient.journal.updateSourceSlice(
         ledgerOwner,
@@ -703,7 +735,7 @@ export class LedgerJournalService
           sha256sum,
           new_content: newContent,
           ...((allowInvalid || dryRun) && { allowInvalid: true }),
-          ...(dryRun && { dryRun: true }),
+          ...((dryRun || probingForBudgetRefusal) && { dryRun: true }),
         },
         directiveLimitExemptParams(platform),
       ),
@@ -712,6 +744,14 @@ export class LedgerJournalService
     // The ledger service compares the file before and after; one that predates
     // the field reported every edit as a change.
     const unchanged = data.unchanged === true;
+    if (probingForBudgetRefusal && !unchanged) {
+      throw commitBudgetIssues[0];
+    }
+    const previewBudgetIssues = dryRun && !unchanged ? await checkBudget() : [];
+    const validation = withBudgetIssues(
+      toReportedProjection(data),
+      previewBudgetIssues,
+    );
     return {
       message: unchanged
         ? dryRun
@@ -727,11 +767,13 @@ export class LedgerJournalService
       unchanged,
       files: dryRun || unchanged ? [] : (data.files ?? []),
       ...(data.commit && { commit: data.commit }),
-      preview: (data.preview ?? []).map((file) => ({
-        path: file.path,
-        text: file.text,
-      })),
-      validation: toReportedProjection(data),
+      preview: dryRun
+        ? (data.preview ?? []).map((file) => ({
+            path: file.path,
+            text: file.text,
+          }))
+        : [],
+      validation,
     };
   }
 }

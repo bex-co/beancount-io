@@ -94,6 +94,12 @@ async function fixture(caller = identity) {
     writable: true,
     limited: false,
     breaks: false,
+    /** Opened ledger accounts consulted by custom-budget validation (w31/096). */
+    accounts: [
+      "Assets:Cash",
+      "Expenses:Food:Coffee",
+      "Expenses:Food:Groceries",
+    ],
     /** The sha of the commit the ledger reports for a write (w23/m42). */
     commit: undefined as string | undefined,
   };
@@ -243,6 +249,9 @@ async function fixture(caller = identity) {
       });
     },
   );
+  const getLedgerAccounts = jest.fn(async () =>
+    envelope(Object.fromEntries(state.accounts.map((a) => [a, {}]))),
+  );
   const journal = {
     deleteSourceSlice,
     deleteMultiSourceSlices,
@@ -260,7 +269,10 @@ async function fixture(caller = identity) {
         },
       },
     }),
-    getPublicApiClient: async () => ({ journal }),
+    getPublicApiClient: async () => ({
+      journal,
+      reports: { getLedgerAccounts },
+    }),
   };
   const models = {
     user: {
@@ -299,6 +311,7 @@ async function fixture(caller = identity) {
     slices,
     state,
     journal,
+    getLedgerAccounts,
     client,
     call: async (
       surface: string,
@@ -1690,6 +1703,237 @@ describe.each(["rest", "gql", "mcp"])(
         });
         expect(result.success).toBe(true);
         expect(f.journal.updateSourceSlice).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
+// w31/096: updateEntrySource / PUT .../entry-source / updateLedgerEntrySourceSlice
+// must enforce the same unopened `custom "budget"` account check as
+// addLedgerEntries and appendLedgerText while preserving CONFLICT/unchanged
+// precedence and zero extra reads for non-budget edits.
+describe.each(["rest", "gql", "mcp"])(
+  "custom budget account validation on update via %s (w31/096)",
+  (surface) => {
+    const budget = (account: string) =>
+      `2026-02-10 custom "budget" ${account} "monthly" 100 USD\n`;
+    const dryFlag = () =>
+      surface === "mcp" ? { dry_run: true } : { dryRun: true };
+
+    it("reports an unopened budget account as valid: false on preview without mutating", async () => {
+      const f = await fixture();
+      const before = [...f.slices];
+      try {
+        const result = await f.call(surface, "update", {
+          ...args("update"),
+          newContent: budget("Expenses:DoesNotExist"),
+          ...dryFlag(),
+        });
+        expect(result.success).toBe(true);
+        expect([...f.slices]).toEqual(before);
+        const body = result.result as Record<string, any>;
+        const validation = surface === "mcp" ? body.validation : body;
+        expect(validation).toMatchObject({
+          errorsBefore: 0,
+          errorsAfter: 1,
+          valid: false,
+          newErrors: [
+            {
+              message: expect.stringContaining(
+                "entry 0: budget account Expenses:DoesNotExist is not opened in this ledger, nor is any account under it; nearest: Expenses:Food:Coffee, Expenses:Food:Groceries",
+              ),
+            },
+          ],
+        });
+        if (surface === "mcp") {
+          expect(body.summary).toContain("1 new bean-check error");
+        }
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("refuses committing an unopened budget account with VALIDATION_FAILED without mutating", async () => {
+      const f = await fixture();
+      const before = [...f.slices];
+      const expectedMessage = expect.stringContaining(
+        "entry 0: budget account Expenses:DoesNotExist is not opened in this ledger, nor is any account under it; nearest: Expenses:Food:Coffee, Expenses:Food:Groceries",
+      );
+      try {
+        const result = await f.call(surface, "update", {
+          ...args("update"),
+          newContent: budget("Expenses:DoesNotExist"),
+        });
+        expect(result.success).toBe(false);
+        expect([...f.slices]).toEqual(before);
+        expect(f.journal.updateSourceSlice).toHaveBeenCalledTimes(1);
+        expect(f.journal.updateSourceSlice.mock.calls[0][2]).toMatchObject({
+          dryRun: true,
+        });
+        if (surface === "rest") {
+          expect(result.status).toBe(400);
+          expect(result.result).toMatchObject({
+            ok: false,
+            error: {
+              code: "VALIDATION_FAILED",
+              message: expectedMessage,
+              metadata: expect.objectContaining({
+                field: "newContent",
+                hint: expect.stringContaining("allowInvalid: true"),
+              }),
+            },
+          });
+        } else if (surface === "gql") {
+          const refusal = result.errors?.[0]?.originalError as
+            | {
+                category?: string;
+                message?: string;
+                metadata?: Record<string, unknown>;
+              }
+            | undefined;
+          expect(refusal).toMatchObject({
+            category: "VALIDATION_FAILED",
+            message: expectedMessage,
+            metadata: expect.objectContaining({
+              field: "newContent",
+              hint: expect.stringContaining("allowInvalid: true"),
+            }),
+          });
+        } else {
+          expect(result.full).toMatchObject({
+            ok: false,
+            error: {
+              code: "VALIDATION_FAILED",
+              message: expectedMessage,
+              hint: expect.stringContaining("allowInvalid: true"),
+            },
+          });
+        }
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("commits an unopened budget account when allowInvalid is true without reading accounts", async () => {
+      const f = await fixture();
+      const text = budget("Expenses:DoesNotExist");
+      try {
+        const result = await f.call(surface, "update", {
+          ...args("update"),
+          newContent: text,
+          allowInvalid: true,
+        });
+        expect(result.success).toBe(true);
+        expect(f.slices.get(ENTRY1)).toBe(text);
+        expect(f.getLedgerAccounts).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+
+    it.each([
+      ["opened leaf account", "Expenses:Food:Coffee"],
+      ["opened parent account", "Expenses:Food"],
+    ])("allows and commits a budget for an %s", async (_label, account) => {
+      const f = await fixture();
+      const text = budget(account);
+      try {
+        const result = await f.call(surface, "update", {
+          ...args("update"),
+          newContent: text,
+        });
+        expect(result.success).toBe(true);
+        expect(f.slices.get(ENTRY1)).toBe(text);
+        expect(f.getLedgerAccounts).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("preserves CONFLICT for a stale sha256sum even when the budget account is unopened", async () => {
+      const f = await fixture();
+      const before = [...f.slices];
+      try {
+        for (const extra of [{}, dryFlag()]) {
+          f.journal.updateSourceSlice.mockRejectedValueOnce(
+            new FavaApiError(
+              "Entry conflict: it has changed since it was loaded; refresh and retry",
+              409,
+              { error: "Entry conflict" },
+            ),
+          );
+          const result = await f.call(surface, "update", {
+            ...args("update", true),
+            newContent: budget("Expenses:DoesNotExist"),
+            ...extra,
+          });
+          expect(result.success).toBe(false);
+          expect([...f.slices]).toEqual(before);
+          if (surface === "rest") {
+            expect(result.status).toBe(409);
+            expect(result.result).toMatchObject({
+              ok: false,
+              error: { code: "CONFLICT" },
+            });
+          } else if (surface === "gql") {
+            const refusal = result.errors?.[0]?.originalError as
+              | { category?: string }
+              | undefined;
+            expect(refusal?.category).toBe("CONFLICT");
+          } else {
+            expect(result.full).toMatchObject({
+              ok: false,
+              error: { code: "CONFLICT" },
+            });
+          }
+        }
+      } finally {
+        await f.close();
+      }
+    });
+
+    it.each([false, true])(
+      "treats an unchanged edit of an existing unopened budget as a no-op (dryRun: %s)",
+      async (dry) => {
+        const f = await fixture();
+        const existingBudget = budget("Expenses:DoesNotExist");
+        f.slices.set(ENTRY1, existingBudget);
+        try {
+          const result = await f.call(surface, "update", {
+            entryHash: ENTRY1,
+            sha256sum: hash(existingBudget),
+            newContent: existingBudget,
+            ...(dry ? dryFlag() : {}),
+          });
+          expect(result.success).toBe(true);
+          expect(result.result).toMatchObject({ unchanged: true });
+          if (dry) {
+            const body = result.result as Record<string, any>;
+            const validation = surface === "mcp" ? body.validation : body;
+            expect(validation).toMatchObject({ valid: true, newErrors: [] });
+          } else if (surface !== "gql") {
+            expect(result.result).toMatchObject({ preview: [] });
+          }
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("leaves non-budget custom directives untouched without reading accounts", async () => {
+      const f = await fixture();
+      const text =
+        '2026-02-10 custom "fava-option" "default-file" "main.bean"\n';
+      try {
+        const result = await f.call(surface, "update", {
+          ...args("update"),
+          newContent: text,
+        });
+        expect(result.success).toBe(true);
+        expect(f.slices.get(ENTRY1)).toBe(text);
+        expect(f.getLedgerAccounts).not.toHaveBeenCalled();
       } finally {
         await f.close();
       }

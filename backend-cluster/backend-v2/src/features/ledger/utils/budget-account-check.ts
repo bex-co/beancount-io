@@ -28,6 +28,21 @@ function headerLineOf(text: string): string | undefined {
   return undefined;
 }
 
+function budgetAccountFromHeader(header: string): string | undefined {
+  const account = BUDGET_ACCOUNT.exec(header)?.[1];
+  return account && ACCOUNT_START.test(account) ? account : undefined;
+}
+
+/**
+ * Extract the `custom "budget"` account token from a single-directive text
+ * slice (e.g. `updateSourceSlice`'s `newContent`), or `undefined` when its
+ * header is not a `custom "budget"` directive (w31/096).
+ */
+export function extractSingleBudgetAccount(text: string): string | undefined {
+  const header = headerLineOf(text);
+  return header ? budgetAccountFromHeader(header) : undefined;
+}
+
 /**
  * Collect `custom "budget"` account tokens (with their 0-based directive
  * index) and accounts opened by `open` directives in the same parsed text
@@ -50,8 +65,8 @@ export function extractDirectiveBudgetAccounts(
       if (account && ACCOUNT_START.test(account)) openedInCall.push(account);
       return;
     }
-    const account = BUDGET_ACCOUNT.exec(header)?.[1];
-    if (account && ACCOUNT_START.test(account)) {
+    const account = budgetAccountFromHeader(header);
+    if (account) {
       budgets.push({ index, account });
     }
   });
@@ -61,9 +76,9 @@ export function extractDirectiveBudgetAccounts(
 /**
  * A budget is a `custom "budget"` directive, whose account bean-check never
  * reads: one for an account the ledger lacks was committed with "no new
- * bean-check errors", and no report ever matched it (w23/071, w31/094). Its
- * account must be opened, or be a parent of an opened one (w21/396), in the
- * ledger or by an `open` in the same call.
+ * bean-check errors", and no report ever matched it (w23/071, w31/094,
+ * w31/096). Its account must be opened, or be a parent of an opened one
+ * (w21/396), in the ledger or by an `open` in the same call.
  */
 export async function checkBudgetAccountsExist(params: {
   favaApiClient: BudgetAccountsFavaClient;
@@ -71,7 +86,7 @@ export async function checkBudgetAccountsExist(params: {
   ledgerName: string;
   budgets: readonly BudgetAccountRef[];
   openedInCall: readonly string[];
-  field: "entries" | "text";
+  field: "entries" | "text" | "newContent";
   itemLabel: "entry" | "directive";
 }): Promise<ValidationError[]> {
   const {
@@ -95,6 +110,11 @@ export async function checkBudgetAccountsExist(params: {
   ];
   const under = (parent: string) => (candidate: string) =>
     candidate === parent || candidate.startsWith(`${parent}:`);
+  const openAction =
+    field === "newContent"
+      ? "open the account first"
+      : "add its `open` to the same call";
+  const hint = `Budget an account the ledger opens, or a parent of one; ${openAction}; or pass \`allowInvalid: true\` to record the budget anyway.`;
   const issues: ValidationError[] = [];
   for (const { index, account } of budgets) {
     if (opened.some(under(account))) continue;
@@ -113,7 +133,7 @@ export async function checkBudgetAccountsExist(params: {
       new ValidationError(
         field,
         `${itemLabel} ${index}: budget account ${account} is not opened in this ledger, nor is any account under it${suggestion}`,
-        "Budget an account the ledger opens, or a parent of one; add its `open` to the same call; or pass `allowInvalid: true` to record the budget anyway.",
+        hint,
         { [itemLabel]: index, account },
       ),
     );
