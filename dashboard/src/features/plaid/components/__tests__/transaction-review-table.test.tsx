@@ -144,6 +144,56 @@ describe("TransactionReviewTable target file", () => {
     );
   });
 
+  it("fits the table to its card instead of to its longest description", () => {
+    render(<TransactionReviewTable ledgerId={LEDGER_ID} />);
+
+    // min-w-max sized the table to every row's full text, so a long bank
+    // description pushed the account pickers past the card's edge.
+    expect(screen.getByRole("table")).not.toHaveClass("min-w-max");
+    for (const name of [/^source account$/i, /^target account/i]) {
+      expect(screen.getByRole("columnheader", { name })).toHaveClass(
+        "min-w-[220px]",
+      );
+    }
+
+    // The body's overflow-wrap: anywhere let the label shrink to one letter
+    // per line beside the bulk actions; now it stays whole and they wrap.
+    const label = screen.getByText("Target Account");
+    expect(label).toHaveClass("whitespace-nowrap");
+    expect(label.parentElement).toHaveClass("flex-wrap");
+
+    // On a phone the bank filters wrap below the search box instead of
+    // squeezing it to its first word.
+    const search = screen.getByPlaceholderText(/search by merchant/i);
+    expect(search.parentElement).toHaveClass("min-w-56", "flex-1");
+    expect(search.parentElement?.parentElement).toHaveClass("flex-wrap");
+  });
+
+  it("shows the merchant over the bank's description in one clamped column", () => {
+    render(<TransactionReviewTable ledgerId={LEDGER_ID} />);
+
+    const merchant = screen.getByText("Coffee Shop");
+    const description = screen.getByText("COFFEE SHOP #42");
+    expect(merchant.closest("td")).toBe(description.closest("td"));
+    expect(merchant.closest("td")).toHaveClass("min-w-40", "max-w-80");
+    for (const line of [merchant, description]) {
+      expect(line).toHaveClass("line-clamp-2");
+      expect(line).toHaveAttribute("dir", "auto");
+      expect(line).toHaveAttribute("title", line.textContent);
+    }
+  });
+
+  it("shows a description once when the bank names no merchant", () => {
+    mockUseUnsyncedTransactions.mockReturnValue({
+      transactions: [{ ...transaction, merchantName: null }],
+      loading: false,
+      refetch,
+    } as unknown as ReturnType<typeof useUnsyncedTransactions>);
+    render(<TransactionReviewTable ledgerId={LEDGER_ID} />);
+
+    expect(screen.getAllByText("COFFEE SHOP #42")).toHaveLength(1);
+  });
+
   it("sends the chosen file as the submission's filename", async () => {
     render(<TransactionReviewTable ledgerId={LEDGER_ID} />);
 

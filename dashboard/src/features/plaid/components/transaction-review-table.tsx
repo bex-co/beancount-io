@@ -64,6 +64,20 @@ import { BulkTargetPopover } from "./bulk-target-popover";
 
 const SKELETON_ROWS = 5;
 
+/**
+ * Column sizing. The table fills its card and scrolls sideways only once the
+ * columns reach these floors; `min-w-max` used to size every column to its
+ * longest text instead, so one long bank description pushed the account
+ * pickers off screen. The body's `overflow-wrap: anywhere` lets any wrapping
+ * text shrink to a single letter, so each column states the width it must keep.
+ */
+const COLUMN = {
+  select: "w-12 min-w-12",
+  /** Merchant over the bank's description: the one column that gives way. */
+  transaction: "min-w-40 max-w-80",
+  account: "w-[220px] min-w-[220px]",
+} as const;
+
 interface TransactionReviewTableProps {
   /** Omit (or pass null) to review unsynced transactions across every mapped account in the ledger. */
   accountId?: string | null;
@@ -430,17 +444,17 @@ export function TransactionReviewTable({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-3 mb-4">
-            <Skeleton className="h-9 flex-1" />
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <Skeleton className="h-9 min-w-56 flex-1" />
             <Skeleton className="h-9 w-45" />
             <Skeleton className="h-9 w-45" />
           </div>
 
           <div className="rounded-md border">
-            <Table className="min-w-max">
+            <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">
+                  <TableHead className={COLUMN.select}>
                     <Skeleton className="h-4 w-4" />
                   </TableHead>
                   <TableHead>
@@ -449,19 +463,16 @@ export function TransactionReviewTable({
                   <TableHead>
                     <Skeleton className="h-4 w-16" />
                   </TableHead>
-                  <TableHead>
-                    <Skeleton className="h-4 w-20" />
-                  </TableHead>
-                  <TableHead>
+                  <TableHead className={COLUMN.transaction}>
                     <Skeleton className="h-4 w-24" />
                   </TableHead>
                   <TableHead className="text-end">
                     <Skeleton className="h-4 w-16 ml-auto" />
                   </TableHead>
-                  <TableHead className="w-[220px]">
+                  <TableHead className={COLUMN.account}>
                     <Skeleton className="h-4 w-28" />
                   </TableHead>
-                  <TableHead className="w-[220px]">
+                  <TableHead className={COLUMN.account}>
                     <Skeleton className="h-4 w-28" />
                   </TableHead>
                 </TableRow>
@@ -480,9 +491,7 @@ export function TransactionReviewTable({
                     </TableCell>
                     <TableCell>
                       <Skeleton className="h-4 w-32" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="mt-1 h-3 w-36" />
                     </TableCell>
                     <TableCell className="text-end">
                       <Skeleton className="h-4 w-16 ml-auto" />
@@ -617,8 +626,10 @@ export function TransactionReviewTable({
       <CardContent>
         {/* Search and filter UI. Each dropdown renders only when it offers a
             real choice — the common case is a single connected bank. */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="relative flex-1">
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          {/* On a phone the dropdowns drop below the search box rather than
+              squeezing it down to its first word. */}
+          <div className="relative min-w-56 flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={t("plaid.transactionReview.searchPlaceholder")}
@@ -679,10 +690,10 @@ export function TransactionReviewTable({
         )}
 
         <div className="rounded-md border">
-          <Table className="min-w-max">
+          <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">
+                <TableHead className={COLUMN.select}>
                   <Checkbox
                     checked={allSelected}
                     onCheckedChange={handleSelectAll}
@@ -695,19 +706,29 @@ export function TransactionReviewTable({
                 </TableHead>
                 <TableHead>{t("plaid.transactionReview.date")}</TableHead>
                 <TableHead>{t("plaid.transactionReview.source")}</TableHead>
-                <TableHead>{t("plaid.transactionReview.merchant")}</TableHead>
-                <TableHead>
-                  {t("plaid.transactionReview.descriptionColumn")}
+                {/* Laid out like its cells: the merchant, then the bank's
+                    own description beneath it. */}
+                <TableHead className={COLUMN.transaction}>
+                  <span className="block">
+                    {t("plaid.transactionReview.merchant")}
+                  </span>
+                  <span className="block text-xs font-normal text-muted-foreground">
+                    {t("plaid.transactionReview.descriptionColumn")}
+                  </span>
                 </TableHead>
-                <TableHead className="text-end">
+                <TableHead className="text-end whitespace-nowrap">
                   {t("plaid.transactionReview.amount")}
                 </TableHead>
-                <TableHead className="w-[220px]">
+                <TableHead className={COLUMN.account}>
                   {t("plaid.transactionReview.sourceAccount")}
                 </TableHead>
-                <TableHead className="w-[220px]">
-                  <div className="flex items-center justify-between">
-                    <span>{t("plaid.transactionReview.targetAccount")}</span>
+                <TableHead className={COLUMN.account}>
+                  {/* The label keeps its words whole and the bulk actions drop
+                      below it when the column is too narrow for both. */}
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                    <span className="whitespace-nowrap">
+                      {t("plaid.transactionReview.targetAccount")}
+                    </span>
                     <div className="flex items-center gap-1">
                       <BulkTargetPopover
                         ledgerId={ledgerId}
@@ -743,7 +764,7 @@ export function TransactionReviewTable({
             <TableBody>
               {filteredTransactions.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-8 text-center">
+                  <TableCell colSpan={7} className="py-8 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <span>
                         {t("plaid.transactionReview.noMatchingTransactions")}
@@ -767,6 +788,7 @@ export function TransactionReviewTable({
                 const isExpense = amount > 0;
                 const targetAccount = targetAccounts.get(transaction.id) || "";
                 const sourceAccount = getSourceAccount(transaction);
+                const merchant = transaction.merchantName || transaction.name;
                 const isMissingAccount =
                   isSelected && (!targetAccount || !sourceAccount);
 
@@ -800,13 +822,28 @@ export function TransactionReviewTable({
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="font-medium">
-                      {transaction.merchantName || transaction.name}
+                    <TableCell className={COLUMN.transaction}>
+                      {/* Two lines each at most; the title holds the rest. A
+                          bank that names no merchant gets its description
+                          once, not twice. */}
+                      <div
+                        dir="auto"
+                        title={merchant}
+                        className="line-clamp-2 w-fit max-w-full font-medium"
+                      >
+                        {merchant}
+                      </div>
+                      {merchant !== transaction.name && (
+                        <div
+                          dir="auto"
+                          title={transaction.name}
+                          className="line-clamp-2 w-fit max-w-full text-xs text-muted-foreground"
+                        >
+                          {transaction.name}
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {transaction.name}
-                    </TableCell>
-                    <TableCell className="text-end font-mono">
+                    <TableCell className="text-end font-mono whitespace-nowrap">
                       <Amount>
                         {isExpense ? "-" : "+"}
                         {formatAmount(
