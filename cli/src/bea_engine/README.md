@@ -201,7 +201,11 @@ atomic replace, answering `"written": 1`. An edit that lands while the write
 runs is refused as `conflict`. A request that changes nothing answers
 `"written": 0` with `"noop": true`, in preview and `--apply` alike.
 
-`--type transactions` carries `rows` of the single-row shape and answers one
+`--type transactions` carries `rows` of the single-row shape, plus an optional
+`form`: `"json"` (the default) or `"csv"` when the rows came from a CSV
+mapping. The form changes only the wording of a row that changes nothing: a CSV
+row is told to fill its account or flag cell, the only cells CSV carries,
+rather than to pass `tags` or `narration`. The batch answers one
 JSON object per row: `{"rows": [{"row", "id", "status", ...}], "diff", ...}`,
 where a row is `ok` (with its `target`, `lineno`, `changes`, and own `diff`),
 `unchanged` (it already matches), or `rejected` (with a `reason`). Unlike `add

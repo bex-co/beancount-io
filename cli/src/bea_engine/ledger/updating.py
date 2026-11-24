@@ -329,11 +329,14 @@ def _json_kind(value: Any) -> str:
     return type(value).__name__
 
 
-def _validate_request(request: dict[str, Any]) -> _Changes:
+def _validate_request(request: dict[str, Any], *, csv: bool = False) -> _Changes:
     """The request as validated changes, or a usage failure naming the problem.
 
     Unknown keys are refused rather than ignored: a misspelled `acount` that
-    silently changed nothing would read as a categorized row.
+    silently changed nothing would read as a categorized row. A `csv` row came
+    from a CSV mapping, which carries only an account and a flag, so a row
+    that changes nothing is pointed at those cells rather than at `tags` and
+    `narration`, columns the CSV form refuses (w1/380).
     """
     unknown = [key for key in request if key not in _REQUEST_FIELDS]
     if unknown:
@@ -386,9 +389,12 @@ def _validate_request(request: dict[str, Any]) -> _Changes:
         changes.narration = single_line(narration)
         changes.has_narration = True
     if changes.account is None and changes.flag is None and not changes.tags and not changes.has_narration:
-        raise protocol.UsageError(
-            "Nothing to change: pass 'account', 'flag', 'tags', or 'narration' alongside 'id'. Nothing was written."
+        remedy = (
+            "fill its account or flag cell, or drop the row"
+            if csv
+            else "pass 'account', 'flag', 'tags', or 'narration' alongside 'id'"
         )
+        raise protocol.UsageError(f"Nothing to change: {remedy}. Nothing was written.")
     return changes
 
 
@@ -831,6 +837,7 @@ def _plan_rows(
     *,
     root: Path,
     into: Path | None = None,
+    csv: bool = False,
 ) -> tuple[list[_RowPlan], list[str], list[int], dict[int, _Rejection], bool]:
     """Resolve and plan every row.
 
@@ -858,7 +865,7 @@ def _plan_rows(
             refuse(index, f"Row {index + 1} must be an object with 'id' and the fields to change.", schema=True)
             continue
         try:
-            changes = _validate_request(item)
+            changes = _validate_request(item, csv=csv)
         except protocol.UsageError as exc:
             refuse(index, _row_reason(index, exc), schema=True)
             continue
@@ -1220,6 +1227,10 @@ def _transactions(
         raise protocol.UsageError("'rows' must be an array of update rows. Nothing was written.")
     if not rows:
         raise protocol.UsageError("No rows to update. Nothing was written.")
+    form = request.get("form", "json")
+    if form not in ("json", "csv"):
+        raise protocol.UsageError("'form' must be 'json' or 'csv'. Nothing was written.")
+    csv = form == "csv"
 
     def load(snapshot: ledger_write.LedgerSnapshot | None = None) -> tuple[EntryIndex, dict[str, Any]]:
         entries, errors, options = managed_load.load_file(file, snapshot=snapshot)
@@ -1298,7 +1309,7 @@ def _transactions(
         snapshot = ledger_write.LedgerSnapshot.capture(file)
         file_texts, file_lines, marks = files(snapshot)
         plans, rejected, rejected_rows, reasons, schema_rejects = _plan_rows(
-            ledger, options, rows, file_lines, root=file, into=into
+            ledger, options, rows, file_lines, root=file, into=into, csv=csv
         )
         valid = _validate_plans(
             plans, file_lines, snapshot, rejected, rejected_rows, reasons, allow_errors=allow_errors
@@ -1332,7 +1343,7 @@ def _transactions(
         ledger, options = load(snapshot)
         file_texts, file_lines, marks = files(snapshot)
         plans, rejected, rejected_rows, reasons, schema_rejects = _plan_rows(
-            ledger, options, rows, file_lines, root=file, into=into
+            ledger, options, rows, file_lines, root=file, into=into, csv=csv
         )
         # Every file validates before any file writes, so a validation failure
         # never leaves half the batch behind.

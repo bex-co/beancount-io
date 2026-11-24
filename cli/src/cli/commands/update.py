@@ -241,19 +241,22 @@ def _rows_from_csv(text: str, name: str) -> list[dict[str, str]]:
     return mapped
 
 
-def _load_mapping(from_file: str) -> list[Any]:
-    """The `--from` rows as JSON-decoded values: a JSON array or a CSV mapping.
+def _load_mapping(from_file: str) -> dict[str, Any]:
+    """The `--from` batch request: a JSON array or a CSV mapping, and its form.
 
     Detected by content — a `[` or `{` opens JSON, anything else is CSV — so
     stdin needs no format flag either. An object is refused as not an array;
-    read as CSV, it came back quoted as column names (w1/378).
+    read as CSV, it came back quoted as column names (w1/378). The form rides
+    along so a CSV row that changes nothing is told to fill its account or
+    flag cell, not to pass `tags` or `narration`, which the CSV form refuses
+    (w1/380).
     """
     text, name = read_text(from_file, noun="Mappings", json_only=False)
     if not text.strip():
         raise UsageError(f"'{name}' (from --from) holds no rows.")
     if text.lstrip().startswith(("[", "{")):
-        return _rows_from_json(text, name)
-    return _rows_from_csv(text, name)
+        return {"rows": _rows_from_json(text, name)}
+    return {"rows": _rows_from_csv(text, name), "form": "csv"}
 
 
 def _rendered_batch(data: dict[str, Any], *, file: Path, apply: bool) -> None:
@@ -360,6 +363,5 @@ def update_transactions(
 
     Pass --from - to read either form from stdin.
     """
-    rows = _load_mapping(from_file)
-    file, data = _update("transactions", {"rows": rows}, into=into, apply=apply, allow_errors=allow_errors)
+    file, data = _update("transactions", _load_mapping(from_file), into=into, apply=apply, allow_errors=allow_errors)
     _rendered_batch(data, file=file, apply=apply)
