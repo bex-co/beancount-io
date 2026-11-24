@@ -1,7 +1,11 @@
 import { LedgerAssetService } from "../ledger-asset-service";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
-import { NotFoundError, ForbiddenError } from "@/shared/errors";
+import {
+  BadUserInputError,
+  NotFoundError,
+  ForbiddenError,
+} from "@/shared/errors";
 
 // Exercises this service's own behavior; authorizeLedger has its own suite.
 jest.mock("@/features/ledger/utils/authorize-ledger", () => ({
@@ -97,6 +101,69 @@ describe("LedgerAssetService", () => {
       ).rejects.toThrow(ForbiddenError);
       expect(mockAssetStorage.generateDownloadUrl).not.toHaveBeenCalled();
     });
+
+    it.each([
+      ["spaces only", "   "],
+      ["tab only", "\t"],
+      ["CRLF only", "\r\n"],
+      ["leading whitespace-only segment", " /a.pdf"],
+      ["trailing whitespace-only segment", "dir/  "],
+      ["inner whitespace-only segment", "dir/   /a.pdf"],
+      ["LF control character", "a\nb.pdf"],
+      ["CRLF control characters", "a\r\nb.pdf"],
+      ["tab control character", "a\tb.pdf"],
+      ["ASCII 0x01 control character", "a\x01b.pdf"],
+      ["ASCII 0x1f control character", "a\x1fb.pdf"],
+      ["DEL control character", "a\x7fb.pdf"],
+      ["C1 0x80 control character", "a\x80b.pdf"],
+      ["C1 0x9f control character", "a\x9fb.pdf"],
+      ["Unicode line separator", "a\u2028b.pdf"],
+      ["Unicode paragraph separator", "a\u2029b.pdf"],
+    ])(
+      "rejects %s filename before ledger lookup, authorization, or signing",
+      async (_label, badFilename) => {
+        await expect(
+          service.getAssetDownloadUrl(42, badFilename, IDENTITY),
+        ).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "filename" },
+        });
+        await expect(
+          service.getAssetDownloadUrl(42, badFilename, IDENTITY),
+        ).rejects.toBeInstanceOf(BadUserInputError);
+        expect(mockGetLedgerByRepoId).not.toHaveBeenCalled();
+        expect(authorizeLedger).not.toHaveBeenCalled();
+        expect(mockAssetStorage.generateDownloadUrl).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each([
+      "2026/receipt.pdf",
+      "my receipt.pdf",
+      "receipt#1.pdf",
+      "レシート.pdf",
+    ])(
+      "preserves valid asset filename %s and presigns its S3 key",
+      async (validFilename) => {
+        mockGetLedgerByRepoId.mockResolvedValue({
+          data: {
+            success: true,
+            data: { id: 42, full_name: "alice/personal" },
+          },
+        });
+
+        const url = await service.getAssetDownloadUrl(
+          42,
+          validFilename,
+          IDENTITY,
+        );
+
+        expect(url).toBe("https://s3.example/signed");
+        expect(mockAssetStorage.generateDownloadUrl).toHaveBeenCalledWith(
+          `assets/repo_42/${validFilename}`,
+        );
+      },
+    );
   });
 
   describe("getLedgerArchiveDownloadUrl", () => {

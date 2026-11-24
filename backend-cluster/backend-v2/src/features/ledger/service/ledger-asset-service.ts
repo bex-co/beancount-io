@@ -24,6 +24,34 @@ import {
 import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 import { getCredentialRejection } from "@/shared/async-context";
 
+const CONTROL_CHAR_RE = /[\p{Cc}\u2028\u2029]/u;
+
+/**
+ * Validate a ledger asset filename under `assets/repo_{repoId}/`.
+ *
+ * `assertSafeRepoPath` keeps whitespace-only and control-character names
+ * readable for legacy Git repository files, whereas S3 asset keys are never
+ * arbitrary legacy Git filenames and would otherwise reach admin ledger lookup
+ * and presign invalid S3 keys (w31/077).
+ */
+function assertSafeAssetFilename(filename: string): void {
+  assertSafeRepoPath(filename, "filename");
+  if (filename.trim() === "") {
+    throw new BadUserInputError("File path must not be empty", "filename");
+  }
+  if (CONTROL_CHAR_RE.test(filename)) {
+    throw new BadUserInputError(
+      "filename must not contain control characters",
+      "filename",
+    );
+  }
+  for (const segment of filename.split("/")) {
+    if (segment.trim() === "") {
+      throw new BadUserInputError("Invalid file path", "filename");
+    }
+  }
+}
+
 /**
  * The refusal for a repository ID this caller cannot use, whether a ledger has
  * that ID or not. The ID is opaque and enumerable, so a lookup miss and a
@@ -94,7 +122,7 @@ export class LedgerAssetService
     if (!Number.isInteger(ledgerRepoId) || ledgerRepoId <= 0) {
       throw new BadUserInputError("Invalid ledgerRepoId");
     }
-    assertSafeRepoPath(filename, "filename");
+    assertSafeAssetFilename(filename);
     const adminClient = this.favaClientFactory.getAdminClient();
     const ledger = await unwrapFavaResponse(
       adminClient.admin.getLedgerByRepoId(ledgerRepoId),

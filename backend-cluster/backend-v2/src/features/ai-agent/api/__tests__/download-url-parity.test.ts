@@ -405,25 +405,53 @@ describe("download URL discovery and authorized HTTP consumption", () => {
         [42, "receipts/../../private.txt"],
         [42, ""],
         [42, "/private.txt"],
+        [42, "   "],
+        [42, "\t"],
+        [42, " /a.pdf"],
+        [42, "dir/  "],
+        [42, "dir/   /a.pdf"],
+        [42, "a\nb.pdf"],
+        [42, "a\r\nb.pdf"],
+        [42, "a\tb.pdf"],
+        [42, "a\x01b.pdf"],
+        [42, "a\x7fb.pdf"],
+        [42, "a\x9fb.pdf"],
+        [42, "a\u2028b.pdf"],
+        [42, "a\u2029b.pdf"],
       ] as const) {
-        expect(
-          (
-            await fetch(
-              `${f.restBase}/api-gateway/v1/asset-download-url?ledgerRepoId=${id}&filename=${encodeURIComponent(path)}`,
-            )
-          ).status,
-        ).toBe(400);
-        await expect(
-          f.read(
+        const restResponse = await fetch(
+          `${f.restBase}/api-gateway/v1/asset-download-url?ledgerRepoId=${id}&filename=${encodeURIComponent(path)}`,
+        );
+        expect(restResponse.status).toBe(400);
+        const restBody = (await restResponse.json()) as {
+          error?: { code?: string };
+        };
+        if (id > 0) {
+          expect(restBody.error?.code).toBe("BAD_USER_INPUT");
+        }
+
+        const mcpErr = await f
+          .read(
             `beancount://assets/download-url?ledgerRepoId=${id}&filename=${encodeURIComponent(path)}`,
-          ),
-        ).rejects.toThrow();
-        await expect(
-          f.gql(
+          )
+          .catch((e: Error & { code?: number; data?: { code?: string } }) => e);
+        expect(mcpErr).toBeInstanceOf(Error);
+        expect((mcpErr as { code?: number }).code).toBe(-32602);
+        if (id > 0) {
+          expect((mcpErr as { data?: { code?: string } }).data?.code).toBe(
+            "BAD_USER_INPUT",
+          );
+        }
+
+        const gqlErr = await f
+          .gql(
             "getLedgerAssetDownloadUrl",
             `ledgerRepoId:${id},filename:${JSON.stringify(path)}`,
-          ),
-        ).rejects.toThrow();
+          )
+          .catch((e: GraphQLError) => formatError(e.toJSON(), e));
+        expect(
+          (gqlErr as { extensions?: { code?: string } }).extensions?.code,
+        ).toBe("BAD_USER_INPUT");
       }
       expect(f.lookup).not.toHaveBeenCalled();
       expect(f.generateDownloadUrl).not.toHaveBeenCalled();
@@ -431,4 +459,40 @@ describe("download URL discovery and authorized HTTP consumption", () => {
       await f.close();
     }
   });
+  it.each([
+    "2026/receipt.pdf",
+    "my receipt.pdf",
+    "receipt#1.pdf",
+    "レシート.pdf",
+  ])(
+    "resolves and presigns valid asset filename %s identically across all three surfaces",
+    async (validFilename) => {
+      const f = await fixture();
+      try {
+        const restResponse = await fetch(
+          `${f.restBase}/api-gateway/v1/asset-download-url?ledgerRepoId=42&filename=${encodeURIComponent(validFilename)}`,
+        );
+        expect(restResponse.status).toBe(200);
+        const restBody = (await restResponse.json()) as {
+          downloadUrl: string;
+        };
+        const mcpBody = await f.read(
+          `beancount://assets/download-url?ledgerRepoId=42&filename=${encodeURIComponent(validFilename)}`,
+        );
+        const gqlBody = await f.gql(
+          "getLedgerAssetDownloadUrl",
+          `ledgerRepoId:42,filename:${JSON.stringify(validFilename)}`,
+        );
+        for (const { downloadUrl } of [restBody, mcpBody, gqlBody]) {
+          const response = await fetch(downloadUrl);
+          expect(response.status).toBe(200);
+        }
+        expect(f.generateDownloadUrl.mock.calls).toEqual(
+          Array(3).fill([`assets/repo_42/${validFilename}`]),
+        );
+      } finally {
+        await f.close();
+      }
+    },
+  );
 });
