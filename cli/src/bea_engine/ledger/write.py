@@ -2286,12 +2286,10 @@ def defining_root(file: Path, first: Path | None = None) -> Path | None:
     one put a leaf under a working ledger below a forecast overlay through the
     overlay, whose forecast entries then counted (w5/774). A step that defines
     nothing is a pass-through intermediate, which the climb continues past to
-    the root above it (w5/346), unless it adds entries to a closure that loads
-    on its own: an overlay. A year index whose month files post to accounts
-    the root opens adds entries too, but they cannot load without the root, so
-    it is still an intermediate; judged an overlay, a write on one month was
-    checked against that month alone once a sibling month held an entry
-    (w1/375). A climb that comes
+    the root above it (w5/346), unless it is an overlay (`_overlays`). A year
+    index adds its other month files, which is not what an overlay adds; judged
+    one, a write on a month was checked against that month alone (w1/375,
+    w1/377). A climb that comes
     back to `file` (an include cycle through it) has no other root to name:
     the hint told the user to run the command they had just run (w5/566).
     """
@@ -2314,7 +2312,7 @@ def defining_root(file: Path, first: Path | None = None) -> Path | None:
             except Exception:  # noqa: BLE001 - unreadable here is reported by the load itself
                 break
             if not _defines_in(around, own):
-                if _step_adds_entries(around, own) and not _needs_root_above(around):
+                if _overlays(around, own):
                     break
                 current = above
                 above = None
@@ -2338,9 +2336,6 @@ _OPTION_NAME = re.compile(_BOM + rb'option[ \t]*"([a-z_]+)"', re.MULTILINE)
 _PLUGIN_NAME = re.compile(_BOM + rb'plugin(?:[ \t]*"([^"]+)"|[ \t]+([A-Za-z_][\w.]*))', re.MULTILINE)
 #: Options that never define what a file reads.
 _REPEATED_OK = {b"title", b"render_commas"}
-#: A dated line: a transaction or directive, the entries an overlay adds. A flag may touch
-#: the date (`2024-01-15*"Forecast"`), as a directive word may (w5/987).
-_ENTRY_LINE = re.compile(_DATE + rb"(?:[ \t]+\S|[A-Za-z*!&#?%])", re.MULTILINE)
 #: Accounts the closure opens, and accounts its entries post to. A name may
 #: start with and contain non-ASCII letters (`Áctivos:Cash`).
 _OPEN_ACCOUNT = re.compile(_DATE + rb"[ \t]*open[ \t]+(\S+)", re.MULTILINE)
@@ -2354,17 +2349,23 @@ _DIRECTIVE_ACCOUNT = re.compile(_DATE + rb"[ \t]*(?:balance|note|document|close)
 _PAD_ACCOUNTS = re.compile(_DATE + rb"[ \t]*pad[ \t]+(\S+)[ \t]+(\S+)", re.MULTILINE)
 
 
+def _named_accounts(content: bytes) -> list[bytes]:
+    """The accounts a file's entries post to, or name in a balance, note, document, close or pad."""
+    named = list(_POSTED_ACCOUNT.findall(content))
+    named.extend(_DIRECTIVE_ACCOUNT.findall(content))
+    for first, second in _PAD_ACCOUNTS.findall(content):
+        named.extend((first, second))
+    return named
+
+
+def _opened_accounts(closure: dict[Path, bytes]) -> set[bytes]:
+    return {account for content in closure.values() for account in _OPEN_ACCOUNT.findall(content)}
+
+
 def _posts_unopened(own: dict[Path, bytes]) -> bool:
     """Whether the closure posts to an account it never opens, needing a plugin's opens."""
-    opened = {account for content in own.values() for account in _OPEN_ACCOUNT.findall(content)}
-    for content in own.values():
-        posted = list(_POSTED_ACCOUNT.findall(content))
-        posted.extend(_DIRECTIVE_ACCOUNT.findall(content))
-        for first, second in _PAD_ACCOUNTS.findall(content):
-            posted.extend((first, second))
-        if any(account not in opened for account in posted):
-            return True
-    return False
+    opened = _opened_accounts(own)
+    return any(account not in opened for content in own.values() for account in _named_accounts(content))
 
 
 def _defines_in(around: dict[Path, bytes], own: dict[Path, bytes]) -> bool:
@@ -2396,22 +2397,34 @@ def _defines_in(around: dict[Path, bytes], own: dict[Path, bytes]) -> bool:
     return False
 
 
-def _step_adds_entries(around: dict[Path, bytes], own: dict[Path, bytes]) -> bool:
-    """Whether the higher closure adds entries or a plugin of its own (an overlay, not a pass-through)."""
-    return any(
-        _ENTRY_LINE.search(content) or _PLUGIN_NAME.search(content)
-        for path, content in around.items()
-        if path not in own
-    )
+def _overlays(around: dict[Path, bytes], own: dict[Path, bytes]) -> bool:
+    """Whether an includer that defines nothing for `own` is an overlay on it, which ends the climb.
 
-
-def _needs_root_above(closure: dict[Path, bytes]) -> bool:
-    """Whether a closure posts to an account it never opens and has no plugin that could open it.
-
-    Such a closure cannot load on its own, so a ledger above it opens what it
-    reads: it is no overlay, whatever entries it adds.
+    A Fava or forecast overlay is a ledger of its own that adds to the working
+    ledger it includes. It loads without a root above: a closure posting to an
+    account it never opens, with no plugin that could open it, cannot, so a
+    year index whose month files post to the root's accounts is no overlay
+    (w1/375). And what it adds extends the ledger below: a plugin, or an entry
+    naming an account that ledger opens (any account, when a plugin there could
+    open it). A year index adds its other months instead, whose entries name
+    the root's accounts or, for prices, events and commodities, none at all.
+    Counting any dated line, an empty month file beside a sibling of prices
+    took its index for an overlay: a conflicting price landed, and the
+    unknown-account remedy wrote a duplicate open (w1/377).
     """
-    return not any(_PLUGIN_NAME.search(content) for content in closure.values()) and _posts_unopened(closure)
+    if _posts_unopened(around) and not any(_PLUGIN_NAME.search(content) for content in around.values()):
+        return False
+    opened = _opened_accounts(own)
+    any_account = any(_PLUGIN_NAME.search(content) for content in own.values())
+    for path, content in around.items():
+        if path in own:
+            continue
+        if _PLUGIN_NAME.search(content):
+            return True
+        named = _named_accounts(content)
+        if any(account in opened for account in named) or (any_account and named):
+            return True
+    return False
 
 
 def root_read_hint(file: Path) -> str | None:

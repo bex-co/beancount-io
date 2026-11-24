@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from bea_engine.ledger import write
+
 ROOT = Path(__file__).resolve().parents[1]
 MAIN = """option "operating_currency" "USD"
 2026-01-01 open Assets:Checking USD
@@ -201,3 +203,16 @@ def test_a_leaf_posting_to_unopened_accounts_still_needs_its_plugin_root(tmp_pat
 
     assert result.returncode == 0, result.stderr
     assert f"leaf.bean is included by {tmp_path / 'root.bean'}" in result.stderr
+
+
+def test_a_forecast_over_a_plugin_opened_ledger_stays_an_overlay(tmp_path: Path) -> None:
+    """A plugin below may open any account, so entries naming one extend that ledger (w1/377)."""
+    (tmp_path / "working.bean").write_text(
+        'plugin "beancount.plugins.auto_accounts"\n2026-01-02 * "Opening"\n  Assets:Checking  5000.00 USD\n'
+        "  Equity:Opening\n"
+    )
+    (tmp_path / "forecast.bean").write_text('include "working.bean"\n' + FORECAST)
+    (tmp_path / "wrapper.bean").write_text('option "operating_currency" "USD"\ninclude "forecast.bean"\n')
+
+    assert write.defining_root(tmp_path / "working.bean") is None
+    assert write.write_through_root(tmp_path / "working.bean", None) == (tmp_path / "working.bean", None, None)
