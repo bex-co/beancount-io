@@ -164,4 +164,86 @@ describe("GET /api-gateway/mcp/archive/{owner}/{name}/{archive}", () => {
     }
     expect(origin.requests).toHaveLength(0);
   });
+
+  it("refuses unknown query parameters before touching the repository (w31/073)", async () => {
+    const cases: Array<{ qs: string; keys: string[] }> = [
+      { qs: "?bogus=1", keys: ["bogus"] },
+      { qs: "?bogus", keys: ["bogus"] },
+      { qs: "?a=1&b=2", keys: ["a", "b"] },
+    ];
+    for (const { qs, keys } of cases) {
+      const response = await fetch(`${base}${PATH}${qs}`);
+      expect(response.status).toBe(400);
+      const body = (await response.json()) as {
+        ok: boolean;
+        error: { code: string; message: string; metadata?: { field?: string } };
+      };
+      expect(body).toMatchObject({
+        ok: false,
+        error: {
+          code: "VALIDATION_FAILED",
+          metadata: { field: "query" },
+        },
+      });
+      for (const key of keys) {
+        expect(body.error.message).toContain(key);
+      }
+    }
+    expect(origin.requests).toHaveLength(0);
+  });
+
+  it("refuses NUL bytes and invalid UTF-8 / lone surrogates in query or path params before touching the repository (w31/073)", async () => {
+    const cases: Array<{ url: string; field?: string }> = [
+      { url: `${base}${PATH}?a=%00`, field: "a" },
+      { url: `${base}${PATH}?a=%ED%A0%80` },
+      { url: `${base}${PATH}?a=%ZZ` },
+      {
+        url: `${base}/api-gateway/mcp/archive/alice%00/main/main.zip`,
+        field: "owner",
+      },
+    ];
+    for (const { url, field } of cases) {
+      const response = await fetch(url);
+      expect(response.status).toBe(400);
+      const body = (await response.json()) as {
+        ok: boolean;
+        error: { code: string; metadata?: { field?: string } };
+      };
+      expect(body).toMatchObject({
+        ok: false,
+        error: {
+          code: "BAD_USER_INPUT",
+          ...(field ? { metadata: { field } } : {}),
+        },
+      });
+    }
+    expect(origin.requests).toHaveLength(0);
+  });
+
+  it("checks authentication and read scope before inspecting query parameters (w31/073)", async () => {
+    for (const identity of [undefined, sessionIdentity]) {
+      as(identity);
+      const response = await fetch(`${base}${PATH}?bogus=1`);
+      expect(response.status).toBe(401);
+      expect(response.headers.get("www-authenticate")).toBe(
+        'Bearer resource_metadata="https://issuer.test/.well-known/oauth-protected-resource"',
+      );
+    }
+    as(scopelessToken);
+    const forbidden = await fetch(`${base}${PATH}?a=%00`);
+    expect(forbidden.status).toBe(403);
+    expect(origin.requests).toHaveLength(0);
+  });
+
+  it("still streams bare trailing '?' queries, .tar.gz archives, and uppercase owner segments", async () => {
+    for (const url of [
+      `${base}${PATH}?`,
+      `${base}/api-gateway/mcp/archive/Alice/main/main.tar.gz`,
+    ]) {
+      const response = await fetch(url);
+      expect(response.status).toBe(200);
+      expect(response.headers.get("cache-control")).toBe("private, no-store");
+    }
+    expect(origin.requests).toHaveLength(2);
+  });
 });

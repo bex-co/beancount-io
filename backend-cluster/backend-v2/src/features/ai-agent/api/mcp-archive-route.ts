@@ -6,9 +6,11 @@ import { assertSafeArchiveName } from "@/features/ledger/utils/safe-archive-name
 import { resolveIdentity, identityHasCapability } from "@/server/api/identity";
 import { enforceRateLimit } from "@/server/api/rate-limit";
 import { requestOpId } from "@/server/api/rest-op-id";
+import { validateRequest } from "@/server/rest/validation-middleware";
 import { clientAddress } from "@/server/client-address";
 import { ForbiddenError, RateLimitedError } from "@/shared/errors";
 import { createLedgerId } from "@/shared/str";
+import { z } from "@/shared/zod-openapi-setup";
 import { MCP_ENDPOINT_PATH, refuseUnauthenticated } from "./mcp-route";
 
 /**
@@ -24,6 +26,9 @@ import { MCP_ENDPOINT_PATH, refuseUnauthenticated } from "./mcp-route";
  * apply unchanged.
  */
 const MCP_ARCHIVE_PATH = `${MCP_ENDPOINT_PATH}/archive/:owner/:name/:archive`;
+const validateArchiveRequest = validateRequest({
+  query: z.strictObject({}).optional(),
+});
 
 export function setMcpArchiveRoute(
   router: Router,
@@ -61,6 +66,10 @@ export function setMcpArchiveRoute(
       }
       throw error;
     }
+
+    // Mirror v1Route's request boundary (percent-encoding, NUL/surrogate/limit
+    // checks, and empty strict query) after auth and rate-limit gates (w31/073).
+    await validateArchiveRequest(ctx, async () => undefined);
 
     const { owner, name, archive } = ctx.params;
     assertSafeArchiveName(archive);
