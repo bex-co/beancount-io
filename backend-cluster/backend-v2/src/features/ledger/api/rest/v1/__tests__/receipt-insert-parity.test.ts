@@ -6,10 +6,12 @@ import { graphql } from "graphql";
 import { LedgerReceiptMutationResolver } from "../../../resolvers/ledger-receipt-resolver";
 import { HealthResolver } from "@/features/healthz/api/health-resolver";
 import { LedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
+import { createLedgerEntryWriter } from "@/features/ledger/service/ledger-entry-service";
+import { FavaApiError } from "@/foundation/fava/api-client";
 import { S3Client } from "@aws-sdk/client-s3";
 import { AssetStorageService } from "@/features/s3/service/asset-storage-service";
 import { formatError } from "@/server/graphql/format-error";
-import { UnbalancedTransactionError } from "@/shared/errors";
+import { NotFoundError, UnbalancedTransactionError } from "@/shared/errors";
 import {
   AuthorizationService,
   SourceBackedRelationshipEvaluator,
@@ -1223,4 +1225,240 @@ describe("upfront documentAccount and postings validation (w31/053)", () => {
       await f.close();
     }
   });
+});
+
+/**
+ * w23/058 + w31/092. Wiring the real `FavaLedgerEntryWriter` verifies the
+ * outgoing `addBulkEntries` payload carries `dryRun: true, allowInvalid: false`
+ * (not `allowInvalid: true` from w23/219), so refused receipt entries fail up
+ * front with UNBALANCED / VALIDATION_FAILED before touching S3 or Git.
+ */
+describe("pre-write guard through FavaLedgerEntryWriter (w23/058, w31/092)", () => {
+  async function wiredFixture(opts: {
+    storage: "s3" | "git";
+    failure: "unbalanced" | "wouldBreak";
+    promoteError?: Error;
+  }) {
+    const envelope = (data: unknown) => ({ data: { success: true, data } });
+    const addBulkEntries = jest.fn(
+      async (
+        _owner: string,
+        _name: string,
+        body: { allowInvalid?: boolean; dryRun?: boolean; entries: unknown[] },
+      ) => {
+        if (opts.failure === "unbalanced" && body.allowInvalid !== true) {
+          throw new FavaApiError(
+            "entry 0: Transaction does not balance: residual 5.00 USD",
+            400,
+            {
+              error: "entry 0: Transaction does not balance: residual 5.00 USD",
+              code: "UNBALANCED",
+              details: { residual: "5.00 USD", entry: 0 },
+            },
+          );
+        }
+        if (opts.failure === "wouldBreak" && body.allowInvalid !== true) {
+          const detail =
+            "Account Expenses:NotOpened was never opened (main.bean:2)";
+          throw new FavaApiError(
+            `adding these entries would introduce 1 new bean-check error: ${detail}`,
+            400,
+            {
+              error: `adding these entries would introduce 1 new bean-check error: ${detail}`,
+              code: "NEW_LEDGER_ERRORS",
+              details: { count: 1, detail },
+            },
+          );
+        }
+        return envelope({
+          entry_hashes: [],
+          included_files: [],
+          preview: [],
+          errors_before: 0,
+          errors_after: 1,
+          new_errors: [{ message: "simulated non-refusing preview error" }],
+        });
+      },
+    );
+    const copy = jest.fn(async () => {
+      if (opts.promoteError) throw opts.promoteError;
+      return { filename: "promoted-receipt.pdf" };
+    });
+    const deleteTemp = jest.fn(async () => undefined);
+    const download = jest.fn(async () => ({
+      downloadUrl: `data:application/pdf;base64,${receiptBytes.toString("base64")}`,
+    }));
+    const createFile = jest.fn(async () => envelope({ sha: "sha-receipt" }));
+    const deleteFile = jest.fn(async () => envelope({}));
+    const fava = {
+      getAdminClient: () => ({
+        ledgers: {
+          getLedger: async () => envelope({ id: 42, private: true }),
+        },
+      }),
+      getApiContext: async () => ({
+        favaApiClient: {
+          collaborators: {
+            getLedgerCollaboratorPermission: async () =>
+              envelope({ permission: "write" }),
+          },
+        },
+      }),
+      getPublicApiClient: async () => ({
+        entries: { addBulkEntries },
+        reports: {
+          getLedgerBcioOptions: async () =>
+            envelope({
+              default_file: "main.bean",
+              ...(opts.storage === "git" ? { receipt_storage: "git" } : {}),
+            }),
+        },
+        ledgers: {
+          getLedgerFile: async () => envelope({ path: "main.bean" }),
+          createLedgerFile: createFile,
+          deleteLedgerFile: deleteFile,
+        },
+      }),
+    };
+    const models = {
+      user: {
+        getUserByUsername: async () => ({ id: "usr_owner" }),
+        getById: async () => ({
+          id: identity.userId,
+          ledger_username: "alice",
+        }),
+      },
+    };
+    const workflow = new LedgerReceiptWorkflow(
+      fava as never,
+      {
+        generateDownloadUrl: download,
+        copyTempToPermanent: copy,
+        deleteTempAsset: deleteTemp,
+      } as never,
+      createLedgerEntryWriter(fava as never),
+      { dashboard: { url: "https://dash.example" } } as never,
+      new AuthorizationService(
+        new SourceBackedRelationshipEvaluator(
+          {} as never,
+          models as never,
+          {} as never,
+          fava as never,
+        ),
+      ),
+    );
+    resolver = new LedgerReceiptMutationResolver(workflow);
+    const rest = await startV1TestServer(
+      { workflows: { ledgerReceipt: workflow } } as unknown as AppLayers,
+      config,
+    );
+    rest.setIdentity(identity);
+    const server = assembleMcpRegistry(
+      {
+        identity,
+        ledgerReceiptWorkflow: workflow,
+        services: { ledgerData: { getErrors: jest.fn(async () => []) } },
+      } as unknown as McpRequestContext,
+      config,
+    );
+    const client = new Client({
+      name: "receipt-precheck-wired",
+      version: "1",
+    });
+    const [a, b] = InMemoryTransport.createLinkedPair();
+    await Promise.all([client.connect(a), server.connect(b)]);
+    return {
+      addBulkEntries,
+      copy,
+      deleteTemp,
+      download,
+      createFile,
+      deleteFile,
+      rest: () =>
+        fetch(
+          `${rest.url}/api-gateway/v1/ledgers/alice/main/import/insert-receipt`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ receiptObjectKey, input }),
+          },
+        ),
+      gql: () =>
+        graphql({
+          schema,
+          source:
+            "mutation($ledgerId:String!,$receiptObjectKey:String!,$input:InsertReceiptTransactionInput!) { insertReceiptTransaction(ledgerId:$ledgerId,receiptObjectKey:$receiptObjectKey,input:$input) { success } }",
+          variableValues: { ledgerId: "alice/main", receiptObjectKey, input },
+          contextValue: { identity, getCurrentIdentity: () => identity },
+        }),
+      mcp: () =>
+        client.callTool({
+          name: "insertReceiptTransaction",
+          arguments: { receiptObjectKey, input },
+        }),
+      close: async () => {
+        await client.close();
+        await server.close();
+        await rest.close();
+      },
+    };
+  }
+
+  it.each<["s3" | "git", "unbalanced" | "wouldBreak", string]>([
+    ["s3", "unbalanced", "UNBALANCED"],
+    ["s3", "wouldBreak", "VALIDATION_FAILED"],
+    ["git", "unbalanced", "UNBALANCED"],
+    ["git", "wouldBreak", "VALIDATION_FAILED"],
+  ])(
+    "refuses %s receipt %s up front with %s on REST, GraphQL, and MCP before touching storage",
+    async (storage, failure, expectedCode) => {
+      // Under S3, even a missing temp asset (NotFoundError from copyTempToPermanent)
+      // must be refused with UNBALANCED / VALIDATION_FAILED before touching S3.
+      const f = await wiredFixture({
+        storage,
+        failure,
+        promoteError: new NotFoundError(
+          "Temporary asset",
+          undefined,
+          TEMP_ASSET_NOT_FOUND_HINT,
+        ),
+      });
+      try {
+        const r = await f.rest();
+        expect(r.status).toBe(400);
+        expect(await r.json()).toMatchObject({
+          ok: false,
+          error: { code: expectedCode },
+        });
+
+        const g = await f.gql();
+        expect(g.errors).toHaveLength(1);
+        expect(
+          formatError(g.errors![0].toJSON(), g.errors![0]).extensions,
+        ).toMatchObject({ code: expectedCode });
+
+        const m = await f.mcp();
+        expect(m.isError).toBe(true);
+        expect(m.structuredContent).toMatchObject({
+          ok: false,
+          error: { code: expectedCode },
+        });
+
+        expect(f.addBulkEntries).toHaveBeenCalledTimes(3);
+        for (const call of f.addBulkEntries.mock.calls) {
+          expect(call[2]).toMatchObject({
+            dryRun: true,
+            allowInvalid: false,
+          });
+        }
+        expect(f.copy).not.toHaveBeenCalled();
+        expect(f.deleteTemp).not.toHaveBeenCalled();
+        expect(f.download).not.toHaveBeenCalled();
+        expect(f.createFile).not.toHaveBeenCalled();
+        expect(f.deleteFile).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
 });

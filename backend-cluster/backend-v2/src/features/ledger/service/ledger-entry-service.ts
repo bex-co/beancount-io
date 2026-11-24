@@ -461,6 +461,13 @@ export interface ILedgerEntryWriter {
     allowInvalid?: boolean,
     /** Run every check the write would and commit nothing (w23/058). */
     dryRun?: boolean,
+    /**
+     * Controls dry-run refusal behavior (w31/092): caller previews return new
+     * errors with `valid: false` instead of refusing (w23/219), while internal
+     * pre-write guards pass `{ refuseOnError: true }` so invalid entries throw
+     * before any file creation, S3 promotion, or Git receipt commit.
+     */
+    options?: { refuseOnError?: boolean },
   ): Promise<AddBulkEntriesResult>;
 }
 
@@ -581,7 +588,9 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     platform: "web" | "mobile",
     allowInvalid = false,
     dryRun = false,
+    options?: { refuseOnError?: boolean },
   ): Promise<AddBulkEntriesResult> {
+    const refuseOnError = options?.refuseOnError === true;
     // Nested twins fold here, before any validation or build reads them.
     const inputs = normalizeEntryKeyTwins(rawInputs);
     const ledgerId = `${ledgerOwner}/${ledgerName}`;
@@ -698,7 +707,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
           ledgerName,
           inputs,
         );
-    if (!dryRun && budgetIssues[0]) throw budgetIssues[0];
+    if ((!dryRun || refuseOnError) && budgetIssues[0]) throw budgetIssues[0];
 
     // Fetch routing options once for the whole batch.
     const bcioData = await this.fetchBcioOptions(
@@ -739,7 +748,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     if (missing.length > 0) {
       // Ask the ledger first: a refused write (unbalanced, a new bean-check
       // error, the directive limit) must not leave an empty routed file and a
-      // "chore: create file" commit behind (w21/683).
+      // "chore: create file" commit behind (w21/683, w31/092).
       await this.addEntries(
         favaApiClient,
         ledgerOwner,
@@ -748,6 +757,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
         platform,
         allowInvalid,
         true,
+        { refuseOnError: true },
       );
       for (const filename of missing) {
         await this.createFile(favaApiClient, ledgerOwner, ledgerName, filename);
@@ -762,6 +772,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       platform,
       allowInvalid,
       dryRun,
+      { refuseOnError },
     );
     const { entryHashes, includedFiles, preview, commit } = written;
     const validation = withBudgetIssues(written.validation, budgetIssues);
@@ -1078,6 +1089,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     platform: "web" | "mobile" = "web",
     allowInvalid = false,
     dryRun = false,
+    options?: { refuseOnError?: boolean },
   ): Promise<{
     entryHashes: string[];
     includedFiles: string[];
@@ -1085,16 +1097,19 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     validation: ReportedProjection;
     commit?: string;
   }> {
+    const previewing = dryRun && options?.refuseOnError !== true;
     const written = await unwrapFavaResponse(
       favaApiClient.entries.addBulkEntries(
         ledgerOwner,
         ledgerName,
         {
           entries,
-          // A preview returns the new bean-check errors and a `valid` flag
-          // instead of refusing, as the append preview does (w1/037, w23/219);
-          // only a commit is refused.
-          allowInvalid: allowInvalid || dryRun,
+          // A caller preview returns the new bean-check errors and a `valid`
+          // flag instead of refusing, as the append preview does (w1/037,
+          // w23/219); a commit and an internal pre-write guard (w21/683,
+          // w23/058, w31/092) respect `allowInvalid` so invalid entries are
+          // refused before any file or receipt is written.
+          allowInvalid: allowInvalid || previewing,
           ...(dryRun && { dryRun }),
         },
         directiveLimitExemptParams(platform),

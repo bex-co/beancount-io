@@ -247,8 +247,8 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     const transaction = receiptTransaction(input, { links: [linkTag] });
     // Checked before the receipt is stored: a refused entry — unbalanced, an
     // unknown account — used to leave the stored receipt behind, one more
-    // with every retry (w23/058). Its document directive can only be checked
-    // once the file exists.
+    // with every retry (w23/058, w31/092). Its document directive can only be
+    // checked once the file exists.
     await this.ledgerEntryWriter.writeBulkEntries(
       identity.userId,
       ledgerOwner,
@@ -257,6 +257,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
       "web",
       false,
       true,
+      { refuseOnError: true },
     );
 
     const ext = extractExt(receiptObjectKey);
@@ -378,8 +379,8 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 
     // Checked before the upload is promoted, so a refused entry leaves no
-    // permanent copy behind (w23/058); the receipt URL is not yet known and
-    // does not change what is checked.
+    // permanent copy behind (w23/058, w31/092); the receipt URL is not yet
+    // known and does not change what is checked.
     await this.ledgerEntryWriter.writeBulkEntries(
       identity.userId,
       ledgerOwner,
@@ -388,6 +389,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
       "web",
       false,
       true,
+      { refuseOnError: true },
     );
 
     const adminClient = this.favaClientFactory.getAdminClient();

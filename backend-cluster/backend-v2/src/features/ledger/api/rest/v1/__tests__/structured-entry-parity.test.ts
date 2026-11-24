@@ -131,6 +131,10 @@ async function fixture(
     wouldBreak: false,
     /** bcio `account_file` routing template, when the ledger routes opens. */
     accountFile: null as string | null,
+    /** bcio `transaction_file` routing template, when the ledger routes transactions. */
+    transactionFile: null as string | null,
+    /** Paths treated as missing by getLedgerFile until created (w21/683, w31/092). */
+    missingFiles: new Set<string>(),
     /** The sha of the commit the ledger reports for a write (w23/m42). */
     commit: undefined as string | undefined,
     /** Files the ledger included from the entry point for this write. */
@@ -237,11 +241,15 @@ async function fixture(
       ...projected,
     });
   });
-  const createFile = jest.fn();
+  const createFile = jest.fn(async (_owner, _name, body: { path: string }) => {
+    state.missingFiles.delete(body.path);
+    return envelope({ path: body.path });
+  });
   const getBcioOptions = jest.fn(async () =>
     envelope({
       default_file: "main.bean",
       account_file: state.accountFile,
+      transaction_file: state.transactionFile,
     }),
   );
   const fava = {
@@ -266,7 +274,14 @@ async function fixture(
           ),
       },
       ledgers: {
-        getLedgerFile: async () => envelope({ path: "main.bean" }),
+        getLedgerFile: async (
+          _owner: string,
+          _name: string,
+          query?: { path?: string },
+        ) =>
+          query?.path && state.missingFiles.has(query.path)
+            ? { data: { success: false } }
+            : envelope({ path: query?.path ?? "main.bean" }),
         createLedgerFile: createFile,
       },
     }),
@@ -2815,5 +2830,134 @@ describe.each(["rest", "gql", "mcp"])(
         }
       },
     );
+  },
+);
+
+// w21/683 + w31/092: w23/219 set allowInvalid: true on every dryRun hop,
+// disabling the missing-routed-file pre-write guard so refused writes created
+// empty routed files and "chore: create file" commits before failing.
+describe.each(["rest", "gql", "mcp"])(
+  "missing routed file pre-write guard via %s (w21/683, w31/092)",
+  (surface) => {
+    const routedTx: LedgerEntryInput[] = [
+      {
+        type: "transaction",
+        entry: {
+          date: "2099-01-15",
+          flag: "*",
+          narration: "Unbalanced routed write",
+          postings: [
+            {
+              account: "Expenses:Food",
+              units: { number: "10.00", currency: "USD" },
+            },
+            {
+              account: "Assets:Cash",
+              units: { number: "-5.00", currency: "USD" },
+            },
+          ],
+        },
+      },
+    ];
+
+    it("refuses unbalanced entries before creating a missing routed file", async () => {
+      const f = await fixture();
+      f.state.transactionFile = "qa-route/{year}.bean";
+      f.state.missingFiles.add("qa-route/2099.bean");
+      f.state.unbalanced = true;
+      try {
+        const outcome = await f.call(surface, routedTx);
+        expect(outcome.success).toBe(false);
+        expect(f.createFile).not.toHaveBeenCalled();
+        expect(f.committed).toEqual([]);
+        expect(f.write).toHaveBeenCalledTimes(1);
+        expect(f.write.mock.calls[0]?.[2]).toMatchObject({
+          dryRun: true,
+          allowInvalid: false,
+        });
+        if (surface === "rest") {
+          expect(outcome.result).toMatchObject({
+            ok: false,
+            error: { code: "UNBALANCED" },
+          });
+        } else if (surface === "gql") {
+          const gqlError = outcome.errors![0];
+          expect(
+            formatError(gqlError.toJSON(), gqlError).extensions,
+          ).toMatchObject({ code: "UNBALANCED" });
+        } else {
+          expect(outcome.full).toMatchObject({
+            ok: false,
+            error: { code: "UNBALANCED" },
+          });
+        }
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("refuses breaking entries before creating a missing routed file", async () => {
+      const f = await fixture();
+      f.state.transactionFile = "qa-route/{year}.bean";
+      f.state.missingFiles.add("qa-route/2099.bean");
+      f.state.wouldBreak = true;
+      try {
+        const outcome = await f.call(surface, routedTx);
+        expect(outcome.success).toBe(false);
+        expect(f.createFile).not.toHaveBeenCalled();
+        expect(f.committed).toEqual([]);
+        expect(f.write).toHaveBeenCalledTimes(1);
+        expect(f.write.mock.calls[0]?.[2]).toMatchObject({
+          dryRun: true,
+          allowInvalid: false,
+        });
+        if (surface === "rest") {
+          expect(outcome.result).toMatchObject({
+            ok: false,
+            error: { code: "VALIDATION_FAILED" },
+          });
+        } else if (surface === "gql") {
+          const gqlError = outcome.errors![0];
+          expect(
+            formatError(gqlError.toJSON(), gqlError).extensions,
+          ).toMatchObject({ code: "VALIDATION_FAILED" });
+        } else {
+          expect(outcome.full).toMatchObject({
+            ok: false,
+            error: { code: "VALIDATION_FAILED" },
+          });
+        }
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("keeps caller dry-run previews non-refusing on a missing routed file (w23/219)", async () => {
+      const f = await fixture();
+      f.state.transactionFile = "qa-route/{year}.bean";
+      f.state.missingFiles.add("qa-route/2099.bean");
+      f.state.unbalanced = true;
+      try {
+        const outcome = await f.call(
+          surface,
+          routedTx,
+          surface === "mcp" ? { dry_run: true } : { dryRun: true },
+        );
+        expect(outcome.success).toBe(true);
+        expect(f.createFile).not.toHaveBeenCalled();
+        expect(f.committed).toEqual([]);
+        expect(f.write).toHaveBeenCalledTimes(1);
+        expect(f.write.mock.calls[0]?.[2]).toMatchObject({
+          dryRun: true,
+          allowInvalid: true,
+        });
+        const body = outcome.result as Record<string, unknown>;
+        expect(surface === "mcp" ? body.validation : body).toMatchObject({
+          valid: false,
+        });
+      } finally {
+        await f.close();
+      }
+    });
   },
 );

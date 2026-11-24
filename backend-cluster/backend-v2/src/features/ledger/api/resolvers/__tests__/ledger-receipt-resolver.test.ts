@@ -98,10 +98,12 @@ function makeWorkflow({
 
 describe("strategy routing", () => {
   it("uses git strategy when receipt_storage='git' (commits file to repo)", async () => {
+    const addBulkEntries = jest.fn().mockResolvedValue({ success: true });
     const createLedgerFile = jest.fn().mockResolvedValue({ success: true });
     const copyTempToPermanent = jest.fn();
     const workflow = makeWorkflow({
       bcioData: bcio("git"),
+      addBulkEntries,
       createLedgerFile,
       copyTempToPermanent,
     });
@@ -114,15 +116,20 @@ describe("strategy routing", () => {
     });
 
     expect(copyTempToPermanent).not.toHaveBeenCalled();
+    expect(addBulkEntries.mock.calls[0]?.[5]).toBe(false);
+    expect(addBulkEntries.mock.calls[0]?.[6]).toBe(true);
+    expect(addBulkEntries.mock.calls[0]?.[7]).toEqual({ refuseOnError: true });
   });
 
   it("uses S3 strategy when receipt_storage='s3' (no git commit)", async () => {
+    const addBulkEntries = jest.fn().mockResolvedValue({ success: true });
     const createLedgerFile = jest.fn();
     const copyTempToPermanent = jest
       .fn()
       .mockResolvedValue({ filename: "r.pdf" });
     const workflow = makeWorkflow({
       bcioData: bcio("s3"),
+      addBulkEntries,
       createLedgerFile,
       copyTempToPermanent,
     });
@@ -136,6 +143,9 @@ describe("strategy routing", () => {
 
     expect(copyTempToPermanent).toHaveBeenCalledTimes(1);
     expect(createLedgerFile).not.toHaveBeenCalled();
+    expect(addBulkEntries.mock.calls[0]?.[5]).toBe(false);
+    expect(addBulkEntries.mock.calls[0]?.[6]).toBe(true);
+    expect(addBulkEntries.mock.calls[0]?.[7]).toEqual({ refuseOnError: true });
   });
 
   it("defaults to S3 strategy for an unknown value", async () => {

@@ -1065,6 +1065,7 @@ describe("LedgerEntryService", () => {
       expect(mockAddBulkEntries).toHaveBeenCalledTimes(1);
       expect(mockAddBulkEntries.mock.calls[0][2]).toMatchObject({
         dryRun: true,
+        allowInvalid: false,
       });
 
       // Retry: accepted by the dry run, so the file is created and written.
@@ -1080,8 +1081,129 @@ describe("LedgerEntryService", () => {
       expect(mockAddBulkEntries).toHaveBeenCalledTimes(3);
       expect(mockAddBulkEntries.mock.calls[1][2]).toMatchObject({
         dryRun: true,
+        allowInvalid: false,
+      });
+      expect(mockAddBulkEntries.mock.calls[2][2]).toMatchObject({
+        allowInvalid: false,
       });
       expect(mockAddBulkEntries.mock.calls[2][2].dryRun).toBeFalsy();
+    });
+
+    it("forwards allowInvalid on the missing-file pre-check and keeps caller dryRun previews non-refusing (w31/092)", async () => {
+      mockGetLedgerFile.mockResolvedValue({ data: { success: false } });
+      const entries = [
+        {
+          type: "commodity" as const,
+          entry: { date: "2024-01-01", currency: "USD" },
+        },
+      ];
+
+      // Missing routed file with caller allowInvalid: true forwards true on both pre-check and commit.
+      await service.addBulkEntries(
+        IDENTITY,
+        "testuser",
+        "test-ledger",
+        entries,
+        "web",
+        true,
+        false,
+      );
+      expect(mockAddBulkEntries).toHaveBeenCalledTimes(2);
+      expect(mockAddBulkEntries.mock.calls[0][2]).toMatchObject({
+        dryRun: true,
+        allowInvalid: true,
+      });
+      expect(mockAddBulkEntries.mock.calls[1][2]).toMatchObject({
+        allowInvalid: true,
+      });
+      expect(mockAddBulkEntries.mock.calls[1][2].dryRun).toBeFalsy();
+
+      // Caller-facing dryRun preview still rides allowInvalid: true (w23/219).
+      mockAddBulkEntries.mockClear();
+      mockCreateLedgerFile.mockClear();
+      mockAddBulkEntries.mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: {
+            entry_hashes: [],
+            included_files: [],
+            preview: [
+              { path: "main.bean", text: "2024-01-01 commodity USD\n" },
+            ],
+            errors_before: 0,
+            errors_after: 1,
+            new_errors: [
+              { message: "Account Expenses:Missing was never opened" },
+            ],
+          },
+        },
+      });
+      const preview = await service.addBulkEntries(
+        IDENTITY,
+        "testuser",
+        "test-ledger",
+        entries,
+        "web",
+        false,
+        true,
+      );
+      expect(preview.success).toBe(true);
+      expect(preview.dryRun).toBe(true);
+      expect(preview.validation.valid).toBe(false);
+      expect(preview.validation.newErrors).toEqual([
+        { message: "Account Expenses:Missing was never opened" },
+      ]);
+      expect(mockCreateLedgerFile).not.toHaveBeenCalled();
+      expect(mockAddBulkEntries).toHaveBeenCalledTimes(1);
+      expect(mockAddBulkEntries.mock.calls[0][2]).toMatchObject({
+        dryRun: true,
+        allowInvalid: true,
+      });
+    });
+
+    it("refuses strict internal dryRun checks with allowInvalid: false and throws on unopened budget accounts (w31/092)", async () => {
+      const writer = createLedgerEntryWriter(mockFavaClientFactory as any);
+
+      await writer.writeBulkEntries(
+        IDENTITY.userId,
+        "testuser",
+        "test-ledger",
+        [{ type: "commodity", entry: { date: "2024-01-01", currency: "USD" } }],
+        "web",
+        false,
+        true,
+        { refuseOnError: true },
+      );
+      expect(mockAddBulkEntries).toHaveBeenCalledTimes(1);
+      expect(mockAddBulkEntries.mock.calls[0][2]).toMatchObject({
+        dryRun: true,
+        allowInvalid: false,
+      });
+
+      mockAddBulkEntries.mockClear();
+      await expect(
+        writer.writeBulkEntries(
+          IDENTITY.userId,
+          "testuser",
+          "test-ledger",
+          [
+            {
+              type: "budget",
+              entry: {
+                date: "2024-01-01",
+                account: "Expenses:Unopened",
+                interval: "monthly",
+                amount: { number: "100", currency: "USD" },
+              },
+            },
+          ],
+          "web",
+          false,
+          true,
+          { refuseOnError: true },
+        ),
+      ).rejects.toThrow(ValidationError);
+      expect(mockAddBulkEntries).not.toHaveBeenCalled();
     });
 
     it("asks the ledger once when every target file exists", async () => {
