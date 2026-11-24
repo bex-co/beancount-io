@@ -16,7 +16,11 @@ import {
 } from "@/foundation/fava";
 import { logger } from "@/shared/logger";
 import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-not-allowed-from-cause";
-import { BadUserInputError, ValidationError } from "@/shared/errors";
+import { BadUserInputError } from "@/shared/errors";
+import {
+  checkBudgetAccountsExist,
+  withBudgetIssues,
+} from "@/features/ledger/utils/budget-account-check";
 import { assertBulkEntriesSize } from "@/features/ledger/utils/bulk-entries-cap";
 import { resolveEntryFile } from "@/features/ledger/utils/entry-file-resolver";
 import { parseDirectiveDate } from "@/features/ledger/utils/directive-date";
@@ -701,12 +705,21 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     // (w23/221), like every other bean-check finding.
     const budgetIssues = allowInvalid
       ? []
-      : await this.assertBudgetAccountsExist(
+      : await checkBudgetAccountsExist({
           favaApiClient,
           ledgerOwner,
           ledgerName,
-          inputs,
-        );
+          budgets: inputs.flatMap((input, index) =>
+            input.type === "budget"
+              ? [{ index, account: input.entry.account }]
+              : [],
+          ),
+          openedInCall: inputs.flatMap((input) =>
+            input.type === "open" ? [input.entry.account] : [],
+          ),
+          field: "entries",
+          itemLabel: "entry",
+        });
     if ((!dryRun || refuseOnError) && budgetIssues[0]) throw budgetIssues[0];
 
     // Fetch routing options once for the whole batch.
@@ -970,61 +983,6 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     }
   }
 
-  /**
-   * A budget is a `custom "budget"` directive, whose account bean-check never
-   * reads: one for an account the ledger lacks was committed with "no new
-   * bean-check errors", and no report ever matched it (w23/071). Its account
-   * must be opened, or be a parent of an opened one (w21/396), in the ledger
-   * or by an `open` in the same batch.
-   */
-  private async assertBudgetAccountsExist(
-    favaApiClient: LedgerEntryFavaClient,
-    ledgerOwner: string,
-    ledgerName: string,
-    inputs: LedgerEntryInput[],
-  ): Promise<ValidationError[]> {
-    if (!inputs.some((input) => input.type === "budget")) return [];
-    const opened = [
-      ...Object.keys(
-        await unwrapFavaResponse(
-          favaApiClient.reports.getLedgerAccounts(ledgerOwner, ledgerName),
-          "get ledger accounts",
-        ),
-      ),
-      ...inputs.flatMap((input) =>
-        input.type === "open" ? [input.entry.account] : [],
-      ),
-    ];
-    const issues: ValidationError[] = [];
-    inputs.forEach((input, index) => {
-      if (input.type !== "budget") return;
-      const { account } = input.entry;
-      const under = (parent: string) => (candidate: string) =>
-        candidate === parent || candidate.startsWith(`${parent}:`);
-      if (opened.some(under(account))) return;
-      // The opened accounts beside it, under its deepest existing parent.
-      const segments = account.split(":");
-      let nearest: string[] = [];
-      for (let depth = segments.length - 1; depth > 0; depth -= 1) {
-        nearest = opened.filter(under(segments.slice(0, depth).join(":")));
-        if (nearest.length > 0) break;
-      }
-      const suggestion =
-        nearest.length > 0
-          ? `; nearest: ${[...new Set(nearest)].sort().slice(0, 3).join(", ")}`
-          : "";
-      issues.push(
-        new ValidationError(
-          "entries",
-          `entry ${index}: budget account ${account} is not opened in this ledger, nor is any account under it${suggestion}`,
-          "Budget an account the ledger opens, or a parent of one; add its `open` to the same call; or pass `allowInvalid: true` to record the budget anyway.",
-          { entry: index, account },
-        ),
-      );
-    });
-    return issues;
-  }
-
   private async fetchBcioOptions(
     favaApiClient: LedgerEntryFavaClient,
     ledgerOwner: string,
@@ -1134,23 +1092,6 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       }),
     };
   }
-}
-
-/** A preview's projection with the budget findings added as new errors (w23/221). */
-function withBudgetIssues(
-  validation: ReportedProjection,
-  issues: readonly ValidationError[],
-): ReportedProjection {
-  if (issues.length === 0) return validation;
-  return {
-    errorsBefore: validation.errorsBefore,
-    errorsAfter: validation.errorsAfter + issues.length,
-    newErrors: [
-      ...validation.newErrors,
-      ...issues.map((issue) => ({ message: issue.message })),
-    ],
-    valid: false,
-  };
 }
 
 /** Composition-only writer used after a protected boundary has authorized. */

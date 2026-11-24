@@ -2359,8 +2359,10 @@ raw text. Posting `tags` and `links` are refused (w23/171). An `open` takes `boo
 A budget's account must be one the ledger opens, a parent of one (a budget on
 `Expenses:Food` covers its children), or one the same call opens. bean-check
 never reads a `custom "budget"` account, so otherwise the budget would match no
-report. Any other account is refused with `VALIDATION_FAILED` naming it and the
-nearest opened accounts, unless `allowInvalid` records it anyway (w23/071).
+report. Both `addLedgerEntries` and `appendLedgerText` refuse any other account
+on commit with `VALIDATION_FAILED` naming it and the nearest opened accounts,
+and report it as `valid: false` on a `dry_run` preview, unless `allowInvalid`
+records it anyway (w23/071, w23/221, w31/094).
 
 The tool uses the real entry writer, including file routing and the normal web
 quota policy. A routed file nothing includes is included from `main.bean` in

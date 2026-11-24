@@ -22,6 +22,11 @@ import {
   diffBeanCheckErrors,
   toBeanCheckErrors,
 } from "@/features/ledger/utils/bean-check-errors";
+import {
+  checkBudgetAccountsExist,
+  extractDirectiveBudgetAccounts,
+  withBudgetIssues,
+} from "@/features/ledger/utils/budget-account-check";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type {
   ILedgerRepoService,
@@ -240,22 +245,41 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
       });
     }
 
-    const [baseline, projected] = await Promise.all([
+    const { budgets, openedInCall } =
+      extractDirectiveBudgetAccounts(directives);
+    const [baseline, projected, budgetIssues] = await Promise.all([
       this.checkProjected(ledgerId, identity, []),
       this.checkProjected(
         ledgerId,
         identity,
         targets.map(({ path: p, content }) => ({ path: p, content })),
       ),
+      allowInvalid || budgets.length === 0
+        ? Promise.resolve([])
+        : this.checkBudgetAccounts(ledgerId, identity, budgets, openedInCall),
     ]);
-    const newErrors = diffBeanCheckErrors(baseline, projected);
+    const beanCheckNewErrors = diffBeanCheckErrors(baseline, projected);
+    const validation = withBudgetIssues(
+      {
+        errorsBefore: baseline.length,
+        errorsAfter: projected.length,
+        newErrors: beanCheckNewErrors,
+        valid: beanCheckNewErrors.length === 0,
+      },
+      budgetIssues,
+    );
 
     // Only a commit is refused: a preview exists to show what the write would
     // break, so it returns the diff and `newErrors` instead (w1/037). The
     // alternative taught agents to preview with `allowInvalid` and then commit
     // the same call — recording exactly what this refusal guards against.
-    if (newErrors.length > 0 && !allowInvalid && !dryRun) {
-      throw unbalancedOrValidationError(newErrors);
+    if (!allowInvalid && !dryRun) {
+      if (beanCheckNewErrors.length > 0) {
+        throw unbalancedOrValidationError(beanCheckNewErrors);
+      }
+      if (budgetIssues[0]) {
+        throw budgetIssues[0];
+      }
     }
 
     const paths = [...byPath.keys()];
@@ -312,10 +336,10 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
             diff: unifiedDiff(target.path, target.before, target.content),
           }))
         : [],
-      errorsBefore: baseline.length,
-      errorsAfter: projected.length,
-      newErrors,
-      valid: newErrors.length === 0,
+      errorsBefore: validation.errorsBefore,
+      errorsAfter: validation.errorsAfter,
+      newErrors: validation.newErrors,
+      valid: validation.valid,
       appendedUnsorted: targets
         .filter((target) => target.appended)
         .map((target) => target.path),
@@ -385,6 +409,28 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
       });
       return [];
     }
+  }
+
+  private async checkBudgetAccounts(
+    ledgerId: string,
+    identity: Identity,
+    budgets: readonly { index: number; account: string }[],
+    openedInCall: readonly string[],
+  ) {
+    const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    const favaApiClient = await this.favaClientFactory.getPublicApiClient(
+      ledgerId,
+      identity.userId,
+    );
+    return checkBudgetAccountsExist({
+      favaApiClient,
+      ledgerOwner,
+      ledgerName,
+      budgets,
+      openedInCall,
+      field: "text",
+      itemLabel: "directive",
+    });
   }
 
   private async checkProjected(

@@ -100,8 +100,17 @@ async function fixture(caller = identity) {
     routeTransactionsTo: null as string | null,
     /** The ledger's include closure; every fixture file unless narrowed. */
     sourceFiles: undefined as string[] | undefined,
+    /** Opened accounts in the ledger, for custom "budget" checks (w31/094). */
+    accounts: [
+      "Assets:Cash",
+      "Expenses:Food:Coffee",
+      "Expenses:Food:Groceries",
+    ] as string[],
   };
   const commits: Commit[] = [];
+  const getLedgerAccounts = jest.fn(async () =>
+    envelope(Object.fromEntries(state.accounts.map((a) => [a, {}]))),
+  );
 
   const changeLedgerFiles = jest.fn(async (_o, _n, body: Commit) => {
     commits.push(body);
@@ -163,6 +172,7 @@ async function fixture(caller = identity) {
     getPublicApiClient: async () => ({
       entries: { addBulkEntries: jest.fn() },
       reports: {
+        getLedgerAccounts,
         getLedgerBcioOptions: async () =>
           envelope({
             default_file: "main.bean",
@@ -262,6 +272,7 @@ async function fixture(caller = identity) {
     changeLedgerFiles,
     checkProjectedErrors,
     getProjectedEntryIds,
+    getLedgerAccounts,
     call: async (
       surface: "rest" | "gql" | "mcp",
       args: Args,
@@ -1265,3 +1276,147 @@ describe("dot-prefix path normalization on appendLedgerText (w31/067)", () => {
     },
   );
 });
+
+// w31/094: `custom "budget"` for an unopened account must match addLedgerEntries
+// across MCP, REST, and GraphQL: invalid on preview, refused on commit unless
+// allowInvalid, and accepted for opened accounts, parents, or same-call opens.
+describe.each(["rest", "gql", "mcp"] as const)(
+  'custom "budget" account check via %s (w31/094)',
+  (surface) => {
+    const budget = (account: string) =>
+      `2026-08-30 custom "budget" ${account} "monthly" 100.00 USD`;
+
+    it("previews an unopened budget account as valid: false naming nearest accounts", async () => {
+      const f = await fixture();
+      try {
+        const res = await f.call(surface, {
+          text: budget("Expenses:NoSuchAccount"),
+          dryRun: true,
+        });
+        expect(res.ok).toBe(true);
+        const data = res.ok ? (res.data as Record<string, unknown>) : {};
+        const validation = (data.validation ?? data) as {
+          valid: boolean;
+          errorsBefore: number;
+          errorsAfter: number;
+          newErrors: { message: string }[];
+        };
+        expect(validation.valid).toBe(false);
+        expect(validation.errorsBefore).toBe(0);
+        expect(validation.errorsAfter).toBe(1);
+        expect(validation.newErrors).toEqual([
+          {
+            message: expect.stringContaining(
+              "budget account Expenses:NoSuchAccount is not opened in this ledger, nor is any account under it; nearest: Expenses:Food:Coffee, Expenses:Food:Groceries",
+            ),
+          },
+        ]);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("refuses committing an unopened budget account with VALIDATION_FAILED", async () => {
+      const f = await fixture();
+      try {
+        const res = await f.call(surface, {
+          text: budget("Expenses:NoSuchAccount"),
+        });
+        expect(res.ok).toBe(false);
+        const expectedMessage = expect.stringContaining(
+          "budget account Expenses:NoSuchAccount is not opened in this ledger, nor is any account under it; nearest: Expenses:Food:Coffee, Expenses:Food:Groceries",
+        );
+        if (!res.ok) {
+          if (surface === "gql") {
+            const gqlError = res.error as {
+              originalError?: {
+                category?: string;
+                message?: string;
+                metadata?: { hint?: string };
+              };
+            };
+            expect(gqlError.originalError).toMatchObject({
+              category: "VALIDATION_FAILED",
+              message: expectedMessage,
+              metadata: expect.objectContaining({
+                hint: expect.stringContaining("allowInvalid: true"),
+              }),
+            });
+          } else if (surface === "mcp") {
+            expect(res.error).toMatchObject({
+              code: "VALIDATION_FAILED",
+              message: expectedMessage,
+              hint: expect.stringContaining("allowInvalid: true"),
+            });
+          } else {
+            expect(res.error).toMatchObject({
+              code: "VALIDATION_FAILED",
+              message: expectedMessage,
+              metadata: expect.objectContaining({
+                hint: expect.stringContaining("allowInvalid: true"),
+              }),
+            });
+          }
+        }
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("commits an unopened budget account when allowInvalid is true without reading accounts", async () => {
+      const f = await fixture();
+      try {
+        const res = await f.call(surface, {
+          text: budget("Expenses:NoSuchAccount"),
+          allowInvalid: true,
+        });
+        expect(res.ok).toBe(true);
+        expect(f.getLedgerAccounts).not.toHaveBeenCalled();
+        expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it.each([
+      ["an opened leaf account", budget("Expenses:Food:Coffee")],
+      ["an opened parent account", budget("Expenses:Food")],
+      [
+        "same-call open + custom budget",
+        `2026-01-01 open Expenses:Travel USD\n${budget("Expenses:Travel")}`,
+      ],
+    ])("accepts %s", async (_label, text) => {
+      const f = await fixture();
+      try {
+        const res = await f.call(surface, { text });
+        expect(res.ok).toBe(true);
+        const data = res.ok ? (res.data as Record<string, unknown>) : {};
+        const validation = (data.validation ?? data) as {
+          valid: boolean;
+          newErrors: unknown[];
+        };
+        expect(validation.valid).toBe(true);
+        expect(validation.newErrors).toEqual([]);
+        expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("leaves non-budget custom directives untouched without reading accounts", async () => {
+      const f = await fixture();
+      try {
+        const res = await f.call(surface, {
+          text: '2026-08-30 custom "fava-option" "default-file" "main.bean"',
+        });
+        expect(res.ok).toBe(true);
+        expect(f.getLedgerAccounts).not.toHaveBeenCalled();
+        expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);

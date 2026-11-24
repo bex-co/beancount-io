@@ -50,6 +50,8 @@ function fixture(
     closureFails?: boolean;
     /** What a preview asks about the directive limit; none unless set. */
     limitPreview?: { assertRoom: jest.Mock };
+    /** Opened accounts in the ledger, for custom "budget" validation (w31/094). */
+    accounts?: string[];
   } = {},
 ) {
   const files = new Map(Object.entries(options.files ?? {}));
@@ -96,9 +98,24 @@ function fixture(
       },
     ),
   };
+  const getLedgerAccounts = jest.fn(async () => ({
+    data: {
+      success: true,
+      data: Object.fromEntries(
+        (
+          options.accounts ?? [
+            "Assets:Cash",
+            "Expenses:Food:Coffee",
+            "Expenses:Food:Groceries",
+          ]
+        ).map((account) => [account, {}]),
+      ),
+    },
+  }));
   const favaClientFactory = {
     getPublicApiClient: async () => ({
       reports: {
+        getLedgerAccounts,
         getLedgerSourceFiles: async () => ({
           data: {
             success: true,
@@ -122,6 +139,7 @@ function fixture(
   };
   return {
     ledgerRepo,
+    getLedgerAccounts,
     workflow: new DirectiveAppendWorkflow(
       ledgerRepo as never,
       favaClientFactory as never,
@@ -762,6 +780,131 @@ describe("DirectiveAppendWorkflow", () => {
         input: { text: TXN },
       });
       expect(result.success).toBe(true);
+      expect(ledgerRepo.changeGeneratedFiles).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // w31/094: bean-check never reads the account inside `custom "budget"`, so
+  // appending one for an unopened account passed preview (`valid: true`) and
+  // committed silently without `allowInvalid`.
+  describe('custom "budget" account validation (w31/094)', () => {
+    const budget = (account: string) =>
+      `2026-08-30 custom "budget" ${account} "monthly" 100.00 USD\n`;
+
+    it("marks a dry run invalid with errorsAfter incremented and nearest accounts named", async () => {
+      const { workflow, ledgerRepo, getLedgerAccounts } = fixture({
+        files: { "main.bean": "" },
+      });
+      const result = await workflow.appendDirectiveText({
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+        input: {
+          text: `${budget("Expenses:NoSuchAccount")}${budget("Expenses:Food:Grocery")}`,
+          dryRun: true,
+        },
+      });
+      expect(result.success).toBe(true);
+      expect(result.dryRun).toBe(true);
+      expect(result.valid).toBe(false);
+      expect(result.errorsBefore).toBe(0);
+      expect(result.errorsAfter).toBe(2);
+      expect(result.newErrors).toEqual([
+        {
+          message: expect.stringContaining(
+            "directive 0: budget account Expenses:NoSuchAccount is not opened in this ledger, nor is any account under it; nearest: Expenses:Food:Coffee, Expenses:Food:Groceries",
+          ),
+        },
+        {
+          message: expect.stringContaining(
+            "directive 1: budget account Expenses:Food:Grocery is not opened in this ledger, nor is any account under it; nearest: Expenses:Food:Coffee, Expenses:Food:Groceries",
+          ),
+        },
+      ]);
+      expect(getLedgerAccounts).toHaveBeenCalledTimes(1);
+      expect(ledgerRepo.changeGeneratedFiles).not.toHaveBeenCalled();
+    });
+
+    it("refuses a commit for an unopened budget account with VALIDATION_FAILED and hint", async () => {
+      const { workflow, ledgerRepo } = fixture({
+        files: { "main.bean": "" },
+      });
+      await expect(
+        workflow.appendDirectiveText({
+          identity: IDENTITY,
+          ledgerId: LEDGER_ID,
+          input: { text: `; monthly cap\n${budget("Expenses:NoSuchAccount")}` },
+        }),
+      ).rejects.toMatchObject({
+        category: "VALIDATION_FAILED",
+        message: expect.stringContaining(
+          "directive 0: budget account Expenses:NoSuchAccount is not opened in this ledger, nor is any account under it; nearest: Expenses:Food:Coffee, Expenses:Food:Groceries",
+        ),
+        metadata: expect.objectContaining({
+          hint: expect.stringContaining("allowInvalid: true"),
+        }),
+      });
+      expect(ledgerRepo.changeGeneratedFiles).not.toHaveBeenCalled();
+    });
+
+    it("commits an unopened budget account when allowInvalid is true, without reading accounts", async () => {
+      const { workflow, ledgerRepo, getLedgerAccounts } = fixture({
+        files: { "main.bean": "" },
+      });
+      const result = await workflow.appendDirectiveText({
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+        input: {
+          text: budget("Expenses:NoSuchAccount"),
+          allowInvalid: true,
+        },
+      });
+      expect(result.success).toBe(true);
+      expect(result.valid).toBe(true);
+      expect(getLedgerAccounts).not.toHaveBeenCalled();
+      expect(ledgerRepo.changeGeneratedFiles).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      ["an opened leaf account", budget("Expenses:Food:Coffee")],
+      ["a parent of opened accounts", budget("Expenses:Food")],
+      ["a root parent of opened accounts", budget("Expenses")],
+      [
+        "an account opened in the same call",
+        `2026-01-01 open Expenses:Travel USD\n${budget("Expenses:Travel")}`,
+      ],
+      [
+        "a parent of an account opened in the same call",
+        `${budget("Expenses:Travel")}2026-01-01 open Expenses:Travel:Flights USD\n`,
+      ],
+    ])("accepts %s", async (_label, text) => {
+      const { workflow, ledgerRepo } = fixture({
+        files: { "main.bean": "" },
+      });
+      const result = await workflow.appendDirectiveText({
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+        input: { text },
+      });
+      expect(result.success).toBe(true);
+      expect(result.valid).toBe(true);
+      expect(result.newErrors).toEqual([]);
+      expect(ledgerRepo.changeGeneratedFiles).toHaveBeenCalledTimes(1);
+    });
+
+    it("skips reading accounts for non-budget custom directives", async () => {
+      const { workflow, ledgerRepo, getLedgerAccounts } = fixture({
+        files: { "main.bean": "" },
+      });
+      const result = await workflow.appendDirectiveText({
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+        input: {
+          text: '2026-08-30 custom "fava-option" "default-file" "main.bean"\n',
+        },
+      });
+      expect(result.success).toBe(true);
+      expect(result.valid).toBe(true);
+      expect(getLedgerAccounts).not.toHaveBeenCalled();
       expect(ledgerRepo.changeGeneratedFiles).toHaveBeenCalledTimes(1);
     });
   });
