@@ -38,6 +38,7 @@ import {
   ListResourceTemplatesRequestSchema,
   ListToolsRequestSchema,
   McpError,
+  PingRequestSchema,
   ReadResourceRequestSchema,
   SUPPORTED_PROTOCOL_VERSIONS,
   type CallToolRequest,
@@ -581,6 +582,14 @@ export function assembleMcpRegistry(
     request: CallToolRequest,
   ): Promise<CallToolResult> => {
     const { name } = request.params;
+    // U+0000 in any argument is the caller's mistake on every tool: refuse it
+    // before lookup, schema validation, or any domain work, so no parameter —
+    // nested or added later — reaches a store that cannot hold it (w23/m22).
+    try {
+      assertNoNulDeep(request.params.arguments, NUL_EXEMPT_PATHS);
+    } catch (error) {
+      return toolFailureResult(name, envelopeFromThrown(error));
+    }
     const entry = toolHandlers.get(name);
     if (!entry) {
       return toolFailureResult(
@@ -593,14 +602,6 @@ export function assembleMcpRegistry(
           ),
         ),
       );
-    }
-    // U+0000 in any argument is the caller's mistake on every tool: refuse it
-    // before the schema or any domain work, so no parameter — nested or added
-    // later — reaches a store that cannot hold it (w23/m22).
-    try {
-      assertNoNulDeep(request.params.arguments, NUL_EXEMPT_PATHS);
-    } catch (error) {
-      return toolFailureResult(name, envelopeFromThrown(error));
     }
     const parsed = await refusingUnknownArguments(
       entry.descriptor.inputSchema,
@@ -643,10 +644,13 @@ export function assembleMcpRegistry(
   // Server.setRequestHandler adds its own full tools/call validation before
   // our callback. Register through the public Protocol API so we can classify
   // outer parameter failures ourselves, retaining full request/result checks.
+  const callToolParamsHint =
+    "Fix the named request field; `tools/list` publishes tool names and input schemas.";
   Protocol.prototype.setRequestHandler.call(
     server.server,
     CallToolRequestSchema.pick({ method: true }).passthrough(),
     async (raw) => {
+      assertMcpToolOuterParams(raw, callToolParamsHint);
       const parsed = CallToolRequestSchema.safeParse(raw);
       if (!parsed.success) {
         const named = CallToolRequestSchema.shape.params
@@ -665,10 +669,7 @@ export function assembleMcpRegistry(
             ),
           );
         }
-        return refuseMcpParameters(
-          parsed.error,
-          "Fix the named request field; `tools/list` publishes tool names and input schemas.",
-        );
+        return refuseMcpParameters(parsed.error, callToolParamsHint);
       }
       const result = await dispatchTool(parsed.data);
       // Preserve the Server wrapper's checks, including its task result path.
@@ -804,6 +805,20 @@ export function assembleMcpRegistry(
   server.server.setRequestHandler(
     ReadResourceRequestSchema.pick({ method: true }).passthrough(),
     async (rawRequest): Promise<ReadResourceResult> => {
+      try {
+        assertNoNulDeep(
+          (rawRequest as { params?: unknown }).params,
+          undefined,
+          "params",
+        );
+      } catch (error) {
+        return refuseMcpRequest(
+          error,
+          "MCP resource read failed",
+          { resource: UNKNOWN_RESOURCE },
+          config,
+        );
+      }
       const parsed = ReadResourceRequestSchema.safeParse(rawRequest);
       if (!parsed.success) {
         return refuseMcpParameters(
@@ -813,16 +828,6 @@ export function assembleMcpRegistry(
       }
       const request = parsed.data;
       const raw = request.params.uri;
-      try {
-        assertNoNulDeep(raw, undefined, "uri");
-      } catch (error) {
-        return refuseMcpRequest(
-          error,
-          "MCP resource read failed",
-          { resource: UNKNOWN_RESOURCE },
-          config,
-        );
-      }
       if (!URL.canParse(raw)) {
         return refuseMcpRequest(
           new BadUserInputError(
@@ -921,15 +926,15 @@ export function assembleMcpRegistry(
   const sdkServer = server.server as unknown as {
     getCapabilities(): InitializeResult["capabilities"];
   };
+  const initializeParamsHint =
+    "Supply `params.protocolVersion`, `params.capabilities`, and `params.clientInfo` ({name, version}); the handshake takes no other parameters.";
   server.server.setRequestHandler(
     InitializeRequestSchema.pick({ method: true }).passthrough(),
     async (rawRequest): Promise<InitializeResult> => {
+      assertMcpParams(rawRequest, initializeParamsHint);
       const validated = InitializeRequestSchema.safeParse(rawRequest);
       if (!validated.success) {
-        return refuseMcpParameters(
-          validated.error,
-          "Supply `params.protocolVersion`, `params.capabilities`, and `params.clientInfo` ({name, version}); the handshake takes no other parameters.",
-        );
+        return refuseMcpParameters(validated.error, initializeParamsHint);
       }
       const requestedVersion = validated.data.params.protocolVersion;
       return {
@@ -952,6 +957,26 @@ export function assembleMcpRegistry(
   server.server.setRequestHandler(
     GetPromptRequestSchema.pick({ method: true }).passthrough(),
     async (rawRequest): Promise<GetPromptResult> => {
+      const rawParams = (rawRequest as { params?: unknown }).params;
+      const rawName =
+        rawParams !== null && typeof rawParams === "object"
+          ? (rawParams as { name?: unknown }).name
+          : undefined;
+      try {
+        assertNoNulDeep(rawParams, undefined, "params");
+      } catch (error) {
+        return refuseMcpRequest(
+          error,
+          "MCP prompt fetch failed",
+          {
+            prompt:
+              typeof rawName === "string" && promptBuilders.has(rawName)
+                ? rawName
+                : "unknown",
+          },
+          config,
+        );
+      }
       const validated = GetPromptRequestSchema.safeParse(rawRequest);
       if (!validated.success) {
         return refuseMcpParameters(
@@ -975,16 +1000,6 @@ export function assembleMcpRegistry(
         );
       }
       const descriptor = MCP_PROMPTS.find((prompt) => prompt.name === name)!;
-      try {
-        assertNoNulDeep(request.params.arguments);
-      } catch (error) {
-        return refuseMcpRequest(
-          error,
-          "MCP prompt fetch failed",
-          { prompt: name },
-          config,
-        );
-      }
       // Strict like tools and resources: a misspelled argument must refuse
       // with the unknown key named, not render with the intent silently
       // dropped (w23/117).
@@ -1022,21 +1037,36 @@ export function assembleMcpRegistry(
     [ListPromptsRequestSchema, "prompts/list"],
   ] as const) {
     const sdkHandler = sdkHandlers.get(inventory)!;
+    const listParamsHint = `\`${inventory}\` takes an optional string \`params.cursor\` and no other parameters.`;
     Protocol.prototype.setRequestHandler.call(
       server.server,
       schema.pick({ method: true }).passthrough(),
       async (rawRequest, extra) => {
+        assertMcpParams(rawRequest, listParamsHint);
         const validated = schema.safeParse(rawRequest);
         if (!validated.success) {
-          return refuseMcpParameters(
-            validated.error,
-            `\`${inventory}\` takes an optional string \`params.cursor\` and no other parameters.`,
-          );
+          return refuseMcpParameters(validated.error, listParamsHint);
         }
         return sdkHandler(rawRequest, extra);
       },
     );
   }
+
+  // `ping` keeps the SDK's `{}` success response, wrapped so its `params`
+  // observe the same argument boundary and coded parameter refusals (w31/079).
+  const pingParamsHint =
+    "`ping` takes no required parameters; omit `params` or pass `{}`.";
+  server.server.setRequestHandler(
+    PingRequestSchema.pick({ method: true }).passthrough(),
+    async (rawRequest) => {
+      assertMcpParams(rawRequest, pingParamsHint);
+      const validated = PingRequestSchema.safeParse(rawRequest);
+      if (!validated.success) {
+        return refuseMcpParameters(validated.error, pingParamsHint);
+      }
+      return {};
+    },
+  );
 
   return server;
 }
@@ -1120,6 +1150,45 @@ function withoutListChanged(
 /** Classify method parameter failures before any SDK or domain dispatch. */
 function refuseMcpParameters(error: unknown, hint: string): never {
   throw new McpRequestFailure({ ...envelopeFromThrown(error), hint });
+}
+
+/** Enforce `assertNoNulDeep` on an MCP method's raw `params` (w31/079). */
+function assertMcpParams(rawRequest: unknown, hint: string): void {
+  try {
+    assertNoNulDeep(
+      (rawRequest as { params?: unknown }).params,
+      undefined,
+      "params",
+    );
+  } catch (error) {
+    return refuseMcpParameters(error, hint);
+  }
+}
+
+/**
+ * Enforce `assertNoNulDeep` on `tools/call` outer `params` (`name`, `_meta`,
+ * `task`, and extra keys) while leaving `params.arguments` to `dispatchTool`
+ * so `NUL_EXEMPT_PATHS` and the tool error envelope keep applying (w31/079).
+ */
+function assertMcpToolOuterParams(rawRequest: unknown, hint: string): void {
+  const params = (rawRequest as { params?: unknown }).params;
+  try {
+    if (
+      params === null ||
+      typeof params !== "object" ||
+      Array.isArray(params)
+    ) {
+      assertNoNulDeep(params, undefined, "params");
+      return;
+    }
+    for (const [key, value] of Object.entries(params)) {
+      assertNoNulDeep(key, undefined, "params");
+      if (key === "arguments") continue;
+      assertNoNulDeep(value, undefined, `params.${key}`, 1);
+    }
+  } catch (error) {
+    return refuseMcpParameters(error, hint);
+  }
 }
 
 /**

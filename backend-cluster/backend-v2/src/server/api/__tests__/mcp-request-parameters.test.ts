@@ -11,6 +11,7 @@ import {
   type Request,
 } from "@modelcontextprotocol/sdk/types.js";
 import { assembleMcpRegistry } from "../composition-root";
+import { ARGUMENT_LIMITS } from "@/shared/argument-limits";
 import type { AppConfig } from "@/config/config";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 
@@ -337,6 +338,368 @@ describe("MCP outer request parameters over SDK dispatch (w6/001)", () => {
         }),
       ]);
       expect(f.domainAccess).not.toHaveBeenCalled();
+    });
+  });
+});
+
+function nestedObject(depth: number): Record<string, unknown> {
+  let current: Record<string, unknown> = { leaf: "ok" };
+  for (let i = 0; i < depth; i++) {
+    current = { nested: current };
+  }
+  return current;
+}
+
+describe("MCP protocol handler argument limits (w31/079)", () => {
+  const overLimitString = "x".repeat(ARGUMENT_LIMITS.maxStringLength + 1);
+  const overLimitArray = new Array<string>(
+    ARGUMENT_LIMITS.maxArrayLength + 1,
+  ).fill("x");
+  const overDepthObject = nestedObject(ARGUMENT_LIMITS.maxDepth + 1);
+
+  const listMethods = [
+    "tools/list",
+    "resources/list",
+    "resources/templates/list",
+    "prompts/list",
+  ] as const;
+
+  const rejectedCases: {
+    label: string;
+    method: string;
+    params: unknown;
+    field: string;
+  }[] = [
+    // initialize
+    {
+      label: "initialize clientInfo.name with NUL",
+      method: "initialize",
+      params: {
+        protocolVersion: LATEST_PROTOCOL_VERSION,
+        capabilities: {},
+        clientInfo: { name: "a\u0000b", version: "1" },
+      },
+      field: "clientInfo.name",
+    },
+    {
+      label: "initialize clientInfo.name with unpaired surrogate",
+      method: "initialize",
+      params: {
+        protocolVersion: LATEST_PROTOCOL_VERSION,
+        capabilities: {},
+        clientInfo: { name: "a\ud800b", version: "1" },
+      },
+      field: "clientInfo.name",
+    },
+    {
+      label: "initialize clientInfo.name over 1 MiB",
+      method: "initialize",
+      params: {
+        protocolVersion: LATEST_PROTOCOL_VERSION,
+        capabilities: {},
+        clientInfo: { name: overLimitString, version: "1" },
+      },
+      field: "clientInfo.name",
+    },
+    {
+      label: "initialize capabilities.experimental nested past maxDepth",
+      method: "initialize",
+      params: {
+        protocolVersion: LATEST_PROTOCOL_VERSION,
+        capabilities: { experimental: overDepthObject },
+        clientInfo: { name: "test", version: "1" },
+      },
+      field: "capabilities.experimental",
+    },
+    {
+      label: "initialize capabilities.experimental array past maxArrayLength",
+      method: "initialize",
+      params: {
+        protocolVersion: LATEST_PROTOCOL_VERSION,
+        capabilities: { experimental: { items: overLimitArray } },
+        clientInfo: { name: "test", version: "1" },
+      },
+      field: "capabilities.experimental.items",
+    },
+    // */list
+    ...listMethods.flatMap((method) => [
+      {
+        label: `${method} cursor with NUL`,
+        method,
+        params: { cursor: "a\u0000b" },
+        field: "cursor",
+      },
+      {
+        label: `${method} cursor with unpaired surrogate`,
+        method,
+        params: { cursor: "a\ud800b" },
+        field: "cursor",
+      },
+      {
+        label: `${method} cursor over 1 MiB`,
+        method,
+        params: { cursor: overLimitString },
+        field: "cursor",
+      },
+      {
+        label: `${method} extra field nested past maxDepth`,
+        method,
+        params: { extra: overDepthObject },
+        field: "extra",
+      },
+      {
+        label: `${method} extra array past maxArrayLength`,
+        method,
+        params: { extra: overLimitArray },
+        field: "extra",
+      },
+    ]),
+    // ping
+    {
+      label: "ping params with NUL",
+      method: "ping",
+      params: { a: "x\u0000y" },
+      field: "params.a",
+    },
+    {
+      label: "ping params with unpaired surrogate",
+      method: "ping",
+      params: { a: "x\ud800y" },
+      field: "params.a",
+    },
+    {
+      label: "ping params over 1 MiB",
+      method: "ping",
+      params: { a: overLimitString },
+      field: "params.a",
+    },
+    {
+      label: "ping params nested past maxDepth",
+      method: "ping",
+      params: { extra: overDepthObject },
+      field: "params.extra",
+    },
+    {
+      label: "ping params array past maxArrayLength",
+      method: "ping",
+      params: { extra: overLimitArray },
+      field: "params.extra",
+    },
+    {
+      label: "ping _meta with NUL",
+      method: "ping",
+      params: { _meta: { progressToken: "a\u0000b" } },
+      field: "params._meta.progressToken",
+    },
+    // tools/call outer params
+    {
+      label: "tools/call task with NUL",
+      method: "tools/call",
+      params: {
+        name: "runBqlQuery",
+        arguments: { query: "BALANCES" },
+        task: { ttl: "a\u0000b" },
+      },
+      field: "params.task.ttl",
+    },
+    {
+      label: "tools/call name with NUL",
+      method: "tools/call",
+      params: { name: "runBqlQuery\u0000", arguments: {} },
+      field: "params.name",
+    },
+    {
+      label: "tools/call name with unpaired surrogate",
+      method: "tools/call",
+      params: { name: "runBqlQuery\ud800", arguments: {} },
+      field: "params.name",
+    },
+    {
+      label: "tools/call name over 1 MiB",
+      method: "tools/call",
+      params: { name: overLimitString, arguments: {} },
+      field: "params.name",
+    },
+    {
+      label: "tools/call _meta with NUL",
+      method: "tools/call",
+      params: {
+        name: "runBqlQuery",
+        arguments: { query: "BALANCES" },
+        _meta: { progressToken: "a\u0000b" },
+      },
+      field: "params._meta",
+    },
+    {
+      label: "tools/call _meta nested past maxDepth",
+      method: "tools/call",
+      params: {
+        name: "runBqlQuery",
+        arguments: { query: "BALANCES" },
+        _meta: overDepthObject,
+      },
+      field: "params._meta",
+    },
+    {
+      label: "tools/call _meta array past maxArrayLength",
+      method: "tools/call",
+      params: {
+        name: "runBqlQuery",
+        arguments: { query: "BALANCES" },
+        _meta: { items: overLimitArray },
+      },
+      field: "params._meta.items",
+    },
+    // prompts/get outer params
+    {
+      label: "prompts/get name with NUL",
+      method: "prompts/get",
+      params: { name: "close-month\u0000", arguments: {} },
+      field: "params.name",
+    },
+    {
+      label: "prompts/get name with unpaired surrogate",
+      method: "prompts/get",
+      params: { name: "close-month\ud800", arguments: {} },
+      field: "params.name",
+    },
+    {
+      label: "prompts/get name over 1 MiB",
+      method: "prompts/get",
+      params: { name: overLimitString, arguments: {} },
+      field: "params.name",
+    },
+    {
+      label: "prompts/get _meta with NUL",
+      method: "prompts/get",
+      params: {
+        name: "close-month",
+        arguments: {},
+        _meta: { progressToken: "a\u0000b" },
+      },
+      field: "params._meta",
+    },
+    {
+      label: "prompts/get _meta nested past maxDepth",
+      method: "prompts/get",
+      params: {
+        name: "close-month",
+        arguments: {},
+        _meta: overDepthObject,
+      },
+      field: "params._meta",
+    },
+    {
+      label: "prompts/get _meta array past maxArrayLength",
+      method: "prompts/get",
+      params: {
+        name: "close-month",
+        arguments: {},
+        _meta: { items: overLimitArray },
+      },
+      field: "params._meta.items",
+    },
+    // resources/read _meta
+    {
+      label: "resources/read _meta with NUL",
+      method: "resources/read",
+      params: {
+        uri: "beancount://configuration/health",
+        _meta: { progressToken: "a\u0000b" },
+      },
+      field: "params._meta",
+    },
+    {
+      label: "resources/read _meta nested past maxDepth",
+      method: "resources/read",
+      params: {
+        uri: "beancount://configuration/health",
+        _meta: overDepthObject,
+      },
+      field: "params._meta",
+    },
+  ];
+
+  it.each(rejectedCases)(
+    "refuses $label as -32602 BAD_USER_INPUT without domain work",
+    async ({ method, params, field }) => {
+      await withClient(async (f) => {
+        const error = await f.client
+          .request(request(method, params), ResultSchema)
+          .catch((caught: unknown) => caught);
+        expect(error).toBeInstanceOf(McpError);
+        expect((error as McpError).code).toBe(-32602);
+        expectInputEnvelope((error as McpError).data, field);
+        expect((error as McpError).message.match(/MCP error/g)).toHaveLength(1);
+        expect(f.domainAccess).not.toHaveBeenCalled();
+        expect(f.queryShellText).not.toHaveBeenCalled();
+        expect(f.listLedgers).not.toHaveBeenCalled();
+      });
+    },
+  );
+
+  it("keeps valid UTF-8, paired-surrogate emoji, ping, unknown names, and exempt file-text working", async () => {
+    await withClient(async (f) => {
+      // Valid initialize with emoji and normal experimental capabilities.
+      const init = await f.client.request(
+        request("initialize", {
+          protocolVersion: LATEST_PROTOCOL_VERSION,
+          capabilities: { experimental: { probe: { enabled: true } } },
+          clientInfo: { name: "Café ☕ 😀", version: "1.0" },
+        }),
+        InitializeResultSchema,
+      );
+      expect(init.serverInfo.name).toBe("beancount-mcp");
+
+      // Valid */list with UTF-8 / paired-surrogate emoji cursor.
+      for (const method of listMethods) {
+        await expect(
+          f.client.request(
+            request(method, { cursor: "cursor-😀-café" }),
+            ResultSchema,
+          ),
+        ).resolves.toBeDefined();
+      }
+
+      // Valid ping with absent, empty, and UTF-8 / emoji params.
+      for (const params of [
+        undefined,
+        {},
+        { _meta: { progressToken: "ping-😀" } },
+      ]) {
+        await expect(
+          f.client.request(request("ping", params), ResultSchema),
+        ).resolves.toEqual({});
+      }
+
+      // Well-formed unknown tool name still returns NOT_FOUND.
+      const unknownTool = await f.client.callTool({
+        name: "noSuchTool😀",
+        arguments: {},
+      });
+      expect(unknownTool.isError).toBe(true);
+      expect(unknownTool.structuredContent).toMatchObject({
+        ok: false,
+        error: { code: "NOT_FOUND" },
+      });
+
+      // Well-formed unknown prompt name still returns -32002 NOT_FOUND.
+      const unknownPrompt = await f.client
+        .getPrompt({ name: "no-such-prompt-😀", arguments: {} })
+        .catch((caught: unknown) => caught);
+      expect(unknownPrompt).toBeInstanceOf(McpError);
+      expect((unknownPrompt as McpError).code).toBe(-32002);
+      expect((unknownPrompt as McpError).data).toMatchObject({
+        code: "NOT_FOUND",
+      });
+
+      // NUL_EXEMPT_PATHS (`query`) still allows NUL inside tool arguments.
+      const bqlWithNul = await f.client.callTool({
+        name: "runBqlQuery",
+        arguments: { query: "SELECT 'a\u0000b'" },
+      });
+      expect(bqlWithNul.isError).toBeUndefined();
+      expect(f.queryShellText).toHaveBeenCalledTimes(1);
     });
   });
 });
