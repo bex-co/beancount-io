@@ -10,8 +10,9 @@ import { restErrorMiddleware } from "@/server/error-middleware";
 // (unit tests are WASM-free); what is under test is the handler: baseline vs
 // projection, the refusal envelope, allowInvalid, and that a refusal commits
 // nothing.
-const MAIN =
+const DEFAULT_MAIN =
   "2026-01-01 open Assets:Cash USD\n2026-01-01 open Equity:Opening\n";
+let mainContent = DEFAULT_MAIN;
 const b64 = (text: string) => Buffer.from(text, "utf8").toString("base64");
 const fromB64 = (text: string) => Buffer.from(text, "base64").toString("utf8");
 
@@ -31,7 +32,7 @@ jest.mock("@/server/auth", () => ({
         fileReads += 1;
         const decoded = decodeURIComponent(path);
         if (decoded === "main.bean")
-          return { data: { content: b64(MAIN), sha: "sha-main" } };
+          return { data: { content: b64(mainContent), sha: "sha-main" } };
         if (Object.hasOwn(extraFiles, decoded))
           return {
             data: { content: b64(extraFiles[decoded]), sha: `sha-${decoded}` },
@@ -83,7 +84,7 @@ jest.mock("../service-context", () => ({
     data: {
       getErrors: async () => {
         baselineReads += 1;
-        return errorsOf(MAIN);
+        return errorsOf(mainContent);
       },
       checkProjectedErrors: async ({
         overlays,
@@ -91,7 +92,7 @@ jest.mock("../service-context", () => ({
         overlays: { path: string; content: string }[];
       }) => {
         const main = overlays.find((overlay) => overlay.path === "main.bean");
-        return errorsOf(main ? fromB64(main.content) : MAIN);
+        return errorsOf(main ? fromB64(main.content) : mainContent);
       },
       // Every file the write touches is already included unless marked unloaded.
       projectedSourceFiles: async ({
@@ -129,6 +130,7 @@ describe("bulk entries refuse a write that adds ledger errors", () => {
   afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())));
 
   beforeEach(() => {
+    mainContent = DEFAULT_MAIN;
     baselineErrors = [];
     baselineReads = 0;
     fileReads = 0;
@@ -317,4 +319,33 @@ describe("bulk entries refuse a write that adds ledger errors", () => {
       expect(committed).toEqual([]);
     },
   );
+
+  // w31/097: an auto-routed bulk entry adding an include to main.bean must not
+  // splice inside a multiline narration containing an `include ...` line.
+  it("appends a routed include outside a multiline string in main.bean", async () => {
+    const multilineMain = [
+      DEFAULT_MAIN.trimEnd(),
+      '2026-08-30 * "Landlord" "Monthly rent',
+      "include qa-sub.bean",
+      'end of memo"',
+      "  Expenses:Food  1.00 USD",
+      "  Assets:Cash",
+      "",
+    ].join("\n");
+    mainContent = multilineMain;
+    extraFiles["txns/2026.bean"] = "";
+    unloadedPaths.add("txns/2026.bean");
+
+    const response = await post({
+      entries: [{ ...open("Assets:Savings"), filename: "txns/2026.bean" }],
+    });
+    expect(response.status).toBe(200);
+    expect(committed).toHaveLength(1);
+    const mainCommit = committed[0].files.find(
+      (file) => file.path === "main.bean",
+    );
+    expect(fromB64(mainCommit!.content)).toBe(
+      `${multilineMain}include "txns/2026.bean"\n`,
+    );
+  });
 });

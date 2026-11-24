@@ -1,6 +1,11 @@
 import { isGlob } from "@/foundation/rustledger/file-map-loader";
+import { endsInsideString } from "@/foundation/rustledger/source-slice";
 import { BadUserInputError } from "@/shared/errors";
 import { lineEndingOf } from "./line-ending";
+
+/** A real top-level double-quoted Beancount `include "..."` directive line. */
+const INCLUDE_LINE_RE =
+  /^[^\S\r\n]*include[^\S\r\n]+"(?:[^"\\]|\\.)*"[^\S\r\n]*(?:;.*)?$/;
 
 /**
  * Refuse a file path containing a Beancount `include` glob metacharacter
@@ -44,7 +49,16 @@ export function addIncludes(
     .map((line) =>
       eol === "\r\n" && line.endsWith("\r") ? line.slice(0, -1) : line,
     );
-  const last = lines.findLastIndex((line) => /^\s*include\s/.test(line));
+  let last = -1;
+  let inString = false;
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (!inString && line.startsWith("*")) continue;
+    if (!inString && INCLUDE_LINE_RE.test(line)) {
+      last = i;
+    }
+    inString = endsInsideString(line, inString);
+  }
   if (last >= 0) {
     lines.splice(last + 1, 0, ...block);
     return lines.join(eol);

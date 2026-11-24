@@ -334,6 +334,52 @@ describe("moveSourceSlices (w1/m45)", () => {
     expect(commitMock).toHaveBeenCalledTimes(1);
     expect(forced.validation.newErrors).toHaveLength(1);
   });
+
+  // w31/097: adding an include for a new move target must not splice inside a multiline string.
+  it("inserts includeFrom outside a multiline narration containing an include line", async () => {
+    const multilineEntry = [
+      '2026-08-30 * "Landlord" "Monthly rent',
+      "include qa-sub.bean",
+      'end of memo"',
+      "  Expenses:Food  1.00 USD",
+      "  Assets:Cash",
+    ].join("\n");
+    const mainWithMultiline = [
+      "2026-01-01 open Expenses:Food USD",
+      "2026-01-01 open Assets:Cash USD",
+      "",
+      TEA,
+      "",
+      multilineEntry,
+      "",
+    ].join("\n");
+    files = { "main.bean": mainWithMultiline };
+    sourceFiles = ["main.bean"];
+    findMock.mockImplementation(async () => {
+      const startLine = mainWithMultiline
+        .split("\n")
+        .indexOf(TEA.split("\n")[0]);
+      return {
+        file: "main.bean",
+        slice: TEA,
+        sha256: sliceSha256(TEA),
+        startLine,
+        endLine: startLine + 3,
+        localOccurrence: 0,
+      };
+    });
+
+    const result = await move({
+      entries: [{ entryHash: TEA_ID, sha256sum: sliceSha256(TEA) }],
+      toPath: "qa-moved.bean",
+      includeFrom: "main.bean",
+    });
+    expect(result.includeAdded).toBe(true);
+    expect(files["main.bean"]).toContain(multilineEntry);
+    expect(
+      files["main.bean"].trimEnd().endsWith('include "qa-moved.bean"'),
+    ).toBe(true);
+  });
 });
 
 // w31/016: Beancount applies pushtag/pushmeta by position within their own

@@ -782,6 +782,33 @@ describe("DirectiveAppendWorkflow", () => {
       expect(result.success).toBe(true);
       expect(ledgerRepo.changeGeneratedFiles).toHaveBeenCalledTimes(1);
     });
+
+    // w31/097: never splice a new include inside a multiline narration string.
+    it("inserts a new routed include outside a multiline string containing an include line", async () => {
+      const mainWithMultiline = [
+        '2026-08-30 * "Landlord" "Monthly rent',
+        "include qa-sub.bean",
+        'end of memo"',
+        "  Expenses:Food:Groceries  1.00 USD",
+        "  Assets:Bank:Checking",
+        "",
+      ].join("\n");
+      const { workflow, ledgerRepo } = fixture({
+        files: { "main.bean": mainWithMultiline },
+        transactionFile: "txns/{year}.bean",
+        unloaded: ["txns/2026.bean"],
+      });
+      await workflow.appendDirectiveText({
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+        input: { text: TXN },
+      });
+      const { operations } = ledgerRepo.changeGeneratedFiles.mock.calls[0]![0];
+      const mainOp = operations.find((op) => op.path === "main.bean");
+      expect(mainOp?.content).toBe(
+        `${mainWithMultiline}include "txns/2026.bean"\n`,
+      );
+    });
   });
 
   // w31/094: bean-check never reads the account inside `custom "budget"`, so

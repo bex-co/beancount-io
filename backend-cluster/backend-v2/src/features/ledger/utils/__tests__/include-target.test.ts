@@ -6,6 +6,7 @@ import {
   includeTargetFor,
   parseIncludeLine,
   resolveIncludeTarget,
+  scanIncludeLines,
 } from "@/features/ledger/utils/include-target";
 import { BadUserInputError } from "@/shared/errors";
 
@@ -34,6 +35,31 @@ describe("include lines", () => {
     const rewritten = formatIncludeLine(parseIncludeLine(line)!, target);
     expect(rewritten).toBe(written);
     expect(parseIncludeLine(rewritten)?.target).toBe(target);
+  });
+
+  // w31/097: stateful scanning skips lines inside multiline Beancount strings.
+  it("scanIncludeLines tracks multiline strings, escapes, comments, org headings, and CRLF", () => {
+    const content = [
+      '; comment with "unclosed',
+      '* Heading with "unclosed',
+      'include "before.bean"',
+      '2026-08-30 * "Landlord" "Monthly rent with \\"quote\\" and \\\\',
+      "include fake-bare.bean",
+      "include 'fake-single.bean'",
+      'include \\"fake-escaped.bean\\"',
+      '* closing bullet"',
+      "  Expenses:Food  1.00 USD",
+      'include "after.bean"',
+    ].join("\r\n");
+
+    const found = scanIncludeLines(content)
+      .filter((entry) => entry.include !== null)
+      .map((entry) => ({ index: entry.index, target: entry.include!.target }));
+
+    expect(found).toEqual([
+      { index: 2, target: "before.bean" },
+      { index: 9, target: "after.bean" },
+    ]);
   });
 });
 
@@ -153,5 +179,70 @@ describe("addIncludeLines", () => {
     expect(() =>
       assertLiteralIncludePath("books/q1].bean", "toPath"),
     ).not.toThrow();
+  });
+
+  // w31/097: lines inside multiline Beancount strings are content, not include directives.
+  it("ignores include-like lines inside multiline strings when anchoring new includes", () => {
+    const noRealIncludes = [
+      '2026-08-30 * "Landlord" "Monthly rent',
+      "include qa-sub.bean",
+      "include 'qa-sub.bean'",
+      'include \\"qa-sub.bean\\"',
+      'end of memo"',
+      "  Expenses:Food:Groceries  1.00 USD",
+      "  Assets:Bank:Checking",
+      "",
+    ].join("\n");
+    expect(addIncludeLines(noRealIncludes, ["qa-moved.bean"])).toBe(
+      `${noRealIncludes}include "qa-moved.bean"\n`,
+    );
+
+    const withEarlierInclude = [
+      'include "txns/2025.bean"',
+      "",
+      '2026-08-30 * "Landlord" "Monthly rent',
+      "include qa-sub.bean",
+      'end of memo"',
+      "  Expenses:Food:Groceries  1.00 USD",
+      "  Assets:Bank:Checking",
+      "",
+    ].join("\n");
+    expect(addIncludeLines(withEarlierInclude, ["txns/2026.bean"])).toBe(
+      [
+        'include "txns/2025.bean"',
+        'include "txns/2026.bean"',
+        "",
+        '2026-08-30 * "Landlord" "Monthly rent',
+        "include qa-sub.bean",
+        'end of memo"',
+        "  Expenses:Food:Groceries  1.00 USD",
+        "  Assets:Bank:Checking",
+        "",
+      ].join("\n"),
+    );
+
+    const withLaterInclude = [
+      '; comment with "unclosed quote',
+      '* Heading with "unclosed quote',
+      '2026-08-30 * "Landlord" "Monthly rent',
+      'include qa-sub.bean"',
+      "  Expenses:Food:Groceries  1.00 USD",
+      "  Assets:Bank:Checking",
+      'include "txns/2025.bean"',
+      "",
+    ].join("\n");
+    expect(addIncludeLines(withLaterInclude, ["txns/2026.bean"])).toBe(
+      [
+        '; comment with "unclosed quote',
+        '* Heading with "unclosed quote',
+        '2026-08-30 * "Landlord" "Monthly rent',
+        'include qa-sub.bean"',
+        "  Expenses:Food:Groceries  1.00 USD",
+        "  Assets:Bank:Checking",
+        'include "txns/2025.bean"',
+        'include "txns/2026.bean"',
+        "",
+      ].join("\n"),
+    );
   });
 });

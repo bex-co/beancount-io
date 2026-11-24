@@ -19,8 +19,8 @@ import { operationNotAllowedFromCause } from "./operation-not-allowed-from-cause
 import {
   isGlobPattern,
   isUrlTarget,
-  parseIncludeLine,
   resolveIncludeTarget,
+  scanIncludeLines,
 } from "./include-target";
 
 /**
@@ -223,8 +223,7 @@ export async function findDanglingDeleteIncluders(opts: {
   }
   const dangling = new Map<string, string[]>();
   for (const [path, content] of contents) {
-    for (const line of content.split("\n")) {
-      const include = parseIncludeLine(line);
+    for (const { include } of scanIncludeLines(content)) {
       if (!include || isUrlTarget(include.target)) continue;
       const resolved = resolveIncludeTarget(path, include.target);
       if (isGlobPattern(resolved)) continue;
@@ -244,14 +243,13 @@ function stripIncludeLines(
   content: string,
   deleted: ReadonlySet<string>,
 ): string {
-  return content
-    .split("\n")
-    .filter((line) => {
-      const include = parseIncludeLine(line);
+  return scanIncludeLines(content)
+    .filter(({ include }) => {
       if (!include || isUrlTarget(include.target)) return true;
       const resolved = resolveIncludeTarget(includerPath, include.target);
       return isGlobPattern(resolved) || !deleted.has(resolved);
     })
+    .map(({ line }) => line)
     .join("\n");
 }
 

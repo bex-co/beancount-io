@@ -145,8 +145,9 @@ import {
   includeTargetFor,
   isGlobPattern,
   isUrlTarget,
-  parseIncludeLine,
   resolveIncludeTarget,
+  scanIncludeLines,
+  type IncludeLine,
 } from "@/features/ledger/utils/include-target";
 import {
   deleteGuardFileAccess,
@@ -1560,8 +1561,10 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     await assertNoPortableTwin(input.newPath, listingOf(keptFiles));
     // An include names a file relative to the file that declares it, so it
     // is matched on what it resolves to, not on its text (w23/029).
-    const namesOldPath = (includingPath: string, line: string) => {
-      const include = parseIncludeLine(line);
+    const namesOldPath = (
+      includingPath: string,
+      include: IncludeLine | null,
+    ) => {
       if (!include || isUrlTarget(include.target)) return null;
       const resolved = resolveIncludeTarget(includingPath, include.target);
       if (isGlobPattern(resolved)) return null;
@@ -1595,9 +1598,8 @@ export class LedgerWorkflow implements ILedgerWorkflow {
           sha: file.sha,
         }))
         .filter(({ path, content }) => {
-          const lines = content.split("\n");
-          for (const line of lines) {
-            const include = parseIncludeLine(line);
+          let referencesOldPath = false;
+          for (const { include } of scanIncludeLines(content)) {
             if (!include || isUrlTarget(include.target)) continue;
             const pattern = resolveIncludeTarget(path, include.target);
             if (
@@ -1606,8 +1608,9 @@ export class LedgerWorkflow implements ILedgerWorkflow {
               !globMatches(pattern, input.newPath)
             )
               lostGlobs.push(`${path} (include "${include.target}")`);
+            if (namesOldPath(path, include)) referencesOldPath = true;
           }
-          return lines.some((line) => namesOldPath(path, line));
+          return referencesOldPath;
         });
     }
     if (lostGlobs.length > 0) {
@@ -1668,14 +1671,13 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       // A rewrite re-encodes the whole including file (w23/030).
       assertWritableText(including, "updateIncludes");
       const newLines: string[] = [];
-      const rewritten = including.content
-        .split("\n")
-        .map((line) => {
-          const include = namesOldPath(including.path, line);
-          if (!include) return line;
+      const rewritten = scanIncludeLines(including.content)
+        .map(({ line, include }) => {
+          const matched = namesOldPath(including.path, include);
+          if (!matched) return line;
           const replacement = formatIncludeLine(
-            include,
-            includeTargetFor(including.path, input.newPath, include.target),
+            matched,
+            includeTargetFor(including.path, input.newPath, matched.target),
           );
           newLines.push(replacement);
           return replacement;
@@ -1996,23 +1998,25 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     const moved: string[] = [];
     const globs: string[] = [];
     const lines: string[] = [];
-    const rewritten = decoded.content.split("\n").map((line) => {
-      const include = parseIncludeLine(line);
-      if (!include || isUrlTarget(include.target)) return line;
-      const before = resolveIncludeTarget(oldPath, include.target);
-      if (before === resolveIncludeTarget(newPath, include.target)) return line;
-      if (isGlobPattern(before)) {
-        globs.push(include.target);
-        return line;
-      }
-      moved.push(include.target);
-      const replacement = formatIncludeLine(
-        include,
-        includeTargetFor(newPath, before, include.target),
-      );
-      lines.push(replacement);
-      return replacement;
-    });
+    const rewritten = scanIncludeLines(decoded.content).map(
+      ({ line, include }) => {
+        if (!include || isUrlTarget(include.target)) return line;
+        const before = resolveIncludeTarget(oldPath, include.target);
+        if (before === resolveIncludeTarget(newPath, include.target))
+          return line;
+        if (isGlobPattern(before)) {
+          globs.push(include.target);
+          return line;
+        }
+        moved.push(include.target);
+        const replacement = formatIncludeLine(
+          include,
+          includeTargetFor(newPath, before, include.target),
+        );
+        lines.push(replacement);
+        return replacement;
+      },
+    );
     if (globs.length > 0) {
       throw new BadUserInputError(
         `${oldPath} includes the glob "${globs[0]}" relative to its folder; in ${posix.dirname(newPath)} it would match other files, and a glob can't be rewritten`,

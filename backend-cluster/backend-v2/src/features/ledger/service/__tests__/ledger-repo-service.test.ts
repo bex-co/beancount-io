@@ -1264,6 +1264,39 @@ describe("LedgerRepoService", () => {
         expect(mockChangeLedgerFiles).toHaveBeenCalledTimes(1);
       });
 
+      // w31/097: an include-looking line inside a multiline string is narration text, not an include directive.
+      it("ignores include-like lines inside multiline strings and still guards real includes after them", async () => {
+        dirWith([
+          { path: "main.bean", type: "file" },
+          { path: "qa-sub.bean", type: "file" },
+          { path: "real.bean", type: "file" },
+        ]);
+        contentsWith([
+          {
+            path: "main.bean",
+            content: [
+              '2026-08-30 * "Landlord" "Monthly rent',
+              "include qa-sub.bean",
+              "include 'qa-sub.bean'",
+              'end of memo"',
+              "  Expenses:Food:Groceries  1.00 USD",
+              "  Assets:Bank:Checking",
+              'include "real.bean"',
+              "",
+            ].join("\n"),
+          },
+          { path: "qa-sub.bean", content: "; disposable\n" },
+          { path: "real.bean", content: "; real\n" },
+        ]);
+        mockChangeLedgerFiles.mockResolvedValue({ data: { success: true } });
+        await attemptDelete("qa-sub.bean");
+        expect(mockChangeLedgerFiles).toHaveBeenCalledTimes(1);
+
+        await expect(attemptDelete("real.bean")).rejects.toThrow(
+          /real\.bean is still included by main\.bean/,
+        );
+      });
+
       it("ignores glob includes — a file leaving a glob match breaks no load", async () => {
         dirWith([
           { path: "main.bean", type: "file" },

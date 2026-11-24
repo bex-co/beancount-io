@@ -103,4 +103,83 @@ describe("addIncludes in a CRLF file", () => {
     );
     expect(crlfOut.replace(/\r\n/g, "")).not.toMatch(/[\r\n]/);
   });
+
+  // w31/097: multiline strings and prose lines must never act as include anchors.
+  it("never splices inside a multiline string in LF or CRLF files", () => {
+    const lines = [
+      '2026-08-30 * "Landlord" "Monthly rent',
+      "include qa-sub.bean",
+      'include utilities and trash"',
+      "  Expenses:Food:Groceries  1.00 USD",
+      "  Assets:Bank:Checking",
+      "",
+    ];
+    expect(addIncludes(lines.join("\n"), ["qa-moved.bean"])).toBe(
+      `${lines.join("\n")}include "qa-moved.bean"\n`,
+    );
+    expect(addIncludes(crlf(lines), ["qa-moved.bean"])).toBe(
+      `${crlf(lines)}include "qa-moved.bean"\r\n`,
+    );
+  });
+
+  it("anchors after the last real double-quoted include, ignoring multiline strings, prose, comments, and org headings", () => {
+    const main = [
+      '; comment with "unclosed quote',
+      '* Heading with "unclosed quote',
+      'include "odd \\"name\\".bean" ; keep',
+      "",
+      '2026-08-30 * "Landlord" "Monthly rent',
+      "include qa-sub.bean",
+      'include \\"qa-sub.bean\\"',
+      'end of memo"',
+      "  Expenses:Food:Groceries  1.00 USD",
+      "  Assets:Bank:Checking",
+      "",
+    ].join("\n");
+    expect(addIncludes(main, ["qa-moved.bean"])).toBe(
+      [
+        '; comment with "unclosed quote',
+        '* Heading with "unclosed quote',
+        'include "odd \\"name\\".bean" ; keep',
+        'include "qa-moved.bean"',
+        "",
+        '2026-08-30 * "Landlord" "Monthly rent',
+        "include qa-sub.bean",
+        'include \\"qa-sub.bean\\"',
+        'end of memo"',
+        "  Expenses:Food:Groceries  1.00 USD",
+        "  Assets:Bank:Checking",
+        "",
+      ].join("\n"),
+    );
+
+    const afterClosed = [
+      '2026-08-30 * "Landlord" "Monthly rent',
+      '* bullet closing quote"',
+      "  Expenses:Food:Groceries  1.00 USD",
+      "  Assets:Bank:Checking",
+      'include "txns/2025.bean"',
+      "",
+    ].join("\n");
+    expect(addIncludes(afterClosed, ["txns/2026.bean"])).toBe(
+      [
+        '2026-08-30 * "Landlord" "Monthly rent',
+        '* bullet closing quote"',
+        "  Expenses:Food:Groceries  1.00 USD",
+        "  Assets:Bank:Checking",
+        'include "txns/2025.bean"',
+        'include "txns/2026.bean"',
+        "",
+      ].join("\n"),
+    );
+
+    const proseLineOutsideString = [
+      "include utilities and trash",
+      "2020-01-01 open Assets:Cash USD",
+      "",
+    ].join("\n");
+    expect(addIncludes(proseLineOutsideString, ["txns/2026.bean"])).toBe(
+      `${proseLineOutsideString}include "txns/2026.bean"\n`,
+    );
+  });
 });

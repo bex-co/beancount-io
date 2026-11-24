@@ -1855,6 +1855,111 @@ describe.each(["rest", "mcp", "gql"])("delete guard via %s", (surface) => {
   });
 });
 
+// w31/097: lines inside multiline Beancount strings must never be treated as
+// `include` directives by delete, rename, or cross-folder file moves.
+describe.each(["rest", "gql", "mcp"])(
+  "multiline strings containing include lines via %s (w31/097)",
+  (surface) => {
+    const MAIN_WITH_MULTILINE = [
+      '2026-08-30 * "Landlord" "Monthly rent',
+      "include qa-sub.bean",
+      "include 'qa-sub.bean'",
+      'end of memo"',
+      "  Expenses:Food:Groceries  1.00 USD",
+      "  Assets:Bank:Checking",
+      "",
+    ].join("\n");
+    const updated = (result: unknown) =>
+      (result as { updatedIncludes?: string[] } | undefined)?.updatedIncludes;
+
+    it.each([false, true])(
+      "deletes an unincluded file without touching a multiline string (removeIncludes=%s)",
+      async (removeIncludes) => {
+        const f = await fixture(identity, {
+          "main.bean": MAIN_WITH_MULTILINE,
+          "qa-sub.bean": "; disposable\n",
+        });
+        try {
+          const outcome = await f.deleteFile(
+            surface,
+            "qa-sub.bean",
+            removeIncludes,
+          );
+          expect(outcome.success).toBe(true);
+          expect(f.files.has("qa-sub.bean")).toBe(false);
+          expect(f.files.get("main.bean")?.content).toBe(MAIN_WITH_MULTILINE);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("removeIncludes strips only a real include and leaves a matching line inside a multiline string intact", async () => {
+      const mainWithBoth = `${MAIN_WITH_MULTILINE}include "qa-sub.bean"\n`;
+      const f = await fixture(identity, {
+        "main.bean": mainWithBoth,
+        "qa-sub.bean": "; disposable\n",
+      });
+      try {
+        const outcome = await f.deleteFile(surface, "qa-sub.bean", true);
+        expect(outcome.success).toBe(true);
+        expect(f.files.has("qa-sub.bean")).toBe(false);
+        expect(f.files.get("main.bean")?.content).toBe(MAIN_WITH_MULTILINE);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it.each([false, true])(
+      "renames an unincluded file without refusing or rewriting a multiline string (updateIncludes=%s)",
+      async (updateIncludes) => {
+        const f = await fixture(identity, {
+          "main.bean": MAIN_WITH_MULTILINE,
+          "qa-sub.bean": "; disposable\n",
+        });
+        try {
+          const outcome = await f.call(
+            surface,
+            "qa-sub.bean",
+            "qa-moved.bean",
+            updateIncludes ? { updateIncludes: true } : {},
+          );
+          expect(outcome.success).toBe(true);
+          expect(updated(outcome.result)).toEqual([]);
+          expect(f.files.has("qa-moved.bean")).toBe(true);
+          expect(f.files.get("main.bean")?.content).toBe(MAIN_WITH_MULTILINE);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("moves a file across folders without rewriting include-like lines inside its multiline strings", async () => {
+      const movedText = [
+        '2026-08-30 * "Landlord" "Monthly rent',
+        "include x.bean",
+        "include *.bean",
+        'end of memo"',
+        "  Expenses:Food:Groceries  1.00 USD",
+        "  Assets:Bank:Checking",
+        "",
+      ].join("\n");
+      const f = await fixture(identity, {
+        "main.bean": "; main\n",
+        "d/doc.bean": movedText,
+      });
+      try {
+        const outcome = await f.call(surface, "d/doc.bean", "e/doc.bean");
+        expect(outcome.success).toBe(true);
+        expect(updated(outcome.result)).toEqual([]);
+        expect(f.files.get("e/doc.bean")?.content).toBe(movedText);
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
 // w6/m11/t008: the advertised hint must cover the committed branch even
 // though the same tool also accepts a non-mutating dry_run.
 describe("rename annotation follows its real effects", () => {

@@ -40,6 +40,50 @@ export function parseIncludeLine(line: string): IncludeLine | null {
   };
 }
 
+/**
+ * Whether a Beancount double-quoted string is still open after `line`, given
+ * whether one was open at its start: `\"` and `\\` escape inside strings;
+ * outside strings, `;` starts a comment and a column-0 `*` starts an
+ * org-mode heading, both running to the end of the line.
+ */
+function endsInsideString(line: string, startsInside: boolean): boolean {
+  if (!startsInside && line.startsWith("*")) return false;
+  let inside = startsInside;
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    if (inside) {
+      if (char === "\\") i += 1;
+      else if (char === '"') inside = false;
+    } else if (char === '"') {
+      inside = true;
+    } else if (char === ";") {
+      break;
+    }
+  }
+  return inside;
+}
+
+interface ScannedIncludeLine {
+  line: string;
+  index: number;
+  include: IncludeLine | null;
+}
+
+/**
+ * Walk `content` line by line while tracking Beancount multiline string state,
+ * so lines that start inside an open `"..."` string never produce an `include`
+ * directive (w31/097).
+ */
+export function scanIncludeLines(content: string): ScannedIncludeLine[] {
+  const lines = content.split("\n");
+  let inString = false;
+  return lines.map((line, index) => {
+    const include = inString ? null : parseIncludeLine(line);
+    inString = endsInsideString(line, inString);
+    return { line, index, include };
+  });
+}
+
 /** Writes `target` into the line's place, escaped so it parses back intact. */
 export function formatIncludeLine(line: IncludeLine, target: string): string {
   const quote =
@@ -69,9 +113,10 @@ export function addIncludeLines(
       path,
     ),
   );
-  const lines = content.split("\n");
-  const last = lines.findLastIndex((line) => parseIncludeLine(line) !== null);
+  const scanned = scanIncludeLines(content);
+  const last = scanned.findLastIndex((entry) => entry.include !== null);
   if (last >= 0) {
+    const lines = scanned.map((entry) => entry.line);
     lines.splice(last + 1, 0, ...block);
     return lines.join("\n");
   }
