@@ -144,4 +144,137 @@ describe("assertAmountsFitEngineDecimal", () => {
       ),
     ).not.toThrow();
   });
+
+  /**
+   * w31/095: expressions, balance tolerances, compound costs, metadata/custom
+   * numbers, and stateful string/comment/org-heading scanning.
+   */
+  it.each([
+    [
+      "parenthesized arithmetic expression",
+      '2026-08-01 * "Cafe" "expr"\n  Expenses:Food:Groceries   (1.0000000000000000000000000001 + 0) USD\n  Assets:Bank:Checking\n',
+      "1.0000000000000000000000000001",
+    ],
+    [
+      "unparenthesized multiplication expression",
+      '2026-08-01 * "Cafe" "mul"\n  Expenses:Food:Groceries   1.0000000000000000000000000001 * 2 USD\n  Assets:Bank:Checking\n',
+      "1.0000000000000000000000000001",
+    ],
+    [
+      "balance assertion with tolerance",
+      "2026-01-02 balance Assets:Cash 200.00000000000000000000000001 ~ 0.01 USD\n",
+      "200.00000000000000000000000001",
+    ],
+    [
+      "balance assertion tolerance operand",
+      "2026-01-02 balance Assets:Cash 200.00 ~ 0.00000000000000000000000000001 USD\n",
+      "0.00000000000000000000000000001",
+    ],
+    [
+      "compound lot cost per-unit leg",
+      '2026-08-01 * "Buy" "lot"\n  Assets:Bank:Savings 10.00 USD {1.0000000000000000000000000001 # 0 USD}\n  Assets:Bank:Checking\n',
+      "1.0000000000000000000000000001",
+    ],
+    [
+      "compound lot cost total leg without space after #",
+      '2026-08-01 * "Buy" "lot"\n  Assets:Bank:Savings 10.00 USD {0 #1.0000000000000000000000000001 USD}\n  Assets:Bank:Checking\n',
+      "1.0000000000000000000000000001",
+    ],
+    [
+      "currency-less lot cost with date",
+      '2026-08-01 * "Buy" "lot"\n  Assets:Bank:Savings 10.00 USD {1.0000000000000000000000000001, 2026-08-01}\n  Assets:Bank:Checking\n',
+      "1.0000000000000000000000000001",
+    ],
+    [
+      "total cost double braces",
+      '2026-08-01 * "Buy" "lot"\n  Assets:Bank:Savings 10.00 USD {{1.0000000000000000000000000001 USD}}\n  Assets:Bank:Checking\n',
+      "1.0000000000000000000000000001",
+    ],
+    [
+      "bare numeric metadata value",
+      '2026-08-01 * "Cafe"\n  ratio: 1.0000000000000000000000000001\n  Expenses:Food 10 USD\n  Assets:Cash\n',
+      "1.0000000000000000000000000001",
+    ],
+    [
+      "custom directive bare numeric value",
+      '2026-08-01 custom "metric" 1.0000000000000000000000000001\n',
+      "1.0000000000000000000000000001",
+    ],
+    [
+      "amount after string ending with escaped backslash",
+      '2026-08-01 custom "path" "C:\\\\" 1.0000000000000000000000000001 USD\n',
+      "1.0000000000000000000000000001",
+    ],
+    [
+      "amount after closing quote of multiline string",
+      '2026-08-01 custom "note" "line 1\nline 2" 1.0000000000000000000000000001 USD\n',
+      "1.0000000000000000000000000001",
+    ],
+  ])("refuses %s", (_name, text, literal) => {
+    expect(() => assertAmountsFitEngineDecimal(text)).toThrow(
+      BadUserInputError,
+    );
+    expect(() => assertAmountsFitEngineDecimal(text)).toThrow(
+      new RegExp(
+        `amount ${literal.replace(/\./g, "\\.")} has more than 28 significant digits`,
+      ),
+    );
+  });
+
+  it.each([
+    [
+      "escaped quote in narration",
+      '2026-08-01 * "Cafe" "ref \\" 123456789012345678901234567890 USD"\n  Expenses:Food:Groceries 10.00 USD\n  Assets:Bank:Checking\n',
+    ],
+    [
+      "multiline string containing long number and currency",
+      '2026-08-01 * "Cafe" "line1\n123456789012345678901234567890 USD"\n  Expenses:Food:Groceries 10.00 USD\n  Assets:Bank:Checking\n',
+    ],
+    [
+      "multiline string with column-0 star line",
+      '2026-08-01 * "Cafe" "line1\n* 123456789012345678901234567890 USD\nstill string 123456789012345678901234567890 USD"\n  Expenses:Food:Groceries 10.00 USD\n  Assets:Bank:Checking\n',
+    ],
+    [
+      "org-mode heading at column 0",
+      '* Ref 123456789012345678901234567890 USD\n** Sub 123456789012345678901234567890 USD\n2026-08-01 * "Cafe"\n  Expenses:Food 10.00 USD\n  Assets:Cash\n',
+    ],
+    [
+      "numeric account component, tag, link, metadata key, and slash date",
+      [
+        "2026/01/01 open Assets:123456789012345678901234567890 USD",
+        '2026/08/01 * "Cafe" #123456789012345678901234567890 ^123456789012345678901234567890',
+        '  ref123456789012345678901234567890: "USD"',
+        "  Assets:123456789012345678901234567890 10.00 USD",
+        "  Equity:Initial",
+      ].join("\n"),
+    ],
+    [
+      "28-digit boundary in expression, balance tolerance, and compound cost",
+      [
+        "2026-01-02 balance Assets:Cash 200.0000000000000000000000001 ~ 0.01 USD",
+        '2026-08-01 * "Boundary"',
+        "  Expenses:Food (1.000000000000000000000000001 + 0) USD",
+        "  Assets:Stock 10.00 USD {1.000000000000000000000000001 # 0 USD}",
+        "  Assets:Cash",
+      ].join("\n"),
+    ],
+  ])("accepts %s", (_name, text) => {
+    expect(() => assertAmountsFitEngineDecimal(text)).not.toThrow();
+  });
+
+  it("tracks multiline string state from line 0 when checking only changed lines", () => {
+    const file = [
+      '2026-08-01 * "Cafe" "line 1',
+      "123456789012345678901234567890 USD",
+      'line 3"',
+      "  Assets:Legacy 999999999999999999999999999.99 USD",
+      "  Assets:Edited 10.00 USD",
+    ].join("\n");
+    expect(() =>
+      assertAmountsFitEngineDecimal(file, new Set([1, 4])),
+    ).not.toThrow();
+    expect(() => assertAmountsFitEngineDecimal(file, new Set([3]))).toThrow(
+      BadUserInputError,
+    );
+  });
 });

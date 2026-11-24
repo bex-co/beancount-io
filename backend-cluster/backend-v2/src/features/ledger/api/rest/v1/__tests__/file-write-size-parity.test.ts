@@ -843,6 +843,55 @@ describe.each<Surface>(["rest", "gql", "mcp"])(
         await f.close();
       }
     });
+
+    it.each([
+      [
+        "arithmetic expression",
+        '2026-08-01 * "Cafe" "expr"\n  Expenses:Food (1.0000000000000000000000000001 + 0) USD\n  Assets:Cash\n',
+      ],
+      [
+        "balance assertion with tolerance",
+        "2026-01-02 balance Assets:Cash 200.00000000000000000000000001 ~ 0.01 USD\n",
+      ],
+      [
+        "compound lot cost",
+        '2026-08-01 * "Buy" "lot"\n  Assets:Bank:Savings 10.00 USD {1.0000000000000000000000000001 # 0 USD}\n  Assets:Bank:Checking\n',
+      ],
+    ])("refuses %s past 28 digits (w31/095)", async (_label, content) => {
+      const f = await fixture();
+      try {
+        expect(await f.write(surface, content)).toMatchObject({
+          ok: false,
+          code: "BAD_USER_INPUT",
+        });
+        expect(f.commits).toHaveLength(0);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it.each([
+      [
+        "escaped quote narration",
+        '2026-08-01 * "Cafe" "ref \\" 123456789012345678901234567890 USD"\n  Expenses:Food 10.00 USD\n  Assets:Cash\n',
+      ],
+      [
+        "multiline string",
+        '2026-08-01 * "Cafe" "line1\n123456789012345678901234567890 USD"\n  Expenses:Food 10.00 USD\n  Assets:Cash\n',
+      ],
+      [
+        "org heading",
+        '* Ref 123456789012345678901234567890 USD\n2026-08-01 * "Cafe"\n  Expenses:Food 10.00 USD\n  Assets:Cash\n',
+      ],
+    ])("accepts %s (w31/095)", async (_label, content) => {
+      const f = await fixture();
+      try {
+        expect(await f.write(surface, content)).toMatchObject({ ok: true });
+        expect(f.commits).toHaveLength(1);
+      } finally {
+        await f.close();
+      }
+    });
   },
 );
 

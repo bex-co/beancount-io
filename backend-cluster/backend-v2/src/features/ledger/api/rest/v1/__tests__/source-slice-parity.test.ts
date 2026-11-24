@@ -1603,3 +1603,96 @@ describe.each(["rest", "gql", "mcp"])(
     });
   },
 );
+
+// w31/095: source-slice updates must refuse expressions, balance tolerances,
+// and compound lot costs past 28 digits while accepting escaped quotes,
+// multiline strings, and org headings across REST, GraphQL, and MCP.
+describe.each(["rest", "gql", "mcp"])(
+  "engine decimal scanner parity on update via %s (w31/095)",
+  (surface) => {
+    it.each([
+      [
+        "arithmetic expression",
+        '2026-08-01 * "Cafe" "expr"\n  Expenses:Food (1.0000000000000000000000000001 + 0) USD\n  Assets:Cash\n',
+        "1.0000000000000000000000000001",
+      ],
+      [
+        "balance assertion with tolerance",
+        "2026-01-02 balance Assets:Cash 200.00000000000000000000000001 ~ 0.01 USD\n",
+        "200.00000000000000000000000001",
+      ],
+      [
+        "compound lot cost",
+        '2026-08-01 * "Buy" "lot"\n  Assets:Bank:Savings 10.00 USD {1.0000000000000000000000000001 # 0 USD}\n  Assets:Bank:Checking\n',
+        "1.0000000000000000000000000001",
+      ],
+    ])(
+      "refuses %s past 28 digits with BAD_USER_INPUT without calling the ledger",
+      async (_label, newContent, literal) => {
+        const f = await fixture();
+        try {
+          const result = await f.call(surface, "update", {
+            ...args("update"),
+            newContent,
+            ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+          });
+          expect(result.success).toBe(false);
+          expect(f.journal.updateSourceSlice).not.toHaveBeenCalled();
+          const expected = expect.stringContaining(
+            `amount ${literal} has more than 28 significant digits`,
+          );
+          if (surface === "rest") {
+            expect(result.status).toBe(400);
+            expect(result.result).toMatchObject({
+              ok: false,
+              error: { code: "BAD_USER_INPUT", message: expected },
+            });
+          } else if (surface === "gql") {
+            const refusal = result.errors?.[0]?.originalError as
+              | { category?: string; message?: string }
+              | undefined;
+            expect(refusal).toMatchObject({
+              category: "BAD_USER_INPUT",
+              message: expected,
+            });
+          } else {
+            expect(result.full).toMatchObject({
+              ok: false,
+              error: { code: "BAD_USER_INPUT", message: expected },
+            });
+          }
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it.each([
+      [
+        "escaped quote narration",
+        '2026-08-01 * "Cafe" "ref \\" 123456789012345678901234567890 USD"\n  Expenses:Food 10.00 USD\n  Assets:Cash\n',
+      ],
+      [
+        "multiline string",
+        '2026-08-01 * "Cafe" "line1\n123456789012345678901234567890 USD"\n  Expenses:Food 10.00 USD\n  Assets:Cash\n',
+      ],
+      [
+        "org heading",
+        '* Ref 123456789012345678901234567890 USD\n2026-08-01 * "Cafe"\n  Expenses:Food 10.00 USD\n  Assets:Cash\n',
+      ],
+    ])("accepts %s", async (_label, newContent) => {
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, "update", {
+          ...args("update"),
+          newContent,
+          ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+        });
+        expect(result.success).toBe(true);
+        expect(f.journal.updateSourceSlice).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);

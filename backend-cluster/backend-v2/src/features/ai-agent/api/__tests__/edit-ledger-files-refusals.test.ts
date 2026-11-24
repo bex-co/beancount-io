@@ -40,11 +40,21 @@ async function fixture() {
     "aux.bean",
     // Holds a long literal committed before the 28-digit refusal (w23/081).
     "legacy.bean",
+    // Holds a normal posting and multiline narration for fragment checks (w31/095).
+    "amounts.bean",
   ]);
   const LEGACY_BEAN = [
     '2021-01-02 * "legacy"',
     "  Assets:Cash  999999999999999999999999999.99 USD",
     "  Equity:Initial",
+    "",
+  ].join("\n");
+  const AMOUNTS_BEAN = [
+    '2026-01-01 * "Paycheck" "line 1',
+    "placeholder",
+    'line 3"',
+    "  Assets:Bank:Checking      3000.00 USD",
+    "  Income:Salary",
     "",
   ].join("\n");
   const getLedgerFilesContent = jest.fn(
@@ -71,7 +81,9 @@ async function fixture() {
                   content:
                     path === "legacy.bean"
                       ? LEGACY_BEAN
-                      : '2026-01-05 * "Cafe"\n2026-02-05 * "Cafe"\n',
+                      : path === "amounts.bean"
+                        ? AMOUNTS_BEAN
+                        : '2026-01-05 * "Cafe"\n2026-02-05 * "Cafe"\n',
                 },
           ),
       },
@@ -1029,6 +1041,140 @@ describe("amounts past 28 digits in file writes", () => {
               path: "legacy.bean",
               old_string: '"legacy"',
               new_string: '"renamed"',
+            },
+          ],
+        },
+      });
+      expect(result.isError).toBeFalsy();
+      expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w31/095: exact-text updates validate the post-fold changed lines so a
+  // numeric-only replacement (leaving " USD" outside old_string) cannot
+  // bypass the 28-digit gate, while multiline string context and untouched
+  // legacy lines stay accurate.
+  it.each([true, false])(
+    "refuses a numeric-only old_string/new_string fragment that leaves currency on the line (dry_run: %p)",
+    async (dry_run) => {
+      const f = await fixture();
+      try {
+        const result = await f.client.callTool({
+          name: "updateLedgerFiles",
+          arguments: {
+            ledger: "alice/main",
+            description: "edit numeric fragment",
+            dry_run,
+            files: [
+              {
+                path: "amounts.bean",
+                old_string: "  Assets:Bank:Checking      3000.00",
+                new_string:
+                  "  Assets:Bank:Checking      1.0000000000000000000000000001",
+              },
+            ],
+          },
+        });
+        expect(result.isError).toBe(true);
+        expect(result.structuredContent).toMatchObject({
+          error: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining(
+              "1.0000000000000000000000000001 has more than 28 significant digits",
+            ),
+          },
+        });
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it("refuses chained fragment updates that combine into an over-long amount", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.client.callTool({
+        name: "updateLedgerFiles",
+        arguments: {
+          ledger: "alice/main",
+          description: "chain numeric fragments",
+          dry_run: true,
+          files: [
+            {
+              path: "amounts.bean",
+              old_string: "3000.00",
+              new_string: "1.000000000000000",
+            },
+            {
+              path: "amounts.bean",
+              old_string: "1.000000000000000",
+              new_string: "1.0000000000000000000000000001",
+            },
+          ],
+        },
+      });
+      expect(result.isError).toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        error: {
+          code: "BAD_USER_INPUT",
+          message: expect.stringContaining(
+            "1.0000000000000000000000000001 has more than 28 significant digits",
+          ),
+        },
+      });
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("accepts editing a line inside an existing multiline string to hold 30 digits + USD", async () => {
+    const f = await fixture();
+    f.changeLedgerFiles.mockResolvedValue({
+      data: { success: true, data: {} },
+    });
+    try {
+      const result = await f.client.callTool({
+        name: "updateLedgerFiles",
+        arguments: {
+          ledger: "alice/main",
+          description: "update multiline narration",
+          files: [
+            {
+              path: "amounts.bean",
+              old_string: "placeholder",
+              new_string: "123456789012345678901234567890 USD",
+            },
+          ],
+        },
+      });
+      expect(result.isError).toBeFalsy();
+      expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("still skips an untouched legacy long literal when inserting lines above it or ending old_string with newline", async () => {
+    const f = await fixture();
+    f.changeLedgerFiles.mockResolvedValue({
+      data: { success: true, data: {} },
+    });
+    try {
+      const result = await f.client.callTool({
+        name: "updateLedgerFiles",
+        arguments: {
+          ledger: "alice/main",
+          description: "add heading above legacy entry",
+          files: [
+            {
+              path: "legacy.bean",
+              old_string: '2021-01-02 * "legacy"\n',
+              new_string:
+                '* Ref 123456789012345678901234567890 USD\n2021-01-02 * "renamed"\n',
             },
           ],
         },

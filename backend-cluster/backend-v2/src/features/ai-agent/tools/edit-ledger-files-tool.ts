@@ -213,6 +213,14 @@ function assertFoldable(files: FileOperation[]): void {
   }
 }
 
+const LINE_BREAKS = /\r\n|\r|\n/g;
+const countLineBreaks = (text: string): number =>
+  text.match(LINE_BREAKS)?.length ?? 0;
+const endsWithLineBreak = (text: string): boolean =>
+  text.endsWith("\n") || text.endsWith("\r");
+const atLineStart = (text: string, index: number): boolean =>
+  index === 0 || text[index - 1] === "\n" || text[index - 1] === "\r";
+
 /**
  * Folds every change to one path into the one operation the commit sends for
  * it, and returns the post-change contents (`null` projects a deletion) that a
@@ -233,7 +241,12 @@ function foldOperations(
   // is an overwrite of the existing file.
   const touched = new Map<
     string,
-    { content: string | null; create: boolean }
+    {
+      content: string | null;
+      create: boolean;
+      changedLines: Set<number> | "all";
+      checkPostFold: boolean;
+    }
   >();
   for (const f of files) {
     const state = touched.get(f.path);
@@ -242,6 +255,8 @@ function foldOperations(
       touched.set(f.path, {
         content: f.content,
         create: !(current === null && fileCache.has(f.path)),
+        changedLines: "all",
+        checkPostFold: false,
       });
       continue;
     }
@@ -259,11 +274,21 @@ function foldOperations(
       throw staleFileConflict(f.path);
     const create = state?.create ?? false;
     if (f.operation === "replace") {
-      touched.set(f.path, { content: f.content, create });
+      touched.set(f.path, {
+        content: f.content,
+        create,
+        changedLines: "all",
+        checkPostFold: false,
+      });
       continue;
     }
     if (f.operation === "delete") {
-      touched.set(f.path, { content: null, create });
+      touched.set(f.path, {
+        content: null,
+        create,
+        changedLines: new Set(),
+        checkPostFold: false,
+      });
       continue;
     }
     // update (str_replace), matched against the text earlier edits produced
@@ -286,21 +311,63 @@ function foldOperations(
         "Extend `old_string` with neighbouring lines until it is unique in the file, or send the whole file as `content`, with its `sha` from `readLedgerFiles`.",
       );
     const at = current.indexOf(f.old_string);
+    const startLine = countLineBreaks(current.slice(0, at));
+    const oldBreaks = countLineBreaks(f.old_string);
+    const newBreaks = countLineBreaks(f.new_string);
+    const lineDelta = newBreaks - oldBreaks;
+    const wholeLineBoundary =
+      endsWithLineBreak(f.old_string) &&
+      (endsWithLineBreak(f.new_string) ||
+        (f.new_string === "" && atLineStart(current, at)));
+    const oldEnd = startLine + oldBreaks - (wholeLineBoundary ? 1 : 0);
+    const newEnd = startLine + newBreaks - (wholeLineBoundary ? 1 : 0);
+
+    let changedLines: Set<number> | "all";
+    if (state?.changedLines === "all") {
+      changedLines = "all";
+    } else {
+      changedLines = new Set<number>();
+      if (state?.changedLines) {
+        for (const line of state.changedLines) {
+          if (line < startLine) changedLines.add(line);
+          else if (line > oldEnd) changedLines.add(line + lineDelta);
+        }
+      }
+      for (let line = startLine; line <= newEnd; line += 1) {
+        changedLines.add(line);
+      }
+    }
+
     touched.set(f.path, {
       content:
         current.slice(0, at) +
         f.new_string +
         current.slice(at + f.old_string.length),
       create,
+      changedLines,
+      checkPostFold: true,
     });
   }
 
   const operations: LedgerChangeFileOperation[] = [];
   const projected = new Map<string, string | null>();
-  for (const [path, { content, create }] of touched) {
+  for (const [
+    path,
+    { content, create, changedLines, checkPostFold },
+  ] of touched) {
     // A change that leaves the file as it is commits nothing: it made an
     // empty commit reported as "Committed 1 change(s)" (w23/052).
     if (!create && content === fileCache.get(path)?.content) continue;
+    // Exact-text `update` edits are checked on the post-fold changed lines so
+    // numeric-only fragments leaving the currency on the line cannot bypass
+    // the 28-digit gate, while multiline strings stay accurate and untouched
+    // pre-existing lines are not re-checked (w23/081, w31/095).
+    if (checkPostFold && content !== null) {
+      assertAmountsFitEngineDecimal(
+        content,
+        changedLines === "all" ? undefined : changedLines,
+      );
+    }
     projected.set(path, content);
     const sha = fileCache.get(path)?.sha;
     if (content === null) operations.push({ operation: "delete", path, sha });
@@ -365,15 +432,14 @@ export async function executeEditLedgerFiles(
         message: description,
         dryRun: true,
       });
-      // Only the new text is checked: an untouched long literal already in
-      // the file is the projection's to report, not this edit's (w23/081).
+      // Whole-file writes are checked upfront before any repository read;
+      // exact-text `update` edits are checked on their post-fold changed lines
+      // in `foldOperations` (w23/081, w31/095).
       // Explicit blob SHAs are validated here too, after write authorization
       // and before any repository read (w31/066).
       for (const file of normalizedFiles) {
         if (file.operation === "create" || file.operation === "replace") {
           assertAmountsFitEngineDecimal(file.content);
-        } else if (file.operation === "update") {
-          assertAmountsFitEngineDecimal(file.new_string);
         }
         if (
           (file.operation === "replace" || file.operation === "delete") &&

@@ -1420,3 +1420,82 @@ describe.each(["rest", "gql", "mcp"] as const)(
     });
   },
 );
+
+// w31/095: 28-digit engine decimal checks must catch expressions, balance
+// tolerances, and compound lot costs while accepting escaped-quote strings
+// across MCP, REST, and GraphQL.
+describe.each(["rest", "gql", "mcp"] as const)(
+  "engine decimal scanner parity via %s (w31/095)",
+  (surface) => {
+    it.each([
+      [
+        "arithmetic expression",
+        [
+          '2026-08-01 * "Cafe" "expr"',
+          "  Expenses:Food:Groceries   (1.0000000000000000000000000001 + 0) USD",
+          "  Assets:Cash",
+        ].join("\n"),
+        "1.0000000000000000000000000001",
+      ],
+      [
+        "balance assertion with tolerance",
+        "2026-01-02 balance Assets:Cash 200.00000000000000000000000001 ~ 0.01 USD",
+        "200.00000000000000000000000001",
+      ],
+      [
+        "compound lot cost",
+        [
+          '2026-08-01 * "Buy" "lot"',
+          "  Assets:Cash 10.00 USD {1.0000000000000000000000000001 # 0 USD}",
+          "  Expenses:Food:Groceries",
+        ].join("\n"),
+        "1.0000000000000000000000000001",
+      ],
+    ])(
+      "refuses %s past 28 digits with BAD_USER_INPUT on dryRun and commit",
+      async (_label, text, literal) => {
+        const f = await fixture();
+        try {
+          for (const dryRun of [true, false]) {
+            const res = await f.call(surface, { text, dryRun });
+            expect(res.ok).toBe(false);
+            if (!res.ok) {
+              const error = res.error as {
+                code?: string;
+                message?: string;
+                originalError?: { category?: string; message?: string };
+              };
+              expect(error.code ?? error.originalError?.category).toBe(
+                "BAD_USER_INPUT",
+              );
+              expect(error.message ?? error.originalError?.message).toContain(
+                `amount ${literal} has more than 28 significant digits`,
+              );
+            }
+          }
+          expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("accepts a narration with an escaped quote before 30 digits and USD", async () => {
+      const f = await fixture();
+      try {
+        const res = await f.call(surface, {
+          text: [
+            '2026-08-01 * "Cafe" "ref \\" 123456789012345678901234567890 USD"',
+            "  Expenses:Food:Groceries 10.00 USD",
+            "  Assets:Cash",
+          ].join("\n"),
+          dryRun: true,
+        });
+        expect(res.ok).toBe(true);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
