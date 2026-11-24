@@ -705,6 +705,113 @@ describe("known openings and the opening-balances account", () => {
       }),
     ).toThrow("cannot have a known opening of its own");
   });
+
+  // w31/089: Equity:OpeningBalances is the counter account of every known
+  // opening, so sorting Liabilities:* after it must not stamp it "zero" or
+  // "unknown" while Assets:* before it silently dropped that metadata.
+  describe("counter-account opening status is order-independent (w31/089)", () => {
+    it.each([
+      [
+        "zero",
+        { name: "Equity:OpeningBalances", openingState: "zero" as const },
+      ],
+      [
+        "unknown",
+        { name: "Equity:OpeningBalances", openingState: "unknown" as const },
+      ],
+      ["omitted (defaults to unknown)", { name: "Equity:OpeningBalances" }],
+      [
+        "zero with currency",
+        {
+          name: "Equity:OpeningBalances",
+          currency: "EUR",
+          openingState: "zero" as const,
+        },
+      ],
+    ])(
+      "omits bcio_opening_balance_status on Equity:OpeningBalances (%s) whether the known account sorts before or after it",
+      (_label, equitySelection) => {
+        for (const knownAccount of [
+          {
+            name: "Assets:Checking",
+            openingState: "known" as const,
+            amount: "100",
+          },
+          {
+            name: "Liabilities:Card",
+            openingState: "known" as const,
+            amount: "50",
+          },
+        ]) {
+          const setup: LedgerSetup = {
+            preset: "blank@1",
+            operatingCurrency: "USD",
+            historyStart: "2026-01-01",
+            accounts: [knownAccount, equitySelection],
+          };
+          const main = previewLedgerSetup(setup, "2026-01-01").files[
+            "main.bean"
+          ]!;
+          expect(buildLedgerFiles(setup, "2026-01-01")["main.bean"]).toBe(main);
+          expect(main).not.toContain("bcio_opening_balance_status");
+          expect(opens(main)).toContain(
+            "2025-12-31 open Equity:OpeningBalances",
+          );
+          expect(
+            opens(main).filter((line) =>
+              line.includes("Equity:OpeningBalances"),
+            ),
+          ).toHaveLength(1);
+        }
+      },
+    );
+
+    it("omits bcio_opening_balance_status on Equity:OpeningBalances in presets when only a liability has a known opening", () => {
+      const main = previewLedgerSetup(
+        {
+          preset: "personal@1",
+          operatingCurrency: "USD",
+          historyStart: "2026-01-01",
+          accounts: [
+            {
+              name: "Liabilities:CreditCard",
+              openingState: "known",
+              amount: "50",
+            },
+            { name: "Equity:OpeningBalances", openingState: "zero" },
+          ],
+        },
+        "2026-01-01",
+      ).files["main.bean"]!;
+      expect(main).not.toContain("bcio_opening_balance_status");
+      expect(main).toContain("  Equity:OpeningBalances 50 USD");
+    });
+
+    it.each(["zero", "unknown"] as const)(
+      "keeps bcio_opening_balance_status %j on Equity:OpeningBalances when no account has a known opening",
+      (openingState) => {
+        const main = previewLedgerSetup(
+          {
+            preset: "blank@1",
+            operatingCurrency: "USD",
+            historyStart: "2026-01-01",
+            accounts: [
+              { name: "Liabilities:Card", openingState: "zero" },
+              {
+                name: "Equity:OpeningBalances",
+                currency: "EUR",
+                openingState,
+              },
+            ],
+          },
+          "2026-01-01",
+        ).files["main.bean"]!;
+        expect(main).toContain(
+          `2026-01-01 open Equity:OpeningBalances EUR\n  bcio_opening_balance_status: "${openingState}"`,
+        );
+      },
+    );
+  });
 });
 
 // w23/049: account names and the title were interpolated raw, so a blank@1

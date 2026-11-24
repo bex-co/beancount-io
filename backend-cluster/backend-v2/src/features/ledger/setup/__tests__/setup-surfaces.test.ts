@@ -256,10 +256,16 @@ describe("28-significant-digit setup amount parity across REST, GraphQL, and MCP
         checkSetupFilesCalls.push(files);
         createdLedgers.push(files);
         return {
-          id: 1,
+          id: "1",
           name: input.name,
           fullName: `alice/${input.name}`,
+          sshUrl: null,
+          httpUrl: `https://example.test/alice/${input.name}.git`,
+          empty: false,
           private: true,
+          createdAt: "2026-01-01T00:00:00Z",
+          updatedAt: "2026-01-01T00:00:00Z",
+          size: 0,
         };
       },
     };
@@ -616,6 +622,123 @@ describe("28-significant-digit setup amount parity across REST, GraphQL, and MCP
           arguments: { setup },
         });
         expect(mcpPreview.isError).toBeFalsy();
+      } finally {
+        await h.close();
+      }
+    },
+  );
+
+  // w31/089: Equity:OpeningBalances must never be stamped with
+  // bcio_opening_balance_status when a known opening posts to it, regardless of
+  // whether the known account sorts before (Assets:*) or after (Liabilities:*)
+  // Equity:OpeningBalances, across REST, GraphQL, and MCP preview & create.
+  it.each([
+    ["zero", "ZERO"],
+    ["unknown", "UNKNOWN"],
+  ] as const)(
+    "omits bcio_opening_balance_status on Equity:OpeningBalances (%s) with a known liability across MCP, REST, and GraphQL (w31/089)",
+    async (openingState, gqlOpeningState) => {
+      const h = await createHarness();
+      try {
+        const setup = {
+          preset: "blank@1" as const,
+          operatingCurrency: "USD",
+          historyStart: "2026-01-01",
+          accounts: [
+            {
+              name: "Liabilities:Card",
+              openingState: "known" as const,
+              amount: "50",
+            },
+            { name: "Equity:OpeningBalances", openingState },
+          ],
+        };
+        const gqlSetup = {
+          preset: "BLANK",
+          operatingCurrency: "USD",
+          historyStart: "2026-01-01",
+          accounts: [
+            {
+              name: "Liabilities:Card",
+              openingState: "KNOWN",
+              amount: "50",
+            },
+            {
+              name: "Equity:OpeningBalances",
+              openingState: gqlOpeningState,
+            },
+          ],
+        };
+
+        const restPreview = await fetch(
+          `${h.rest.url}/api-gateway/v1/ledgers/preview`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ setup }),
+          },
+        );
+        expect(restPreview.status).toBe(200);
+        const restPreviewBody = (await restPreview.json()) as {
+          files: Record<string, string>;
+        };
+        const restMain = restPreviewBody.files["main.bean"]!;
+        expect(restMain).not.toContain("bcio_opening_balance_status");
+        expect(restMain).toContain("2025-12-31 open Equity:OpeningBalances\n");
+        expect(restMain).toContain("  Equity:OpeningBalances 50 USD");
+
+        const gqlPreview = await graphql({
+          schema,
+          source: `query($setup: LedgerSetupInput!) { previewLedgerSetup(setup: $setup) { accounts files } }`,
+          variableValues: { setup: gqlSetup },
+          contextValue: { identity, getCurrentIdentity: () => identity },
+        });
+        expect(gqlPreview.errors).toBeUndefined();
+        const gqlMain = (
+          gqlPreview.data as {
+            previewLedgerSetup: { files: Record<string, string> };
+          }
+        ).previewLedgerSetup.files["main.bean"]!;
+        expect(gqlMain).toBe(restMain);
+
+        const mcpPreview = await h.client.callTool({
+          name: "previewLedgerSetup",
+          arguments: { setup },
+        });
+        expect(mcpPreview.isError).toBeFalsy();
+        const mcpMain = (
+          mcpPreview.structuredContent as {
+            result: { files: Record<string, string> };
+          }
+        ).result.files["main.bean"]!;
+        expect(mcpMain).toBe(restMain);
+
+        // createLedger uses the same builder across all three surfaces.
+        const restCreate = await fetch(`${h.rest.url}/api-gateway/v1/ledgers`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ name: "card-rest", setup }),
+        });
+        expect(restCreate.status).toBe(200);
+
+        const gqlCreate = await graphql({
+          schema,
+          source: `mutation($setup: LedgerSetupInput!) { createLedger(name: "card-gql", setup: $setup) { name } }`,
+          variableValues: { setup: gqlSetup },
+          contextValue: { identity, getCurrentIdentity: () => identity },
+        });
+        expect(gqlCreate.errors).toBeUndefined();
+
+        const mcpCreate = await h.client.callTool({
+          name: "createLedger",
+          arguments: { name: "card-mcp", setup },
+        });
+        expect(mcpCreate.isError).toBeFalsy();
+
+        expect(h.createdLedgers).toHaveLength(3);
+        for (const files of h.createdLedgers) {
+          expect(files["main.bean"]).toBe(restMain);
+        }
       } finally {
         await h.close();
       }

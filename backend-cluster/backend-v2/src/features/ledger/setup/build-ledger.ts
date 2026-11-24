@@ -358,6 +358,12 @@ export function previewLedgerSetup(
 
   const openings: string[] = [];
   const assertions: string[] = [];
+  // Ensure the counter account is in the sorted account list once when any
+  // known opening posts to it, so it opens in its alphabetical position with
+  // no duplicate `open` (w23/048) and no order-dependent metadata (w31/089).
+  if (hasKnownOpening && !selected.has(OPENING_EQUITY)) {
+    selected.set(OPENING_EQUITY, { name: OPENING_EQUITY });
+  }
   const accounts = [...selected.values()].sort((a, b) =>
     a.name.localeCompare(b.name),
   );
@@ -384,23 +390,21 @@ export function previewLedgerSetup(
       .join(" ");
   };
   for (const account of accounts) {
-    // Already opened as the counter of an earlier known opening: a second
-    // `open` made the new ledger fail bean-check (w23/048).
-    if (opened.has(account.name)) continue;
     const currency = account.currency ?? operatingCurrency;
     lines.push(openLine(account.name, account.currency));
     opened.add(account.name);
-    if (account.openingState === "unknown") {
-      lines.push(`  ${openingStatusKey}: "unknown"`);
-    } else if (account.openingState === "zero") {
-      lines.push(`  ${openingStatusKey}: "zero"`);
+    // When any known opening posts to Equity:OpeningBalances, it is the
+    // counter account of those postings and must not be stamped "zero" or
+    // "unknown" regardless of alphabetical order (w31/089).
+    if (!(account.name === OPENING_EQUITY && hasKnownOpening)) {
+      if (account.openingState === "unknown") {
+        lines.push(`  ${openingStatusKey}: "unknown"`);
+      } else if (account.openingState === "zero") {
+        lines.push(`  ${openingStatusKey}: "zero"`);
+      }
     }
     if (account.openingState === "known" && account.amount) {
       const amount = ledgerOpeningAmount(account.name, account.amount);
-      if (!opened.has(OPENING_EQUITY)) {
-        lines.push(openLine(OPENING_EQUITY));
-        opened.add(OPENING_EQUITY);
-      }
       const negated = amount.startsWith("-") ? amount.slice(1) : `-${amount}`;
       openings.push(
         `${openDate} * "Opening balance"`,
