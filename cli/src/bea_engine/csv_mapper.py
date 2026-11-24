@@ -869,24 +869,6 @@ def _pending_column(headers: list[str], rows: list[dict[str, str]], columns: dic
     return None
 
 
-# Ordered so the unambiguous ISO form wins before the day/month forms it could
-# never be confused with.
-_DATE_FORMATS = (
-    "%Y-%m-%d",
-    "%Y/%m/%d",
-    "%m/%d/%Y",
-    "%d/%m/%Y",
-    "%m/%d/%y",
-    "%d/%m/%y",
-    "%m-%d-%Y",
-    "%d-%m-%Y",
-    "%d.%m.%Y",
-    "%d %b %Y",
-    "%b %d, %Y",
-    "%Y%m%d",
-)
-
-
 @dataclass(frozen=True)
 class InferredMapping:
     """A `--csv` spec read off the header row, with what stayed uncertain."""
@@ -1357,51 +1339,6 @@ def open_records(
                 raise _decode_usage_error(source, exc, encoding) from None
 
         yield headers, rows()
-
-
-def infer_date_format(
-    source: Path, column: str, *, delimiter: str | None = None, encoding: str = "utf-8", skip: int = 0
-) -> tuple[str | None, bool]:
-    """The one date format that parses this column, and whether others also did.
-
-    Day-first and month-first columns are indistinguishable until a row carries
-    a day past the twelfth, so the caller is told when the choice was a guess
-    instead of silently booking half a year into the wrong month.
-
-    The whole column is read: the deciding day can arrive at any row, and a
-    sample that stopped at 200 chose month-first for an export whose 201st date
-    was `13/04/2024`, then refused that valid date. Candidates are narrowed as
-    the rows stream, so no value is kept.
-    """
-    working = list(_DATE_FORMATS)
-    seen = False
-    try:
-        with open_records(source, delimiter=delimiter, encoding=encoding, skip=skip) as (headers, rows):
-            if column not in headers:
-                return None, False
-            for _line, row in rows:
-                if _is_header_repeat(row, headers):
-                    continue
-                value = row[column].strip()
-                if not value:
-                    continue
-                seen = True
-                working = [candidate for candidate in working if _parses(value, candidate)]
-                if not working:
-                    return None, False
-    except (OSError, UnicodeDecodeError, UsageError):
-        return None, False
-    if not seen:
-        return None, False
-    return working[0], len(working) > 1
-
-
-def _parses(value: str, date_format: str) -> bool:
-    try:
-        _strptime(value, date_format)
-    except ValueError:
-        return False
-    return True
 
 
 def _strptime(value: str, date_format: str) -> datetime:
