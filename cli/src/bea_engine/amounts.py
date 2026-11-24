@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import math
 import re
-import sys
 from decimal import Decimal, Inexact, InvalidOperation, Rounded, localcontext
 from typing import Any
 
@@ -44,9 +43,11 @@ class _ZeroDivisor(Exception):
 class _Expression:
     """Beancount's `number_expr`: numbers, unary `+`/`-`, `+ - * /` and parentheses.
 
-    Evaluated exactly as the grammar evaluates it, with `Decimal` under the
-    active context, so a computed divisor (`100/(2-2)`) is found as surely
-    as a literal one. Every division checks its divisor before dividing.
+    Evaluated iteratively with an explicit frame stack — matching the grammar
+    and `Decimal` under the active context — so deeply nested divisors
+    (`10/((((...))))` or `10/---...0`) never hit Python's recursion limit or
+    overflow the C stack on any platform. Every division checks its divisor
+    before dividing.
     """
 
     def __init__(self, text: str, start: int) -> None:
@@ -58,75 +59,91 @@ class _Expression:
             self.at += 1
         return self.text[self.at] if self.at < len(self.text) else ""
 
-    def expression(self) -> Decimal:
-        value = self.term()
-        while self._peek() in ("+", "-"):
-            sign = self.text[self.at]
-            self.at += 1
-            right = self.term()
-            value = value + right if sign == "+" else value - right
-        return value
-
-    def term(self) -> Decimal:
-        value = self.unary()
-        while self._peek() in ("*", "/") and not _SLASH_CURRENCY.match(self.text, self.at):
-            operator = self.text[self.at]
-            self.at += 1
-            right = self.unary()
-            if operator == "*":
-                value *= right
-            elif right == 0:
-                raise _ZeroDivisor
-            else:
-                value /= right
-        return value
-
     def unary(self) -> Decimal:
-        # Unary minus binds tightest in the grammar, so `/-0-5` divides by `-0`.
-        char = self._peek()
-        if char in ("+", "-"):
-            self.at += 1
-            value = self.unary()
-            return -value if char == "-" else value
-        if char == "(":
-            self.at += 1
-            value = self.expression()
-            if self._peek() != ")":
+        # Each frame represents an open `(` waiting for its inner expression
+        # and closing `)`: [paren_sign, expr_acc, expr_op, term_acc, term_op],
+        # where paren_sign is 0 (no minus), -1 (odd minuses), or 1 (even >0
+        # minuses, which still rounds under the active Decimal context).
+        frames: list[list[Decimal | str | int | None]] = []
+
+        while True:
+            # Unary signs bind tightest in the grammar, so `/-0-5` divides by `-0`.
+            sign = 0
+            while (char := self._peek()) in ("+", "-"):
+                self.at += 1
+                if char == "-":
+                    sign = -1 if sign >= 0 else 1
+
+            if char == "(":
+                self.at += 1
+                frames.append([sign, None, None, None, None])
+                continue
+
+            number = _NUMBER.match(self.text, self.at)
+            if number is None:
                 raise _NotArithmetic
-            self.at += 1
-            return value
-        number = _NUMBER.match(self.text, self.at)
-        if number is None:
-            raise _NotArithmetic
-        self.at = number.end()
-        return Decimal(number[0].replace(",", ""))
+            self.at = number.end()
+            value = Decimal(number[0].replace(",", ""))
+            if sign < 0:
+                value = -value
+            elif sign > 0:
+                value = +value
 
+            while True:
+                if not frames:
+                    return value
 
-#: How deep one divisor evaluation may recurse after the default stack gives
-#: out. Beancount's parser still crashes on a zero divisor nested hundreds
-#: deep, while it still parses a nonzero divisor nested thousands deep — so
-#: the guard must out-evaluate the parser rather than give up first. Past this
-#: limit the input is deeper than anything the parser survives (it runs out of
-#: memory first), and is refused rather than sent to it.
-_DEEP_DIVISOR_RECURSION_LIMIT = 60000
+                frame = frames[-1]
+                term_acc = frame[3]
+                term_op = frame[4]
+                if term_op is None:
+                    term_val = value
+                elif term_op == "*":
+                    assert isinstance(term_acc, Decimal)
+                    term_val = term_acc * value
+                else:
+                    if value == 0:
+                        raise _ZeroDivisor
+                    assert isinstance(term_acc, Decimal)
+                    term_val = term_acc / value
 
+                op = self._peek()
+                if op in ("*", "/") and not _SLASH_CURRENCY.match(self.text, self.at):
+                    self.at += 1
+                    frame[3] = term_val
+                    frame[4] = op
+                    break
 
-def _divisor_value(text: str, start: int) -> Decimal:
-    """The unary divisor after one slash, evaluated past the default stack.
+                expr_acc = frame[1]
+                expr_op = frame[2]
+                if expr_op is None:
+                    expr_val = term_val
+                elif expr_op == "+":
+                    assert isinstance(expr_acc, Decimal)
+                    expr_val = expr_acc + term_val
+                else:
+                    assert isinstance(expr_acc, Decimal)
+                    expr_val = expr_acc - term_val
 
-    A divisor nested hundreds deep overflows the default stack, which used to
-    read as "not arithmetic" and wave a crashing divisor through. The retry
-    keeps the verdict exact, so deep nonzero input still passes.
-    """
-    try:
-        return _Expression(text, start).unary()
-    except RecursionError:
-        old_limit = sys.getrecursionlimit()
-        sys.setrecursionlimit(_DEEP_DIVISOR_RECURSION_LIMIT)
-        try:
-            return _Expression(text, start).unary()
-        finally:
-            sys.setrecursionlimit(old_limit)
+                if op in ("+", "-"):
+                    self.at += 1
+                    frame[1] = expr_val
+                    frame[2] = op
+                    frame[3] = None
+                    frame[4] = None
+                    break
+
+                if op != ")":
+                    raise _NotArithmetic
+                self.at += 1
+                paren_sign = frame[0]
+                frames.pop()
+                if paren_sign == -1:
+                    value = -expr_val
+                elif paren_sign == 1:
+                    value = +expr_val
+                else:
+                    value = expr_val
 
 
 def _divides_by_zero(text: str) -> bool:
@@ -146,17 +163,12 @@ def _divides_by_zero(text: str) -> bool:
                 if wide:
                     context.prec = max(context.prec, len(text)) + 2
                 try:
-                    if _divisor_value(text, slash.end()) == 0:
+                    if _Expression(text, slash.end()).unary() == 0:
                         return True
                 except _ZeroDivisor:
                     return True
                 except (_NotArithmetic, ArithmeticError):
                     break
-                except RecursionError:
-                    # Deeper than the retry limit: past anything Beancount's
-                    # parser survives, which runs out of memory first. Refuse
-                    # rather than send it to a crash.
-                    return True
     return False
 
 
