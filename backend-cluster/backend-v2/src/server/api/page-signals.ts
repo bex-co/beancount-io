@@ -51,11 +51,11 @@ const numberedArray =
   };
 
 /**
- * A ledger catalog list (w2/m34): with neither `page` nor `limit` it returns
- * every ledger, and a `page` sent alone reads a page of the default size
- * (w31/012).
+ * A list that returns every row when neither `page` nor `limit` is sent, and
+ * reads pages of `HOST_DEFAULT_LIMIT` when `page` comes alone (w2/m34,
+ * w31/012, w31/072): ledger catalog lists and staged bank transactions.
  */
-const catalogArray: Signal = (query, result) =>
+const optionalPageArray: Signal = (query, result) =>
   numberedArray(
     number(query.page) === undefined && number(query.limit) === undefined
       ? {}
@@ -108,11 +108,11 @@ const SIGNALS: Record<string, Signal> = {
   },
   // Page-and-limit reads that cannot count what is left.
   // Staged bank transactions: the tool and the resource are the same read.
-  listStagedBankTransactions: numberedArray(),
-  bankUnsyncedTransactions: numberedArray(),
-  listLedgers: catalogArray,
-  accessibleLedgers: catalogArray,
-  ownedLedgers: catalogArray,
+  listStagedBankTransactions: optionalPageArray,
+  bankUnsyncedTransactions: optionalPageArray,
+  listLedgers: optionalPageArray,
+  accessibleLedgers: optionalPageArray,
+  ownedLedgers: optionalPageArray,
   // Search reads one page even when `limit` is omitted.
   searchLedgers: numberedArray({ limit: HOST_DEFAULT_LIMIT }),
   ledgerCommits: numberedArray({ page: 1, limit: 30 }),

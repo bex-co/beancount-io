@@ -84,7 +84,7 @@ export class PlaidQueryResolver {
   @Authenticated()
   @Query(() => [PlaidTransactionType], {
     description:
-      "Get unsynced transactions for a Plaid account, or for the whole ledger when accountId is omitted. Pass limit (at most 100) and page to read them in pages; omit limit for every row.",
+      "Get unsynced transactions for a Plaid account, or for the whole ledger when accountId is omitted. Pass limit (at most 100) and page to read them in pages (page alone reads pages of 30); omit both for every row.",
   })
   async getUnsyncedPlaidTransactions(
     @Arg("ledgerId", () => String) ledgerId: string,
@@ -100,7 +100,7 @@ export class PlaidQueryResolver {
     page?: number | null,
     @Arg("limit", () => Number, {
       nullable: true,
-      description: "Page size, at most 100; omit for every row",
+      description: "Page size, at most 100; defaults to 30 when page is set",
     })
     limit?: number | null,
   ): Promise<PlaidTransactionType[]> {

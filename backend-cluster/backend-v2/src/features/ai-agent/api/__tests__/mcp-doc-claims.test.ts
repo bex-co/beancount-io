@@ -153,6 +153,13 @@ const CLAIMS: Claim[] = [
     violations: () => (HOST_DEFAULT_LIMIT === 30 ? [] : ["HOST_DEFAULT_LIMIT"]),
   },
   {
+    // w31/072: listStagedBankTransactions called with `page` but no `limit`
+    // reads pages of HOST_DEFAULT_LIMIT alongside listLedgers and owned ledgers.
+    id: "staged bank transactions with page but no limit read pages of 30",
+    doc: "`listLedgers`, the owned ledgers, and `listStagedBankTransactions` called with a `page` but no `limit` read pages of 30",
+    violations: () => (HOST_DEFAULT_LIMIT === 30 ? [] : ["HOST_DEFAULT_LIMIT"]),
+  },
+  {
     id: "category suggestions take at most 500 transactions per read",
     doc: "at most 500 transactions per read",
     violations: () =>

@@ -142,43 +142,59 @@ describe("pageSignal", () => {
   });
 
   it("says nothing when the read cannot know", () => {
-    // A staged-bank page past the first, asked for without a size, has no page size to compare to.
-    expect(
-      pageSignal("bankUnsyncedTransactions", { page: 2 }, [{}]),
-    ).toBeUndefined();
     expect(pageSignal("ledgerJournal", {}, "not rows")).toBeUndefined();
     expect(pageSignal("notAPagedRead", {}, [])).toBeUndefined();
   });
 
-  it("reads every ledger as complete when neither page nor limit is sent", () => {
-    expect(pageSignal("accessibleLedgers", {}, [{}, {}])).toEqual({
-      returned: 2,
-      page: 1,
-      hasMore: false,
-    });
-  });
-
-  // w31/012: these reads send HOST_DEFAULT_LIMIT when the caller sends no
-  // `limit`, so a full page of that size may be followed by another.
-  it.each(["accessibleLedgers", "ownedLedgers", "listLedgers"])(
-    "reads %s with a page but no size as a page of 30",
+  it.each([
+    "accessibleLedgers",
+    "ownedLedgers",
+    "listLedgers",
+    "bankUnsyncedTransactions",
+    "listStagedBankTransactions",
+  ])(
+    "reads every row of %s as complete when neither page nor limit is sent",
     (read) => {
-      const full = new Array(HOST_DEFAULT_LIMIT).fill({});
-      expect(pageSignal(read, { page: 1 }, full)).toEqual({
-        returned: 30,
-        limit: 30,
+      expect(pageSignal(read, {}, [{}, {}])).toEqual({
+        returned: 2,
         page: 1,
-        hasMore: true,
-        nextPage: 2,
-      });
-      expect(pageSignal(read, { page: 3 }, [{}])).toEqual({
-        returned: 1,
-        limit: 30,
-        page: 3,
         hasMore: false,
       });
     },
   );
+
+  // w31/012, w31/072: these reads apply HOST_DEFAULT_LIMIT when the caller
+  // sends `page` without `limit`, so a full page of that size may be followed
+  // by another.
+  it.each([
+    "accessibleLedgers",
+    "ownedLedgers",
+    "listLedgers",
+    "bankUnsyncedTransactions",
+    "listStagedBankTransactions",
+  ])("reads %s with a page but no size as a page of 30", (read) => {
+    const full = new Array(HOST_DEFAULT_LIMIT).fill({});
+    expect(pageSignal(read, { page: 1 }, full)).toEqual({
+      returned: 30,
+      limit: 30,
+      page: 1,
+      hasMore: true,
+      nextPage: 2,
+    });
+    expect(pageSignal(read, { page: 2 }, full)).toEqual({
+      returned: 30,
+      limit: 30,
+      page: 2,
+      hasMore: true,
+      nextPage: 3,
+    });
+    expect(pageSignal(read, { page: 3 }, [{}])).toEqual({
+      returned: 1,
+      limit: 30,
+      page: 3,
+      hasMore: false,
+    });
+  });
 
   it.each([
     ["searchLedgers", { q: "open_ledger" }],

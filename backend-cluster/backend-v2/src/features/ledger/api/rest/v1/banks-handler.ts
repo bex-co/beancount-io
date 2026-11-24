@@ -51,9 +51,10 @@ export const bankAccountQuery = z
   .strict();
 
 /**
- * The staging area's read: the account filter plus a page. Omitting `limit`
- * returns every staged row, which the dashboard's Bank Sync table relies on;
- * an agent pages with `limit` so a first sync of months of history does not
+ * The staging area's read: the account filter plus a page. Omitting both `page`
+ * and `limit` returns every staged row, which the dashboard's Bank Sync table
+ * relies on; passing `page` without `limit` reads pages of 30, and an agent
+ * can pass `limit` (at most 100) so a first sync of months of history does not
  * arrive as one result.
  */
 export const unsyncedTransactionsQuery = bankAccountQuery

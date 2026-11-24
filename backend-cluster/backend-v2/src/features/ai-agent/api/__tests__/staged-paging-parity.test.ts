@@ -141,17 +141,24 @@ async function fixture() {
       error?: { code: string };
     };
 
-    let resource: { ids?: string[]; page?: unknown; code?: string };
+    let resource: {
+      ids?: string[];
+      page?: unknown;
+      pageItem?: unknown;
+      code?: string;
+    };
     try {
       const read = await client.readResource({
         uri: `beancount://${LEDGER}/bank-transactions/unsynced${suffix}`,
       });
       const content = read.contents[0] as { text: string; _meta?: unknown };
+      const second = read.contents[1] as { text: string } | undefined;
       resource = {
         ids: (JSON.parse(content.text) as { transactionId: string }[]).map(
           (row) => row.transactionId,
         ),
         page: (content._meta as { page?: unknown } | undefined)?.page,
+        pageItem: second ? JSON.parse(second.text) : undefined,
       };
     } catch (error) {
       resource = { code: (error as { data?: { code?: string } }).data?.code };
@@ -263,22 +270,84 @@ describe("staged bank transactions are paged the same way on every surface", () 
     }
   });
 
-  it("returns every row without a limit, as the dashboard reads it", async () => {
+  it("returns every row when neither page nor limit is sent, as the dashboard reads it", async () => {
     const f = await fixture();
     try {
       const out = await f.read({});
       const expected = ids(0, 250);
-      for (const surface of [out.tool, out.resource, out.rest, out.gql])
-        expect(surface.ids).toEqual(expected);
-      expect(out.tool.page).toEqual({
+      const page = {
         returned: 250,
         page: 1,
         hasMore: false,
-      });
+      };
+      for (const surface of [out.tool, out.resource, out.rest, out.gql])
+        expect(surface.ids).toEqual(expected);
+      expect(out.tool.page).toEqual(page);
+      expect(out.resource.page).toEqual(page);
+      expect(out.resource.pageItem).toEqual({ page });
+      expect(out.rest.hasMore).toBe("false");
+      expect(out.rest.link).toBeNull();
+      expect(out.gql.page).toEqual(page);
     } finally {
       await f.close();
     }
   });
+
+  // w31/072: passing `page` without `limit` slices pages of 30 (HOST_DEFAULT_LIMIT)
+  // and emits the matching page signal on every surface instead of returning all rows
+  // from page 1 and dropping the signal for page > 1.
+  it.each([
+    [
+      "page 1 without limit",
+      1,
+      ids(0, 30),
+      { returned: 30, limit: 30, page: 1, hasMore: true, nextPage: 2 },
+    ],
+    [
+      "page 2 without limit",
+      2,
+      ids(30, 60),
+      { returned: 30, limit: 30, page: 2, hasMore: true, nextPage: 3 },
+    ],
+    [
+      "short last page (page 9) without limit",
+      9,
+      ids(240, 250),
+      { returned: 10, limit: 30, page: 9, hasMore: false },
+    ],
+    [
+      "empty page past the end (page 10) without limit",
+      10,
+      [],
+      { returned: 0, limit: 30, page: 10, hasMore: false },
+    ],
+  ])(
+    "serves %s as a page of 30 with matching signals on every surface",
+    async (_label, pageNum, expected, page) => {
+      const f = await fixture();
+      try {
+        const out = await f.read({ page: pageNum });
+        for (const surface of [out.tool, out.resource, out.rest, out.gql])
+          expect(surface.ids).toEqual(expected);
+        expect(out.tool.page).toEqual(page);
+        expect(out.resource.page).toEqual(page);
+        expect(out.resource.pageItem).toEqual({ page });
+        expect(out.rest.hasMore).toBe(String(page.hasMore));
+        if (page.hasMore) {
+          expect(out.rest.link).toContain(`page=${pageNum + 1}`);
+          expect(out.rest.link).toContain("limit=30");
+        } else {
+          expect(out.rest.link).toBeNull();
+        }
+        expect(out.gql.page).toEqual(page);
+        const last = JSON.parse(out.tool.text?.split("\n").at(-1) ?? "");
+        expect(last.page).toEqual(page);
+        expect(last.result).toHaveLength(expected.length);
+      } finally {
+        await f.close();
+      }
+    },
+  );
 
   it.each([
     ["a limit past 100", { limit: 101 }],

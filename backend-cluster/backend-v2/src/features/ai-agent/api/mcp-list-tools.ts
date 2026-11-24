@@ -56,7 +56,7 @@ export async function executeListBankConnections(
 // --- listStagedBankTransactions ---------------------------------------------
 
 export const listStagedBankTransactionsDescription =
-  "List bank transactions staged for import, newest first. Each row's `transactionId` — not its `id` — is what importStagedBankTransactions and discardStagedBankTransactions take. Pass `limit` to read a large staging area in pages (`page.hasMore` says whether more remain; omit `limit` for every staged row). Imported and discarded rows leave the list, so after acting on a page read page 1 again rather than the next page.";
+  "List bank transactions staged for import, newest first. Each row's `transactionId` — not its `id` — is what importStagedBankTransactions and discardStagedBankTransactions take. Page with `page` and `limit` (`page.hasMore` says whether more remain; omit both for all rows). Imported and discarded rows leave the list, so after acting on a page read page 1 again.";
 
 // Strict JSON input (w23/112, w31/070): unlike REST's `unsyncedTransactionsQuery`
 // (which uses `intQuery()` for URL query strings and `.openapi()` for

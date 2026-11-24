@@ -1,4 +1,5 @@
 import { BANK_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
+import { HOST_DEFAULT_LIMIT } from "@/shared/host-page";
 import { assertPageArgs } from "@/shared/page-info";
 import { type DbExecutor } from "@/drizzle/drizzle";
 import { assertBankId, assertBankIds } from "../utils/assert-bank-id";
@@ -142,8 +143,9 @@ export type PlaidUnlinkResult =
 
 /**
  * A page of the staging area: `limit` rows starting at page `page` (1-based).
- * Without `limit` every staged row comes back, which is what the dashboard's
- * Bank Sync table reads, and `page` alone selects nothing.
+ * With neither `page` nor `limit` every staged row comes back, which is what
+ * the dashboard's Bank Sync table reads; `page` alone reads pages of
+ * `HOST_DEFAULT_LIMIT` (30), matching the ledger catalog lists (w31/072).
  */
 export interface StagedPage {
   page?: number | null;
@@ -151,9 +153,12 @@ export interface StagedPage {
 }
 
 function pageOf<T>(rows: T[], { page, limit }: StagedPage): T[] {
-  if (limit === undefined || limit === null) return rows;
-  const start = ((page ?? 1) - 1) * limit;
-  return rows.slice(start, start + limit);
+  const hasPage = page !== undefined && page !== null;
+  const hasLimit = limit !== undefined && limit !== null;
+  if (!hasPage && !hasLimit) return rows;
+  const size = hasLimit ? limit : HOST_DEFAULT_LIMIT;
+  const start = ((page ?? 1) - 1) * size;
+  return rows.slice(start, start + size);
 }
 
 export interface IPlaidItemService {
