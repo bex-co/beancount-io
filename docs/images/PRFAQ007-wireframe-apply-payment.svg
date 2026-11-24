@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700" width="1100" height="700" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#1f2328">
+  <title>PRFAQ007 wireframe: apply one payment to invoices</title>
+  <desc>One payment in review. The scanned check and remittance stub are on the left. On the right, the category Assets:AccountsReceivable is split by invoice, a short payment of 40.00 asks for a decision, and the entry that will be recorded is shown.</desc>
+  <rect width="1100" height="700" fill="#ffffff"/>
+  <rect x="20" y="20" width="1060" height="660" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="44" y="56" font-size="18" font-weight="600">Apply payment to invoices · Acme Corp, check 10482</text>
+  <text x="44" y="78" fill="#57606a">Lockbox batch Nov 20 · 1,960.00 USD</text>
+  <rect x="906" y="40" width="150" height="24" rx="12" fill="#fff8e5" stroke="#bf8700"/>
+  <text x="981" y="57" text-anchor="middle" fill="#9a6700" font-size="12">Short by 40.00</text>
+
+  <!-- scanned image -->
+  <rect x="44" y="98" width="380" height="558" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="60" y="122" font-size="11" font-weight="600" fill="#57606a">SCANNED IMAGE · PAGE 1 OF 2</text>
+  <rect x="60" y="136" width="348" height="130" fill="#f6f8fa" stroke="#8c959f" stroke-dasharray="4 3"/>
+  <text x="74" y="160" font-weight="600">ACME CORP</text><text x="394" y="160" text-anchor="end">No. 10482</text>
+  <text x="74" y="186" fill="#57606a">Pay to the order of</text><text x="74" y="204">Your Company Inc.</text>
+  <text x="394" y="204" text-anchor="end" font-weight="600">$1,960.00</text>
+  <line x1="74" y1="240" x2="230" y2="240" stroke="#8c959f"/><line x1="260" y1="240" x2="394" y2="240" stroke="#8c959f"/>
+  <text x="74" y="256" font-size="11" fill="#57606a">Memo</text>
+  <rect x="60" y="282" width="348" height="210" fill="#f6f8fa" stroke="#8c959f" stroke-dasharray="4 3"/>
+  <text x="74" y="306" font-weight="600">Remittance advice</text>
+  <g font-size="11" fill="#57606a"><text x="74" y="330">INVOICE</text><text x="250" y="330" text-anchor="end">AMOUNT</text><text x="394" y="330" text-anchor="end">PAID</text></g>
+  <line x1="74" y1="338" x2="394" y2="338" stroke="#8c959f"/>
+  <text x="74" y="360">INV-101</text><text x="250" y="360" text-anchor="end">1,200.00</text><text x="394" y="360" text-anchor="end">1,200.00</text>
+  <rect x="68" y="370" width="332" height="26" fill="#fff8e5" stroke="#bf8700"/>
+  <text x="74" y="388">INV-102</text><text x="250" y="388" text-anchor="end">800.00</text><text x="394" y="388" text-anchor="end">760.00</text>
+  <text x="74" y="420" font-style="italic" fill="#57606a">Less 2% discount, early payment</text>
+  <line x1="74" y1="446" x2="394" y2="446" stroke="#8c959f"/>
+  <text x="74" y="468" font-weight="600">Total</text><text x="394" y="468" text-anchor="end" font-weight="600">1,960.00</text>
+  <text x="60" y="630" fill="#57606a">◂ Page 1 of 2 ▸ · Zoom</text>
+
+  <!-- read + matched -->
+  <rect x="444" y="98" width="612" height="196" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="460" y="122" font-size="11" font-weight="600" fill="#57606a">CATEGORY: Assets:AccountsReceivable, SPLIT BY INVOICE</text>
+  <g font-size="11" font-weight="600" fill="#57606a"><text x="460" y="150">INVOICE</text><text x="640" y="150" text-anchor="end">OPEN</text><text x="750" y="150" text-anchor="end">PAID</text><text x="780" y="150">RESULT</text></g>
+  <line x1="460" y1="158" x2="1040" y2="158" stroke="#8c959f"/>
+  <text x="460" y="184" font-weight="600">INV-101</text><text x="640" y="184" text-anchor="end">1,200.00</text><text x="750" y="184" text-anchor="end">1,200.00</text>
+  <rect x="780" y="168" width="110" height="22" rx="11" fill="#eefbf1" stroke="#2f8f4e"/><text x="835" y="184" text-anchor="middle" fill="#2f8f4e" font-size="12">Paid in full</text>
+  <line x1="460" y1="200" x2="1040" y2="200" stroke="#d0d7de"/>
+  <text x="460" y="226" font-weight="600">INV-102</text><text x="640" y="226" text-anchor="end">800.00</text><text x="750" y="226" text-anchor="end">760.00</text>
+  <rect x="780" y="210" width="110" height="22" rx="11" fill="#fff8e5" stroke="#bf8700"/><text x="835" y="226" text-anchor="middle" fill="#9a6700" font-size="12">Short 40.00</text>
+  <text x="904" y="226" fill="#57606a" font-size="12">“2% discount”</text>
+  <line x1="460" y1="242" x2="1040" y2="242" stroke="#8c959f"/>
+  <text x="460" y="270" font-weight="600">Total applied</text><text x="750" y="270" text-anchor="end" font-weight="600">1,960.00</text><text x="780" y="270" fill="#2f8f4e">Equals the check amount</text>
+
+  <rect x="444" y="310" width="612" height="150" rx="6" fill="#ffffff" stroke="#bf8700"/>
+  <text x="460" y="336" font-weight="600">What should happen to the 40.00 on INV-102?</text>
+  <circle cx="468" cy="362" r="6" fill="#ffffff" stroke="#1f2328"/><circle cx="468" cy="362" r="3" fill="#1f2328"/>
+  <text x="484" y="367">Accept as an early-payment discount. INV-102 is closed.</text>
+  <circle cx="468" cy="394" r="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="484" y="399">Leave 40.00 open on INV-102.</text>
+  <circle cx="468" cy="426" r="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="484" y="431">Mark as disputed and leave open.</text>
+
+  <rect x="444" y="476" width="612" height="130" rx="6" fill="#eef4ff" stroke="#3b6fd8"/>
+  <text x="460" y="498" font-size="11" font-weight="600" fill="#57606a">ENTRY THAT WILL BE RECORDED</text>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12">
+    <text x="460" y="520">2026-11-20 * "Acme Corp" "Payment INV-101, INV-102"</text>
+    <text x="460" y="538">&#160;&#160;Assets:Bank:Operating&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;1,960.00 USD</text>
+    <text x="460" y="556">&#160;&#160;Assets:AccountsReceivable&#160;&#160;&#160;-1,200.00 USD&#160;&#160;&#160;invoice: "INV-101"</text>
+    <text x="460" y="574">&#160;&#160;Assets:AccountsReceivable&#160;&#160;&#160;&#160;&#160;-800.00 USD&#160;&#160;&#160;invoice: "INV-102"</text>
+    <text x="460" y="592">&#160;&#160;Income:SalesDiscounts&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;40.00 USD</text>
+  </g>
+  <rect x="444" y="624" width="110" height="32" rx="6" fill="#1f2328"/><text x="499" y="645" text-anchor="middle" fill="#ffffff" font-weight="600">Record</text>
+  <rect x="564" y="624" width="140" height="32" rx="6" fill="#ffffff" stroke="#57606a"/><text x="634" y="645" text-anchor="middle">Change invoices</text>
+  <rect x="714" y="624" width="190" height="32" rx="6" fill="#ffffff" stroke="#57606a"/><text x="809" y="645" text-anchor="middle">Not a customer payment</text>
+</svg>

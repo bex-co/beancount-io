@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" width="1280" height="760" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" fill="#1f2328">
+  <title>PRFAQ007 wireframe: bank transactions with customer payments</title>
+  <desc>The bank transactions review page. Deposits are categorized to Assets:AccountsReceivable split by invoice, next to an ordinary expense row. Two deposits need a decision: a lockbox batch with one short payment, and a wire with no remittance where two open invoices fit.</desc>
+  <rect width="1280" height="760" fill="#ffffff"/>
+  <rect x="20" y="20" width="1240" height="720" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="44" y="58" font-size="18" font-weight="600">Bank transactions</text>
+  <rect x="1126" y="38" width="110" height="32" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="1181" y="59" text-anchor="middle">Sync now</text>
+
+  <rect x="44" y="84" width="1192" height="40" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="62" y="109">Since yesterday: <tspan font-weight="600">9 imported</tspan> automatically · <tspan font-weight="600">1 lockbox deposit</tspan> applied to 22 invoices · <tspan font-weight="600">2 need a decision</tspan> · <tspan font-weight="600">3 to categorize</tspan></text>
+
+  <!-- Needs a decision -->
+  <text x="44" y="152" font-size="15" font-weight="600">Needs a decision (2)</text>
+  <rect x="44" y="164" width="590" height="132" rx="6" fill="#ffffff" stroke="#bf8700"/>
+  <text x="62" y="190" font-weight="600">Nov 20 · LOCKBOX DEPOSIT · +41,280.00 USD</text>
+  <text x="62" y="212" fill="#9a6700">13 of 14 payments in this batch are applied. One is short.</text>
+  <rect x="62" y="224" width="554" height="28" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="74" y="243">Acme Corp · check 10482 · 1,960.00 → INV-101, INV-102 · short by 40.00</text>
+  <rect x="62" y="260" width="140" height="26" rx="6" fill="#ffffff" stroke="#1f2328"/>
+  <text x="132" y="278" text-anchor="middle" font-weight="600">Review payment</text>
+
+  <rect x="646" y="164" width="590" height="132" rx="6" fill="#ffffff" stroke="#bf8700"/>
+  <text x="664" y="190" font-weight="600">Nov 21 · WIRE IN NORTHWIND · +725.00 USD</text>
+  <text x="664" y="212" fill="#9a6700">No remittance arrived. Two open invoices could be this payment.</text>
+  <rect x="664" y="224" width="270" height="28" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="676" y="243">○ INV-110 · 725.00 · due Nov 15</text>
+  <rect x="946" y="224" width="270" height="28" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="958" y="243">○ INV-114 · 725.00 · due Dec 1</text>
+  <rect x="664" y="260" width="140" height="26" rx="6" fill="#ffffff" stroke="#1f2328"/>
+  <text x="734" y="278" text-anchor="middle" font-weight="600">Apply to selected</text>
+  <rect x="814" y="260" width="130" height="26" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="879" y="278" text-anchor="middle">Leave unapplied</text>
+
+  <!-- To categorize -->
+  <text x="44" y="330" font-size="15" font-weight="600">To categorize (3)</text>
+  <rect x="1126" y="310" width="110" height="28" rx="6" fill="#1f2328"/>
+  <text x="1181" y="329" text-anchor="middle" fill="#ffffff" font-weight="600">Submit (3)</text>
+  <rect x="44" y="346" width="1192" height="214" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <g font-size="11" font-weight="600" fill="#57606a">
+    <text x="62" y="370">DATE</text><text x="124" y="370">FROM THE BANK</text><text x="370" y="370">PAYEE</text><text x="530" y="370">NARRATION</text><text x="800" y="370" text-anchor="end">AMOUNT</text><text x="820" y="370">CATEGORY</text><text x="1090" y="370">SOURCE</text>
+  </g>
+  <line x1="62" y1="380" x2="1218" y2="380" stroke="#8c959f"/>
+
+  <text x="62" y="410">Nov 21</text><text x="124" y="410" fill="#57606a" font-size="12">ACH CREDIT BOREALIS LTD</text>
+  <rect x="370" y="392" width="148" height="28" rx="5" fill="#ffffff" stroke="#8c959f"/><text x="380" y="411">Borealis Ltd</text>
+  <rect x="530" y="392" width="180" height="28" rx="5" fill="#ffffff" stroke="#8c959f"/><text x="540" y="411">Payment, 8 invoices</text>
+  <text x="800" y="411" text-anchor="end">+12,400.00</text>
+  <rect x="820" y="388" width="256" height="44" rx="5" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="830" y="406" font-weight="600">Assets:AccountsReceivable</text><text x="830" y="424" font-size="12" fill="#2f8f4e">8 invoices · all paid in full ▾</text>
+  <rect x="1090" y="396" width="128" height="22" rx="11" fill="#f6f8fa" stroke="#8c959f"/><text x="1154" y="412" text-anchor="middle" font-size="12">EDI file</text>
+  <line x1="62" y1="442" x2="1218" y2="442" stroke="#d0d7de"/>
+
+  <text x="62" y="472">Nov 21</text><text x="124" y="472" fill="#57606a" font-size="12">DEPOSIT CHECK 7731</text>
+  <rect x="370" y="454" width="148" height="28" rx="5" fill="#ffffff" stroke="#8c959f"/><text x="380" y="473">Cedar Supply</text>
+  <rect x="530" y="454" width="180" height="28" rx="5" fill="#ffffff" stroke="#8c959f"/><text x="540" y="473">Payment INV-103</text>
+  <text x="800" y="473" text-anchor="end">+500.00</text>
+  <rect x="820" y="450" width="256" height="44" rx="5" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="830" y="468" font-weight="600">Assets:AccountsReceivable</text><text x="830" y="486" font-size="12" fill="#2f8f4e">INV-103 · paid in full ▾</text>
+  <rect x="1090" y="458" width="128" height="22" rx="11" fill="#f6f8fa" stroke="#8c959f"/><text x="1154" y="474" text-anchor="middle" font-size="12">lockbox image</text>
+  <line x1="62" y1="504" x2="1218" y2="504" stroke="#d0d7de"/>
+
+  <text x="62" y="534">Nov 21</text><text x="124" y="534" fill="#57606a" font-size="12">HARDWARE DEPOT 114 OAK</text>
+  <rect x="370" y="516" width="148" height="28" rx="5" fill="#ffffff" stroke="#8c959f"/><text x="380" y="535">Hardware Depot</text>
+  <rect x="530" y="516" width="180" height="28" rx="5" fill="#ffffff" stroke="#8c959f"/><text x="540" y="535">Supplies</text>
+  <text x="800" y="535" text-anchor="end">−42.18</text>
+  <rect x="820" y="516" width="256" height="28" rx="5" fill="#ffffff" stroke="#8c959f"/><text x="830" y="535">Expenses:Supplies</text>
+  <rect x="1090" y="520" width="128" height="22" rx="11" fill="#f6f8fa" stroke="#8c959f"/><text x="1154" y="536" text-anchor="middle" font-size="12">history · 4 prior</text>
+
+  <!-- Imported automatically -->
+  <text x="44" y="592" font-size="15" font-weight="600">Imported automatically (9)</text>
+  <rect x="44" y="604" width="1192" height="118" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="62" y="632">Nov 19 · LOCKBOX DEPOSIT · +28,900.00 → Assets:AccountsReceivable · 9 payments, 22 invoices</text>
+  <rect x="930" y="616" width="200" height="22" rx="11" fill="#eefbf1" stroke="#2f8f4e"/><text x="1030" y="632" text-anchor="middle" fill="#2f8f4e" font-size="12">matched a lockbox batch</text><text x="1218" y="632" text-anchor="end" fill="#57606a">Undo</text>
+  <line x1="62" y1="644" x2="1218" y2="644" stroke="#d0d7de"/>
+  <text x="62" y="670">Nov 20 · ACH CREDIT DELTA HOLDINGS · +3,150.00 → Assets:AccountsReceivable · INV-088, INV-090</text>
+  <rect x="930" y="654" width="200" height="22" rx="11" fill="#eefbf1" stroke="#2f8f4e"/><text x="1030" y="670" text-anchor="middle" fill="#2f8f4e" font-size="12">matched an EDI file</text><text x="1218" y="670" text-anchor="end" fill="#57606a">Undo</text>
+  <line x1="62" y1="682" x2="1218" y2="682" stroke="#d0d7de"/>
+  <text x="62" y="708">Nov 20 · CORNER GROCER · −35.20 → Expenses:Office:Supplies</text>
+  <rect x="930" y="692" width="200" height="22" rx="11" fill="#f6f8fa" stroke="#8c959f"/><text x="1030" y="708" text-anchor="middle" font-size="12">history · 6 priors</text><text x="1218" y="708" text-anchor="end" fill="#57606a">Undo</text>
+</svg>
