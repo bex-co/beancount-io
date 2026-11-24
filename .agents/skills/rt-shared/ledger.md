@@ -101,6 +101,8 @@ newest first.
 
 ### Skipped
 
+- 2026-11-23 ledger `average-booking.ts` — read fully; every branch pins a past fix (w21/708 AVERAGE refusal, w21/721 saleLocator, w21/722 last-option-wins, w21/733 flagged-sale POSTING); examined, no divergence.
+- 2026-11-23 ledger `generated-closes.ts` (`inactiveAfterGeneratedCloses`/`inactivePads`/`withoutDroppedCloseErrors`/`withoutGeneratedCloseErrors`) — read fully; every branch pins a past fix (w21/737 close_tree closes, w21/753 late child, w21/756 pads, w21/775/776 dropped/generated errors); examined, no divergence.
 - 2026-11-23 ledger `sell-gains.ts` mul/add, `source-slice.ts` addScaled, `price-map.ts` addInto/two-hop times, `account-tree.ts` reduce-plus — exact arithmetic like the pre-fix journal/lot-inventory twins, but every operand chain is written-source short decimals (prices, tolerances `0.5×10^-places`, already-rounded reduced values); the >28-digit dust needs a 28-digit division quotient, which only the booked-cost paths carry — examined, no reachable divergence, no proof.
 - 2026-11-23 mobile `decimal-number.ts` vs dashboard `beancount/decimal-number.ts` — shared parse/negate/sum/fraction core is textually identical modulo names; splits are per-surface (`decimalOf`/`compareDecimals`/`roundDecimal` mobile-only, `exceedsLedgerDigits`/`isPositiveDecimalNumber` dashboard-only), no divergence.
 - 2026-11-23 dashboard `transaction-summary.ts` transfer check (`abs(sum) < 1e-9`) — pins near-balanced two-posting txns as transfers; no documented intent for a different tolerance, left alone.
@@ -116,16 +118,6 @@ newest first.
 - 2026-11-21 cli `report_csv.py` vs `bea_engine/query.py` CSV-injection handling — trigger sets agree; every report user-text cell is in `_TEXT_COLUMNS`, numbers exempt by column; examined, no divergence.
 - 2026-11-21 cli `rows._alternating_nuls` vs `csv_mapper._refuse_utf16` parity half — deliberate documented floor (w5/738); examined, no divergence.
 - 2026-11-21 cli `bea_engine/importing.py` duplicate pool vs dashboard unbooked-dup fix — probed live: exact-ID rows matching an unbalanced ledger txn stay `duplicate` per the documented always-skip rule, failing ledgers refuse without `--allow-errors`; no intent pins error entries out; ambiguous, no fix.
-- 2026-11-21 dashboard `series-util`/`calendar-date` month windows + carry/forward-fill + export/model exact-decimal core — read against tests and docblocks; no divergence.
-- 2026-11-21 dashboard cash-flow `statement-tree`/`merge-intervals`/`role-resolver`/`account-roots` + overview categorizer — read; agree with the engine post-fix, no separate divergence.
-- 2026-11-21 dashboard Smart Import currency-symbol table (`csv-validator.ts` `SYMBOL_CURRENCIES`) — FIXED: added ֏/؋/₵ (w5/924) and fullwidth ￡/￦ (w5/1064) so those rows conflict under the wrong currency like `bea import --csv`, instead of silently posting as dollars.
-- 2026-11-21 dashboard `csv-validator.ts` ↔ cli `bea_engine/csv_mapper.py` amount parity (separator votes, `splitAmountSign`, `resolveDecimalConvention`, `parseAmount` precision) — implementations agree; only the symbol table had drifted (shipped above); the unicode-digit `isdigit`-vs-`\d` difference is unpinned on both sides, left alone.
-- 2026-11-21 mobile `account-search.ts`/`account-frecency.ts` (`fuzzyMatch`/`filterAccounts`/`exactness`/`frecencyScore`/`topAccounts`) — cubic-exact proof holds, smartcase/substring/multi-word/tiebreak paths all match their docblocks and pins; examined, no divergence.
-- 2026-11-21 dashboard `date-picker-utils.ts` (`widenYearToken`/`parseStrictCalendarDate`/`rollingCalendarBounds`/`CivilDate`) — strictness, year bounds, Apia-day and digit-fold behavior match the w4/325–326/m32/m24 pins; examined, no divergence.
-- 2026-11-21 cli zero-divisor twin agreement (`bea_engine/amounts` vs `cli/amounts` `_Expression`/`_divides_by_zero`/`_ZERO_DIVISOR`/`_NOT_ARITHMETIC`) — bodies identical; 33-spelling fuzz vs beancount 3.2.3 oracle: no missed crash; the 4 evaluator-refuses divergences (`.0`, `0_0`, `//0`) are all inputs beancount rejects or SystemErrors on, and the literal scan already refuses them — message-only, nothing valid diverges.
-- 2026-11-21 mobile recurrence trio (`detect-recurrence`/`payee-series`/`resolve-recurring` + `use-payee-recurrence` wiring) — 61-probe battery (leap clamping, lapse cap, grace/lapse edges, quarter-end anchor, four-weekly guard, biweekly-with-15, semimonthly skip, refund tie, currency switch, weekend shift, resolver truth table) all agree with documented intent; no divergence.
-- 2026-11-21 mobile valuation basis pair (`valueBasisOf` operating-currency read vs `selectValuation` cost-currency pricing) — agree on all reachable inputs; w21/124 + w21/426 tests pin the foreign-cost-lot behavior; module-doc intro line is loose wording, not a behavior bug.
-- 2026-11-21 mobile `search-fold.ts`/`arabic-script-fold.ts` vs ledger `directive-filter.ts` folds, `plain-search-filter.ts`↔server live pair — letter/digit/mark folds identical both sides, compositions agree by design per surface, client NFD-alternation matched server-side; examined, no divergence.
 
 ## rt-logic-simplifier
 
