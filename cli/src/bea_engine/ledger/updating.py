@@ -35,6 +35,7 @@ from bea_engine.ledger import reader
 from bea_engine.ledger import write as ledger_write
 from bea_engine.ledger.text import (
     BANK_ID_KEYS,
+    IMPORT_ID_KEYS,
     decode_error_message,
     ledger_roots,
     parse_account,
@@ -193,11 +194,13 @@ def locate_transaction(entries: list[Any], id_text: str, root: Path | None = Non
 
     `file:line` resolves by location, its path read from the working
     directory and then from the folder of `root`, the root ledger; anything
-    else resolves by `import-id` first, `ref` second, and a bank ID
+    else resolves by import-id (`IMPORT_ID_KEYS`, a merged transfer's
+    `import-id-2` included) first, `ref` second, and a bank ID
     (`BANK_ID_KEYS`) third, so an import-id always wins when a `ref` or a bank
-    ID elsewhere spells the same value. A repeated value is ambiguous and an
-    absent one is not found; both are usage errors, because the caller named
-    the wrong entry rather than the ledger failing to load.
+    ID elsewhere spells the same value. A value two entries hold within one
+    tier, under one key or two, is ambiguous and an absent one is not found;
+    both are usage errors, because the caller named the wrong entry rather
+    than the ledger failing to load.
     """
     from beancount.core.data import Transaction
 
@@ -221,22 +224,20 @@ def locate_transaction(entries: list[Any], id_text: str, root: Path | None = Non
     # The loader reads metadata as NFC, so a decomposed id copied from the
     # file is compared in that form too (w5/1030).
     wanted = unicodedata.normalize("NFC", id_text)
-    for key in ("import-id", "ref"):
-        matches = [entry for entry in on_disk if wanted in _metadata_values(entry, key)]
+    # A merged transfer's `import-id-2` is the second account's own row id,
+    # the one `bea import` of that account reports as "already in the
+    # ledger"; refused here, it sent the user into the file (w1/373). The
+    # statement's own ID, which a CSV import keeps as `bank_id: "TX-1001"`
+    # beside `import-id: "bank:TX-1001"`, was refused the same way (w1/372).
+    # A tier's keys count as one, so two entries holding the value under
+    # different keys of the same tier are ambiguous too.
+    for keys in (IMPORT_ID_KEYS, ("ref",), BANK_ID_KEYS):
+        matches = [entry for entry in on_disk if any(wanted in _metadata_values(entry, key) for key in keys)]
         if len(matches) > 1:
-            raise _ambiguous(id_text, key, matches)
+            held = [key for key in keys if any(wanted in _metadata_values(entry, key) for entry in matches)]
+            raise _ambiguous(id_text, " or ".join(held), matches)
         if matches:
             return matches[0]
-    # The statement's own ID, which a CSV import keeps as `bank_id: "TX-1001"`
-    # beside `import-id: "bank:TX-1001"`: refused, the one ID a person holds
-    # sent them into the file for the prefix (w1/372). The keys are one tier,
-    # so two entries holding the value under different keys are ambiguous too.
-    matches = [entry for entry in on_disk if any(wanted in _metadata_values(entry, key) for key in BANK_ID_KEYS)]
-    if len(matches) > 1:
-        keys = [key for key in BANK_ID_KEYS if any(wanted in _metadata_values(entry, key) for entry in matches)]
-        raise _ambiguous(id_text, " or ".join(keys), matches)
-    if matches:
-        return matches[0]
     raise protocol.UsageError(
         f"No transaction with import-id, ref, or bank ID {id_text!r} in this ledger"
         f"{_no_file_named(id_text, root)}. Nothing was written."

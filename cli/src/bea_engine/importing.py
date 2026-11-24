@@ -30,6 +30,7 @@ from bea_engine.ledger import write as ledger_write
 from bea_engine.ledger.prices import quote_refusal, reciprocal_agrees
 from bea_engine.ledger.text import (
     BANK_ID_KEYS,
+    IMPORT_ID_KEYS,
     OPENED_ACCOUNTS,
     bea_command,
     checked_operating_currencies,
@@ -644,7 +645,7 @@ def answer(
                     stored = next(
                         (
                             str(value)
-                            for value in (match.meta.get("import-id"), match.meta.get("import-id-2"))
+                            for value in (match.meta.get(key) for key in IMPORT_ID_KEYS)
                             if str(value or "").endswith(f":sha256:{matched_value}")
                         ),
                         f"sha256:{matched_value}",
@@ -2095,7 +2096,7 @@ def _identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, st
         identities.append((account, "file", nfc(meta["bea_import_id"])))
     # beancount-migrate writes the same digest under its source's prefix
     # (`monarch:sha256:…`), so a later bank import of that row must find it.
-    for value in (meta.get("import-id"), meta.get("import-id-2")):
+    for value in (meta.get(key) for key in IMPORT_ID_KEYS):
         if (match := _GENERATED_ID.fullmatch(str(value or ""))) is not None and not (
             alias is not None and value == meta.get("import-id") and nfc(value) == nfc(alias)
         ):

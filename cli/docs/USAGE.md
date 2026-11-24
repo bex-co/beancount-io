@@ -2044,9 +2044,11 @@ transaction ID, or `file:line`; an id shared by two rows is refused rather
 than guessed at. A bank ID is what a CSV import keeps from its `id` column as
 `bank_id` (and an OFX import from FITID as `fitid`, a Python importer as
 `transaction_id` or `imported_id`), so the ID printed on the statement finds
-the row whose import-id reads `bank:TX-1001` without the prefix. An import-id
-wins over a `ref`, and a `ref` over a bank ID, when they spell the same
-value. A bare `--account` retargets the queue's leg, while `OLD=NEW` names
+the row whose import-id reads `bank:TX-1001` without the prefix. A transfer
+merged from two statement rows (a beancount-migrate pair) also answers to the
+second row's ID it keeps as `import-id-2`, the one importing that account
+reports as already in the ledger. An import-id wins over a `ref`, and a `ref`
+over a bank ID, when they spell the same value. A bare `--account` retargets the queue's leg, while `OLD=NEW` names
 another leg. A retarget
 onto the entry's only other account (the queue leg of a row imported from
 `Assets:Checking`, moved to `Assets:Checking`) would post against its own

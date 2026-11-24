@@ -132,11 +132,11 @@ def update_transaction(
 
     Clears the review queue `bea import` leaves behind: point --id at the
     row's import-id, or at the bank's own transaction ID, and pass the
-    account it belongs to. The entry is located by its import-id, by a ref
-    metadata value, by a bank ID (the bank_id, fitid, transaction_id or
-    imported_id an import kept), or by file:line; an id shared by two
-    entries is refused rather than guessed at. Only the entry's own lines
-    change, so the diff stays reviewable:
+    account it belongs to. The entry is located by its import-id (a merged
+    transfer's import-id-2 included), by a ref metadata value, by a bank ID
+    (the bank_id, fitid, transaction_id or imported_id an import kept), or
+    by file:line; an id shared by two entries is refused rather than guessed
+    at. Only the entry's own lines change, so the diff stays reviewable:
 
     \b
       bea update transaction --id 9f2c --account Expenses:Groceries --flag '*'

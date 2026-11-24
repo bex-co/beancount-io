@@ -57,6 +57,16 @@ def single_line(text: str) -> str:
     return CONTROL_CHARACTERS.sub(visible_escape, re.sub(r"[\r\n]+", " ", text))
 
 
+IMPORT_ID_KEYS = ("import-id", "import-id-2")
+"""The metadata keys an entry's import identity is kept under.
+
+Every import stamps `import-id`. A transfer merged from two statement rows
+(beancount-migrate's pairs) keeps the second row's id as `import-id-2`, the
+other account's own id. Both match that account's re-import exactly, and
+`bea update --id` finds the entry by either (w1/373).
+"""
+
+
 BANK_ID_KEYS = ("bank_id", "fitid", "transaction_id", "imported_id")
 """The metadata keys a row's own bank ID is kept under.
 
