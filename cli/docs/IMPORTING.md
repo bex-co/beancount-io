@@ -257,7 +257,10 @@ role unmapped rather than guessing. `Description`-style headers map to
 `--date-format` is likewise read from the file when unset: bea keeps the one
 `strptime` format that parses every date in the column. A column whose days
 never pass the twelfth cannot distinguish `%m/%d/%Y` from `%d/%m/%Y`, and bea
-says so instead of choosing quietly. When no known format reads the whole
+says so instead of choosing quietly. When an earlier export of the same header
+and account proved its convention, bea reads such a column that way and names
+that file (`Read aug.csv day-first as jul.csv was (--date-format %d/%m/%Y)`),
+as the remembered mapping below describes. When no known format reads the whole
 column, the error names the row whose date ruled out the last one; correct
 that cell or pass `--date-format`. Anything read this way is printed as the
 equivalent flags, so a wrong reading is visible in the preview that writes
@@ -396,11 +399,15 @@ the ledger's record in `importers/` under the configuration directory; the
 `bea import checking.csv --account Assets:Checking --apply`.
 For a remembered mapping, human output reports
 `Using remembered settings for <file>` (or `Using settings remembered from
-<seeding file> for <file>`) listing every setting in force as flags that paste
+<seeding file> for <file>`) listing every setting it supplied as flags that paste
 back: one `--csv` carrying the columns and any `encoding=`, then `--account`
-and the rest. JSON reports
+and the rest. A date format read from the file is no remembered setting: its
+own note names it (`Read the date format from <file>: --date-format …`), and
+the line pasted back reads it again the same way. JSON reports
 `config_source` `remembered --csv` plus a `remembered` object with the same
-fields (`null` when the run used no memory). A successful explicit `--csv`
+fields (`null` when the run used no memory); its `date_format` is the remembered
+`--date-format`, `null` when the format was read from the file, and the
+top-level `date_format` is the one in force. A successful explicit `--csv`
 preview or apply replaces the remembered settings; settings it drops are named,
 never silently discarded. A remembered `--date-format` the refresh does not
 repeat is kept when the new file's dates read the same way, and named as
@@ -411,10 +418,16 @@ saved with it once that run succeeds, and the run says so
 rows the last preview showed. Failed runs leave the saved settings unchanged,
 including an apply rejected for review with exit 4. A successful preview can
 remember its mapping even when some rows need review. Only a `--date-format`
-you passed is remembered, and even that is re-validated per file: when the new
-export unambiguously uses another convention, the import refuses and names the
-expected format, since two
-exports can share a header row without sharing a date convention. A
+you passed is remembered as a setting, and even that is re-validated per file:
+when the new export unambiguously uses another convention, the import refuses
+and names the expected format, since two
+exports can share a header row without sharing a date convention. Without one,
+the mapping keeps the format the latest export with a day past the twelfth
+proved, and that file's name, only as a tie-breaker: a later export of that header and account
+whose days never pass the twelfth is read the same way, with a note naming
+that file, so a day-first bank's mid-month export is not booked month-first. A
+later export whose dates prove another convention is read as they prove, with
+a note that the convention changed, and becomes the one later ties follow. A
 remembered `encoding=cp1252` or `encoding=latin-1` is re-validated the same
 way: a later file that is valid UTF-8 with accented or other non-ASCII text is
 read as UTF-8 for that run, with a note, and the remembered encoding stays

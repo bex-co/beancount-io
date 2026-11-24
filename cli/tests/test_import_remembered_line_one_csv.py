@@ -75,7 +75,9 @@ def test_an_encoding_joins_the_columns_in_one_csv_option(book: Path, bea_config_
     settings = _settings(recalled)
     pasted = _import(book, source, *shlex.split(settings))
 
-    assert settings == f"--csv {COLUMNS},encoding=cp1252 --account Assets:Savings --date-format %Y-%m-%d"
+    # The date format was read from the file, not remembered: its own note says so (w1/379).
+    assert settings == f"--csv {COLUMNS},encoding=cp1252 --account Assets:Savings"
+    assert "Read the date format from jan.csv: --date-format %Y-%m-%d." in recalled["notes"]
     assert shlex.split(settings).count("--csv") == 1
     assert pasted["config_source"] == "--csv"
     assert pasted["diff"] == recalled["diff"] == first["diff"]
@@ -144,7 +146,7 @@ def test_a_utf8_export_keeps_its_single_csv_option_and_gains_the_account(book: P
     settings = _settings(recalled)
     pasted = _import(book, source, *shlex.split(settings))
 
-    assert settings == f"--csv {COLUMNS} --account Assets:Savings --date-format %Y-%m-%d"
+    assert settings == f"--csv {COLUMNS} --account Assets:Savings"
     assert pasted["diff"] == recalled["diff"] == first["diff"]
     (kept,) = _stored(bea_config_dir)
     assert kept["mapping"] == COLUMNS and kept["account"] == "Assets:Savings"

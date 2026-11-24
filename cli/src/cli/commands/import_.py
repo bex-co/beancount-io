@@ -742,6 +742,47 @@ def _remembered_rules(
     return str(csv_rules_arg) if csv_rules_arg is not None else None
 
 
+def _date_proof(entry: dict[str, Any] | None) -> tuple[str, str] | None:
+    """The date format an earlier export of this source proved, and that file's name.
+
+    It is stored apart from `date_format`, which holds only a format the user
+    typed, and it is no setting: it only breaks the tie for a later export whose
+    days never pass the twelfth, which otherwise read month-first whatever the
+    bank's convention (w1/379).
+    """
+    if entry is None:
+        return None
+    date_format, name = entry.get("proven_date_format"), entry.get("proven_date_source")
+    if isinstance(date_format, str) and date_format and isinstance(name, str) and name:
+        return date_format, name
+    return None
+
+
+def _date_order(date_format: str) -> str | None:
+    """`day-first` or `month-first` for a format that leads with the day or month, else None."""
+    lead = re.search(r"%[dmbBYy]", date_format)
+    if lead is None or lead.group() in {"%Y", "%y"}:
+        return None
+    return "day-first" if lead.group() == "%d" else "month-first"
+
+
+def _proven_date_note(name: str, date_format: str, proof: tuple[str, str] | None) -> str:
+    """What a run's unambiguous dates proved, beside what an earlier export of its source proved."""
+    shown = shlex.join(["--date-format", date_format])
+    if proof is None or proof[0] == date_format:
+        return f"Read the date format from {name}: {shown}."
+    now, was = _date_order(date_format), _date_order(proof[0])
+    if now is not None and was is not None and now != was:
+        return (
+            f"The date convention changed: {name}'s dates read {now} ({shown}), where {proof[1]}'s read {was}. "
+            "Read it as its dates prove."
+        )
+    return (
+        f"The date format changed: {name}'s dates read {shown}, where {proof[1]}'s read "
+        f"{shlex.quote(proof[0])}. Read it as its dates prove."
+    )
+
+
 def _recall_csv(
     file: Path, source: Path, account: str | None = None, *, notes: list[str], skip: int | None = None
 ) -> dict[str, Any] | None:
@@ -1193,10 +1234,14 @@ def import_entries(
         config_notes.append(memory_note)
     recalled_date_format: str | None = None
     recalled_source: str | None = None
-    # Only a date format the caller chose is worth remembering. An inferred one
-    # belongs to the file it was read from, and two exports can share a header
-    # row without sharing a date convention.
+    # Only a date format the caller chose is remembered as a setting. An
+    # inferred one belongs to the file it was read from, and two exports can
+    # share a header row without sharing a date convention. What a file's
+    # dates proved is kept apart, only to break a later export's tie (w1/379).
     chosen_date_format = date_format
+    date_format_inferred = False
+    date_proof: str | None = None
+    earlier_proof: tuple[str, str] | None = None
     chosen_default_account = default_account
     # Likewise a delimiter: one detected for this file belongs to this file,
     # and forcing it onto the next export sharing the header refused a re-save
@@ -1230,7 +1275,9 @@ def import_entries(
             settings = [f"--csv {_shell_spec(columns_only)}"]
             if csv_run_account is not None:
                 settings.append(shlex.join(["--account", csv_run_account]))
-            if date_format is not None:
+            # One read from this file is not a remembered setting: its own
+            # note states it (w1/379).
+            if date_format is not None and not date_format_inferred:
                 settings.append(shlex.join(["--date-format", date_format]))
             if csv_rules_arg is not None and not rules_is_descriptor:
                 settings.append(shlex.join(["--rules", str(csv_rules_arg)]))
@@ -1444,6 +1491,7 @@ def import_entries(
             if date_format is None and isinstance(remembered.get("date_format"), str) and remembered["date_format"]:
                 date_format = remembered["date_format"]
                 recalled_date_format = remembered["date_format"]
+            earlier_proof = _date_proof(remembered)
             # Older records also kept a detected separator inside the mapping.
             stored_delimiter = remembered.get("delimiter")
             try:
@@ -1651,6 +1699,22 @@ def import_entries(
             csv_delimiter = spec_delimiter
         if mapping.encoding is not None:
             csv_encoding = mapping.encoding
+        headers: list[str] | None = None
+        prior: dict[str, Any] | None = None
+        if not remembered_run:
+            # The entry this run replaces, read before the dates: a refresh
+            # breaks a date tie with its proof as a flag-free run does, so the
+            # remembered line pasted back reads the rows the same way.
+            try:
+                from cli.csv_mapper import read_header
+
+                # With the separator in force, so the header remembered is the one read (w5/922).
+                headers = read_header(source, delimiter=csv_delimiter, encoding=csv_encoding, skip=csv_skip or 0)
+                prior = _find_csv_entry(file, headers, csv_run_account or "")
+            except UsageError:
+                headers = None
+                prior = None
+            earlier_proof = _date_proof(prior)
         if date_format is None:
             with preserve_settings_notes():
                 date_format, ambiguous, rejection = inspect_date_column(
@@ -1660,6 +1724,10 @@ def import_entries(
                     encoding=csv_encoding,
                     mapped_columns=mapping.columns,
                     skip=csv_skip or 0,
+                    # One source account's exports share a convention: what an
+                    # earlier one proved decides a column that reads either way,
+                    # which otherwise went month-first for a day-first bank.
+                    prefer=earlier_proof[0] if earlier_proof is not None else None,
                 )
             if rejection is not None:
                 # No known format reads the whole column: name the cell that
@@ -1683,9 +1751,28 @@ def import_entries(
                     # The remembered-settings note first, as other refusals list it (w5/525).
                     details=settings_notes(None, refusal=True),
                 )
+            date_format_inferred = True
             if date_format is None:
                 date_format = "%Y-%m-%d"
-            elif ambiguous:
+            elif not ambiguous:
+                date_proof = date_format
+                changed = earlier_proof is not None and earlier_proof[0] != date_format
+                if remembered_run or changed:
+                    inferred_notes.append(_proven_date_note(source.name, date_format, earlier_proof))
+                if remembered_run and isinstance(remembered, dict) and (earlier_proof is None or changed):
+                    csv_to_remember = {
+                        **(csv_to_remember or remembered),
+                        "proven_date_format": date_format,
+                        "proven_date_source": source.name,
+                    }
+            elif earlier_proof is not None and date_format == earlier_proof[0]:
+                order = _date_order(date_format)
+                inferred_notes.append(
+                    f"Read {source.name} {f'{order} ' if order else ''}as {earlier_proof[1]} was "
+                    f"({shlex.join(['--date-format', date_format])}): no day in it passes the twelfth, so its own "
+                    "dates read either way. Pass --date-format if that is the wrong reading."
+                )
+            else:
                 inferred_notes.append(
                     f"Dates parse as {date_format} but the column has no day past the twelfth, so day-first and "
                     "month-first cannot be told apart. Pass --date-format if that is the wrong reading."
@@ -1751,15 +1838,6 @@ def import_entries(
             # a later bank-signed file that merely shares its headers.
             # Nor a separator, which travels in its own field and only when chosen.
             stored_mapping = _strip_spec_keys(csv_request or "", {"sign", "delimiter"})
-            try:
-                from cli.csv_mapper import read_header
-
-                # With the separator in force, so the header remembered is the one read (w5/922).
-                headers = read_header(source, delimiter=csv_delimiter, encoding=csv_encoding, skip=csv_skip or 0)
-                prior = _find_csv_entry(file, headers, csv_run_account or "")
-            except UsageError:
-                headers = None
-                prior = None
             # A refresh that types no --date-format keeps the remembered one
             # when this file reads the same way: nothing was replaced, and
             # erasing it unannounced booked the next ambiguous export
@@ -1791,6 +1869,9 @@ def import_entries(
                         f"{', '.join(discarded)}. Re-pass them to keep them across refreshes."
                     )
             stored_rules = _remembered_rules(prior, rules_is_descriptor, csv_rules_arg)
+            # What this file's dates proved, or else what an earlier one did:
+            # a column that reads either way proves nothing (w1/379).
+            proof = (date_proof, source.name) if date_proof is not None else _date_proof(prior)
             csv_to_remember = {
                 "headers": headers,
                 "mapping": stored_mapping,
@@ -1799,6 +1880,8 @@ def import_entries(
                 "rules": stored_rules,
                 "default_account": default_account,
                 "date_format": kept_date_format,
+                "proven_date_format": proof[0] if proof is not None else None,
+                "proven_date_source": proof[1] if proof is not None else None,
                 "delimiter": chosen_delimiter,
                 # Sign itself is never remembered; only which files it was
                 # chosen for, so replaying one of them cannot flip its sign.
@@ -1964,7 +2047,8 @@ def import_entries(
             "mapping": csv_request,
             "source": recalled_source,
             "account": csv_run_account,
-            "date_format": date_format,
+            # Only a format memory supplied: one read from this file is not (w1/379).
+            "date_format": None if date_format_inferred else date_format,
             "delimiter": carried_delimiter,
             "encoding": csv_encoding,
             "decimal": csv_decimal,

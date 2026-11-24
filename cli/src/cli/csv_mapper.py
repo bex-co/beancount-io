@@ -954,13 +954,17 @@ def inspect_date_column(
     mapped_columns: dict[str, str] | None = None,
     skip: int = 0,
     also: Sequence[str] = (),
+    prefer: str | None = None,
 ) -> tuple[str | None, bool, DateRejection | None]:
     """The one date format that parses this column, whether others also did,
     and — when none fits — the cell that ruled out the last candidate.
 
     Day-first and month-first columns are indistinguishable until a row carries
     a day past the twelfth, so the caller is told when the choice was a guess
-    instead of silently booking half a year into the wrong month.
+    instead of silently booking half a year into the wrong month. ``prefer``
+    breaks that tie: when it still reads every date it is the one returned,
+    still flagged ambiguous, so an account's earlier export that proved its
+    convention decides a later one that cannot (w1/379).
 
     The whole column is read: the deciding day can arrive at any row, and a
     sample that stopped at 200 chose month-first for an export whose 201st date
@@ -972,7 +976,8 @@ def inspect_date_column(
     error points at the record to fix. ``mapped_columns`` is the `--csv`
     mapping that decides which cells count; without it only the date cell does.
     """
-    working = [*_DATE_FORMATS, *(item for item in dict.fromkeys(also) if item not in _DATE_FORMATS)]
+    extra = [*also, *([prefer] if prefer is not None else [])]
+    working = [*_DATE_FORMATS, *(item for item in dict.fromkeys(extra) if item not in _DATE_FORMATS)]
     seen = False
     try:
         with open_records(source, delimiter=delimiter, encoding=encoding, skip=skip) as (headers, rows):
@@ -1004,7 +1009,7 @@ def inspect_date_column(
         return None, False, None
     if not seen:
         return None, False, None
-    return working[0], len(working) > 1, None
+    return (prefer if prefer in working else working[0]), len(working) > 1, None
 
 
 def _parses(value: str, date_format: str) -> bool:
