@@ -61,6 +61,39 @@ def test_a_nonzero_divisor_still_passes(text: str) -> None:
     refuse_zero_divisor(text)
 
 
+# A divisor nested deeper than the default stack allows. The evaluator used to
+# give up with RecursionError and report the line clean, while Beancount's own
+# parser still segfaulted on the zero divisor inside. Beancount still
+# parses a nonzero divisor nested thousands deep, so the guard must evaluate
+# deeper rather than refuse deep input outright.
+DEEP_ZERO_DIVISORS = [
+    "10/" + "(" * 800 + "0" + ")" * 800,
+    "10/" + "(" * 800 + "2-2" + ")" * 800,
+    "10/" + "(" * 10000 + "2-2" + ")" * 10000,
+    "10/" + "-" * 2000 + "0",
+    "10/(--1.0000000000000000000000000000001-1)",
+]
+DEEP_NONZERO_DIVISORS = [
+    "10/" + "(" * 800 + "1" + ")" * 800,
+    "10/" + "(" * 10000 + "1" + ")" * 10000,
+    "10/" + "-" * 2000 + "1",
+]
+
+
+@pytest.mark.parametrize("expression", DEEP_ZERO_DIVISORS)
+def test_a_deeply_nested_zero_divisor_is_refused(expression: str) -> None:
+    with pytest.raises(UsageError, match="Division by zero"):
+        check_decimal_notation(f"Assets:Brokerage {expression} USD")
+    with pytest.raises(ValueError, match="Division by zero"):
+        refuse_zero_divisor(f"{expression} USD")
+
+
+@pytest.mark.parametrize("expression", DEEP_NONZERO_DIVISORS)
+def test_a_deeply_nested_nonzero_divisor_still_passes(expression: str) -> None:
+    check_decimal_notation(f"Assets:Brokerage {expression} USD")
+    refuse_zero_divisor(f"{expression} USD")
+
+
 def _bea(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
     env = {k: v for k, v in os.environ.items() if not k.startswith("BEA_") and k != "CI"}
     env.update(
