@@ -84,6 +84,27 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
     [H_TEA_DUP, TEA],
   ]);
   const loaded = ["main.bean", "2026.bean", "prices/btc.bean"];
+  const getLedgerDirContent = jest.fn(
+    async (_owner: string, _name: string, query?: { dir_path?: string }) => {
+      if (!query?.dir_path) {
+        return envelope([
+          { path: "main.bean", type: "file" },
+          { path: "2026.bean", type: "file" },
+          { path: "caf\u00e9.bean", type: "file" },
+          { path: "prices", type: "dir" },
+          { path: "books", type: "dir" },
+          { path: "books.bean", type: "dir" },
+        ]);
+      }
+      if (query.dir_path === "prices") {
+        return envelope([{ path: "prices/btc.bean", type: "file" }]);
+      }
+      if (query.dir_path === "books") {
+        return envelope([{ path: "books/jan.bean", type: "file" }]);
+      }
+      throw new FavaApiError("not found", 404, { error: "not found" });
+    },
+  );
   const commits: MoveBody[] = [];
   const envelope = (data: unknown) => ({ data: { success: true, data } });
   // The ledger service's move (w1/m45/t002), reduced to its contract.
@@ -169,7 +190,10 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
         },
       },
     }),
-    getPublicApiClient: async () => ({ journal: { moveSourceSlices } }),
+    getPublicApiClient: async () => ({
+      journal: { moveSourceSlices },
+      ledgers: { getLedgerDirContent },
+    }),
   };
   const models = {
     user: {
@@ -292,6 +316,7 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
   };
   return {
     moveSourceSlices,
+    getLedgerDirContent,
     commits,
     call,
     listTools: () => client.listTools(),
@@ -508,10 +533,13 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
   it("refuses a read-only collaborator before reaching the ledger", async () => {
     const env = await fixture({ readOnly: true });
     try {
-      await expect(env.call(surface, MOVE)).resolves.toMatchObject({
+      await expect(
+        env.call(surface, { ...MOVE, toPath: "Main.bean" }),
+      ).resolves.toMatchObject({
         success: false,
         code: "FORBIDDEN",
       });
+      expect(env.getLedgerDirContent).not.toHaveBeenCalled();
       expect(env.moveSourceSlices).not.toHaveBeenCalled();
     } finally {
       await env.close();
@@ -593,6 +621,88 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
       }
     },
   );
+
+  // w31/086: portable twin and file-vs-folder collision checks refuse colliding
+  // toPath values with CONFLICT on dry-run and commit alike across all surfaces.
+  it.each([
+    ["case twin", "Main.bean", /already exists as main\.bean/],
+    [
+      "Unicode NFD twin",
+      "cafe\u0301.bean",
+      /already exists as caf\u00e9\.bean/,
+    ],
+    [
+      "invisible-character twin",
+      "main\u200b.bean",
+      /already exists as main\.bean/,
+    ],
+    [
+      "case-colliding parent folder",
+      "Books/2026.bean",
+      /already exists as books/,
+    ],
+    [
+      "nested file twin",
+      "books/Jan.bean",
+      /already exists as books\/jan\.bean/,
+    ],
+    [
+      "path beneath existing file",
+      "main.bean/sub.bean",
+      /main\.bean is a file, not a folder/,
+    ],
+    ["existing folder at toPath", "books.bean", /it is an existing folder/],
+  ] as const)(
+    "refuses %s (%s) with CONFLICT before reaching the ledger",
+    async (_label, toPath, pattern) => {
+      const env = await fixture();
+      try {
+        for (const dryRun of [true, false]) {
+          const refused = await env.call(surface, {
+            entries: ENTRIES,
+            toPath,
+            includeFrom: "main.bean",
+            dryRun,
+          });
+          expect(refused).toMatchObject({
+            success: false,
+            code: "CONFLICT",
+          });
+          expect(refused.message).toMatch(pattern);
+          if (surface === "rest") {
+            expect(refused.status).toBe(409);
+          }
+        }
+        expect(env.moveSourceSlices).not.toHaveBeenCalled();
+        expect(env.commits).toHaveLength(0);
+      } finally {
+        await env.close();
+      }
+    },
+  );
+
+  it("still allows moving into an exact-match existing file or brand-new folder", async () => {
+    const env = await fixture();
+    try {
+      const intoExisting = await env.call(surface, {
+        entries: ENTRIES,
+        toPath: "2026.bean",
+        dryRun: true,
+      });
+      expect(intoExisting.success).toBe(true);
+
+      const intoNewDir = await env.call(surface, {
+        entries: ENTRIES,
+        toPath: "newdir/2026.bean",
+        includeFrom: "main.bean",
+        dryRun: true,
+      });
+      expect(intoNewDir.success).toBe(true);
+      expect(env.moveSourceSlices).toHaveBeenCalledTimes(2);
+    } finally {
+      await env.close();
+    }
+  });
 });
 
 describe("moveEntrySources description (w31/017)", () => {

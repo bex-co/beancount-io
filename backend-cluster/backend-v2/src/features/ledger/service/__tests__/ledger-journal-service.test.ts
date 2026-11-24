@@ -2,6 +2,7 @@ import { LedgerJournalService } from "../ledger-journal-service";
 import {
   BadUserInputError,
   ConflictError,
+  ForbiddenError,
   InternalServerError,
   NotFoundError,
 } from "@/shared/errors";
@@ -29,6 +30,7 @@ const mockDeleteSourceSlice = jest.fn();
 const mockDeleteMultiSourceSlices = jest.fn();
 const mockMoveSourceSlices = jest.fn();
 const mockUpdateSourceSlice = jest.fn();
+const mockGetLedgerDirContent = jest.fn();
 
 const mockFavaApiClient = {
   journal: {
@@ -40,6 +42,9 @@ const mockFavaApiClient = {
     deleteMultiSourceSlices: mockDeleteMultiSourceSlices,
     moveSourceSlices: mockMoveSourceSlices,
     updateSourceSlice: mockUpdateSourceSlice,
+  },
+  ledgers: {
+    getLedgerDirContent: mockGetLedgerDirContent,
   },
 };
 
@@ -63,6 +68,9 @@ describe("LedgerJournalService", () => {
     (authorizeLedger as jest.Mock).mockResolvedValue({
       ledgerRepoId: 1,
       ownerUserId: USER_ID,
+    });
+    mockGetLedgerDirContent.mockResolvedValue({
+      data: { success: true, data: [] },
     });
     service = new LedgerJournalService(mockFavaClientFactory as any, {} as any);
   });
@@ -771,6 +779,180 @@ describe("LedgerJournalService", () => {
         expect(mockMoveSourceSlices).not.toHaveBeenCalled();
       },
     );
+
+    describe("portable twin and file-vs-folder collision guards (w31/086)", () => {
+      const dirListing = (entries: Array<{ path: string; type: string }>) => ({
+        data: { success: true, data: entries },
+      });
+
+      const stubTree = () => {
+        mockGetLedgerDirContent.mockImplementation(
+          async (
+            _owner: string,
+            _name: string,
+            query?: { dir_path?: string },
+          ) => {
+            if (!query?.dir_path) {
+              return dirListing([
+                { path: "main.bean", type: "file" },
+                { path: "2026.bean", type: "file" },
+                { path: "caf\u00e9.bean", type: "file" },
+                { path: "books", type: "dir" },
+                { path: "books.bean", type: "dir" },
+                { path: "link.bean", type: "symlink" },
+              ]);
+            }
+            if (query.dir_path === "books") {
+              return dirListing([{ path: "books/jan.bean", type: "file" }]);
+            }
+            throw new FavaApiError("not found", 404, { error: "not found" });
+          },
+        );
+      };
+
+      it.each([
+        [
+          "case twin of existing file",
+          "Main.bean",
+          /already exists as main\.bean/,
+        ],
+        [
+          "Unicode NFD twin of existing NFC file",
+          "cafe\u0301.bean",
+          /already exists as caf\u00e9\.bean/,
+        ],
+        [
+          "invisible-character twin of existing file",
+          "main\u200b.bean",
+          /already exists as main\.bean/,
+        ],
+        [
+          "case-colliding parent folder",
+          "Books/2026.bean",
+          /already exists as books/,
+        ],
+        [
+          "case twin inside existing folder",
+          "books/Jan.bean",
+          /already exists as books\/jan\.bean/,
+        ],
+        [
+          "child path beneath existing file",
+          "main.bean/sub.bean",
+          /main\.bean is a file, not a folder/,
+        ],
+        [
+          "child path beneath existing symlink",
+          "link.bean/sub.bean",
+          /link\.bean is a file, not a folder/,
+        ],
+        ["existing folder at toPath", "books.bean", /it is an existing folder/],
+      ])(
+        "refuses %s (%s) with ConflictError before calling the ledger",
+        async (_label, toPath, pattern) => {
+          stubTree();
+
+          const failure = await service
+            .moveSourceSlices({
+              ledgerId: LEDGER_ID,
+              identity: IDENTITY,
+              entries: [{ entryHash: H1, sha256sum: S1 }],
+              toPath,
+              includeFrom: "main.bean",
+              dryRun: true,
+            })
+            .catch((error: unknown) => error);
+
+          expect(failure).toBeInstanceOf(ConflictError);
+          expect(failure).toMatchObject({ category: "CONFLICT" });
+          expect((failure as Error).message).toMatch(pattern);
+          expect(mockMoveSourceSlices).not.toHaveBeenCalled();
+        },
+      );
+
+      it.each([
+        ["exact-match existing file", "2026.bean", 1],
+        ["exact-match existing nested file", "books/jan.bean", 2],
+        ["brand-new nested path", "newdir/2026.bean", 1],
+      ])(
+        "allows %s (%s) and forwards to the ledger",
+        async (_label, toPath, expectedDirCalls) => {
+          stubTree();
+          mockMoveSourceSlices.mockResolvedValue({
+            data: {
+              success: true,
+              data: {
+                message: `Moved 1 entry to ${toPath}`,
+                moved_hashes: [H1],
+                include_added: false,
+                files: ["main.bean", toPath],
+              },
+            },
+          });
+
+          const result = await service.moveSourceSlices({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entries: [{ entryHash: H1, sha256sum: S1 }],
+            toPath,
+            includeFrom: "main.bean",
+          });
+
+          expect(result.toPath).toBe(toPath);
+          expect(mockGetLedgerDirContent).toHaveBeenCalledTimes(
+            expectedDirCalls,
+          );
+          expect(mockMoveSourceSlices).toHaveBeenCalledTimes(1);
+        },
+      );
+
+      it("returns early without failing when directory listing answers NOT_FOUND", async () => {
+        mockGetLedgerDirContent.mockRejectedValue(
+          new FavaApiError("not found", 404, { error: "not found" }),
+        );
+        mockMoveSourceSlices.mockResolvedValue({
+          data: {
+            success: true,
+            data: {
+              message: "Moved 1 entry to newdir/2026.bean",
+              moved_hashes: [H1],
+              include_added: true,
+              files: ["main.bean", "newdir/2026.bean"],
+            },
+          },
+        });
+
+        await service.moveSourceSlices({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          entries: [{ entryHash: H1, sha256sum: S1 }],
+          toPath: "newdir/2026.bean",
+          includeFrom: "main.bean",
+        });
+
+        expect(mockMoveSourceSlices).toHaveBeenCalledTimes(1);
+      });
+
+      it("refuses unauthorized callers before listing directories", async () => {
+        (authorizeLedger as jest.Mock).mockRejectedValue(
+          new ForbiddenError("read-only"),
+        );
+
+        await expect(
+          service.moveSourceSlices({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entries: [{ entryHash: H1, sha256sum: S1 }],
+            toPath: "Main.bean",
+            includeFrom: "main.bean",
+            dryRun: true,
+          }),
+        ).rejects.toBeInstanceOf(ForbiddenError);
+
+        expect(mockGetLedgerDirContent).not.toHaveBeenCalled();
+        expect(mockMoveSourceSlices).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe("updateSourceSlice", () => {

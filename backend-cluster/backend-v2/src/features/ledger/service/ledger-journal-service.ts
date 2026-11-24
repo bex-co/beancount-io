@@ -27,6 +27,7 @@ import {
   assertSha256Format,
 } from "@/features/ledger/utils/entry-hash-alias";
 import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
+import { assertNoPortableTwin } from "@/features/ledger/utils/portable-twin";
 
 /**
  * The page a journal read asks for: limit 1–1000 (default 20), offset 0 or
@@ -604,6 +605,22 @@ export class LedgerJournalService
     if (includeFrom !== undefined) {
       assertSafeRepoPath(includeFrom, "includeFrom");
     }
+    // Refuse case/Unicode/invisible-character twins and file-vs-folder
+    // collisions upfront (dry-run and commit alike), matching create/rename/PR
+    // file guards (w31/086).
+    await assertNoPortableTwin(toPath, async (dir) =>
+      (
+        await unwrapFavaResponse(
+          favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
+            ...(dir === undefined ? {} : { dir_path: dir }),
+          }),
+          "check target file path",
+        )
+      ).map((entry) => ({
+        path: entry.path,
+        type: entry.type === "dir" ? ("dir" as const) : ("file" as const),
+      })),
+    );
 
     const data = await unwrapFavaResponse(
       favaApiClient.journal.moveSourceSlices(ledgerOwner, ledgerName, {
