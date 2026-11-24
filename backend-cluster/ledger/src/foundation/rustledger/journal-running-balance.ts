@@ -6,7 +6,7 @@ import {
   roundWithPythonDecimalContext,
 } from "./decimal-context";
 import { isUnbookedDirective } from "./plugins/provenance";
-import { isFlowAccount } from "./lot-inventory";
+import { isFlowAccount, unitsByCostKey } from "./lot-inventory";
 
 /**
  * Account journal with per-entry change and running balance — a faithful port
@@ -30,8 +30,8 @@ import { isFlowAccount } from "./lot-inventory";
  * `.toFixed(scale)` — yielding byte-identical strings to the Python golden
  * (`"1000.00"`, `"15"`, `"-50.00"`).
  *
- * The three reserved conversions plus explicit currency targets are
- * implemented: `units`, `at_cost` (the endpoint default), `at_value`, and a
+ * The reserved conversions plus explicit currency targets are implemented:
+ * `units`, `units_by_cost`, `at_cost` (the endpoint default), `at_value`, and a
  * bare currency/code list (`USD` / `USD,EUR`). `at_value` mirrors fava's `_AtValueConversion` →
  * `get_market_value`: each lot with a cost is valued in its *cost currency* using
  * the market price `(units.currency → cost.currency)` as-of the entry date (with
@@ -346,7 +346,15 @@ class LotInventory {
     };
 
     this.lots.forEach((lot) => {
-      if (
+      if (conversion === "units_by_cost") {
+        addInto(
+          unitsByCostKey(
+            lot.unitsCurrency,
+            lot.costPerUnit !== null ? lot.costCurrency : null,
+          ),
+          lot.units,
+        );
+      } else if (
         conversion === "at_cost" &&
         lot.costPerUnit !== null &&
         lot.costCurrency !== null
@@ -372,6 +380,7 @@ class LotInventory {
 
     if (
       conversion !== "units" &&
+      conversion !== "units_by_cost" &&
       conversion !== "at_cost" &&
       conversion !== "at_value" &&
       valuation
@@ -580,10 +589,12 @@ export function accountJournalItems(
   const isRelevant = makeAccountTester(account, withChildren);
 
   // `at_value` and currency targets value each row as-of the entry's own date
-  // (fava passes `entry.date` to `cost_or_value`); `units` and `at_cost` read
-  // no price.
+  // (fava passes `entry.date` to `cost_or_value`); `units`, `units_by_cost`,
+  // and `at_cost` read no price.
   const prices =
-    conversion !== "units" && conversion !== "at_cost"
+    conversion !== "units" &&
+    conversion !== "units_by_cost" &&
+    conversion !== "at_cost"
       ? opts.prices
       : undefined;
   const balance = new LotInventory();

@@ -4,6 +4,7 @@ import { loadCachedFileMapForRepo } from "@/foundation/clients/load-cached-ledge
 import { parseLedgerFiles } from "@/foundation/rustledger";
 import { LedgerDataService } from "../ledger-data-service";
 import { LedgerFinanceService } from "../ledger-finance-service";
+import { LedgerJournalService } from "../ledger-journal-service";
 
 jest.mock("@/foundation/clients/load-cached-ledger-file-map", () => ({
   loadCachedFileMapForRepo: jest.fn(),
@@ -144,6 +145,7 @@ beforeEach(() => {
 
 const finance = () => new LedgerFinanceService(factory as never, {} as never);
 const data = () => new LedgerDataService(factory as never, {} as never);
+const journal = () => new LedgerJournalService(factory as never, {} as never);
 
 function node(tree: Tree, account: string): Tree | undefined {
   if (tree.account === account) return tree;
@@ -309,5 +311,121 @@ describe("units_by_cost on the balance reads (w4/m58)", () => {
       EUR: "500.00",
       VTI: "10",
     });
+  });
+
+  it("keys account-journal change and balance by cost currency, ignoring prices (w31/083)", async () => {
+    const mixed = await journal().getAccountJournal({
+      ...params,
+      query: { account: "Assets:Mixed", conversion: "units_by_cost" },
+    });
+    const mixedTxns = mixed.items
+      .filter((item) => item.entry.directive_type === "Transaction")
+      .reverse();
+
+    expect(
+      mixedTxns.map((item) => ({ change: item.change, balance: item.balance })),
+    ).toEqual([
+      {
+        change: { "QAC {EUR}": "1", "QAC {USD}": "2" },
+        balance: { "QAC {EUR}": "1", "QAC {USD}": "2" },
+      },
+      {
+        change: { "QAC {EUR}": "3" },
+        balance: { "QAC {EUR}": "4", "QAC {USD}": "2" },
+      },
+    ]);
+
+    const fund = await journal().getAccountJournal({
+      ...params,
+      query: { account: "Assets:Fund", conversion: "units_by_cost" },
+    });
+    const fundTxn = fund.items.find(
+      (item) => item.entry.directive_type === "Transaction",
+    );
+    expect(fundTxn?.change).toEqual({ "EUR {}": "500.00", "VTI {EUR}": "10" });
+    expect(fundTxn?.balance).toEqual({ "EUR {}": "500.00", "VTI {EUR}": "10" });
+  });
+
+  it("drops a fully sold lot key in the account journal under units_by_cost (w31/083)", async () => {
+    const sold = await journal().getAccountJournal({
+      ...params,
+      query: { account: "Assets:Sold", conversion: "units_by_cost" },
+    });
+    const txns = sold.items
+      .filter((item) => item.entry.directive_type === "Transaction")
+      .reverse();
+
+    expect(
+      txns.map((item) => ({ change: item.change, balance: item.balance })),
+    ).toEqual([
+      { change: { "XYZ {USD}": "5" }, balance: { "XYZ {USD}": "5" } },
+      { change: { "XYZ {USD}": "-5" }, balance: {} },
+    ]);
+  });
+
+  it("preserves cost-currency keys across a time-clamped opening summary (w31/083)", async () => {
+    const clamped = await journal().getAccountJournal({
+      ...params,
+      query: {
+        account: "Assets:Mixed",
+        time: "2026-08",
+        conversion: "units_by_cost",
+      },
+    });
+    const txns = clamped.items
+      .filter((item) => item.entry.directive_type === "Transaction")
+      .reverse();
+
+    expect(
+      txns.map((item) => ({ change: item.change, balance: item.balance })),
+    ).toEqual([
+      {
+        change: { "QAC {EUR}": "1", "QAC {USD}": "2" },
+        balance: { "QAC {EUR}": "1", "QAC {USD}": "2" },
+      },
+      {
+        change: { "QAC {EUR}": "3" },
+        balance: { "QAC {EUR}": "4", "QAC {USD}": "2" },
+      },
+    ]);
+  });
+
+  it("keeps flow-account journals in raw units_by_cost even with prices (w31/083)", async () => {
+    const flowDirectives: DirectiveJson[] = [
+      open("Assets:Cash"),
+      open("Expenses:Travel"),
+      price("2026-01-01", "EUR", "1.00", "USD"),
+      price("2026-02-01", "EUR", "2.00", "USD"),
+      transaction("2026-01-15", [
+        units("Expenses:Travel", "100.00", "EUR"),
+        units("Assets:Cash", "-100.00", "EUR"),
+      ]),
+      transaction("2026-02-15", [
+        units("Expenses:Travel", "50.00", "EUR"),
+        units("Assets:Cash", "-50.00", "EUR"),
+      ]),
+    ];
+    jest.mocked(parseLedgerFiles).mockResolvedValueOnce({
+      valid: true,
+      errors: [],
+      options: { operating_currencies: ["USD"], title: null },
+      directives: flowDirectives,
+      directiveCount: flowDirectives.length,
+    });
+
+    const result = await journal().getAccountJournal({
+      ...params,
+      query: { account: "Expenses:Travel", conversion: "units_by_cost" },
+    });
+    const txns = result.items
+      .filter((item) => item.entry.directive_type === "Transaction")
+      .reverse();
+
+    expect(
+      txns.map((item) => ({ change: item.change, balance: item.balance })),
+    ).toEqual([
+      { change: { "EUR {}": "100.00" }, balance: { "EUR {}": "100.00" } },
+      { change: { "EUR {}": "50.00" }, balance: { "EUR {}": "150.00" } },
+    ]);
   });
 });

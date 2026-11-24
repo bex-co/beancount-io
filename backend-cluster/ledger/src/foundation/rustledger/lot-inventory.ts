@@ -122,7 +122,10 @@ export type Conversion =
  * `costCurrency` — beancount's own `10 VTI {EUR}` notation — or `VTI {}`
  * for units held without a cost.
  */
-function unitsByCostKey(currency: string, costCurrency: string | null): string {
+export function unitsByCostKey(
+  currency: string,
+  costCurrency: string | null,
+): string {
   return `${currency} {${costCurrency ?? ""}}`;
 }
 

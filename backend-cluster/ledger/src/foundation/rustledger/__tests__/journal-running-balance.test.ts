@@ -821,4 +821,164 @@ describe("accountJournalItems — Fava parity for getAccountJournal", () => {
     expect(forSource[0].change).toEqual({});
     expect(forSource[0].balance).toEqual({});
   });
+
+  describe("units_by_cost (w31/083)", () => {
+    const multiCostDirectives: DirectiveJson[] = [
+      {
+        type: "price",
+        date: "2026-06-01",
+        currency: "VTI",
+        amount: { number: "220.00", currency: "USD" },
+      },
+      {
+        type: "price",
+        date: "2026-06-01",
+        currency: "EUR",
+        amount: { number: "1.10", currency: "USD" },
+      },
+      {
+        type: "transaction",
+        date: "2026-07-01",
+        flag: "*",
+        narration: "Buy VTI in EUR and USD plus cash",
+        tags: [],
+        links: [],
+        postings: [
+          {
+            account: "Assets:Fund",
+            units: { number: "10", currency: "VTI" },
+            cost: {
+              number: { kind: "per_unit", value: "180.00" },
+              currency: "EUR",
+            },
+          },
+          {
+            account: "Assets:Fund",
+            units: { number: "4", currency: "VTI" },
+            cost: {
+              number: { kind: "per_unit", value: "250.00" },
+              currency: "USD",
+            },
+          },
+          {
+            account: "Assets:Cash",
+            units: { number: "150.00", currency: "EUR" },
+          },
+        ],
+      },
+      {
+        type: "transaction",
+        date: "2026-07-15",
+        flag: "*",
+        narration: "Buy more EUR VTI and fully sell USD VTI",
+        tags: [],
+        links: [],
+        postings: [
+          {
+            account: "Assets:Fund",
+            units: { number: "2", currency: "VTI" },
+            cost: {
+              number: { kind: "per_unit", value: "190.00" },
+              currency: "EUR",
+            },
+          },
+          {
+            account: "Assets:Fund",
+            units: { number: "-4", currency: "VTI" },
+            cost: {
+              number: { kind: "per_unit", value: "250.00" },
+              currency: "USD",
+            },
+          },
+        ],
+      },
+    ];
+
+    it("keys costed lots by cost currency, keeps cash distinct, ignores prices, and drops zeroed keys", () => {
+      const items = accountJournalItems(multiCostDirectives, "Assets", {
+        withChildren: true,
+        conversion: "units_by_cost",
+        prices: buildScaledPriceMap(multiCostDirectives),
+      });
+
+      expect(items).toHaveLength(2);
+      expect(items[0].change).toEqual({
+        "VTI {EUR}": "10",
+        "VTI {USD}": "4",
+        "EUR {}": "150.00",
+      });
+      expect(items[0].balance).toEqual({
+        "VTI {EUR}": "10",
+        "VTI {USD}": "4",
+        "EUR {}": "150.00",
+      });
+      expect(items[1].change).toEqual({
+        "VTI {EUR}": "2",
+        "VTI {USD}": "-4",
+      });
+      expect(items[1].balance).toEqual({
+        "VTI {EUR}": "12",
+        "EUR {}": "150.00",
+      });
+    });
+
+    it("keeps flow accounts in raw units_by_cost without reading prices", () => {
+      const flowDirectives: DirectiveJson[] = [
+        {
+          type: "price",
+          date: "2026-01-01",
+          currency: "EUR",
+          amount: { number: "1.00", currency: "USD" },
+        },
+        {
+          type: "price",
+          date: "2026-02-01",
+          currency: "EUR",
+          amount: { number: "2.00", currency: "USD" },
+        },
+        {
+          type: "transaction",
+          date: "2026-01-15",
+          flag: "*",
+          narration: "Jan trip",
+          tags: [],
+          links: [],
+          postings: [
+            {
+              account: "Expenses:Travel",
+              units: { number: "100.00", currency: "EUR" },
+            },
+          ],
+        },
+        {
+          type: "transaction",
+          date: "2026-02-15",
+          flag: "*",
+          narration: "Feb trip",
+          tags: [],
+          links: [],
+          postings: [
+            {
+              account: "Expenses:Travel",
+              units: { number: "50.00", currency: "EUR" },
+            },
+          ],
+        },
+      ];
+
+      const items = accountJournalItems(flowDirectives, "Expenses:Travel", {
+        withChildren: false,
+        conversion: "units_by_cost",
+        prices: buildScaledPriceMap(flowDirectives),
+        flowRoots: ["Income", "Expenses"],
+      });
+
+      expect(
+        items.map((item) => ({ change: item.change, balance: item.balance })),
+      ).toEqual([
+        { change: { "EUR {}": "100.00" }, balance: { "EUR {}": "100.00" } },
+        { change: { "EUR {}": "50.00" }, balance: { "EUR {}": "150.00" } },
+      ]);
+    });
+  });
 });

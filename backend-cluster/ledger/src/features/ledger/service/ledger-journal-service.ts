@@ -1166,7 +1166,9 @@ export class LedgerJournalService implements ILedgerJournalService {
     // Value/currency conversions use the FULL ledger's price map (fava values
     // against `ledger.prices`, not the filtered/clamped stream).
     const prices =
-      conversion !== "units" && conversion !== "at_cost"
+      conversion !== "units" &&
+      conversion !== "units_by_cost" &&
+      conversion !== "at_cost"
         ? buildScaledPriceMap(snapshot.directives)
         : undefined;
     // account_journal returns chronological; reverse for newest-first display.
