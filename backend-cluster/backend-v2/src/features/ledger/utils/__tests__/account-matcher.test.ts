@@ -26,15 +26,19 @@ describe("isAccountSpelling", () => {
   it("accepts a non-Latin leaf the loader reads as one token", () => {
     expect(isAccountSpelling("Expenses:Food:中餐", ROOTS)).toBe(true);
     expect(isAccountSpelling("Expenses:Kค่า", ROOTS)).toBe(true);
+    expect(isAccountSpelling("Assets:Bank:خانه‌ها", ROOTS)).toBe(true);
   });
 
-  it("refuses control characters to the regex branch", () => {
+  it("refuses control and invisible format characters to the regex branch", () => {
     expect(isAccountSpelling("Assets:Nope\u202E", ROOTS)).toBe(false);
+    expect(isAccountSpelling("Assets:Bank:Foo\u200bBar", ROOTS)).toBe(false);
   });
 
   it("sends a name the lexer splits to the regex branch, as Fava does", () => {
     // Each is two tokens or more to the lexer, so no account is spelled so.
     expect(isAccountSpelling("Expenses:Food:coffee", ROOTS)).toBe(false);
+    expect(isAccountSpelling("Assets:Bank:épargne", ROOTS)).toBe(false);
+    expect(isAccountSpelling("Assets:Bank:😀", ROOTS)).toBe(false);
     expect(isAccountSpelling("Expenses:Food:", ROOTS)).toBe(false);
     expect(isAccountSpelling("Expenses:Food::Bar", ROOTS)).toBe(false);
     expect(isAccountSpelling("Expenses:Food:-Bar", ROOTS)).toBe(false);
@@ -118,15 +122,39 @@ describe("lexesAsAccount and loadsAsAccount (w31/013)", () => {
     ["Assets:Bank:Checking", true, true],
     ["Expenses:Food:日本", true, true],
     ["Expenses:Food:Café", true, true],
-    ["Expenses:Food:éclair", true, true],
+    ["Assets:Bank:Épargne", true, true],
+    ["Assets:Bank:ǅ", true, true],
+    ["Assets:Bank:١", true, true],
+    ["Assets:Bank:خانه‌ها", true, true],
+    ["Assets:Bank:Foo\u200dBar", true, true],
+    ["Assets:Bank:Foo—Bar", true, true],
+    ["Assets:Bank:Foo€Bar", true, true],
+    ["Assets:Bank:Foo😀Bar", true, true],
     ["Expenses:2026:日本", true, true],
     ["Expenses:Food:خرید\u200cها", true, true],
     ["Aktiva:Bank", true, true],
+    ["Épargne:Bank", true, true],
     // The grammar needs a capital or a digit to start the first component.
     ["Expenses:日本", true, false],
     ["日本:Food", true, false],
-    // The lexer splits these, so neither loader reads one account.
+    ["ǅ:Bank", true, false],
+    // The lexer splits these, so neither loader reads one account (w31/081).
     ["Expenses:Food:coffee", false, false],
+    ["Expenses:Food:éclair", false, false],
+    ["Assets:Bank:épargne", false, false],
+    ["Assets:épargne", false, false],
+    ["épargne:Bank", false, false],
+    ["١:Bank", false, false],
+    ["Assets:Bank:€", false, false],
+    ["Assets:Bank:😀", false, false],
+    ["Assets:Bank:—", false, false],
+    ["Assets:Bank:「Foo」", false, false],
+    ["Assets:Bank:ʰ", false, false],
+    ["Assets:Bank:Ⅰ", false, false],
+    ["Assets:Bank:²", false, false],
+    ["Assets:Bank:\u0301", false, false],
+    ["Assets:Bank:\u200cFoo", false, false],
+    ["Assets:Bank:\u200dFoo", false, false],
     ["assets:Bank", false, false],
     ["Expenses:Food:", false, false],
     ["Expenses:Food::日本", false, false],
@@ -134,12 +162,14 @@ describe("lexesAsAccount and loadsAsAccount (w31/013)", () => {
     ["Expenses:Food:Bar$", false, false],
     ["Expenses", false, false],
     ["", false, false],
-    // Spaces and controls end a name; bidirectional overrides are refused.
+    // Spaces, controls, and format characters (except inner ZWNJ/ZWJ) are refused.
     ["Expenses:Food:日 本", false, false],
     ["Expenses:Food:日\u3000本", false, false],
     ["Expenses:Food:日\u00a0本", false, false],
     ["Expenses:Food:日\u0085本", false, false],
     ["Expenses:Food:日本\u202e", false, false],
+    ["Assets:Bank:Foo\u200bBar", false, false],
+    ["Assets:Bank:Foo\u00adBar", false, false],
   ])("%p: lexes %p, loads %p", (name, lexes, loads) => {
     expect(lexesAsAccount(name)).toBe(lexes);
     expect(loadsAsAccount(name)).toBe(loads);

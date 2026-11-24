@@ -328,8 +328,13 @@ describe.each(SURFACES)("renameAccount on %s (w1/m43)", (surface) => {
   it.each([
     ["a lowercase ASCII start", "Expenses:Food:coffee"],
     ["a non-Latin first component", "Expenses:日本"],
+    ["a lowercase non-ASCII start", "Expenses:Food:épargne"],
+    ["a currency symbol start", "Expenses:Food:€"],
+    ["an emoji start", "Expenses:Food:😀"],
+    ["an em-dash start", "Expenses:Food:—"],
+    ["a zero-width space", "Expenses:Food:Foo\u200bBar"],
   ])(
-    "refuses a to with %s by BAD_USER_INPUT, stating the rule (w31/013)",
+    "refuses a to with %s by BAD_USER_INPUT, stating the rule (w31/013, w31/081)",
     async (_case, to) => {
       const env = await fixture();
       try {
@@ -354,6 +359,30 @@ describe.each(SURFACES)("renameAccount on %s (w1/m43)", (surface) => {
       }
     },
   );
+
+  it.each([
+    "Expenses:Food:Épargne",
+    "Expenses:Food:Café",
+    "Expenses:Food:خانه‌ها",
+  ])("accepts valid Unicode target %s on preview (w31/081)", async (to) => {
+    const env = await fixture();
+    try {
+      const preview = await env.call(surface, {
+        from: "Expenses:Food:日本",
+        to,
+        dryRun: true,
+      });
+      expect(preview.success).toBe(true);
+      const verdict = preview.result as {
+        valid?: boolean;
+        validation?: { valid: boolean };
+      };
+      expect(verdict.valid ?? verdict.validation?.valid).toBe(true);
+      expect(env.commits).toHaveLength(0);
+    } finally {
+      await env.close();
+    }
+  });
 
   it("refuses a rename to another root and a read-only credential by the same codes", async () => {
     const env = await fixture();

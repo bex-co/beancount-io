@@ -461,4 +461,164 @@ describe("28-significant-digit setup amount parity across REST, GraphQL, and MCP
       }
     },
   );
+
+  // w31/081: non-ASCII component starts rustledger refuses (Ll, Sc, So, Pd) and
+  // invisible format characters (ZWSP) must be refused upfront across MCP, REST,
+  // and GraphQL, while valid Unicode (Épargne, 日本, خانه‌ها with ZWNJ) passes.
+  it.each([
+    ["lowercase non-ASCII start", "Assets:Bank:épargne"],
+    ["lowercase non-ASCII first component", "Assets:épargne"],
+    ["currency symbol start", "Assets:Bank:€"],
+    ["emoji start", "Assets:Bank:😀"],
+    ["em-dash start", "Assets:Bank:—"],
+    ["zero-width space inside component", "Assets:Bank:Foo\u200bBar"],
+  ])(
+    "refuses blank@1 account with %s (%s) with VALIDATION_FAILED on setup across MCP, REST, and GraphQL (w31/081)",
+    async (_label, accountName) => {
+      const h = await createHarness();
+      try {
+        const setup = {
+          preset: "blank@1" as const,
+          accounts: [{ name: accountName }],
+        };
+        const gqlSetup = {
+          preset: "BLANK",
+          accounts: [{ name: accountName }],
+        };
+
+        const restPreview = await fetch(
+          `${h.rest.url}/api-gateway/v1/ledgers/preview`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ setup }),
+          },
+        );
+        expect(restPreview.status).toBe(400);
+        expect(await restPreview.json()).toMatchObject({
+          error: {
+            code: "VALIDATION_FAILED",
+            message: expect.stringContaining("is not a Beancount account name"),
+          },
+        });
+
+        const restCreate = await fetch(`${h.rest.url}/api-gateway/v1/ledgers`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ name: "household", setup }),
+        });
+        expect(restCreate.status).toBe(400);
+        expect(await restCreate.json()).toMatchObject({
+          error: {
+            code: "VALIDATION_FAILED",
+            message: expect.stringContaining("is not a Beancount account name"),
+          },
+        });
+
+        const gqlPreview = await graphql({
+          schema,
+          source: `query($setup: LedgerSetupInput!) { previewLedgerSetup(setup: $setup) { accounts files } }`,
+          variableValues: { setup: gqlSetup },
+          contextValue: { identity, getCurrentIdentity: () => identity },
+        });
+        expect(gqlPreview.errors?.length).toBeGreaterThan(0);
+        const gqlPreviewFormatted = formatError(
+          { message: gqlPreview.errors![0]!.message },
+          gqlPreview.errors![0]!,
+        );
+        expect(gqlPreviewFormatted.extensions?.code).toBe("VALIDATION_FAILED");
+        expect(gqlPreviewFormatted.message).toContain(
+          "is not a Beancount account name",
+        );
+
+        const gqlCreate = await graphql({
+          schema,
+          source: `mutation($setup: LedgerSetupInput!) { createLedger(name: "household", setup: $setup) { name } }`,
+          variableValues: { setup: gqlSetup },
+          contextValue: { identity, getCurrentIdentity: () => identity },
+        });
+        expect(gqlCreate.errors?.length).toBeGreaterThan(0);
+        const gqlCreateFormatted = formatError(
+          { message: gqlCreate.errors![0]!.message },
+          gqlCreate.errors![0]!,
+        );
+        expect(gqlCreateFormatted.extensions?.code).toBe("VALIDATION_FAILED");
+        expect(gqlCreateFormatted.message).toContain(
+          "is not a Beancount account name",
+        );
+
+        const mcpPreview = await h.client.callTool({
+          name: "previewLedgerSetup",
+          arguments: { setup },
+        });
+        expect(mcpPreview.isError).toBe(true);
+        expect(mcpPreview.structuredContent).toMatchObject({
+          error: {
+            code: "VALIDATION_FAILED",
+            message: expect.stringContaining("is not a Beancount account name"),
+          },
+        });
+
+        const mcpCreate = await h.client.callTool({
+          name: "createLedger",
+          arguments: { name: "household", setup },
+        });
+        expect(mcpCreate.isError).toBe(true);
+        expect(mcpCreate.structuredContent).toMatchObject({
+          error: {
+            code: "VALIDATION_FAILED",
+            message: expect.stringContaining("is not a Beancount account name"),
+          },
+        });
+
+        expect(h.checkSetupFilesCalls).toEqual([]);
+        expect(h.createdLedgers).toEqual([]);
+      } finally {
+        await h.close();
+      }
+    },
+  );
+
+  it.each(["Assets:Bank:Épargne", "Assets:Bank:日本", "Assets:Bank:خانه‌ها"])(
+    "accepts valid Unicode blank@1 account %s across MCP, REST, and GraphQL (w31/081)",
+    async (accountName) => {
+      const h = await createHarness();
+      try {
+        const setup = {
+          preset: "blank@1" as const,
+          accounts: [{ name: accountName }],
+        };
+        const gqlSetup = {
+          preset: "BLANK",
+          accounts: [{ name: accountName }],
+        };
+
+        const restPreview = await fetch(
+          `${h.rest.url}/api-gateway/v1/ledgers/preview`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ setup }),
+          },
+        );
+        expect(restPreview.status).toBe(200);
+
+        const gqlPreview = await graphql({
+          schema,
+          source: `query($setup: LedgerSetupInput!) { previewLedgerSetup(setup: $setup) { accounts files } }`,
+          variableValues: { setup: gqlSetup },
+          contextValue: { identity, getCurrentIdentity: () => identity },
+        });
+        expect(gqlPreview.errors).toBeUndefined();
+
+        const mcpPreview = await h.client.callTool({
+          name: "previewLedgerSetup",
+          arguments: { setup },
+        });
+        expect(mcpPreview.isError).toBeFalsy();
+      } finally {
+        await h.close();
+      }
+    },
+  );
 });

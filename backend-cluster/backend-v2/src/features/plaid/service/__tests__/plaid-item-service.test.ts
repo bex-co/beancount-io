@@ -804,6 +804,8 @@ describe("PlaidItemService", () => {
       "Assets:Bank:Checking",
       "Liabilities:CreditCard:Visa",
       "Assets:Bank:日本",
+      "Assets:Bank:Café",
+      "Assets:Bank:خانه‌ها",
       "Assets:2026:Checking",
     ])(
       "accepts valid Beancount account name %j",
@@ -836,6 +838,10 @@ describe("PlaidItemService", () => {
       "assets:checking",
       "Assets:Bank\n",
       "Assets:Bank\x00",
+      "Assets:Bank:épargne",
+      "Assets:Bank:€",
+      "Assets:Bank:😀",
+      "Assets:Bank:Foo\u200bBar",
     ])(
       "refuses invalid ledgerAccount %j before authorization or lookup",
       async (invalidLedgerAccount) => {

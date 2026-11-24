@@ -224,15 +224,15 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
 
 /** The rule a refused name breaks, as stock Beancount loads an account. */
 const ACCOUNT_NAME_RULE =
-  "Join a root and its components with colons (Expenses:Food:日本). The root is a capital letter followed by letters, digits or hyphens; the first component starts with a capital letter or a digit; each later component starts with a capital letter, a digit or a non-ASCII character. ASCII inside a component is limited to letters, digits and hyphens, and a name holds no spaces or control characters.";
+  "Join a root and its components with colons (Expenses:Food:日本). The root is a capital letter followed by letters, digits or hyphens; the first component starts with a capital letter or a digit; each later component starts with an uppercase or titlecase letter, a caseless letter (such as CJK or Arabic), or a decimal digit. ASCII inside a component is limited to letters, digits and hyphens, and a name holds no spaces or control characters.";
 
 /**
  * The refusals that need no read: names, the root, and a rename onto itself.
  * `to` must be a name stock Beancount loads, a non-Latin leaf included
  * (w31/013). `from` need only be one account token, its root or first
- * component starting with any non-ASCII character: the hosted engine loads
- * `Expenses:日本`, which stock refuses, and renaming it is how a ledger gets
- * rid of it.
+ * component starting with a caseless or titlecase letter: the hosted engine
+ * loads `Expenses:日本`, which stock refuses, and renaming it is how a ledger
+ * gets rid of it.
  */
 function assertRenamable(from: string, to: string): void {
   for (const [name, value, loads] of [

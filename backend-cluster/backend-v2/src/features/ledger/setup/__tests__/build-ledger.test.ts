@@ -719,6 +719,20 @@ describe("names and titles written into main.bean", () => {
     "Assets",
     "Assets:bank",
     "Assets:Bank Account",
+    // w31/081: non-ASCII component starts rustledger refuses, and invisible format chars
+    "Assets:Bank:épargne",
+    "Assets:épargne",
+    "Assets:Bank:€",
+    "Assets:Bank:😀",
+    "Assets:Bank:—",
+    "Assets:Bank:「Foo」",
+    "Assets:Bank:ʰ",
+    "Assets:Bank:Ⅰ",
+    "Assets:Bank:²",
+    "Assets:Bank:\u0301",
+    "Assets:Bank:\u200cFoo",
+    "Assets:Bank:Foo\u200bBar",
+    "Assets:Bank:Foo\u00adBar",
   ])("refuses the account name %j", (name) => {
     expect(() =>
       previewLedgerSetup({ preset: "blank@1", accounts: [{ name }] }),
@@ -730,6 +744,14 @@ describe("names and titles written into main.bean", () => {
     "Liabilities:Card:2026",
     "Assets:Café",
     "Assets:现金",
+    "Assets:Bank:Épargne",
+    "Assets:Bank:Café",
+    "Assets:Bank:日本",
+    "Assets:Bank:خانه‌ها",
+    "Assets:Bank:Foo\u200dBar",
+    "Assets:Bank:١",
+    "Assets:Bank:ǅ",
+    "Assets:Bank:Foo—Bar",
   ])("accepts the account name %j", (name) => {
     const { files } = previewLedgerSetup(
       { preset: "blank@1", accounts: [{ name }] },

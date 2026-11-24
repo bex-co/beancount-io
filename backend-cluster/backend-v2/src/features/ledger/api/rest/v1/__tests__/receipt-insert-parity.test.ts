@@ -1020,6 +1020,10 @@ describe("upfront documentAccount and postings validation (w31/053)", () => {
     "expenses:food",
     "Expenses:Food:Bad Account",
     "Expenses:Food\n",
+    "Assets:Bank:épargne",
+    "Assets:Bank:€",
+    "Assets:Bank:😀",
+    "Assets:Bank:Foo\u200bBar",
   ])(
     "refuses invalid documentAccount %j as BAD_USER_INPUT on REST, GraphQL, and MCP before any effect",
     async (documentAccount) => {

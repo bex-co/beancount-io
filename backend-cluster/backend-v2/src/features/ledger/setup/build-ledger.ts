@@ -1,4 +1,5 @@
 import { ValidationError } from "@/shared/errors";
+import { lexesAsAccount } from "../utils/account-matcher";
 import {
   fitsEngineDecimal,
   formatEngineDecimalPreview,
@@ -49,14 +50,11 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const AMOUNT_PATTERN = /^[+-]?\d+(\.\d+)?$/;
 const OPENING_EQUITY = "Equity:OpeningBalances";
 /**
- * An account a new ledger can open: one of Beancount's five default roots,
- * then components that start with an uppercase letter, a digit, or a
- * non-ASCII letter. Interpolated unchecked, a `blank@1` name carrying a
- * newline wrote whole directives into `main.bean` (w23/049).
+ * An account a new ledger can open must start with one of Beancount's five
+ * default roots; the rest of the name follows `lexesAsAccount` (w23/049,
+ * w31/081).
  */
-const ACCOUNT_PATTERN =
-  /^(?:Assets|Liabilities|Equity|Income|Expenses)(?::[\p{Lu}\p{N}\P{ASCII}][\p{L}\p{N}\P{ASCII}-]*)+$/u;
-const NOT_IN_A_NAME = /[\s\p{C}]/u;
+const DEFAULT_ROOT_PREFIX = /^(?:Assets|Liabilities|Equity|Income|Expenses):/;
 
 const fail = (message: string): never => {
   throw new ValidationError("setup", message);
@@ -274,11 +272,11 @@ export function previewLedgerSetup(
   for (const selection of setup.accounts ?? []) {
     if (
       typeof selection.name !== "string" ||
-      NOT_IN_A_NAME.test(selection.name) ||
-      !ACCOUNT_PATTERN.test(selection.name)
+      !DEFAULT_ROOT_PREFIX.test(selection.name) ||
+      !lexesAsAccount(selection.name)
     ) {
       fail(
-        `Account ${JSON.stringify(selection.name)} is not a Beancount account name: it starts with Assets, Liabilities, Equity, Income or Expenses, each further part starts with a capital letter or a digit, and it holds no spaces`,
+        `Account ${JSON.stringify(selection.name)} is not a Beancount account name: it starts with Assets, Liabilities, Equity, Income or Expenses, each further part starts with an uppercase or titlecase letter, a caseless letter (such as CJK or Arabic), or a decimal digit, and it holds no spaces or control characters`,
       );
     }
     if (listed.has(selection.name)) {

@@ -27,27 +27,36 @@ const ACCOUNT_RE = new RegExp(`^(?:${TYPE})(?::${NAME})+$`, "u");
 /** The same pattern unanchored at the end, as the grammar matches a token. */
 const ACCOUNT_PREFIX_RE = new RegExp(`^(?:${TYPE})(?::${NAME})+`, "u");
 
-/** Control characters and bidirectional overrides, as `CONTROL_CHARACTERS`. */
-const REFUSED =
-  // eslint-disable-next-line no-control-regex -- the control ranges are the point: this mirrors Python's refused set exactly.
-  /[\x00-\x09\x0b\x0c\x0e-\x1f\x7f-\x9f\u202a-\u202e\u2066-\u2069]/;
+/**
+ * Whitespace and control/format characters (`\p{C}`), except Persian/Indic
+ * ZWNJ (`\u200c`) and ZWJ (`\u200d`), matching `entry-tokens.ts` (w21/649,
+ * w31/081). Refuses invisible format characters like ZWSP (`\u200b`), soft
+ * hyphen (`\u00ad`), and bidi overrides while allowing ZWNJ/ZWJ inside a
+ * component.
+ */
+const NOT_IN_A_NAME = /(?![\u200c\u200d])[\s\p{C}]/u;
 
 /**
- * A non-ASCII character inside an account token. The lexer takes any; a
- * space or a control ends the name here, as `bea` refuses one in a name.
+ * A non-ASCII continuation character inside an account token. Excludes
+ * whitespace, controls (`\p{Cc}`), and format characters (`\p{Cf}`) other
+ * than ZWNJ/ZWJ. Kept free of `\p{Cs}` so single-code-unit boundary checks
+ * in `account-rename.ts` treat astral characters (surrogate pairs) as part
+ * of the token; unpaired surrogates are still refused by `NOT_IN_A_NAME`.
  */
-const WIDE = "[^\\p{ASCII}\\s\\p{Cc}]";
+const WIDE = "(?:[^\\p{ASCII}\\s\\p{Cc}\\p{Cf}]|[\\u200c\\u200d])";
 
 /** One character of an account token: ASCII letters, digits and `-`, or `WIDE`. */
 export const ACCOUNT_CHAR = new RegExp(`[A-Za-z0-9-]|${WIDE}`, "u");
 
 /**
- * The lexer's account token, whole: a root starting with A-Z, then one or
- * more `:` components starting with A-Z or 0-9, each continuing with ASCII
- * letters, digits and `-`; a non-ASCII character may stand anywhere.
+ * The rustledger lexer's account token, whole: a root starting with an
+ * uppercase, titlecase, or caseless letter (`Lu`, `Lt`, `Lo`), then one or
+ * more `:` components starting with `Lu`, `Lt`, `Lo`, or a decimal digit
+ * (`Nd`), each continuing with ASCII letters, digits and `-` or a non-ASCII
+ * continuation character (w31/081).
  */
 const ACCOUNT_TOKEN_RE = new RegExp(
-  `^(?:[A-Z]|${WIDE})(?:[A-Za-z0-9-]|${WIDE})*(?::(?:[A-Z0-9]|${WIDE})(?:[A-Za-z0-9-]|${WIDE})*)+$`,
+  `^[\\p{Lu}\\p{Lt}\\p{Lo}](?:[A-Za-z0-9-]|${WIDE})*(?::[\\p{Lu}\\p{Lt}\\p{Lo}\\p{Nd}](?:[A-Za-z0-9-]|${WIDE})*)+$`,
   "u",
 );
 
@@ -57,7 +66,7 @@ const ACCOUNT_TOKEN_RE = new RegExp(
  * Beancount refuses.
  */
 export function lexesAsAccount(value: string): boolean {
-  return !REFUSED.test(value) && ACCOUNT_TOKEN_RE.test(value);
+  return !NOT_IN_A_NAME.test(value) && ACCOUNT_TOKEN_RE.test(value);
 }
 
 /**

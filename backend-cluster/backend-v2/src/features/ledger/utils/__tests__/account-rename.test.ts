@@ -110,12 +110,15 @@ describe("renameAccountInText (w1/m43)", () => {
   });
 
   it("reads a non-ASCII character as part of the name, as the loader does", () => {
-    // `€` continues the token, so Assets:Savings€ is a neighbour, not a child.
+    // `€` and astral emojis continue the token, so Assets:Savings€ and
+    // Assets:Savings😀 are neighbours, not children.
     const source =
-      "2026-01-01 open Assets:Savings€\n2026-01-01 open Assets:Savings\n";
+      "2026-01-01 open Assets:Savings€\n2026-01-01 open Assets:Savings😀\n2026-01-01 open Assets:Savings\n";
     expect(
       renameAccountInText(source, "Assets:Savings", "Assets:Saving").text,
-    ).toBe("2026-01-01 open Assets:Savings€\n2026-01-01 open Assets:Saving\n");
+    ).toBe(
+      "2026-01-01 open Assets:Savings€\n2026-01-01 open Assets:Savings😀\n2026-01-01 open Assets:Saving\n",
+    );
   });
 
   it("reads a zero-width non-joiner as part of the name (w31/013)", () => {

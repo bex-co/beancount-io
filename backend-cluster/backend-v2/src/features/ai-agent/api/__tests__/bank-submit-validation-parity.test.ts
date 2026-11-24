@@ -339,6 +339,10 @@ describe("bank transaction submit validation across REST, MCP, and GraphQL (w31/
     "Expenses:Bad Account",
     "expenses:food",
     "Expenses",
+    "Assets:Bank:épargne",
+    "Assets:Bank:€",
+    "Assets:Bank:😀",
+    "Assets:Bank:Foo\u200bBar",
   ])(
     "refuses invalid targetAccount %j as BAD_USER_INPUT before auth, Fava, or Postgres",
     async (targetAccount) => {
@@ -384,7 +388,17 @@ describe("bank transaction submit validation across REST, MCP, and GraphQL (w31/
     },
   );
 
-  it.each(["", "   ", "bad account", "assets:checking", "Assets"])(
+  it.each([
+    "",
+    "   ",
+    "bad account",
+    "assets:checking",
+    "Assets",
+    "Assets:Bank:épargne",
+    "Assets:Bank:€",
+    "Assets:Bank:😀",
+    "Assets:Bank:Foo\u200bBar",
+  ])(
     "refuses invalid sourceAccount %j as BAD_USER_INPUT before auth, Fava, or Postgres",
     async (sourceAccount) => {
       const f = await fixture(writeIdentity);
