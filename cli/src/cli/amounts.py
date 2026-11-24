@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import sys
 from decimal import Decimal, localcontext
 from typing import Any
 
@@ -171,6 +172,33 @@ class _Expression:
         return Decimal(number[0].replace(",", ""))
 
 
+#: How deep one divisor evaluation may recurse after the default stack gives
+#: out. Beancount's parser still crashes on a zero divisor nested hundreds
+#: deep, while it still parses a nonzero divisor nested thousands deep — so
+#: the guard must out-evaluate the parser rather than give up first. Past this
+#: limit the input is deeper than anything the parser survives (it runs out of
+#: memory first), and is refused rather than sent to it.
+_DEEP_DIVISOR_RECURSION_LIMIT = 60000
+
+
+def _divisor_value(text: str, start: int) -> Decimal:
+    """The unary divisor after one slash, evaluated past the default stack.
+
+    A divisor nested hundreds deep overflows the default stack, which used to
+    read as "not arithmetic" and wave a crashing divisor through. The retry
+    keeps the verdict exact, so deep nonzero input still passes.
+    """
+    try:
+        return _Expression(text, start).unary()
+    except RecursionError:
+        old_limit = sys.getrecursionlimit()
+        sys.setrecursionlimit(_DEEP_DIVISOR_RECURSION_LIMIT)
+        try:
+            return _Expression(text, start).unary()
+        finally:
+            sys.setrecursionlimit(old_limit)
+
+
 def _divides_by_zero(text: str) -> bool:
     """Whether any division in one line of amount text has a divisor that evaluates to zero.
 
@@ -188,12 +216,17 @@ def _divides_by_zero(text: str) -> bool:
                 if wide:
                     context.prec = max(context.prec, len(text)) + 2
                 try:
-                    if _Expression(text, slash.end()).unary() == 0:
+                    if _divisor_value(text, slash.end()) == 0:
                         return True
                 except _ZeroDivisor:
                     return True
-                except (_NotArithmetic, RecursionError, ArithmeticError):
+                except (_NotArithmetic, ArithmeticError):
                     break
+                except RecursionError:
+                    # Deeper than the retry limit: past anything Beancount's
+                    # parser survives, which runs out of memory first. Refuse
+                    # rather than send it to a crash.
+                    return True
     return False
 
 

@@ -99,6 +99,8 @@ newest first.
 
 ### Skipped
 
+- 2026-11-24 cli beancount crash-vs-error variance (`10/0/2`, `100/-0-5`, `10/0-5`, `10/(3-3)/(4-4)` SystemError entries vs `10/0`, `10/2/0` segfaults) — the guard refuses every variant before parsing either way; examined, no change.
+- 2026-11-24 cli guard over-refusal shapes (`10/0,0` Invalid-number, `10/.0.0` Invalid-token, slash-currency-adjacent) — beancount clean-errors, guard refuses with the divisor message; message-only divergence, no crash; left alone.
 - 2026-11-23 ledger `average-booking.ts` — read fully; every branch pins a past fix (w21/708 AVERAGE refusal, w21/721 saleLocator, w21/722 last-option-wins, w21/733 flagged-sale POSTING); examined, no divergence.
 - 2026-11-23 ledger `generated-closes.ts` (`inactiveAfterGeneratedCloses`/`inactivePads`/`withoutDroppedCloseErrors`/`withoutGeneratedCloseErrors`) — read fully; every branch pins a past fix (w21/737 close_tree closes, w21/753 late child, w21/756 pads, w21/775/776 dropped/generated errors); examined, no divergence.
 - 2026-11-23 ledger `sell-gains.ts` mul/add, `source-slice.ts` addScaled, `price-map.ts` addInto/two-hop times, `account-tree.ts` reduce-plus — exact arithmetic like the pre-fix journal/lot-inventory twins, but every operand chain is written-source short decimals (prices, tolerances `0.5×10^-places`, already-rounded reduced values); the >28-digit dust needs a 28-digit division quotient, which only the booked-cost paths carry — examined, no reachable divergence, no proof.
