@@ -244,13 +244,14 @@ def _rows_from_csv(text: str, name: str) -> list[dict[str, str]]:
 def _load_mapping(from_file: str) -> list[Any]:
     """The `--from` rows as JSON-decoded values: a JSON array or a CSV mapping.
 
-    Detected by content — a `[` opens the array, anything else is CSV — so
-    stdin needs no format flag either.
+    Detected by content — a `[` or `{` opens JSON, anything else is CSV — so
+    stdin needs no format flag either. An object is refused as not an array;
+    read as CSV, it came back quoted as column names (w1/378).
     """
     text, name = read_text(from_file, noun="Mappings", json_only=False)
     if not text.strip():
         raise UsageError(f"'{name}' (from --from) holds no rows.")
-    if text.lstrip().startswith("["):
+    if text.lstrip().startswith(("[", "{")):
         return _rows_from_json(text, name)
     return _rows_from_csv(text, name)
 

@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 from bea_engine import protocol
+from bea_engine.amounts import JsonFloat
 from bea_engine.ledger import reader
 from bea_engine.ledger import write as ledger_write
 from bea_engine.ledger.text import (
@@ -315,6 +316,19 @@ class _Changes:
 _REQUEST_FIELDS = ("id", "account", "flag", "tags", "narration")
 
 
+def _json_kind(value: Any) -> str:
+    """A JSON value as a refusal names it: `the boolean true`, `the number 1.5`, `an object`."""
+    if isinstance(value, bool):
+        return f"the boolean {'true' if value else 'false'}"
+    if isinstance(value, JsonFloat):
+        return f"the number {value.literal}"
+    if isinstance(value, dict):
+        return "an object"
+    if isinstance(value, list):
+        return "an array"
+    return type(value).__name__
+
+
 def _validate_request(request: dict[str, Any]) -> _Changes:
     """The request as validated changes, or a usage failure naming the problem.
 
@@ -328,6 +342,15 @@ def _validate_request(request: dict[str, Any]) -> _Changes:
             f"use {', '.join(_REQUEST_FIELDS)}. Nothing was written."
         )
     raw_id = request.get("id")
+    # An importer's `transaction_id: 12345` lists as a number, so a copied id
+    # arrives as one; read it as its decimal text, as the CSV form reads every
+    # id. Any other type is named rather than called missing (w1/378).
+    if isinstance(raw_id, int) and not isinstance(raw_id, bool):
+        raw_id = str(raw_id)
+    elif raw_id is not None and not isinstance(raw_id, str):
+        raise protocol.UsageError(
+            f"'id' must be text or a whole number, not {_json_kind(raw_id)}. Nothing was written."
+        )
     if not isinstance(raw_id, str) or not raw_id.strip():
         raise protocol.UsageError(
             "An update needs an 'id': an import-id, a ref, a bank ID, or file:line. Nothing was written."
@@ -374,13 +397,12 @@ def _gate_load_errors(errors: list[Any], file: Path, *, allow_errors: bool) -> N
 
     The span and the line edits are computed from the parse; on a broken parse
     they could name the wrong lines. `--allow-errors` tolerates pre-existing
-    errors the write itself does not touch, like every other writer.
+    errors the write itself does not touch, like every other writer, and the
+    refusal says so as theirs does: `bea check`'s bare `N error(s).` named
+    neither that nothing was written nor the remedy (w1/378).
     """
     if errors and not allow_errors:
-        raise protocol.LedgerError(
-            f"{file}: {len(errors)} error(s).",
-            details=[format_error(error, ledger_file=file) for error in errors],
-        )
+        raise ledger_write.preexisting_refusal(errors, [format_error(error, ledger_file=file) for error in errors])
 
 
 def _generated(entry: Any, shared: frozenset[tuple[str, int]]) -> bool:
@@ -1134,6 +1156,9 @@ def _row_payload(
     payload = []
     for index, item in enumerate(rows):
         raw_id = item.get("id") if isinstance(item, dict) else None
+        if isinstance(raw_id, JsonFloat):
+            # Echoed as typed, not as the marker's repr `JsonFloat('1.5')`.
+            raw_id = raw_id.literal
         if index in reasons:
             rejection = reasons[index]
             payload.append(

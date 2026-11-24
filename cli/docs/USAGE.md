@@ -2123,7 +2123,8 @@ bea list transaction --flag '!'
 ```
 
 JSON rows use the single-row fields; pass `--from -` to read either form from
-stdin. With `--apply`, any rejection exits **1** with per-row results, as `bea
+stdin. A JSON mapping is an array even for one row, and its `id` may be a whole
+number, as `bea --json list` shows a numeric `transaction_id`. With `--apply`, any rejection exits **1** with per-row results, as `bea
 add transactions --partial` reports. A preview writes nothing and exits 0 even
 when it rejects rows: each rejection shows in its row status and in the
 `rejected` count (`data.rejected` under `--json`), so a script that previews
