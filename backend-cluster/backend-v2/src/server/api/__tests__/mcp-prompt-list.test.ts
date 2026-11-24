@@ -328,6 +328,33 @@ describe("MCP prompts", () => {
   });
 
   /**
+   * w31/074. Whitespace-only values on free-text optional arguments count as
+   * omitted over the MCP wire, while whitespace-only fixed-shape arguments
+   * (`month`, `ledger`) stay refused with BAD_USER_INPUT.
+   */
+  it("treats whitespace-only free-text arguments as omitted over prompts/get", async () => {
+    const fixedShape = new Set(["month", "ledger"]);
+    await withClient(unpinned, async (client) => {
+      for (const descriptor of MCP_PROMPTS) {
+        const freeTextArgs = Object.keys(descriptor.argsSchema).filter(
+          (arg) => !fixedShape.has(arg),
+        );
+        if (freeTextArgs.length === 0) continue;
+        const omitted = await client.getPrompt({ name: descriptor.name });
+        const whitespace = await client.getPrompt({
+          name: descriptor.name,
+          arguments: Object.fromEntries(
+            freeTextArgs.map((arg) => [arg, "   "]),
+          ),
+        });
+        expect(textOf(whitespace.messages[0].content)).toBe(
+          textOf(omitted.messages[0].content),
+        );
+      }
+    });
+  });
+
+  /**
    * w6/015. The reconcile and close playbooks told an agent to pass a
    * `description` to `addLedgerEntries`, whose strict input has none — the
    * call they prescribed would be refused. Only the file tools take one.

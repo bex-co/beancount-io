@@ -94,15 +94,17 @@ export function validatePromptArgs(
 
 /**
  * The playbook a `prompts/get` returns: the caller's arguments with every
- * `""` dropped, checked, then folded in.
+ * `""` dropped, checked, then whitespace-only free-text arguments dropped
+ * before folding in.
  *
  * Every argument is optional, and a client with a form submits an unfilled
- * optional field as `""`. Read as given, that one value meant three things
- * (w31/011): a malformed `month` or `ledger`, refused; a blank folded into
- * the text ("Reconcile  against one statement period."), losing the
- * fallback; or nothing at all where a builder tested truthiness. Dropping it
- * here, before the check and the builder, makes `""` mean omitted for every
- * argument, as `ledger: ""` already does on the tools.
+ * optional field as `""` (w31/011) or whitespace (w31/074). Dropping `""`
+ * before `validatePromptArgs` makes `""` mean omitted for every argument, as
+ * `ledger: ""` already does on the tools. Fixed-shape arguments (`month`,
+ * `ledger`) are still checked on any non-empty value so `" "` stays refused
+ * as `BAD_USER_INPUT`; any remaining argument whose trimmed value is empty is
+ * dropped before the builder sees it so blank strings never fold into broken
+ * playbook prose.
  */
 export function renderPrompt(
   descriptor: McpPromptDescriptor,
@@ -113,7 +115,12 @@ export function renderPrompt(
     Object.entries(args).filter(([, value]) => value !== ""),
   );
   validatePromptArgs(given);
-  return descriptor.build(given, identity);
+  const effective = Object.fromEntries(
+    Object.entries(given).filter(
+      ([, value]) => value !== undefined && value.trim() !== "",
+    ),
+  );
+  return descriptor.build(effective, identity);
 }
 
 /**

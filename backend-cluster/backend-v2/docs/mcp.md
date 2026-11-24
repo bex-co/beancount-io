@@ -1519,9 +1519,10 @@ with the credential's scopes and ledger restriction.
 | `reconcile-account`  | `account`, `period`, `statement` (CSV or pasted text), `ledger` | Classify every difference against one statement, then append missing entries and a balance assertion after confirmation                                                                                                                                                                       |
 | `categorize-imports` | `item_id`, `ledger`                                             | Categorize staged bank transactions into existing accounts, flag duplicates, and submit after confirmation. `item_id` is the connection's own `id` (pitm\_…), not its Plaid `itemId`. Listing linked banks needs `ledger.admin`; otherwise pass `item_id` or work with what is already staged |
 
-An argument sent as an empty string counts as omitted, so a client form that
-submits an unfilled field gets the same playbook as one that leaves it out.
-`month` must be `YYYY-MM` and `ledger` must be `owner/name`; a malformed value is
+An argument sent as an empty string — or whitespace-only for free-text arguments
+— counts as omitted, so a client form that submits an unfilled field gets the
+same playbook as one that leaves it out. `month` must be `YYYY-MM` and `ledger`
+must be `owner/name`; any non-empty malformed value (including whitespace) is
 refused rather than folded into the playbook. A credential restricted to one
 ledger is told that ledger, and a `ledger` argument outside the restriction is
 named as refused.
