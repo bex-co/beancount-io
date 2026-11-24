@@ -916,6 +916,53 @@ describe("LedgerWorkflow", () => {
         ).not.toHaveBeenCalled();
         expect(mockFavaApiClient.ledgers.createLedger).not.toHaveBeenCalled();
       });
+
+      // w31/078: setup opening amounts exceeding the 28-significant-digit
+      // engine Decimal limit must fail upfront before checkSetupFiles or repo
+      // creation.
+      it.each([
+        "1.0000000000000000000000000001",
+        "0.000000000000000000000000000001",
+        "10000000000000000000000000000",
+        "9999999999999999999999999999999999",
+      ])(
+        "refuses oversized setup opening amount %s before checking or creating a ledger",
+        async (amount) => {
+          const setup = {
+            preset: "personal@1" as const,
+            operatingCurrency: "USD",
+            historyStart: "2026-02-01",
+            accounts: [
+              {
+                name: "Assets:Bank",
+                openingState: "known" as const,
+                amount,
+              },
+            ],
+          };
+          await expect(
+            workflow.previewLedgerSetup({ identity: IDENTITY, setup }),
+          ).rejects.toMatchObject({
+            category: "VALIDATION_FAILED",
+            metadata: expect.objectContaining({ field: "setup" }),
+            message: expect.stringContaining("28 significant digits"),
+          });
+          await expect(
+            workflow.createLedger({
+              identity: IDENTITY,
+              input: { name: "household", setup },
+            }),
+          ).rejects.toMatchObject({
+            category: "VALIDATION_FAILED",
+            metadata: expect.objectContaining({ field: "setup" }),
+            message: expect.stringContaining("28 significant digits"),
+          });
+          expect(
+            mockFavaApiClient.reports.checkLedgerFiles,
+          ).not.toHaveBeenCalled();
+          expect(mockFavaApiClient.ledgers.createLedger).not.toHaveBeenCalled();
+        },
+      );
     });
 
     describe("starter currency (w3/m62)", () => {

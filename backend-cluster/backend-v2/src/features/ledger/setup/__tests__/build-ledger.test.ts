@@ -469,6 +469,100 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
     });
   });
 
+  // w31/078: engine Decimal holds at most 28 significant digits and 28
+  // fractional digits; wider amounts silently rounded or cascaded parse errors.
+  describe("28-significant-digit engine decimal limit on opening amounts (w31/078)", () => {
+    it.each([
+      ["29-digit integer", "10000000000000000000000000000"],
+      ["29-significant-digit fraction", "1.0000000000000000000000000001"],
+      ["30-significant-digit fraction", "1.00000000000000000000000000001"],
+      ["30-fraction-digit small decimal", "0.000000000000000000000000000001"],
+      ["29-fraction-digit small decimal", "0.00000000000000000000000000001"],
+      ["34-digit overflow", "9999999999999999999999999999999999"],
+      ["signed 29-digit integer", "-10000000000000000000000000000"],
+      ["explicit-plus 29-digit integer", "+10000000000000000000000000000"],
+    ])("refuses %s (%s) with ValidationError on setup", (_label, amount) => {
+      const setup: LedgerSetup = {
+        preset: "personal@1",
+        operatingCurrency: "USD",
+        historyStart: "2026-02-01",
+        accounts: [{ name: "Assets:Bank", openingState: "known", amount }],
+      };
+      for (const run of [
+        () => previewLedgerSetup(setup, "2026-01-01"),
+        () => buildLedgerFiles(setup, "2026-01-01"),
+      ]) {
+        let thrown: unknown;
+        try {
+          run();
+        } catch (error) {
+          thrown = error;
+        }
+        expect(thrown).toBeInstanceOf(ValidationError);
+        const error = thrown as ValidationError;
+        expect(error.category).toBe("VALIDATION_FAILED");
+        expect(error.metadata).toMatchObject({ field: "setup" });
+        expect(error.message).toContain("Assets:Bank");
+        expect(error.message).toContain(amount);
+        expect(error.message).toContain("28 significant digits");
+      }
+    });
+
+    it("truncates very long offending amount literals in the refusal message", () => {
+      const huge = "9".repeat(80);
+      let thrown: unknown;
+      try {
+        previewLedgerSetup(
+          {
+            preset: "personal@1",
+            historyStart: "2026-02-01",
+            accounts: [
+              { name: "Assets:Bank", openingState: "known", amount: huge },
+            ],
+          },
+          "2026-01-01",
+        );
+      } catch (error) {
+        thrown = error;
+      }
+      expect(thrown).toBeInstanceOf(ValidationError);
+      const error = thrown as ValidationError;
+      expect(error.category).toBe("VALIDATION_FAILED");
+      expect(error.metadata).toMatchObject({ field: "setup" });
+      expect(error.message).toContain(`${"9".repeat(64)}…`);
+      expect(error.message).not.toContain(huge);
+    });
+
+    it.each([
+      ["28-digit integer", "1234567890123456789012345678"],
+      ["negative 28-digit integer", "-1234567890123456789012345678"],
+      ["positive signed 28-digit integer", "+1234567890123456789012345678"],
+      [
+        "leading zeros within 28 significant digits",
+        "00000000000000000000000000001.23",
+      ],
+      ["28-fraction-digit small decimal", "0.0000000000000000000000000001"],
+      [
+        "28 significant digits across decimal point",
+        "1.000000000000000000000000001",
+      ],
+    ])("accepts %s (%s)", (_label, amount) => {
+      const preview = previewLedgerSetup(
+        {
+          preset: "personal@1",
+          operatingCurrency: "USD",
+          historyStart: "2026-02-01",
+          accounts: [{ name: "Assets:Bank", openingState: "known", amount }],
+        },
+        "2026-01-01",
+      );
+      const expectedAmount = amount.startsWith("+") ? amount.slice(1) : amount;
+      expect(preview.files["main.bean"]).toContain(
+        `2026-02-01 balance Assets:Bank ${expectedAmount} USD`,
+      );
+    });
+  });
+
   // w21/107: Date.parse rolled 2026-04-31 over to 1 May, so it was accepted.
   it("refuses a history start that is not a calendar day", () => {
     for (const historyStart of ["2026-02-30", "2026-04-31", "2025-02-29"]) {

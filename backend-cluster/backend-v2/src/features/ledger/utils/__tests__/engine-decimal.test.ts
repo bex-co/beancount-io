@@ -1,8 +1,39 @@
 import {
   assertAmountsFitEngineDecimal,
+  fitsEngineDecimal,
+  formatEngineDecimalPreview,
   textAmountLiterals,
 } from "../engine-decimal";
 import { BadUserInputError } from "@/shared/errors";
+
+describe("fitsEngineDecimal", () => {
+  it.each([
+    "1234567890123456789012345678",
+    "-1234567890123456789012345678",
+    "+1234567890123456789012345678",
+    "00000000000000000000000000001.23",
+    "0.0000000000000000000000000001",
+    "1,234,567.89",
+  ])("accepts %s", (literal) => {
+    expect(fitsEngineDecimal(literal)).toBe(true);
+  });
+
+  it.each([
+    "10000000000000000000000000000",
+    "1.0000000000000000000000000001",
+    "0.00000000000000000000000000001",
+    "9999999999999999999999999999999999",
+  ])("refuses %s", (literal) => {
+    expect(fitsEngineDecimal(literal)).toBe(false);
+  });
+
+  it("truncates previews longer than 64 characters", () => {
+    expect(formatEngineDecimalPreview("9".repeat(64))).toBe("9".repeat(64));
+    expect(formatEngineDecimalPreview("9".repeat(65))).toBe(
+      `${"9".repeat(64)}…`,
+    );
+  });
+});
 
 /** w23/081: the 28-significant-digit rule for amounts in raw Beancount text. */
 describe("textAmountLiterals", () => {

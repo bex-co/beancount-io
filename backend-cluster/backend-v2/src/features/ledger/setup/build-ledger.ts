@@ -1,5 +1,10 @@
 import { ValidationError } from "@/shared/errors";
 import {
+  fitsEngineDecimal,
+  formatEngineDecimalPreview,
+  MAX_DECIMAL_DIGITS,
+} from "../utils/engine-decimal";
+import {
   isSupportedCurrency,
   moduleById,
   presetById,
@@ -297,9 +302,17 @@ export function previewLedgerSetup(
           `"${OPENING_EQUITY}" balances the other opening balances and cannot have a known opening of its own`,
         );
       }
-      if (!selection.amount || !AMOUNT_PATTERN.test(selection.amount)) {
+      const amount = selection.amount;
+      if (!amount || !AMOUNT_PATTERN.test(amount)) {
         fail(
           `Account "${selection.name}" needs a decimal amount for a known opening balance`,
+        );
+      } else if (!fitsEngineDecimal(amount)) {
+        // The ledger engine's Decimal holds at most 28 significant digits and 28
+        // fractional digits; wider amounts silently round or cascade parse errors
+        // during bean-check (w21/997, w23/081, w31/078).
+        fail(
+          `Account "${selection.name}" amount "${formatEngineDecimalPreview(amount)}" has more than ${MAX_DECIMAL_DIGITS} significant digits; shorten it to ${MAX_DECIMAL_DIGITS} significant digits or fewer`,
         );
       }
     } else if (selection.amount !== undefined) {

@@ -5,9 +5,10 @@ import { BadUserInputError } from "@/shared/errors";
  * error, or a changed value read back rounded. The structured-entry builder
  * refuses such literals (`backend-cluster/ledger` `entry-build.ts`, w21/997);
  * packages share no code, so this is the same rule restated for Beancount
- * text, applied to the new text every raw write commits (w23/081).
+ * text and setup opening balances, applied before any write or check
+ * (`w23/081`, `w31/078`).
  */
-const MAX_DECIMAL_DIGITS = 28;
+export const MAX_DECIMAL_DIGITS = 28;
 
 /**
  * An amount in text: a decimal number and the currency beside it, as the
@@ -26,12 +27,19 @@ const QUOTED_SPAN = /"[^"\n]*"/g;
 /** How much of an offending literal the refusal names before trimming. */
 const LITERAL_PREVIEW = 64;
 
+/** Truncate an overly long offending decimal literal for error messages. */
+export function formatEngineDecimalPreview(literal: string): string {
+  return literal.length > LITERAL_PREVIEW
+    ? `${literal.slice(0, LITERAL_PREVIEW)}…`
+    : literal;
+}
+
 /**
- * Whether a text literal fits the engine's 28 digits, as written: leading
+ * Whether a decimal literal fits the engine's 28 digits, as written: leading
  * zeros carry no value, commas group, and every fraction digit counts — the
  * same count `fitsEngineDecimal` in the ledger service applies (w21/997).
  */
-function textLiteralFitsEngine(literal: string): boolean {
+export function fitsEngineDecimal(literal: string): boolean {
   const unsigned = literal.replace(/^[+-]/, "").replace(/,/g, "");
   const dot = unsigned.indexOf(".");
   const whole = (dot === -1 ? unsigned : unsigned.slice(0, dot)).replace(
@@ -70,11 +78,8 @@ export function textAmountLiterals(text: string): string[] {
 export function assertAmountsFitEngineDecimal(text: string): void {
   if (text.includes("\0")) return;
   for (const literal of textAmountLiterals(text)) {
-    if (!textLiteralFitsEngine(literal)) {
-      const shown =
-        literal.length > LITERAL_PREVIEW
-          ? `${literal.slice(0, LITERAL_PREVIEW)}…`
-          : literal;
+    if (!fitsEngineDecimal(literal)) {
+      const shown = formatEngineDecimalPreview(literal);
       throw new BadUserInputError(
         `amount ${shown} has more than ${MAX_DECIMAL_DIGITS} significant digits; the engine would read it back rounded`,
         undefined,
