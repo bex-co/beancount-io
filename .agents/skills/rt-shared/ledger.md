@@ -45,7 +45,6 @@ newest first.
 
 ### Deferred
 
-- 2026-11-21 `JSON_FLOAT_MARKER` transport marker (`cli/amounts.py:36` "must match `bea_engine.amounts`" vs `bea_engine/amounts.py:197`) — string literal both sides must share, no test pins it; add a drift guard next run.
 
 ### Skipped
 
