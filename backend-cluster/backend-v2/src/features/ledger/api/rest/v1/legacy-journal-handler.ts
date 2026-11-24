@@ -1,19 +1,24 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
-import { json, booleanQuery } from "@/server/rest/v1-schemas";
+import {
+  json,
+  booleanQuery,
+  intQuery,
+  decimalQuery,
+} from "@/server/rest/v1-schemas";
 import { jsonStringArrayQuery } from "./journal-reads";
 
 const legacyJournalQuery = z
   .object({
-    first: z.coerce.number().int().optional(),
+    first: intQuery().optional(),
     after: z.string().optional(),
-    last: z.coerce.number().int().optional(),
+    last: intQuery().optional(),
     before: z.string().optional(),
     detailed: booleanQuery,
     searchQuery: z.string().optional(),
     accountFilter: z.string().optional(),
-    amountMin: z.coerce.number().optional(),
-    amountMax: z.coerce.number().optional(),
+    amountMin: decimalQuery().optional(),
+    amountMax: decimalQuery().optional(),
     entryTypes: jsonStringArrayQuery("entryTypes").optional(),
     sortBy: z.string().optional(),
     sortOrder: z.string().optional(),

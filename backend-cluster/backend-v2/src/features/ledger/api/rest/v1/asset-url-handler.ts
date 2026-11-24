@@ -1,10 +1,10 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { ledgerPathSchema, ledgerIdOf } from "./schemas";
 import { anonymousV1Route, v1Route } from "@/server/rest/v1-route";
-import { json } from "@/server/rest/v1-schemas";
+import { intQuery, json } from "@/server/rest/v1-schemas";
 export const assetUrlQuery = z
   .object({
-    ledgerRepoId: z.coerce.number().int().positive(),
+    ledgerRepoId: intQuery({ positive: true }),
     filename: z.string(),
   })
   .strict();

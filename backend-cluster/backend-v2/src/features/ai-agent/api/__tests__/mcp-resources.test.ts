@@ -941,3 +941,236 @@ describe("argument limits on resource reads (w31/065)", () => {
     }
   });
 });
+
+/**
+ * w31/071. Numeric query parameters on MCP resources must accept only strict
+ * base-10 integer strings — never silently coerce `""` / whitespace to `0` or
+ * accept hex / binary / octal / scientific / float literals.
+ */
+describe("strict numeric query parameters on resource reads (w31/071)", () => {
+  const makeContext = () => {
+    const getJournal = jest.fn(async () => ({
+      total: 0,
+      data: [],
+      is_empty: true,
+    }));
+    const plaintextJournal = jest.fn(async () => ({
+      total: 0,
+      truncated: false,
+      text: "",
+    }));
+    const getAccountJournal = jest.fn(async () => ({
+      total: 0,
+      data: [],
+      is_empty: true,
+    }));
+    const listCommits = jest.fn(async () => ({
+      commits: [],
+      total: 0,
+      hasMore: false,
+    }));
+    const getFeed = jest.fn(async () => ({
+      items: [],
+      total: 0,
+      hasMore: false,
+    }));
+    const listCollaborators = jest.fn(async () => []);
+    const getUserFollowers = jest.fn(async () => ({ users: [], total: 0 }));
+    const getAssetDownloadUrl = jest.fn(
+      async () => "https://example.test/asset",
+    );
+    const getPullRequestDetails = jest.fn(async () => ({
+      number: 42,
+      title: "t",
+      description: "d",
+      state: "open",
+      author: "alice",
+      headBranch: "h",
+      baseBranch: "main",
+      files: [],
+    }));
+    const getUnsyncedTransactions = jest.fn(async () => []);
+    const base = ctx(contentOf("main.beancount", "ok"), undefined);
+    const context = {
+      ...base,
+      identity: {
+        ...base.identity,
+        scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
+      },
+      services: {
+        ...base.services,
+        ledgerJournal: { getJournal, plaintextJournal, getAccountJournal },
+        plaidItem: { getUnsyncedTransactions },
+      },
+      commitsService: { listCommits },
+      feedService: { getFeed },
+      collaboratorsWorkflow: { listCollaborators },
+      socialService: { getUserFollowers },
+      ledgerAssetService: { getAssetDownloadUrl },
+      pullRequestWorkflow: { getPullRequestDetails },
+    } as unknown as McpRequestContext;
+    return {
+      context,
+      spies: {
+        getJournal,
+        plaintextJournal,
+        getAccountJournal,
+        listCommits,
+        getFeed,
+        listCollaborators,
+        getUserFollowers,
+        getAssetDownloadUrl,
+        getPullRequestDetails,
+        getUnsyncedTransactions,
+      },
+    };
+  };
+
+  it.each([
+    [
+      "empty offset on journal",
+      `${RESOURCE_SCHEME}://alice/main/journal?limit=2&offset=`,
+    ],
+    [
+      "whitespace offset on journal",
+      `${RESOURCE_SCHEME}://alice/main/journal?limit=2&offset=%20%20`,
+    ],
+    [
+      "empty limit on journal",
+      `${RESOURCE_SCHEME}://alice/main/journal?limit=`,
+    ],
+    [
+      "padded limit on journal",
+      `${RESOURCE_SCHEME}://alice/main/journal?limit=%202%20`,
+    ],
+    [
+      "hex limit on journal",
+      `${RESOURCE_SCHEME}://alice/main/journal?limit=0x2`,
+    ],
+    [
+      "binary limit on journal",
+      `${RESOURCE_SCHEME}://alice/main/journal?limit=0b10`,
+    ],
+    [
+      "octal limit on journal",
+      `${RESOURCE_SCHEME}://alice/main/journal?limit=0o10`,
+    ],
+    [
+      "scientific notation limit on journal",
+      `${RESOURCE_SCHEME}://alice/main/journal?limit=1e1`,
+    ],
+    [
+      "float string limit on journal",
+      `${RESOURCE_SCHEME}://alice/main/journal?limit=1.0`,
+    ],
+    [
+      "empty offset on plaintext-journal",
+      `${RESOURCE_SCHEME}://alice/main/plaintext-journal?limit=2&offset=`,
+    ],
+    [
+      "empty offset on account-journal",
+      `${RESOURCE_SCHEME}://alice/main/account-journal?account=Assets&limit=2&offset=`,
+    ],
+    [
+      "empty offset on account/feed",
+      `${RESOURCE_SCHEME}://account/feed?offset=`,
+    ],
+    [
+      "hex page on commits",
+      `${RESOURCE_SCHEME}://alice/main/commits?page=0x1&limit=2`,
+    ],
+    [
+      "scientific page on collaborators",
+      `${RESOURCE_SCHEME}://alice/main/collaborators?page=1e0`,
+    ],
+    [
+      "hex page on social/followers",
+      `${RESOURCE_SCHEME}://social/followers?username=alice&page=0x1`,
+    ],
+    [
+      "scientific ledgerRepoId on assets/download-url",
+      `${RESOURCE_SCHEME}://assets/download-url?ledgerRepoId=1e0&filename=x`,
+    ],
+    [
+      "empty ledgerRepoId on assets/download-url",
+      `${RESOURCE_SCHEME}://assets/download-url?ledgerRepoId=&filename=x`,
+    ],
+    [
+      "scientific prNumber on pull-request",
+      `${RESOURCE_SCHEME}://alice/main/pull-request?prNumber=1e0`,
+    ],
+    [
+      "empty prNumber on pull-request",
+      `${RESOURCE_SCHEME}://alice/main/pull-request?prNumber=`,
+    ],
+    [
+      "hex page on bank-transactions/unsynced",
+      `${RESOURCE_SCHEME}://alice/main/bank-transactions/unsynced?page=0x1`,
+    ],
+  ])(
+    "refuses %s as BAD_USER_INPUT naming an invalid integer before any service",
+    async (_label, uri) => {
+      const { context, spies } = makeContext();
+      const { client, close } = await connect(context);
+      try {
+        const error = await client
+          .readResource({ uri })
+          .then(() => undefined)
+          .catch((caught: unknown) => caught as McpError);
+        expect(error?.code).toBe(JSON_RPC_INVALID_PARAMS);
+        expect(error?.data).toMatchObject({
+          code: "BAD_USER_INPUT",
+          message: expect.stringMatching(/invalid integer/i),
+        });
+        expect((error?.data as { message: string }).message).not.toMatch(
+          /too small/i,
+        );
+        for (const spy of Object.values(spies)) {
+          expect(spy).not.toHaveBeenCalled();
+        }
+      } finally {
+        await close();
+      }
+    },
+  );
+
+  it("keeps omitted defaults and accepts canonical base-10 integers", async () => {
+    const { context, spies } = makeContext();
+    const { client, close } = await connect(context);
+    try {
+      await client.readResource({
+        uri: `${RESOURCE_SCHEME}://alice/main/journal?limit=2&offset=0`,
+      });
+      expect(spies.getJournal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          query: expect.objectContaining({ limit: 2, offset: 0 }),
+        }),
+      );
+
+      await client.readResource({ uri: `${RESOURCE_SCHEME}://account/feed` });
+      expect(spies.getFeed).toHaveBeenCalledWith(
+        expect.objectContaining({ offset: 0, limit: 10 }),
+        expect.anything(),
+      );
+
+      await client.readResource({
+        uri: `${RESOURCE_SCHEME}://alice/main/commits`,
+      });
+      expect(spies.listCommits).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 1, limit: 30 }),
+      );
+
+      await client.readResource({
+        uri: `${RESOURCE_SCHEME}://alice/main/pull-request?prNumber=42`,
+      });
+      expect(spies.getPullRequestDetails).toHaveBeenCalledWith(
+        "alice",
+        "main",
+        42,
+        expect.anything(),
+      );
+    } finally {
+      await close();
+    }
+  });
+});

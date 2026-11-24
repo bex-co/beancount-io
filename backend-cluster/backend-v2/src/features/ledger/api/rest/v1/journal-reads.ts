@@ -1,6 +1,6 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { assertNoNulDeep } from "@/shared/assert-no-nul";
-import { booleanQuery } from "@/server/rest/v1-schemas";
+import { booleanQuery, intQuery } from "@/server/rest/v1-schemas";
 import { INCLUDE_SOURCE_DESCRIPTION } from "@/features/ledger/utils/include-source-description";
 import { JOURNAL_KINDS } from "@/features/ledger/utils/journal-kinds";
 import {
@@ -106,8 +106,8 @@ const customSubtypesQuery = jsonStringArrayQuery("customSubtypes")
   );
 
 const journalQuerySchema = filters.extend({
-  limit: z.coerce.number().int().min(1).max(1000).optional(),
-  offset: z.coerce.number().int().min(0).optional(),
+  limit: intQuery({ min: 1, max: 1000 }).optional(),
+  offset: intQuery({ min: 0 }).optional(),
   include_source: booleanQuery.openapi({
     description: INCLUDE_SOURCE_DESCRIPTION,
   }),
@@ -123,16 +123,12 @@ const journalQuerySchema = filters.extend({
   customSubtypes: customSubtypesQuery,
 });
 const plaintextJournalQuery = filters.extend({
-  limit: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(PLAINTEXT_PAGE_MAX)
+  limit: intQuery({ min: 1, max: PLAINTEXT_PAGE_MAX })
     .optional()
     .describe(
       "Entries per page. Omitted, REST and GraphQL return every entry; MCP returns 200.",
     ),
-  offset: z.coerce.number().int().min(0).optional(),
+  offset: intQuery({ min: 0 }).optional(),
 });
 const accountJournalQuery = filters.extend({
   account: z.string(),
@@ -143,8 +139,8 @@ const accountJournalQuery = filters.extend({
     .string()
     .optional()
     .describe("Alias of filter_account, as GraphQL spells it."),
-  limit: z.coerce.number().int().min(1).max(1000).optional(),
-  offset: z.coerce.number().int().min(0).optional(),
+  limit: intQuery({ min: 1, max: 1000 }).optional(),
+  offset: intQuery({ min: 0 }).optional(),
   with_children: booleanQuery,
   // Twin (w23/m10/t003): the camel spelling, accepted on every surface.
   withChildren: booleanQuery.openapi({

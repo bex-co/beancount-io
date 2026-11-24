@@ -260,3 +260,270 @@ describe("documented lenient values", () => {
     });
   });
 });
+
+// w31/071: numeric URL query and path parameters must accept only strict
+// base-10 strings — never silently coerce `""` / whitespace to `0` or accept
+// hex / binary / octal / scientific / float literals via JS `Number()`.
+describe("strict numeric query and path parameters (w31/071)", () => {
+  const invalidInts = [
+    ["empty string", ""],
+    ["whitespace", "%20%20"],
+    ["padded integer", "%202%20"],
+    ["hex literal", "0x2"],
+    ["binary literal", "0b10"],
+    ["octal literal", "0o10"],
+    ["scientific notation", "1e1"],
+    ["float string", "1.0"],
+  ] as const;
+
+  const invalidDecimals = [
+    ["empty string", ""],
+    ["whitespace", "%20%20"],
+    ["padded decimal", "%202.5%20"],
+    ["hex literal", "0x2"],
+    ["binary literal", "0b10"],
+    ["octal literal", "0o10"],
+    ["scientific notation", "1e1"],
+    ["Infinity", "Infinity"],
+    ["NaN", "NaN"],
+  ] as const;
+
+  const integerRoutes: readonly [string, (value: string) => string][] = [
+    ["journal offset", (v) => `${LEDGER}/journal?limit=2&offset=${v}`],
+    ["journal limit", (v) => `${LEDGER}/journal?limit=${v}`],
+    [
+      "plaintext-journal offset",
+      (v) => `${LEDGER}/plaintext-journal?limit=2&offset=${v}`,
+    ],
+    [
+      "account-journal offset",
+      (v) =>
+        `${LEDGER}/account-journal?account=Assets:Cash&limit=2&offset=${v}`,
+    ],
+    ["account/feed offset", (v) => `/api-gateway/v1/account/feed?offset=${v}`],
+    ["account/feed limit", (v) => `/api-gateway/v1/account/feed?limit=${v}`],
+    ["commits page", (v) => `${LEDGER}/commits?page=${v}&limit=2`],
+    ["commits limit", (v) => `${LEDGER}/commits?limit=${v}`],
+    ["collaborators page", (v) => `${LEDGER}/collaborators?page=${v}`],
+    [
+      "social/followers page",
+      (v) => `/api-gateway/v1/social/followers?username=alice&page=${v}`,
+    ],
+    ["ledgers page", (v) => `/api-gateway/v1/ledgers?page=${v}`],
+    ["ledgers/search uid", (v) => `/api-gateway/v1/ledgers/search?uid=${v}`],
+    [
+      "asset-download-url ledgerRepoId",
+      (v) => `/api-gateway/v1/asset-download-url?ledgerRepoId=${v}&filename=x`,
+    ],
+    ["public-keys page", (v) => `/api-gateway/v1/public-keys?page=${v}`],
+    [
+      "legacy/journal-entries first",
+      (v) => `/api-gateway/v1/legacy/journal-entries?first=${v}`,
+    ],
+    [
+      "legacy/journal-entries last",
+      (v) => `/api-gateway/v1/legacy/journal-entries?last=${v}`,
+    ],
+  ];
+
+  it.each(integerRoutes)(
+    "refuses non-base-10 integer literals on %s",
+    async (_label, buildPath) => {
+      for (const [, raw] of invalidInts) {
+        const response = await fetch(`${server.url}${buildPath(raw)}`);
+        expect(response.status).toBe(400);
+        const body = (await response.json()) as {
+          ok: boolean;
+          error: { code: string; message: string };
+        };
+        expect(body).toMatchObject({
+          ok: false,
+          error: { code: "VALIDATION_FAILED" },
+        });
+        expect(body.error.message).toMatch(/invalid integer/i);
+        expect(body.error.message).not.toMatch(/too small/i);
+      }
+    },
+  );
+
+  it.each([
+    ["pull-requests/{prNumber}", (v: string) => `${LEDGER}/pull-requests/${v}`],
+    ["public-keys/{keyId}", (v: string) => `/api-gateway/v1/public-keys/${v}`],
+  ])("refuses non-base-10 path integers on %s", async (_label, buildPath) => {
+    for (const raw of ["%202%20", "0x2", "0b10", "0o10", "1e1", "1.0"]) {
+      const response = await fetch(`${server.url}${buildPath(raw)}`);
+      expect(response.status).toBe(400);
+      const body = (await response.json()) as {
+        ok: boolean;
+        error: { code: string; message: string };
+      };
+      expect(body).toMatchObject({
+        ok: false,
+        error: { code: "VALIDATION_FAILED" },
+      });
+      expect(body.error.message).toMatch(/invalid integer/i);
+    }
+  });
+
+  it.each(["amountMin", "amountMax"])(
+    "refuses non-base-10 decimal literals on legacy/journal-entries %s",
+    async (param) => {
+      for (const [, raw] of invalidDecimals) {
+        const response = await fetch(
+          `${server.url}/api-gateway/v1/legacy/journal-entries?${param}=${raw}`,
+        );
+        expect(response.status).toBe(400);
+        const body = (await response.json()) as {
+          ok: boolean;
+          error: { code: string; message: string };
+        };
+        expect(body).toMatchObject({
+          ok: false,
+          error: { code: "VALIDATION_FAILED" },
+        });
+        expect(body.error.message).toMatch(/invalid number/i);
+      }
+    },
+  );
+
+  it("preserves missing-required and out-of-range error messages", async () => {
+    const missing = await fetch(
+      `${server.url}/api-gateway/v1/asset-download-url?filename=x`,
+    );
+    expect(missing.status).toBe(400);
+    expect(await missing.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: "VALIDATION_FAILED",
+        message: expect.stringContaining("ledgerRepoId is required"),
+      },
+    });
+
+    const tooSmall = await fetch(`${server.url}${LEDGER}/journal?limit=0`);
+    expect(tooSmall.status).toBe(400);
+    expect(await tooSmall.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: "VALIDATION_FAILED",
+        message: expect.stringMatching(/too small|>=1/i),
+      },
+    });
+
+    const negativeOffset = await fetch(
+      `${server.url}${LEDGER}/journal?offset=-1`,
+    );
+    expect(negativeOffset.status).toBe(400);
+    expect(await negativeOffset.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: "VALIDATION_FAILED",
+        message: expect.stringMatching(/too small|>=0/i),
+      },
+    });
+
+    const tooBig = await fetch(`${server.url}${LEDGER}/journal?limit=1001`);
+    expect(tooBig.status).toBe(400);
+    expect(await tooBig.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: "VALIDATION_FAILED",
+        message: expect.stringMatching(/too big|<=1000/i),
+      },
+    });
+  });
+
+  describe("canonical base-10 numbers and defaults", () => {
+    const getJournal = jest.fn(async () => ({
+      total: 0,
+      data: [],
+      is_empty: true,
+    }));
+    const getLegacyJournal = jest.fn(async () => ({
+      edges: [],
+      pageInfo: { hasNextPage: false, hasPreviousPage: false },
+    }));
+    const getFeed = jest.fn(async () => ({
+      items: [],
+      total: 0,
+      hasMore: false,
+    }));
+    const getPullRequestDetails = jest.fn(async () => ({
+      number: 7,
+      title: "t",
+      description: "d",
+      state: "open",
+      author: "alice",
+      headBranch: "h",
+      baseBranch: "main",
+      files: [],
+    }));
+    let validServer: V1TestServer;
+    beforeAll(async () => {
+      validServer = await startV1TestServer(
+        {
+          services: {
+            ledgerJournal: { getJournal },
+            feed: { getFeed },
+          },
+          workflows: {
+            ledger: { getLegacyJournal },
+            pullRequest: { getPullRequestDetails },
+          },
+        } as unknown as AppLayers,
+        { api: { scopeEnforcement: "enforce" } } as AppConfig,
+      );
+      validServer.setIdentity(sessionIdentity);
+    });
+    afterAll(async () => validServer.close());
+    beforeEach(() => {
+      getJournal.mockClear();
+      getLegacyJournal.mockClear();
+      getFeed.mockClear();
+      getPullRequestDetails.mockClear();
+    });
+
+    it("accepts canonical base-10 integers, decimals, and omitted defaults", async () => {
+      const journalRes = await fetch(
+        `${validServer.url}${LEDGER}/journal?limit=2&offset=0`,
+      );
+      expect(journalRes.status).toBe(200);
+      expect(getJournal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          query: expect.objectContaining({ limit: 2, offset: 0 }),
+        }),
+      );
+
+      const legacyRes = await fetch(
+        `${validServer.url}/api-gateway/v1/legacy/journal-entries?first=5&amountMin=-12.5&amountMax=.5`,
+      );
+      expect(legacyRes.status).toBe(200);
+      expect(getLegacyJournal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          args: expect.objectContaining({
+            first: 5,
+            amountMin: -12.5,
+            amountMax: 0.5,
+          }),
+        }),
+      );
+
+      const feedRes = await fetch(
+        `${validServer.url}/api-gateway/v1/account/feed`,
+      );
+      expect(feedRes.status).toBe(200);
+      expect(getFeed).toHaveBeenCalledWith(
+        expect.objectContaining({ offset: 0, limit: 10 }),
+        expect.anything(),
+      );
+
+      const prRes = await fetch(`${validServer.url}${LEDGER}/pull-requests/7`);
+      expect(prRes.status).toBe(200);
+      expect(getPullRequestDetails).toHaveBeenCalledWith(
+        "alice",
+        "main",
+        7,
+        expect.anything(),
+      );
+    });
+  });
+});

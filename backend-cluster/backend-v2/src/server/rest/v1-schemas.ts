@@ -6,13 +6,71 @@ import { z } from "@/shared/zod-openapi-setup";
  * that "what a v1 error looks like" has one answer.
  */
 
+const STRICT_INT_RE = /^-?\d+$/;
+const STRICT_DECIMAL_RE = /^-?(?:\d+\.?\d*|\.\d+)$/;
+
+interface IntQueryBounds {
+  readonly min?: number;
+  readonly max?: number;
+  readonly positive?: boolean;
+}
+
+/**
+ * A base-10 integer carried as a URL query or path string (w31/071).
+ *
+ * Unlike `z.coerce.number()` (which delegates to JS `Number()` and silently
+ * turns `""` / `"   "` into `0` and accepts `"0x2"` / `"1e1"`), this accepts
+ * only strict `/^-?\d+$/` strings and preserves OpenAPI `integer` metadata.
+ */
+export function intQuery(bounds?: IntQueryBounds) {
+  let schema = z
+    .number({
+      error: (iss) =>
+        iss.input === undefined
+          ? undefined
+          : "Invalid integer: expected a base-10 integer",
+    })
+    .int();
+  if (bounds?.positive) schema = schema.positive();
+  if (bounds?.min !== undefined) schema = schema.min(bounds.min);
+  if (bounds?.max !== undefined) schema = schema.max(bounds.max);
+  return z.preprocess(
+    (value) =>
+      typeof value === "string" && STRICT_INT_RE.test(value)
+        ? Number(value) || 0
+        : value,
+    schema,
+  );
+}
+
+/**
+ * A finite base-10 decimal number carried as a URL query string (w31/071).
+ *
+ * Refuses `""`, whitespace, hex/binary/octal, scientific notation, and
+ * `Infinity`/`NaN` while preserving OpenAPI `number` metadata.
+ */
+export function decimalQuery() {
+  return z.preprocess(
+    (value) =>
+      typeof value === "string" && STRICT_DECIMAL_RE.test(value)
+        ? Number(value) || 0
+        : value,
+    z.number({
+      error: (iss) =>
+        iss.input === undefined
+          ? undefined
+          : "Invalid number: expected a base-10 decimal number",
+    }),
+  );
+}
+
 export const paginationSchema = z
   .object({
-    page: z.coerce.number().int().min(1).optional().openapi({
+    page: intQuery({ min: 1 }).optional().openapi({
       description: "1-based page number",
       example: 1,
     }),
-    limit: z.coerce.number().int().min(1).max(100).optional().openapi({
+    limit: intQuery({ min: 1, max: 100 }).optional().openapi({
       description: "Page size, at most 100",
       example: 20,
     }),

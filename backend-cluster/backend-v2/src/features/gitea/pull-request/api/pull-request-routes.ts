@@ -1,6 +1,6 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
-import { json } from "@/server/rest/v1-schemas";
+import { intQuery, json } from "@/server/rest/v1-schemas";
 import { ledgerPathSchema } from "@/features/ledger/api/rest/v1/schemas";
 export const pullRequestCreateInput = z
   .object({
@@ -30,7 +30,7 @@ export const pullRequestCreateInput = z
   })
   .strict();
 export const pullRequestNumberQuery = z
-  .object({ prNumber: z.coerce.number().int().positive() })
+  .object({ prNumber: intQuery({ positive: true }) })
   .strict();
 export const pullRequestResultSchema = z.object({
   success: z.boolean(),
@@ -69,7 +69,7 @@ const pullRequestDetailsSchema = z.object({
   diff: z.string().optional(),
 });
 const path = ledgerPathSchema.extend({
-  prNumber: z.coerce.number().int().positive(),
+  prNumber: intQuery({ positive: true }),
 });
 export const PULL_REQUEST_ROUTES = [
   v1Route({

@@ -1,4 +1,8 @@
-import { paginationSchema, booleanQuery } from "@/server/rest/v1-schemas";
+import {
+  paginationSchema,
+  booleanQuery,
+  intQuery,
+} from "@/server/rest/v1-schemas";
 import type { SearchLedgersParams } from "@/features/ledger/workflow/ledger-workflow.types";
 import { z } from "@/shared/zod-openapi-setup";
 import type { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
@@ -6,7 +10,7 @@ import type { Identity } from "@/server/api/identity";
 
 // The same bounds as every other catalog list; the workflow holds GraphQL to
 // them too (w23/019).
-const idQuery = z.coerce.number().int().min(1).optional();
+const idQuery = intQuery({ min: 1 }).optional();
 const searchQuery = paginationSchema.extend({
   q: z.string().optional(),
   topic: booleanQuery,

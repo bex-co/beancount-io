@@ -7,14 +7,14 @@ import {
   registerV1Routes,
   type V1Deps,
 } from "@/server/rest/v1-route";
-import { json } from "@/server/rest/v1-schemas";
+import { intQuery, json } from "@/server/rest/v1-schemas";
 import { HOST_PAGE_MAX } from "@/shared/host-page";
 
 export const socialListQuery = z
   .object({
     username: z.string(),
-    page: z.coerce.number().int().min(1).optional(),
-    limit: z.coerce.number().int().min(1).max(HOST_PAGE_MAX).optional(),
+    page: intQuery({ min: 1 }).optional(),
+    limit: intQuery({ min: 1, max: HOST_PAGE_MAX }).optional(),
   })
   .strict();
 const userList = z.object({

@@ -1,6 +1,7 @@
 import Router from "@koa/router";
 import { z } from "@/shared/zod-openapi-setup";
 import { registerRoute } from "@/server/rest/openapi-registry";
+import { intQuery } from "@/server/rest/v1-schemas";
 import type { IAdminService } from "../service/admin-service";
 import { BadUserInputError } from "@/shared/errors";
 import { apiTokenRequired } from "./admin-api-middleware";
@@ -12,11 +13,11 @@ const ENV_TO_CLIENT_ID = {
 
 const listActivePaidUsersQuerySchema = z
   .object({
-    limit: z.coerce.number().int().min(1).max(200).default(50).openapi({
+    limit: intQuery({ min: 1, max: 200 }).default(50).openapi({
       description: "Maximum number of users to return",
       example: 50,
     }),
-    offset: z.coerce.number().int().min(0).default(0).openapi({
+    offset: intQuery({ min: 0 }).default(0).openapi({
       description: "Number of users to skip for pagination",
       example: 0,
     }),

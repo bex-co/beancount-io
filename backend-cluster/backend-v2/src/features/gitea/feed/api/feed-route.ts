@@ -1,12 +1,12 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
-import { json } from "@/server/rest/v1-schemas";
+import { intQuery, json } from "@/server/rest/v1-schemas";
 import { FEED_PAGE_MAX } from "../utils/feed-page";
 
 export const feedQuery = z
   .object({
-    offset: z.coerce.number().int().min(0).default(0),
-    limit: z.coerce.number().int().min(1).max(FEED_PAGE_MAX).default(10),
+    offset: intQuery({ min: 0 }).default(0),
+    limit: intQuery({ min: 1, max: FEED_PAGE_MAX }).default(10),
     source: z.string().optional(),
     locale: z.string().optional(),
   })

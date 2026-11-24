@@ -18,7 +18,7 @@ def _get_kwargs(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -31,12 +31,7 @@ def _get_kwargs(
 
     params["limit"] = limit
 
-    json_offset: int | None | Unset
-    if isinstance(offset, Unset):
-        json_offset = UNSET
-    else:
-        json_offset = offset
-    params["offset"] = json_offset
+    params["offset"] = offset
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -126,7 +121,7 @@ def sync_detailed(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Read Beancount journal text with account, time, and expression filters
 
@@ -147,7 +142,7 @@ def sync_detailed(
             transactions alone.
         limit (int | Unset): Entries per page. Omitted, REST and GraphQL return every entry; MCP
             returns 200.
-        offset (int | None | Unset):
+        offset (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -183,7 +178,7 @@ def sync(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Read Beancount journal text with account, time, and expression filters
 
@@ -204,7 +199,7 @@ def sync(
             transactions alone.
         limit (int | Unset): Entries per page. Omitted, REST and GraphQL return every entry; MCP
             returns 200.
-        offset (int | None | Unset):
+        offset (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -235,7 +230,7 @@ async def asyncio_detailed(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Read Beancount journal text with account, time, and expression filters
 
@@ -256,7 +251,7 @@ async def asyncio_detailed(
             transactions alone.
         limit (int | Unset): Entries per page. Omitted, REST and GraphQL return every entry; MCP
             returns 200.
-        offset (int | None | Unset):
+        offset (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -290,7 +285,7 @@ async def asyncio(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Read Beancount journal text with account, time, and expression filters
 
@@ -311,7 +306,7 @@ async def asyncio(
             transactions alone.
         limit (int | Unset): Entries per page. Omitted, REST and GraphQL return every entry; MCP
             returns 200.
-        offset (int | None | Unset):
+        offset (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

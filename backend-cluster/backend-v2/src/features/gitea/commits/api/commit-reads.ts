@@ -6,7 +6,7 @@ import {
 import type { ILedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
 import type { Identity } from "@/server/api/identity";
 import { v1Route } from "@/server/rest/v1-route";
-import { json } from "@/server/rest/v1-schemas";
+import { intQuery, json } from "@/server/rest/v1-schemas";
 import {
   ledgerPathSchema,
   ledgerIdOf,
@@ -45,13 +45,8 @@ export const COMMIT_READS = [
     query: z
       .object({
         branch: z.string().default("main"),
-        page: z.coerce.number().int().min(1).default(1),
-        limit: z.coerce
-          .number()
-          .int()
-          .min(1)
-          .max(MAX_COMMITS_PAGE_SIZE)
-          .default(30),
+        page: intQuery({ min: 1 }).default(1),
+        limit: intQuery({ min: 1, max: MAX_COMMITS_PAGE_SIZE }).default(30),
       })
       .strict(),
     fetch: (services: Services, { identity, ledgerId, query }: Params) =>

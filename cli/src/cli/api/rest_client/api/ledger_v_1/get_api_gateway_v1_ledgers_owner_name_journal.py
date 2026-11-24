@@ -21,7 +21,7 @@ def _get_kwargs(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
     include_source: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     includeSource: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     directive_types: str | Unset = UNSET,
@@ -40,12 +40,7 @@ def _get_kwargs(
 
     params["limit"] = limit
 
-    json_offset: int | None | Unset
-    if isinstance(offset, Unset):
-        json_offset = UNSET
-    else:
-        json_offset = offset
-    params["offset"] = json_offset
+    params["offset"] = offset
 
     json_include_source: str | Unset = UNSET
     if not isinstance(include_source, Unset):
@@ -155,7 +150,7 @@ def sync_detailed(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
     include_source: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     includeSource: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     directive_types: str | Unset = UNSET,
@@ -178,7 +173,7 @@ def sync_detailed(
             them — so a single-day journal still lists them. Use directiveTypes to ask for
             transactions alone.
         limit (int | Unset):
-        offset (int | None | Unset):
+        offset (int | Unset):
         include_source (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Attach each
             entry's source as {path, lineno, text, sha256sum}: the text and checksum entry context
             returns, ready for the entry-source update and deletes. null where an entry has no
@@ -240,7 +235,7 @@ def sync(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
     include_source: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     includeSource: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     directive_types: str | Unset = UNSET,
@@ -263,7 +258,7 @@ def sync(
             them — so a single-day journal still lists them. Use directiveTypes to ask for
             transactions alone.
         limit (int | Unset):
-        offset (int | None | Unset):
+        offset (int | Unset):
         include_source (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Attach each
             entry's source as {path, lineno, text, sha256sum}: the text and checksum entry context
             returns, ready for the entry-source update and deletes. null where an entry has no
@@ -320,7 +315,7 @@ async def asyncio_detailed(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
     include_source: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     includeSource: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     directive_types: str | Unset = UNSET,
@@ -343,7 +338,7 @@ async def asyncio_detailed(
             them — so a single-day journal still lists them. Use directiveTypes to ask for
             transactions alone.
         limit (int | Unset):
-        offset (int | None | Unset):
+        offset (int | Unset):
         include_source (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Attach each
             entry's source as {path, lineno, text, sha256sum}: the text and checksum entry context
             returns, ready for the entry-source update and deletes. null where an entry has no
@@ -403,7 +398,7 @@ async def asyncio(
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
     include_source: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     includeSource: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     directive_types: str | Unset = UNSET,
@@ -426,7 +421,7 @@ async def asyncio(
             them — so a single-day journal still lists them. Use directiveTypes to ask for
             transactions alone.
         limit (int | Unset):
-        offset (int | None | Unset):
+        offset (int | Unset):
         include_source (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Attach each
             entry's source as {path, lineno, text, sha256sum}: the text and checksum entry context
             returns, ready for the entry-source update and deletes. null where an entry has no

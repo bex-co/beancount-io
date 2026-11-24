@@ -1434,7 +1434,6 @@
           {
             "schema": {
               "type": "integer",
-              "nullable": true,
               "minimum": 0,
               "default": 0,
               "description": "Number of users to skip for pagination",
@@ -1534,7 +1533,6 @@
           {
             "schema": {
               "type": "integer",
-              "nullable": true,
               "minimum": 0,
               "default": 0,
               "description": "Number of users to skip for pagination",

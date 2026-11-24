@@ -8803,8 +8803,7 @@
         "parameters": [
           {
             "schema": {
-              "type": "integer",
-              "nullable": true
+              "type": "integer"
             },
             "required": false,
             "name": "first",
@@ -8820,8 +8819,7 @@
           },
           {
             "schema": {
-              "type": "integer",
-              "nullable": true
+              "type": "integer"
             },
             "required": false,
             "name": "last",
@@ -8865,8 +8863,7 @@
           },
           {
             "schema": {
-              "type": "number",
-              "nullable": true
+              "type": "number"
             },
             "required": false,
             "name": "amountMin",
@@ -8874,8 +8871,7 @@
           },
           {
             "schema": {
-              "type": "number",
-              "nullable": true
+              "type": "number"
             },
             "required": false,
             "name": "amountMax",
@@ -9258,7 +9254,6 @@
           {
             "schema": {
               "type": "integer",
-              "nullable": true,
               "minimum": 0
             },
             "required": false,
@@ -9543,7 +9538,6 @@
           {
             "schema": {
               "type": "integer",
-              "nullable": true,
               "minimum": 0
             },
             "required": false,
@@ -9776,7 +9770,6 @@
           {
             "schema": {
               "type": "integer",
-              "nullable": true,
               "minimum": 0
             },
             "required": false,
@@ -23487,7 +23480,6 @@
           {
             "schema": {
               "type": "integer",
-              "nullable": true,
               "minimum": 0,
               "default": 0
             },

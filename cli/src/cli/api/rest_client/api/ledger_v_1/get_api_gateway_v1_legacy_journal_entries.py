@@ -12,15 +12,15 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    first: int | None | Unset = UNSET,
+    first: int | Unset = UNSET,
     after: str | Unset = UNSET,
-    last: int | None | Unset = UNSET,
+    last: int | Unset = UNSET,
     before: str | Unset = UNSET,
     detailed: GetApiGatewayV1LegacyJournalEntriesDetailed | Unset = UNSET,
     search_query: str | Unset = UNSET,
     account_filter: str | Unset = UNSET,
-    amount_min: float | None | Unset = UNSET,
-    amount_max: float | None | Unset = UNSET,
+    amount_min: float | Unset = UNSET,
+    amount_max: float | Unset = UNSET,
     entry_types: str | Unset = UNSET,
     sort_by: str | Unset = UNSET,
     sort_order: str | Unset = UNSET,
@@ -29,21 +29,11 @@ def _get_kwargs(
 
     params: dict[str, Any] = {}
 
-    json_first: int | None | Unset
-    if isinstance(first, Unset):
-        json_first = UNSET
-    else:
-        json_first = first
-    params["first"] = json_first
+    params["first"] = first
 
     params["after"] = after
 
-    json_last: int | None | Unset
-    if isinstance(last, Unset):
-        json_last = UNSET
-    else:
-        json_last = last
-    params["last"] = json_last
+    params["last"] = last
 
     params["before"] = before
 
@@ -57,19 +47,9 @@ def _get_kwargs(
 
     params["accountFilter"] = account_filter
 
-    json_amount_min: float | None | Unset
-    if isinstance(amount_min, Unset):
-        json_amount_min = UNSET
-    else:
-        json_amount_min = amount_min
-    params["amountMin"] = json_amount_min
+    params["amountMin"] = amount_min
 
-    json_amount_max: float | None | Unset
-    if isinstance(amount_max, Unset):
-        json_amount_max = UNSET
-    else:
-        json_amount_max = amount_max
-    params["amountMax"] = json_amount_max
+    params["amountMax"] = amount_max
 
     params["entryTypes"] = entry_types
 
@@ -158,15 +138,15 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    first: int | None | Unset = UNSET,
+    first: int | Unset = UNSET,
     after: str | Unset = UNSET,
-    last: int | None | Unset = UNSET,
+    last: int | Unset = UNSET,
     before: str | Unset = UNSET,
     detailed: GetApiGatewayV1LegacyJournalEntriesDetailed | Unset = UNSET,
     search_query: str | Unset = UNSET,
     account_filter: str | Unset = UNSET,
-    amount_min: float | None | Unset = UNSET,
-    amount_max: float | None | Unset = UNSET,
+    amount_min: float | Unset = UNSET,
+    amount_max: float | Unset = UNSET,
     entry_types: str | Unset = UNSET,
     sort_by: str | Unset = UNSET,
     sort_order: str | Unset = UNSET,
@@ -179,15 +159,15 @@ def sync_detailed(
     JSON-encoded string array.
 
     Args:
-        first (int | None | Unset):
+        first (int | Unset):
         after (str | Unset):
-        last (int | None | Unset):
+        last (int | Unset):
         before (str | Unset):
         detailed (GetApiGatewayV1LegacyJournalEntriesDetailed | Unset):
         search_query (str | Unset):
         account_filter (str | Unset):
-        amount_min (float | None | Unset):
-        amount_max (float | None | Unset):
+        amount_min (float | Unset):
+        amount_max (float | Unset):
         entry_types (str | Unset): JSON-encoded string array, including [] for an empty filter
             list
         sort_by (str | Unset):
@@ -228,15 +208,15 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    first: int | None | Unset = UNSET,
+    first: int | Unset = UNSET,
     after: str | Unset = UNSET,
-    last: int | None | Unset = UNSET,
+    last: int | Unset = UNSET,
     before: str | Unset = UNSET,
     detailed: GetApiGatewayV1LegacyJournalEntriesDetailed | Unset = UNSET,
     search_query: str | Unset = UNSET,
     account_filter: str | Unset = UNSET,
-    amount_min: float | None | Unset = UNSET,
-    amount_max: float | None | Unset = UNSET,
+    amount_min: float | Unset = UNSET,
+    amount_max: float | Unset = UNSET,
     entry_types: str | Unset = UNSET,
     sort_by: str | Unset = UNSET,
     sort_order: str | Unset = UNSET,
@@ -249,15 +229,15 @@ def sync(
     JSON-encoded string array.
 
     Args:
-        first (int | None | Unset):
+        first (int | Unset):
         after (str | Unset):
-        last (int | None | Unset):
+        last (int | Unset):
         before (str | Unset):
         detailed (GetApiGatewayV1LegacyJournalEntriesDetailed | Unset):
         search_query (str | Unset):
         account_filter (str | Unset):
-        amount_min (float | None | Unset):
-        amount_max (float | None | Unset):
+        amount_min (float | Unset):
+        amount_max (float | Unset):
         entry_types (str | Unset): JSON-encoded string array, including [] for an empty filter
             list
         sort_by (str | Unset):
@@ -293,15 +273,15 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    first: int | None | Unset = UNSET,
+    first: int | Unset = UNSET,
     after: str | Unset = UNSET,
-    last: int | None | Unset = UNSET,
+    last: int | Unset = UNSET,
     before: str | Unset = UNSET,
     detailed: GetApiGatewayV1LegacyJournalEntriesDetailed | Unset = UNSET,
     search_query: str | Unset = UNSET,
     account_filter: str | Unset = UNSET,
-    amount_min: float | None | Unset = UNSET,
-    amount_max: float | None | Unset = UNSET,
+    amount_min: float | Unset = UNSET,
+    amount_max: float | Unset = UNSET,
     entry_types: str | Unset = UNSET,
     sort_by: str | Unset = UNSET,
     sort_order: str | Unset = UNSET,
@@ -314,15 +294,15 @@ async def asyncio_detailed(
     JSON-encoded string array.
 
     Args:
-        first (int | None | Unset):
+        first (int | Unset):
         after (str | Unset):
-        last (int | None | Unset):
+        last (int | Unset):
         before (str | Unset):
         detailed (GetApiGatewayV1LegacyJournalEntriesDetailed | Unset):
         search_query (str | Unset):
         account_filter (str | Unset):
-        amount_min (float | None | Unset):
-        amount_max (float | None | Unset):
+        amount_min (float | Unset):
+        amount_max (float | Unset):
         entry_types (str | Unset): JSON-encoded string array, including [] for an empty filter
             list
         sort_by (str | Unset):
@@ -361,15 +341,15 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    first: int | None | Unset = UNSET,
+    first: int | Unset = UNSET,
     after: str | Unset = UNSET,
-    last: int | None | Unset = UNSET,
+    last: int | Unset = UNSET,
     before: str | Unset = UNSET,
     detailed: GetApiGatewayV1LegacyJournalEntriesDetailed | Unset = UNSET,
     search_query: str | Unset = UNSET,
     account_filter: str | Unset = UNSET,
-    amount_min: float | None | Unset = UNSET,
-    amount_max: float | None | Unset = UNSET,
+    amount_min: float | Unset = UNSET,
+    amount_max: float | Unset = UNSET,
     entry_types: str | Unset = UNSET,
     sort_by: str | Unset = UNSET,
     sort_order: str | Unset = UNSET,
@@ -382,15 +362,15 @@ async def asyncio(
     JSON-encoded string array.
 
     Args:
-        first (int | None | Unset):
+        first (int | Unset):
         after (str | Unset):
-        last (int | None | Unset):
+        last (int | Unset):
         before (str | Unset):
         detailed (GetApiGatewayV1LegacyJournalEntriesDetailed | Unset):
         search_query (str | Unset):
         account_filter (str | Unset):
-        amount_min (float | None | Unset):
-        amount_max (float | None | Unset):
+        amount_min (float | Unset):
+        amount_max (float | Unset):
         entry_types (str | Unset): JSON-encoded string array, including [] for an empty filter
             list
         sort_by (str | Unset):

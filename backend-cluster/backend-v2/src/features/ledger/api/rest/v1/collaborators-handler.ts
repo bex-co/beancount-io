@@ -1,7 +1,7 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { HOST_PAGE_MAX } from "@/shared/host-page";
 import { v1Route } from "@/server/rest/v1-route";
-import { json } from "@/server/rest/v1-schemas";
+import { intQuery, json } from "@/server/rest/v1-schemas";
 import { ledgerPathSchema, ledgerIdOf, dryRunBody } from "./schemas";
 import { previewFlagInput } from "@/features/ledger/utils/flag-alias";
 
@@ -59,8 +59,8 @@ export const collaboratorResultSchema = z.object({
 });
 export const collaboratorListQuery = z
   .object({
-    page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(HOST_PAGE_MAX).default(10),
+    page: intQuery({ min: 1 }).default(1),
+    limit: intQuery({ min: 1, max: HOST_PAGE_MAX }).default(10),
   })
   .strict();
 const collaboratorName = z.string().min(1);

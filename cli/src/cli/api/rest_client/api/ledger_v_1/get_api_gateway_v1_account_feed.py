@@ -12,7 +12,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    offset: int | None | Unset = 0,
+    offset: int | Unset = 0,
     limit: int | Unset = 10,
     source: str | Unset = UNSET,
     locale: str | Unset = UNSET,
@@ -20,12 +20,7 @@ def _get_kwargs(
 
     params: dict[str, Any] = {}
 
-    json_offset: int | None | Unset
-    if isinstance(offset, Unset):
-        json_offset = UNSET
-    else:
-        json_offset = offset
-    params["offset"] = json_offset
+    params["offset"] = offset
 
     params["limit"] = limit
 
@@ -117,7 +112,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    offset: int | None | Unset = 0,
+    offset: int | Unset = 0,
     limit: int | Unset = 10,
     source: str | Unset = UNSET,
     locale: str | Unset = UNSET,
@@ -130,7 +125,7 @@ def sync_detailed(
     defaults to 0 and limit to 10, at most 100.
 
     Args:
-        offset (int | None | Unset):  Default: 0.
+        offset (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 10.
         source (str | Unset):
         locale (str | Unset):
@@ -160,7 +155,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    offset: int | None | Unset = 0,
+    offset: int | Unset = 0,
     limit: int | Unset = 10,
     source: str | Unset = UNSET,
     locale: str | Unset = UNSET,
@@ -173,7 +168,7 @@ def sync(
     defaults to 0 and limit to 10, at most 100.
 
     Args:
-        offset (int | None | Unset):  Default: 0.
+        offset (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 10.
         source (str | Unset):
         locale (str | Unset):
@@ -198,7 +193,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    offset: int | None | Unset = 0,
+    offset: int | Unset = 0,
     limit: int | Unset = 10,
     source: str | Unset = UNSET,
     locale: str | Unset = UNSET,
@@ -211,7 +206,7 @@ async def asyncio_detailed(
     defaults to 0 and limit to 10, at most 100.
 
     Args:
-        offset (int | None | Unset):  Default: 0.
+        offset (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 10.
         source (str | Unset):
         locale (str | Unset):
@@ -239,7 +234,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    offset: int | None | Unset = 0,
+    offset: int | Unset = 0,
     limit: int | Unset = 10,
     source: str | Unset = UNSET,
     locale: str | Unset = UNSET,
@@ -252,7 +247,7 @@ async def asyncio(
     defaults to 0 and limit to 10, at most 100.
 
     Args:
-        offset (int | None | Unset):  Default: 0.
+        offset (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 10.
         source (str | Unset):
         locale (str | Unset):

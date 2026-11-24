@@ -23,7 +23,7 @@ def _get_kwargs(
     filter_account: str | Unset = UNSET,
     filterAccount: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     withChildren: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
@@ -47,12 +47,7 @@ def _get_kwargs(
 
     params["limit"] = limit
 
-    json_offset: int | None | Unset
-    if isinstance(offset, Unset):
-        json_offset = UNSET
-    else:
-        json_offset = offset
-    params["offset"] = json_offset
+    params["offset"] = offset
 
     json_with_children: str | Unset = UNSET
     if not isinstance(with_children, Unset):
@@ -166,7 +161,7 @@ def sync_detailed(
     filter_account: str | Unset = UNSET,
     filterAccount: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     withChildren: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
@@ -192,7 +187,7 @@ def sync_detailed(
         filter_account (str | Unset):
         filterAccount (str | Unset): Alias of filter_account, as GraphQL spells it.
         limit (int | Unset):
-        offset (int | None | Unset):
+        offset (int | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
         withChildren (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset): Alias of
             with_children.
@@ -256,7 +251,7 @@ def sync(
     filter_account: str | Unset = UNSET,
     filterAccount: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     withChildren: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
@@ -282,7 +277,7 @@ def sync(
         filter_account (str | Unset):
         filterAccount (str | Unset): Alias of filter_account, as GraphQL spells it.
         limit (int | Unset):
-        offset (int | None | Unset):
+        offset (int | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
         withChildren (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset): Alias of
             with_children.
@@ -341,7 +336,7 @@ async def asyncio_detailed(
     filter_account: str | Unset = UNSET,
     filterAccount: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     withChildren: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
@@ -367,7 +362,7 @@ async def asyncio_detailed(
         filter_account (str | Unset):
         filterAccount (str | Unset): Alias of filter_account, as GraphQL spells it.
         limit (int | Unset):
-        offset (int | None | Unset):
+        offset (int | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
         withChildren (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset): Alias of
             with_children.
@@ -429,7 +424,7 @@ async def asyncio(
     filter_account: str | Unset = UNSET,
     filterAccount: str | Unset = UNSET,
     limit: int | Unset = UNSET,
-    offset: int | None | Unset = UNSET,
+    offset: int | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     withChildren: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
@@ -455,7 +450,7 @@ async def asyncio(
         filter_account (str | Unset):
         filterAccount (str | Unset): Alias of filter_account, as GraphQL spells it.
         limit (int | Unset):
-        offset (int | None | Unset):
+        offset (int | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
         withChildren (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset): Alias of
             with_children.
