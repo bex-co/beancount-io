@@ -703,6 +703,51 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
       await env.close();
     }
   });
+
+  // w31/093: Beancount interprets `[` in `include` targets as a glob character
+  // class, so adding an include line for a bracketed toPath breaks the ledger.
+  it.each([true, false])(
+    "refuses a bracketed toPath with includeFrom as BAD_USER_INPUT (dryRun=%s)",
+    async (dryRun) => {
+      const env = await fixture();
+      try {
+        for (const toPath of ["qa-20261124-[1].bean", "dir[1]/target.bean"]) {
+          const refused = await env.call(surface, {
+            entries: ENTRIES,
+            toPath,
+            includeFrom: "main.bean",
+            dryRun,
+          });
+          expect(refused).toMatchObject({
+            success: false,
+            code: "BAD_USER_INPUT",
+          });
+          expect(refused.message).toMatch(/toPath/);
+          expect(refused.message).toMatch(/glob metacharacter/);
+          if (surface === "rest") {
+            expect(refused.status).toBe(400);
+            expect(refused.metadata).toMatchObject({ field: "toPath" });
+          } else if (surface === "gql") {
+            expect(refused.metadata).toMatchObject({ field: "toPath" });
+          }
+        }
+        expect(env.moveSourceSlices).not.toHaveBeenCalled();
+        expect(env.commits).toHaveLength(0);
+
+        // Non-bracket control still succeeds.
+        const control = await env.call(surface, {
+          entries: ENTRIES,
+          toPath: "qa-20261124-1.bean",
+          includeFrom: "main.bean",
+          dryRun,
+        });
+        expect(control.success).toBe(true);
+        expect(env.moveSourceSlices).toHaveBeenCalledTimes(1);
+      } finally {
+        await env.close();
+      }
+    },
+  );
 });
 
 describe("moveEntrySources description (w31/017)", () => {

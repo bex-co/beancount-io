@@ -2,7 +2,10 @@ import {
   assertPortableRepoPath,
   assertSafeRepoPath,
 } from "@/shared/safe-repo-path";
-import { addIncludes } from "@/features/ledger/utils/routed-includes";
+import {
+  addIncludes,
+  assertLiteralIncludePath,
+} from "@/features/ledger/utils/routed-includes";
 import {
   lineEndingOf,
   withLineEnding,
@@ -1468,6 +1471,9 @@ export class LedgerJournalService implements ILedgerJournalService {
       );
     }
     if (!repoPaths.includes(toPath)) assertPortableRepoPath(toPath, "toPath");
+    if (includeFrom !== undefined && !reached) {
+      assertLiteralIncludePath(toPath, "toPath");
+    }
     const { removed, transforms } = await this.planSliceRemoval(
       loaded,
       entries,
@@ -1507,7 +1513,11 @@ export class LedgerJournalService implements ILedgerJournalService {
       const prior = transforms.get(includeFrom);
       // Escaped, in the file's line ending, after its last include (w23/062).
       transforms.set(includeFrom, async (current) =>
-        addIncludes(prior ? await prior(current) : (current ?? ""), [target]),
+        addIncludes(
+          prior ? await prior(current) : (current ?? ""),
+          [target],
+          "toPath",
+        ),
       );
     }
 

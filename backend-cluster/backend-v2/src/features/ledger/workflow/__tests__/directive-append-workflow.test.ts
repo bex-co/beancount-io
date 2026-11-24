@@ -725,5 +725,44 @@ describe("DirectiveAppendWorkflow", () => {
       });
       expect(ledgerRepo.projectedSourceFiles).not.toHaveBeenCalled();
     });
+
+    // w31/093: an auto-routed unloaded target with `[` cannot be written into
+    // an `include` line without being expanded as a glob pattern.
+    it.each([false, true])(
+      "refuses an unloaded auto-routed target containing [ (dryRun %p)",
+      async (dryRun) => {
+        const { workflow, ledgerRepo } = fixture({
+          files: { "main.bean": MAIN },
+          transactionFile: "txns/q[1]-{year}.bean",
+          unloaded: ["txns/q[1]-2026.bean"],
+        });
+        await expect(
+          workflow.appendDirectiveText({
+            identity: IDENTITY,
+            ledgerId: LEDGER_ID,
+            input: { text: TXN, dryRun },
+          }),
+        ).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          message: expect.stringContaining("glob metacharacter"),
+        });
+        expect(ledgerRepo.changeGeneratedFiles).not.toHaveBeenCalled();
+      },
+    );
+
+    it("still allows an already-loaded auto-routed target containing [", async () => {
+      const { workflow, ledgerRepo } = fixture({
+        files: { "main.bean": MAIN, "txns/q[1]-2026.bean": "" },
+        transactionFile: "txns/q[1]-{year}.bean",
+        unloaded: [],
+      });
+      const result = await workflow.appendDirectiveText({
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+        input: { text: TXN },
+      });
+      expect(result.success).toBe(true);
+      expect(ledgerRepo.changeGeneratedFiles).toHaveBeenCalledTimes(1);
+    });
   });
 });

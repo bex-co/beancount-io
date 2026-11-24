@@ -243,6 +243,44 @@ describe("moveSourceSlices (w1/m45)", () => {
     expect(commitMock).not.toHaveBeenCalled();
   });
 
+  // w31/093: a bracketed path is portable on disk, but writing `include` for
+  // it expands as a glob on load.
+  it.each([false, true])(
+    "refuses adding an include for a bracketed toPath (dryRun=%s)",
+    async (dryRun) => {
+      await expect(
+        move({ toPath: "books/q[1].bean", includeFrom: "main.bean", dryRun }),
+      ).rejects.toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: expect.stringMatching(/toPath.*glob metacharacter/),
+      });
+      // Even when the relative target omits the bracketed folder, the resolved
+      // path still contains `[` and is treated as a glob by the loader.
+      files["dir[1]/index.bean"] = "";
+      sourceFiles = ["main.bean", "2026.bean", "dir[1]/index.bean"];
+      await expect(
+        move({
+          toPath: "dir[1]/target.bean",
+          includeFrom: "dir[1]/index.bean",
+          dryRun,
+        }),
+      ).rejects.toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: expect.stringMatching(/toPath.*glob metacharacter/),
+      });
+      expect(commitMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it("still allows moving into a bracketed file already loaded by the ledger", async () => {
+    files["books/q[1].bean"] = "; loaded by glob\n";
+    sourceFiles = ["main.bean", "2026.bean", "books/q[1].bean"];
+    const result = await move({ toPath: "books/q[1].bean" });
+    expect(result.includeAdded).toBe(false);
+    expect(commitMock).toHaveBeenCalledTimes(1);
+    expect(files["books/q[1].bean"]).toContain("Tea");
+  });
+
   it("previews without committing", async () => {
     const result = await move({
       dryRun: true,

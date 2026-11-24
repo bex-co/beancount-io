@@ -11,7 +11,10 @@ import {
   parseDirectiveText,
 } from "@/features/ledger/utils/directive-text";
 import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
-import { addIncludeLines } from "@/features/ledger/utils/include-target";
+import {
+  addIncludeLines,
+  assertLiteralIncludePath,
+} from "@/features/ledger/utils/include-target";
 import { LEDGER_ENTRY_POINT } from "@/features/ledger/utils/ledger-entry-point";
 import { assertWritableText } from "@/shared/file-content";
 import { unifiedDiff } from "@/shared/unified-diff";
@@ -172,6 +175,9 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
             existing,
           )
         : [];
+    for (const target of included) {
+      assertLiteralIncludePath(target, "path");
+    }
     if (included.length > 0 && !existing.has(LEDGER_ENTRY_POINT)) {
       const [entryPoint] = await this.ledgerRepo.getFilesContent({
         ledgerId,

@@ -1,4 +1,5 @@
 import { posix } from "path";
+import { BadUserInputError } from "@/shared/errors";
 
 /**
  * `include` lines as the ledger service loads them: a target resolves against
@@ -58,8 +59,10 @@ export function formatIncludeLine(line: IncludeLine, target: string): string {
 export function addIncludeLines(
   content: string,
   paths: readonly string[],
+  field = "path",
 ): string {
   if (paths.length === 0) return content;
+  for (const path of paths) assertLiteralIncludePath(path, field);
   const block = paths.map((path) =>
     formatIncludeLine(
       { prefix: "include ", target: path, quote: '"', suffix: "" },
@@ -110,6 +113,23 @@ export function includeTargetFor(
 
 export function isGlobPattern(target: string): boolean {
   return /[*?[]/.test(target);
+}
+
+/**
+ * Refuse a file path containing a Beancount `include` glob metacharacter
+ * (`*`, `?`, or `[`) when writing a literal `include` line for it (w31/093).
+ * Both Python `glob.glob` and `rustledger` expand `[...]` as a character class,
+ * and {@link isGlobPattern} treats it as a non-rewritable glob. Non-included
+ * files (e.g. attachments like `receipt[1].pdf`) never call this guard.
+ */
+export function assertLiteralIncludePath(path: string, field = "path"): void {
+  if (isGlobPattern(path)) {
+    throw new BadUserInputError(
+      `${field} ${JSON.stringify(path)} contains a Beancount include glob metacharacter (*, ?, or [) and cannot be targeted literally in an include line`,
+      field,
+      "Choose a path without *, ?, or [ when writing an include line for it.",
+    );
+  }
 }
 
 type SegmentToken =

@@ -139,6 +139,7 @@ import { assertExplicitFileContentSize } from "@/features/ledger/utils/explicit-
 import { assertWritableText, decodeFileContent } from "@/shared/file-content";
 import { posix } from "path";
 import {
+  assertLiteralIncludePath,
   formatIncludeLine,
   globMatches,
   includeTargetFor,
@@ -1615,6 +1616,9 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         "newPath",
         "Choose a new path the pattern still matches, or change the include line first.",
       );
+    }
+    if (includingFiles.length > 0) {
+      assertLiteralIncludePath(input.newPath, "newPath");
     }
     if (includingFiles.length > 0 && !input.updateIncludes) {
       const names = includingFiles.map((file) => file.path).join(", ");

@@ -29,9 +29,14 @@ jest.mock("@/server/auth", () => ({
     repos: {
       repoGetContents: async (_owner: string, _repo: string, path: string) => {
         fileReads += 1;
-        if (path !== "main.bean")
-          throw Object.assign(new Error("404"), { status: 404 });
-        return { data: { content: b64(MAIN), sha: "sha-main" } };
+        const decoded = decodeURIComponent(path);
+        if (decoded === "main.bean")
+          return { data: { content: b64(MAIN), sha: "sha-main" } };
+        if (Object.hasOwn(extraFiles, decoded))
+          return {
+            data: { content: b64(extraFiles[decoded]), sha: `sha-${decoded}` },
+          };
+        throw Object.assign(new Error("404"), { status: 404 });
       },
       repoChangeFiles: async (
         _owner: string,
@@ -69,6 +74,8 @@ function errorsOf(text: string) {
 }
 
 let baselineReads = 0;
+let unloadedPaths = new Set<string>();
+let extraFiles: Record<string, string> = {};
 
 jest.mock("../service-context", () => ({
   ...jest.requireActual("../service-context"),
@@ -86,12 +93,15 @@ jest.mock("../service-context", () => ({
         const main = overlays.find((overlay) => overlay.path === "main.bean");
         return errorsOf(main ? fromB64(main.content) : MAIN);
       },
-      // Every file the write touches is already included.
+      // Every file the write touches is already included unless marked unloaded.
       projectedSourceFiles: async ({
         overlays,
       }: {
         overlays: { path: string }[];
-      }) => overlays.map((overlay) => overlay.path),
+      }) =>
+        overlays
+          .map((overlay) => overlay.path)
+          .filter((path) => !unloadedPaths.has(path)),
     },
   }),
 }));
@@ -123,6 +133,8 @@ describe("bulk entries refuse a write that adds ledger errors", () => {
     baselineReads = 0;
     fileReads = 0;
     committed.length = 0;
+    unloadedPaths = new Set();
+    extraFiles = {};
   });
 
   const post = (body: Record<string, unknown>) =>
@@ -283,6 +295,25 @@ describe("bulk entries refuse a write that adds ledger errors", () => {
       );
       expect(fileReads).toBe(0);
       expect(baselineReads).toBe(0);
+      expect(committed).toEqual([]);
+    },
+  );
+
+  // w31/093: an unloaded routed target containing `[` cannot be added via an
+  // `include` line without being expanded as a glob pattern.
+  it.each([false, true])(
+    "refuses adding an include for an unloaded bracketed filename (dryRun=%s)",
+    async (dryRun) => {
+      extraFiles["txns/q[1].bean"] = "";
+      unloadedPaths.add("txns/q[1].bean");
+      const response = await post({
+        entries: [{ ...open("Assets:Savings"), filename: "txns/q[1].bean" }],
+        dryRun,
+      });
+      const body = (await response.json()) as Record<string, any>;
+      expect(response.status).toBe(400);
+      expect(body.success).toBe(false);
+      expect(body.error).toMatch(/filename.*glob metacharacter/);
       expect(committed).toEqual([]);
     },
   );

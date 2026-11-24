@@ -1,11 +1,13 @@
 import {
   addIncludeLines,
+  assertLiteralIncludePath,
   formatIncludeLine,
   globMatches,
   includeTargetFor,
   parseIncludeLine,
   resolveIncludeTarget,
 } from "@/features/ledger/utils/include-target";
+import { BadUserInputError } from "@/shared/errors";
 
 describe("include lines", () => {
   it.each([
@@ -127,5 +129,29 @@ describe("addIncludeLines", () => {
         .flatMap((line) => parseIncludeLine(line)?.target ?? []),
     ).toEqual(["a.bean", 'odd "name".bean']);
     expect(addIncludeLines("x\n", [])).toBe("x\n");
+  });
+
+  // w31/093: glob metacharacters in an include target cannot be matched literally.
+  it.each([
+    "books/q[1].bean",
+    "books/q[1.bean",
+    "books/*.bean",
+    "books/?.bean",
+  ])("refuses glob metacharacter path %p", (badPath) => {
+    expect(() => assertLiteralIncludePath(badPath, "toPath")).toThrow(
+      BadUserInputError,
+    );
+    expect(() => addIncludeLines("", [badPath], "toPath")).toThrow(
+      /toPath.*glob metacharacter/,
+    );
+  });
+
+  it("allows literal paths without glob metacharacters", () => {
+    expect(() =>
+      assertLiteralIncludePath("books/q1.bean", "toPath"),
+    ).not.toThrow();
+    expect(() =>
+      assertLiteralIncludePath("books/q1].bean", "toPath"),
+    ).not.toThrow();
   });
 });

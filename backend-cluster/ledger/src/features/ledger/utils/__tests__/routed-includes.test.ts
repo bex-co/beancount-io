@@ -1,4 +1,5 @@
-import { addIncludes } from "../routed-includes";
+import { addIncludes, assertLiteralIncludePath } from "../routed-includes";
+import { BadUserInputError } from "@/shared/errors";
 
 // w23/062: a routed write's new file is included from the entry point.
 describe("addIncludes", () => {
@@ -39,6 +40,19 @@ describe("addIncludes", () => {
     );
     expect(addIncludes("x\n", [])).toBe("x\n");
   });
+
+  // w31/093: glob metacharacters in an include target cannot be loaded literally.
+  it.each(["books/q[1].bean", "books/q[1.bean", "books/*.bean", "books/?.bean"])(
+    "refuses glob metacharacter path %p",
+    (badPath) => {
+      expect(() => assertLiteralIncludePath(badPath, "toPath")).toThrow(
+        BadUserInputError,
+      );
+      expect(() => addIncludes("", [badPath], "toPath")).toThrow(
+        /toPath.*glob metacharacter/,
+      );
+    },
+  );
 });
 
 // w21/695: a CRLF entry point gained a bare-LF include line.

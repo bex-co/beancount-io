@@ -794,6 +794,71 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
       await f.close();
     }
   });
+  // w31/093: rewriting an exact include line to a path containing `[` emits a
+  // glob pattern that Beancount / rustledger cannot load literally.
+  it.each([true, false])(
+    "refuses renaming an included file to a bracketed newPath as BAD_USER_INPUT (dryRun=%s)",
+    async (dryRun) => {
+      const f = await fixture(identity, {
+        "main.bean": 'include "qa-20261124-small.bean"\n',
+        "qa-20261124-small.bean": "2026-01-01 open Assets:Cash USD\n",
+      });
+      try {
+        const previewFlag = dryRun
+          ? surface === "mcp"
+            ? { dry_run: true }
+            : { dryRun: true }
+          : {};
+        const refused = await f.call(
+          surface,
+          "qa-20261124-small.bean",
+          "qa-20261124-[1].bean",
+          { updateIncludes: true, ...previewFlag },
+        );
+        expect(refused).toMatchObject({
+          success: false,
+          code: "BAD_USER_INPUT",
+        });
+        expect(refused.message).toMatch(/newPath/);
+        expect(refused.message).toMatch(/glob metacharacter/);
+        if (surface === "rest") {
+          expect(refused).toMatchObject({ status: 400 });
+        }
+        expect(f.change).not.toHaveBeenCalled();
+        expect(f.files.has("qa-20261124-small.bean")).toBe(true);
+        expect(f.files.has("qa-20261124-[1].bean")).toBe(false);
+
+        // Non-bracket control succeeds.
+        const control = await f.call(
+          surface,
+          "qa-20261124-small.bean",
+          "qa-20261124-1.bean",
+          { updateIncludes: true, ...previewFlag },
+        );
+        expect(control.success).toBe(true);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+  it("still allows renaming a non-included attachment to a bracketed path", async () => {
+    const f = await fixture(identity, {
+      "main.bean": "2026-01-01 open Assets:Cash USD\n",
+      "documents/receipt.pdf": "%PDF-1.4\n",
+    });
+    try {
+      const outcome = await f.call(
+        surface,
+        "documents/receipt.pdf",
+        "documents/receipt[1].pdf",
+      );
+      expect(outcome.success).toBe(true);
+      expect(f.files.has("documents/receipt[1].pdf")).toBe(true);
+      expect(f.files.has("documents/receipt.pdf")).toBe(false);
+    } finally {
+      await f.close();
+    }
+  });
   it("rewrites includes with updateIncludes in the same commit", async () => {
     const f = await fixture(identity, {
       "main.bean": 'include "old.bean"\n',

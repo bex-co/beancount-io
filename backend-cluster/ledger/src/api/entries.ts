@@ -36,7 +36,10 @@ import {
   DEFAULT_ENTRY_POINT,
   type ReplacedSourceRange,
 } from "@/foundation/rustledger";
-import { addIncludes } from "@/features/ledger/utils/routed-includes";
+import {
+  addIncludes,
+  assertLiteralIncludePath,
+} from "@/features/ledger/utils/routed-includes";
 import {
   lineEndingOf,
   withLineEnding,
@@ -353,12 +356,15 @@ export function setEntriesHandler(router: Router): void {
       );
       const included = [...byFile.keys()].filter((path) => !loaded.has(path));
       if (included.length > 0) {
+        for (const path of included) {
+          assertLiteralIncludePath(path, "filename");
+        }
         const entry =
           currentContents.get(DEFAULT_ENTRY_POINT) ??
           (await readFile(DEFAULT_ENTRY_POINT));
         currentContents.set(DEFAULT_ENTRY_POINT, {
           ...entry,
-          current: addIncludes(entry.current, included),
+          current: addIncludes(entry.current, included, "filename"),
         });
       }
 

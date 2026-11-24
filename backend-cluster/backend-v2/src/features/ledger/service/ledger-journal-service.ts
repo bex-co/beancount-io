@@ -27,6 +27,7 @@ import {
   assertSha256Format,
 } from "@/features/ledger/utils/entry-hash-alias";
 import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
+import { assertLiteralIncludePath } from "@/features/ledger/utils/include-target";
 import { assertNoPortableTwin } from "@/features/ledger/utils/portable-twin";
 
 /**
@@ -604,6 +605,9 @@ export class LedgerJournalService
     assertSafeRepoPath(toPath, "toPath");
     if (includeFrom !== undefined) {
       assertSafeRepoPath(includeFrom, "includeFrom");
+      // Writing `include "<toPath>"` for a path with glob metacharacters would
+      // expand as a glob on load instead of targeting the file literally (w31/093).
+      assertLiteralIncludePath(toPath, "toPath");
     }
     // Refuse case/Unicode/invisible-character twins and file-vs-folder
     // collisions upfront (dry-run and commit alike), matching create/rename/PR
