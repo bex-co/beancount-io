@@ -68,7 +68,12 @@ async function fixture(
       { content, sha: shaOf(`sha-${index}-${path}`) },
     ]),
   );
-  const state = { writable: true, exists: true, visible: true };
+  const state = {
+    writable: true,
+    exists: true,
+    visible: true,
+    commit: undefined as string | undefined,
+  };
   const envelope = (data: unknown) => ({ data: { success: true, data } });
   // The include closure from main.bean, as the ledger service lists it
   // (exact includes are enough here): a non-`.bean` file in it is an
@@ -152,7 +157,7 @@ async function fixture(
         files.delete(op.path);
       }
     }
-    return envelope({});
+    return envelope(state.commit ? { commit: state.commit } : {});
   });
   const fava = {
     getAdminClient: () => ({
@@ -189,7 +194,7 @@ async function fixture(
         ) => {
           if (!files.has(options.path)) throw new Error("Fixture missing file");
           files.delete(options.path);
-          return envelope({});
+          return envelope(state.commit ? { commit: state.commit } : {});
         },
         getLedgerFile: async (
           _o: string,
@@ -401,15 +406,17 @@ async function fixture(
             body: JSON.stringify(removeIncludes ? { removeIncludes } : {}),
           },
         );
+        const body = (await response.json()) as { commit?: string };
         return {
           success: response.status === 200,
-          result: await response.json(),
+          result: body,
+          commit: body.commit,
         };
       }
       if (surface === "gql") {
         const result = await graphql({
           schema,
-          source: `mutation($path:String!,$sha:String!,$remove:Boolean) { deleteLedgerFile(ledgerId:"alice/main",path:$path,sha:$sha,removeIncludes:$remove) { path } }`,
+          source: `mutation($path:String!,$sha:String!,$remove:Boolean) { deleteLedgerFile(ledgerId:"alice/main",path:$path,sha:$sha,removeIncludes:$remove) { path commit } }`,
           variableValues: {
             path,
             sha: files.get(path)?.sha ?? "0".repeat(40),
@@ -417,7 +424,16 @@ async function fixture(
           },
           contextValue: { identity: caller, getCurrentIdentity: () => caller },
         });
-        return { success: !result.errors, result };
+        return {
+          success: !result.errors,
+          result,
+          commit:
+            (
+              result.data?.deleteLedgerFile as
+                | { commit?: string | null }
+                | undefined
+            )?.commit ?? undefined,
+        };
       }
       const result = await client.callTool({
         name: "deleteLedgerFiles",
@@ -427,7 +443,12 @@ async function fixture(
           ...(removeIncludes ? { remove_includes: true } : {}),
         },
       });
-      return { success: !result.isError, result: result.structuredContent };
+      return {
+        success: !result.isError,
+        result: result.structuredContent,
+        commit: (result.structuredContent as { result?: { commit?: string } })
+          ?.result?.commit,
+      };
     },
     close: async () => {
       await client.close();
@@ -1716,9 +1737,12 @@ describe.each(["rest", "mcp", "gql"])("delete guard via %s", (surface) => {
       "second.bean": "; doomed\n",
       "keep.bean": "; keep\n",
     });
+    const commitSha = "deadbeef".repeat(5);
+    f.state.commit = commitSha;
     try {
       const outcome = await f.deleteFile(surface, "second.bean", true);
       expect(outcome.success).toBe(true);
+      expect(outcome.commit).toBe(commitSha);
       expect(f.files.has("second.bean")).toBe(false);
       // The glob and the other exact include stay; only the deleted file's goes.
       expect(f.files.get("main.bean")?.content).toBe(
@@ -1735,10 +1759,12 @@ describe.each(["rest", "mcp", "gql"])("delete guard via %s", (surface) => {
       "main.bean": "; main\n",
       "lone.bean": "; lone\n",
     });
+    const commitSha = "cafebabe".repeat(5);
+    f.state.commit = commitSha;
     try {
-      expect((await f.deleteFile(surface, "lone.bean", true)).success).toBe(
-        true,
-      );
+      const outcome = await f.deleteFile(surface, "lone.bean", true);
+      expect(outcome.success).toBe(true);
+      expect(outcome.commit).toBe(commitSha);
       expect(f.files.has("lone.bean")).toBe(false);
       expect(f.files.get("main.bean")?.content).toBe("; main\n");
     } finally {
@@ -1751,9 +1777,12 @@ describe.each(["rest", "mcp", "gql"])("delete guard via %s", (surface) => {
       "main.bean": "; main\n",
       "lone.bean": "; lone\n",
     });
+    const commitSha = "feedface".repeat(5);
+    f.state.commit = commitSha;
     try {
       const outcome = await f.deleteFile(surface, "lone.bean");
       expect(outcome.success).toBe(true);
+      expect(outcome.commit).toBe(commitSha);
       expect(f.files.has("lone.bean")).toBe(false);
     } finally {
       await f.close();

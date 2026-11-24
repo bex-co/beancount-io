@@ -1337,7 +1337,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         deletedPaths: [input.path],
       });
       if (removals.length > 0) {
-        await unwrapFavaResponse(
+        const deleted = await unwrapFavaResponse(
           favaApiClient.ledgers.changeLedgerFiles(ledgerOwner, ledgerName, {
             files: [
               { operation: "delete", path: input.path, sha: input.sha },
@@ -1353,7 +1353,10 @@ export class LedgerWorkflow implements ILedgerWorkflow {
           "delete ledger file",
           (cause) => operationNotAllowedFromCause("delete ledger file", cause),
         );
-        return { path: input.path };
+        return {
+          path: input.path,
+          ...(deleted?.commit && { commit: deleted.commit }),
+        };
       }
     }
     // The same guard as the repo-service path (w23/m4/t002): deleting a

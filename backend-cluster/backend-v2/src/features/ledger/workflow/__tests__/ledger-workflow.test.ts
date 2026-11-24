@@ -2159,6 +2159,104 @@ describe("LedgerWorkflow", () => {
       expect(result).toEqual({ path: "accounts.bean", commit: "c0mm1t5ha" });
     });
 
+    it("returns the commit from changeLedgerFiles when removeIncludes rewrites an includer", async () => {
+      mockFavaApiClient.ledgers.getLedgerDirContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            { type: "file", path: "main.bean" },
+            { type: "file", path: "second.bean" },
+          ],
+        },
+      });
+      mockFavaApiClient.ledgers.getLedgerFilesContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            {
+              path: "main.bean",
+              sha: BLOB_SHA_1,
+              content: '; main\ninclude "second.bean"\n',
+              encoding: null,
+            },
+          ],
+        },
+      });
+      mockFavaApiClient.ledgers.changeLedgerFiles.mockResolvedValue({
+        data: { success: true, data: { commit: "c0mm1t5ha" } },
+      });
+
+      const result = await workflow.deleteLedgerFile({
+        identity: IDENTITY,
+        ledgerId,
+        input: {
+          path: "second.bean",
+          sha: BLOB_SHA_1,
+          message: "Drop second",
+          removeIncludes: true,
+        },
+      });
+
+      expect(mockFavaApiClient.ledgers.changeLedgerFiles).toHaveBeenCalledWith(
+        "testuser",
+        "test-ledger",
+        {
+          files: [
+            { operation: "delete", path: "second.bean", sha: BLOB_SHA_1 },
+            {
+              operation: "update",
+              path: "main.bean",
+              content: Buffer.from("; main\n", "utf-8").toString("base64"),
+              sha: BLOB_SHA_1,
+            },
+          ],
+          message: "Drop second",
+        },
+      );
+      expect(mockFavaApiClient.ledgers.deleteLedgerFile).not.toHaveBeenCalled();
+      expect(result).toEqual({ path: "second.bean", commit: "c0mm1t5ha" });
+    });
+
+    it("omits commit when changeLedgerFiles returns no commit for removeIncludes", async () => {
+      mockFavaApiClient.ledgers.getLedgerDirContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            { type: "file", path: "main.bean" },
+            { type: "file", path: "second.bean" },
+          ],
+        },
+      });
+      mockFavaApiClient.ledgers.getLedgerFilesContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            {
+              path: "main.bean",
+              sha: BLOB_SHA_1,
+              content: '; main\ninclude "second.bean"\n',
+              encoding: null,
+            },
+          ],
+        },
+      });
+      mockFavaApiClient.ledgers.changeLedgerFiles.mockResolvedValue({
+        data: { success: true, data: {} },
+      });
+
+      const result = await workflow.deleteLedgerFile({
+        identity: IDENTITY,
+        ledgerId,
+        input: {
+          path: "second.bean",
+          sha: BLOB_SHA_1,
+          removeIncludes: true,
+        },
+      });
+
+      expect(result).toEqual({ path: "second.bean" });
+    });
+
     // w31/066: malformed blob SHAs refuse upfront without calling Gitea.
     it.each(["", "   ", "not-a-sha", "A".repeat(40)])(
       "refuses malformed sha=%j as BadUserInputError without calling Fava",
