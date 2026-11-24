@@ -1,17 +1,40 @@
 # w1 · m50 — A batch recategorization costs one ledger load, not one per row
 
-**Worker:** worker1 **Goal:** `bea update transactions` resolves, plans, diffs and validates a batch in about one ledger load plus work proportional to its rows, and a rejected row adds a few loads rather than one per row, with byte-identical output **Status:** todo
+**Worker:** worker1 **Goal:** `bea update transactions` resolves, plans, diffs and validates a batch in about one ledger load plus work proportional to its rows, and a rejected row adds a few loads rather than one per row, with byte-identical output **Status:** done
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Resolve and plan every row against indexes built once per batch | 30m | — |
-| t002 | Diff each row from a window around its span, byte-identical to the whole-file diff | 30m | — |
-| t003 | Attribute a failed combined validation to rows from its located errors; bisect only the rest | 45m | — |
-| t004 | Simplify | 20m | t001, t002, t003 |
-| t005 | Test coverage | 30m | t001, t002, t003 |
-| t006 | Closeout | 15m | t004, t005 |
+| t001 | Resolve and plan every row against indexes built once per batch — **DONE** | 30m | — |
+| t002 | Diff each row from a window around its span, byte-identical to the whole-file diff — **DONE** | 30m | — |
+| t003 | Attribute a failed combined validation to rows from its located errors; bisect only the rest — **DONE** | 45m | — |
+| t004 | Simplify — **DONE** | 20m | t001, t002, t003 |
+| t005 | Test coverage — **DONE** | 30m | t001, t002, t003 |
+| t006 | Closeout — **DONE** | 15m | t004, t005 |
+
+## Closeout
+
+**Done 2026-11-23** (`/loopx w1`). Measured on the repro and the larger fixtures (macOS arm64, Python 3.12, `uv run bea` from the checkout, the same machine before and after; previews leave every file byte-identical):
+
+| Ledger (one file) | Batch | Before (`762899226`) | After |
+| --- | --- | --- | --- |
+| 5,000 transactions | 500 valid rows, preview | 10.9 s | 1.0 s |
+| 5,000 transactions | the same 500, row 1 names `Expenses:Typo` | 134.0 s | 2.1 s |
+| 22,000 transactions | the last 2,000 rows, preview | 360.6 s | 5.0 s |
+| 22,000 transactions | 2,000 rows scattered over the file, preview | not run | 58.1 s |
+
+The 22,000-transaction file has the note's shape, every entry carrying an import-id and amounts varying; the note's `bea import` of 2,000 such rows took 9 s. The three before/after answers are byte-identical (`cmp` of the `--json` output). The pre-change engine and this one gave identical answers, exit codes and written bytes for eight scenarios, each previewed and applied: a mistyped first row, 14 mistyped rows among 120, a missing id beside a duplicate row, an assertion one row breaks, two rows that break an assertion beside a typo, a narration that drops a continuation line, two included files with a byte-order mark and no final newline, and `file:line` ids on a file whose entries repeat. Validations fell from 102 to 3, 122 to 16, 52 to 8 and 69 to 4. `make check-all` passes in `cli/`.
+
+Deviations, both recorded in t002 and t003 and pinned by tests:
+
+- Rows that load together are written together beside a rejected row, even one that fails alone, as they are in a batch without the rejected row. Before, every row was tried alone once the batch failed.
+- Where entries repeat each other line for line, a row's diff shows the row's own lines; `difflib` over the whole file could pair a line with its copy in another entry and report dozens of unchanged lines. The batch's combined diff is still the whole file's.
+
+Left as they were:
+
+- The batch's combined diff is still one whole-file `difflib` per file, kept for byte-identity. Its cost grows with how scattered the rows are. The 2,000 rows `bea import` just wrote sit together at the end of the file, and that preview takes 5.0 s. Spread over the whole file, the same number of rows takes 58.1 s, of which `difflib` is all but about 8 s (cProfile: the 2,000 row diffs take 0.17 s together). Windowing the combined diff would remove that cost, but on densely edited files it pairs lines differently from the whole-file matcher. Doing it would mean deliberately changing that diff.
+- `--apply` re-validates each file the preview already judged, and a failing trial reloads the unchanged ledger to classify its errors.
 
 ## Definition of done
 

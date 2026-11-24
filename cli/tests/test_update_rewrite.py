@@ -90,7 +90,9 @@ def _plan(ledger: Path, request: dict[str, Any]) -> tuple[str, str]:
     entry = updating.locate_transaction(entries, changes.id)
     snapshot = ledger_write.LedgerSnapshot.capture(ledger)
     target = Path((entry.meta or {})["filename"])
-    return updating.plan_rewrite(entries, options, entry, changes, snapshot.require_target(target), target)
+    return updating.plan_rewrite(
+        updating.EntryIndex(entries), options, entry, changes, snapshot.require_target(target), target
+    )
 
 
 class TestPreviewAndApply:

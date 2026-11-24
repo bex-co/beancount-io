@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import datetime
+import difflib
 import re
 import unicodedata
 import warnings
+from collections import Counter
 from collections.abc import Collection, Iterator, Mapping
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -693,11 +695,174 @@ def unified_file_diff(text: str, new_text: str, name: str, *, bom: bool = False)
     first line when `bom` says the file has one, and marks a last line without
     a terminator with `\\ No newline at end of file`, as Git does.
     """
-    import difflib
-
     if bom:
         text, new_text = "\ufeff" + text, "\ufeff" + new_text
     out = []
     for line in difflib.unified_diff(physical_lines(text), physical_lines(new_text), fromfile=name, tofile=name):
         out.append(line if line.endswith("\n") else f"{line}\n\\ No newline at end of file\n")
     return "".join(out)
+
+
+class FileDiffer:
+    """One file's lines, read once, so the diff of one row's edits never walks the rest.
+
+    `diff` answers what `unified_file_diff` answers for the whole file with
+    a few of its lines rewritten or dropped, by running `difflib`'s matcher
+    over each edit and its neighbours alone. A batch of updates diffed the
+    whole file once per row, a quarter second a row on a 100,000-line
+    ledger (w1/374).
+
+    Two things make a window match the whole file. `difflib` never starts a
+    match at a line that fills more than 1% of a file of 200 lines or more
+    (a blank line, a posting every entry repeats), so those lines are judged
+    against the whole file, not the window. And each side of a window
+    reaches a line that appears once in the file before and after the edits,
+    so the unchanged lines there match as they do within the whole file; a
+    side with no such line within reach runs to the file's edge. Windows
+    that meet are matched as one, and the lines between two windows match
+    themselves.
+
+    One case still differs. Where entries repeat each other line for line
+    (no metadata, the same payees and amounts), `difflib` over the whole
+    file can pair a line with its copy in another entry and report dozens
+    of unchanged lines around a one-line edit; the window reports the edit's
+    own lines. Edits to many entries at once make that pairing likely, so a
+    batch's combined diff stays the whole file's.
+    """
+
+    _REACH = 1000
+
+    def __init__(self, text: str, name: str, *, bom: bool = False) -> None:
+        self.name = name
+        self.bom = bom
+        self._text_lines = text.split("\n")
+        self.lines = physical_lines(("\ufeff" if bom else "") + text)
+        self._counts = Counter(self.lines)
+
+    def diff(self, edits: Mapping[int, str | None]) -> str:
+        """The diff of the file with `edits` applied.
+
+        `edits` maps a 0-based line of the file's `\\n`-split text to its new
+        text, or to None to drop it, as `plan_lines` plans a row. The last
+        line keeps the file's want of a final newline, and the first the
+        file's byte-order mark.
+        """
+        lines, size = self.lines, len(self.lines)
+        if any(not 0 <= number < size for number in edits):
+            raise ValueError("An edit names a line the file does not have.")
+        rewritten = dict(edits)
+        first = next((number for number in range(size) if rewritten.get(number, "") is not None), None)
+        last = next((number for number in reversed(range(size)) if rewritten.get(number, "") is not None), None)
+        if first is None or last is None:
+            raise ValueError("An edit leaves the file without a line.")
+        # The mark and the missing final newline belong to whichever lines
+        # end up first and last, so those count as rewritten too.
+        if self.bom:
+            rewritten.setdefault(first, self._text_lines[first])
+        open_end = not lines[-1].endswith("\n")
+        if open_end:
+            rewritten.setdefault(last, self._text_lines[last])
+
+        def physical(number: int, text: str) -> str:
+            mark = "\ufeff" if self.bom and number == first else ""
+            return mark + text + ("" if open_end and number == last else "\n")
+
+        new = {number: physical(number, text) for number, text in rewritten.items() if text is not None}
+        counts = self._counts
+        change = Counter(new.values())
+        change.subtract(lines[number] for number in rewritten)
+
+        def anchor(number: int) -> bool:
+            # Once in the file before and after: its only match is itself.
+            line = lines[number]
+            return number not in rewritten and counts[line] == 1 and change[line] == 0
+
+        reaches: list[tuple[int, int]] = []
+        for number in rewritten:
+            reach = range(number - 1, max(number - self._REACH, 0) - 1, -1)
+            before = next((other for other in reach if anchor(other)), None)
+            after = next((other for other in range(number + 1, min(number + self._REACH, size)) if anchor(other)), None)
+            # Three lines of context each side, as `unified_diff` shows.
+            low = 0 if before is None else max(min(before, number - 3), 0)
+            reaches.append((low, size if after is None else min(max(after + 1, number + 4), size)))
+        windows: list[list[int]] = []
+        for low, high in sorted(reaches):
+            if windows and low <= windows[-1][1]:
+                windows[-1][1] = max(windows[-1][1], high)
+            else:
+                windows.append([low, high])
+        dropped = [number for number, text in rewritten.items() if text is None]
+        total = size - len(dropped)
+        limit = total // 100 + 1 if total >= 200 else None
+        blocks: list[tuple[int, int, int]] = []
+        added: dict[int, str] = {}
+        reached = 0
+        for low, high in windows:
+            shift = low - sum(1 for number in dropped if number < low)
+            blocks.append((reached, shift - (low - reached), low - reached))
+            after_lines = [
+                new[number] if number in rewritten else lines[number]
+                for number in range(low, high)
+                if number in new or number not in rewritten
+            ]
+            matcher = difflib.SequenceMatcher(None, lines[low:high], after_lines, False)
+            if limit is not None:
+                # `b2j` maps each line of the window's new side to where it
+                # sits there; a line left out of it is one no match starts at.
+                index: dict[str, list[int]] = matcher.b2j  # type: ignore[attr-defined]  # not in typeshed
+                for line in [line for line in index if counts[line] + change[line] > limit]:
+                    del index[line]
+            blocks.extend((low + i, shift + j, k) for i, j, k in matcher.get_matching_blocks()[:-1])
+            added.update((shift + j, line) for j, line in enumerate(after_lines))
+            reached = high
+        blocks.append((reached, total - (size - reached), size - reached))
+        return _unified(_Matched(blocks, size, total), lines, added, self.name)
+
+
+class _Matched(difflib.SequenceMatcher[str]):
+    """`difflib`'s opcodes and hunks over matching blocks found window by window."""
+
+    def __init__(self, blocks: list[tuple[int, int, int]], old_size: int, new_size: int) -> None:
+        super().__init__(None, [], [], False)
+        merged: list[tuple[int, int, int]] = []
+        for i, j, k in blocks:
+            if not k:
+                continue
+            if merged and merged[-1][0] + merged[-1][2] == i and merged[-1][1] + merged[-1][2] == j:
+                merged[-1] = (merged[-1][0], merged[-1][1], merged[-1][2] + k)
+            else:
+                merged.append((i, j, k))
+        self._blocks = [difflib.Match(i, j, k) for i, j, k in [*merged, (old_size, new_size, 0)]]
+
+    def get_matching_blocks(self) -> list[difflib.Match]:
+        return self._blocks
+
+
+def _unified(matcher: difflib.SequenceMatcher[str], old: list[str], new: Mapping[int, str], name: str) -> str:
+    """`difflib.unified_diff`'s text for the matcher's opcodes; `new` holds every line they insert."""
+    out: list[str] = []
+    for group in matcher.get_grouped_opcodes(3):
+        if not out:
+            out = [f"--- {name}\n", f"+++ {name}\n"]
+        first, last = group[0], group[-1]
+        out.append(f"@@ -{_unified_range(first[1], last[2])} +{_unified_range(first[3], last[4])} @@\n")
+        for tag, i1, i2, j1, j2 in group:
+            if tag == "equal":
+                out.extend(f" {line}" for line in old[i1:i2])
+                continue
+            if tag in {"replace", "delete"}:
+                out.extend(f"-{line}" for line in old[i1:i2])
+            if tag in {"replace", "insert"}:
+                out.extend(f"+{new[j]}" for j in range(j1, j2))
+    return "".join(line if line.endswith("\n") else f"{line}\n\\ No newline at end of file\n" for line in out)
+
+
+def _unified_range(start: int, stop: int) -> str:
+    """A hunk header's `start,length`, as `difflib` writes it."""
+    beginning = start + 1
+    length = stop - start
+    if length == 1:
+        return f"{beginning}"
+    if not length:
+        beginning -= 1
+    return f"{beginning},{length}"
