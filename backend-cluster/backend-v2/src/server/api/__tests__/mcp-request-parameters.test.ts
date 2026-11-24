@@ -703,3 +703,121 @@ describe("MCP protocol handler argument limits (w31/079)", () => {
     });
   });
 });
+
+describe("MCP task-augmented requests (w31/080)", () => {
+  const validMethodBaseParams: {
+    method: string;
+    baseParams: Record<string, unknown>;
+  }[] = [
+    {
+      method: "tools/call",
+      baseParams: { name: "listLedgers", arguments: {} },
+    },
+    {
+      method: "resources/read",
+      baseParams: { uri: "beancount://configuration/health" },
+    },
+    {
+      method: "prompts/get",
+      baseParams: { name: "close-month", arguments: {} },
+    },
+    {
+      method: "initialize",
+      baseParams: {
+        protocolVersion: LATEST_PROTOCOL_VERSION,
+        capabilities: {},
+        clientInfo: { name: "request-parameters", version: "1" },
+      },
+    },
+    { method: "tools/list", baseParams: {} },
+    { method: "resources/list", baseParams: {} },
+    { method: "resources/templates/list", baseParams: {} },
+    { method: "prompts/list", baseParams: {} },
+    { method: "ping", baseParams: {} },
+  ];
+
+  const taskPayloads: { label: string; task: Record<string, unknown> }[] = [
+    { label: "empty task {}", task: {} },
+    { label: "task with ttl", task: { ttl: 60000 } },
+    { label: "task with NUL in extra property", task: { extra: "\u0000" } },
+  ];
+
+  const taskCases = validMethodBaseParams.flatMap(({ method, baseParams }) =>
+    taskPayloads.map(({ label, task }) => ({
+      method,
+      label,
+      params: { ...baseParams, task },
+    })),
+  );
+
+  it.each(taskCases)(
+    "$method with $label refuses as -32602 BAD_USER_INPUT without domain work",
+    async ({ method, params }) => {
+      await withClient(async (f) => {
+        const error = await f.client
+          .request(request(method, params), ResultSchema)
+          .catch((caught: unknown) => caught);
+        expect(error).toBeInstanceOf(McpError);
+        const mcpError = error as McpError;
+        expect(mcpError.code).toBe(-32602);
+        expectInputEnvelope(mcpError.data, "params.task");
+        const envelope = mcpError.data as {
+          code: string;
+          message: string;
+          hint: string;
+        };
+        expect(envelope.message).toContain(method);
+        expect(envelope.hint).toContain("params.task");
+        expect(mcpError.message).toContain("BAD_USER_INPUT: ");
+        expect(mcpError.message).toContain("\nHint: ");
+        expect(mcpError.message.match(/MCP error/g)).toHaveLength(1);
+        expect(f.domainAccess).not.toHaveBeenCalled();
+        expect(f.queryShellText).not.toHaveBeenCalled();
+        expect(f.listLedgers).not.toHaveBeenCalled();
+      });
+    },
+  );
+
+  it("keeps malformed params.task refusals, absent tasks capability, and unknown method -32601 intact", async () => {
+    await withClient(async (f) => {
+      for (const task of [null, "bad", { ttl: "later" }]) {
+        const error = await f.client
+          .request(
+            request("tools/call", {
+              name: "listLedgers",
+              arguments: {},
+              task,
+            }),
+            ResultSchema,
+          )
+          .catch((caught: unknown) => caught);
+        expect(error).toBeInstanceOf(McpError);
+        expect((error as McpError).code).toBe(-32602);
+        expectInputEnvelope((error as McpError).data, "task");
+        expect((error as McpError).message.match(/MCP error/g)).toHaveLength(1);
+      }
+
+      const init = await f.client.request(
+        request("initialize", {
+          protocolVersion: LATEST_PROTOCOL_VERSION,
+          capabilities: {},
+          clientInfo: { name: "request-parameters", version: "1" },
+        }),
+        InitializeResultSchema,
+      );
+      expect(init.capabilities.tasks).toBeUndefined();
+
+      for (const method of ["tasks/list", "completion/complete"]) {
+        const error = await f.client
+          .request(request(method, { task: {} }), ResultSchema)
+          .catch((caught: unknown) => caught);
+        expect(error).toBeInstanceOf(McpError);
+        expect((error as McpError).code).toBe(-32601);
+      }
+
+      expect(f.domainAccess).not.toHaveBeenCalled();
+      expect(f.queryShellText).not.toHaveBeenCalled();
+      expect(f.listLedgers).not.toHaveBeenCalled();
+    });
+  });
+});

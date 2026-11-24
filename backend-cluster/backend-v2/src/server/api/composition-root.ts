@@ -28,7 +28,6 @@ import { Protocol } from "@modelcontextprotocol/sdk/shared/protocol.js";
 import {
   CallToolRequestSchema,
   CallToolResultSchema,
-  CreateTaskResultSchema,
   ErrorCode,
   GetPromptRequestSchema,
   InitializeRequestSchema,
@@ -542,6 +541,25 @@ export function assembleMcpRegistry(
 
   publishToolSecuritySchemes(server);
 
+  // `Protocol._onrequest` checks `assertTaskHandlerCapability(request.method)`
+  // before any registered handler runs whenever `params.task` matches
+  // `TaskMetadataSchema`. The SDK's default throws a plain `Error` (no `code`,
+  // no `data`), which serializes as uncoded `-32603` and bypasses handler
+  // parameter checks (w31/080). Refuse every task-augmented request in this
+  // server's coded `-32602` `BAD_USER_INPUT` envelope instead.
+  (
+    server.server as unknown as {
+      assertTaskHandlerCapability(method: string): void;
+    }
+  ).assertTaskHandlerCapability = (method: string): never =>
+    refuseMcpParameters(
+      new BadUserInputError(
+        `Task-augmented requests (\`params.task\`) are not supported for \`${method}\`.`,
+        "params.task",
+      ),
+      "This stateless MCP endpoint does not support tasks. Omit `params.task` and send the request directly.",
+    );
+
   const toolHandlers = new Map<
     string,
     {
@@ -672,14 +690,11 @@ export function assembleMcpRegistry(
         return refuseMcpParameters(parsed.error, callToolParamsHint);
       }
       const result = await dispatchTool(parsed.data);
-      // Preserve the Server wrapper's checks, including its task result path.
-      const output = (
-        parsed.data.params.task ? CreateTaskResultSchema : CallToolResultSchema
-      ).safeParse(result);
+      const output = CallToolResultSchema.safeParse(result);
       if (!output.success) {
         throw new McpError(
           ErrorCode.InvalidParams,
-          `Invalid ${parsed.data.params.task ? "task creation" : "tools/call"} result: ${output.error.message}`,
+          `Invalid tools/call result: ${output.error.message}`,
         );
       }
       return output.data;
