@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import type { ZodType } from "zod";
+import { z, type ZodType } from "zod";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import { V1_DECLARED_ROUTES } from "@/server/api/composition-root";
@@ -42,17 +42,113 @@ function treatment(schema: ZodType | undefined, key: string) {
   return issues.some((issue) => issue.path[0] === key) ? "read" : "dropped";
 }
 
-// POSTs that change nothing: a BQL query, and RFC 7662 introspection, whose
-// clients may send `token_type_hint`.
-const READ_ONLY_BODIES = new Set([
-  "POST /ledgers/{owner}/{name}/query",
-  "POST /token/introspect",
-]);
+/** Collect every ZodObject reachable inside a request body schema (root and nested). */
+function collectObjectSchemas(
+  schema: ZodType | undefined,
+  location = "body",
+  seen = new Set<ZodType>(),
+): { location: string; schema: z.ZodObject }[] {
+  if (!schema || seen.has(schema)) return [];
+  seen.add(schema);
+
+  if (schema instanceof z.ZodObject) {
+    const found: { location: string; schema: z.ZodObject }[] = [
+      { location, schema },
+    ];
+    for (const [key, value] of Object.entries(schema.shape)) {
+      found.push(
+        ...collectObjectSchemas(value as ZodType, `${location}.${key}`, seen),
+      );
+    }
+    return found;
+  }
+  if (schema instanceof z.ZodArray) {
+    return collectObjectSchemas(
+      schema.def.element as ZodType,
+      `${location}[]`,
+      seen,
+    );
+  }
+  if (
+    schema instanceof z.ZodOptional ||
+    schema instanceof z.ZodNullable ||
+    schema instanceof z.ZodDefault ||
+    schema instanceof z.ZodReadonly ||
+    schema instanceof z.ZodCatch
+  ) {
+    return collectObjectSchemas(
+      schema.def.innerType as ZodType,
+      location,
+      seen,
+    );
+  }
+  if (schema instanceof z.ZodPipe) {
+    return [
+      ...collectObjectSchemas(schema.def.in as ZodType, location, seen),
+      ...collectObjectSchemas(schema.def.out as ZodType, location, seen),
+    ];
+  }
+  if (schema instanceof z.ZodUnion) {
+    return (schema.def.options as readonly ZodType[]).flatMap((option, i) =>
+      collectObjectSchemas(option, `${location}|${i}`, seen),
+    );
+  }
+  if (schema instanceof z.ZodIntersection) {
+    return [
+      ...collectObjectSchemas(schema.def.left as ZodType, location, seen),
+      ...collectObjectSchemas(schema.def.right as ZodType, location, seen),
+    ];
+  }
+  if (schema instanceof z.ZodTuple) {
+    const items = (schema.def.items as readonly ZodType[]).flatMap((item, i) =>
+      collectObjectSchemas(item, `${location}[${i}]`, seen),
+    );
+    const rest = schema.def.rest
+      ? collectObjectSchemas(
+          schema.def.rest as ZodType,
+          `${location}[...]`,
+          seen,
+        )
+      : [];
+    return [...items, ...rest];
+  }
+  if (schema instanceof z.ZodRecord) {
+    return collectObjectSchemas(
+      schema.def.valueType as ZodType,
+      `${location}[*]`,
+      seen,
+    );
+  }
+  if (schema instanceof z.ZodLazy) {
+    return collectObjectSchemas(schema.def.getter() as ZodType, location, seen);
+  }
+  return [];
+}
+
+// RFC 7662 token introspection deliberately allows extension parameters.
+const NON_STRICT_BODIES = new Set(["POST /token/introspect"]);
 
 it.each(ROUTES.map((route) => [route.name, route]))(
   "%s refuses a query key it does not declare",
   (_name, route) => {
     expect(treatment(route.query, "zz_probe")).toBe("refused");
+  },
+);
+
+it.each(
+  ROUTES.filter((route) => !NON_STRICT_BODIES.has(route.name)).map((route) => [
+    route.name,
+    route,
+  ]),
+)(
+  "%s refuses unknown keys on its JSON body and every nested object (w31/076)",
+  (_name, route) => {
+    const objects = collectObjectSchemas(route.body);
+    expect(objects.length).toBeGreaterThan(0);
+    const nonStrict = objects
+      .filter(({ schema }) => treatment(schema, "zz_probe") !== "refused")
+      .map(({ location }) => location);
+    expect(nonStrict).toEqual([]);
   },
 );
 
@@ -66,7 +162,7 @@ it.each(
   (_name, route) => {
     for (const key of ["dry_run", "dryRun"]) {
       expect(treatment(route.query, key)).not.toBe("dropped");
-      if (!READ_ONLY_BODIES.has(route.name))
+      if (!NON_STRICT_BODIES.has(route.name))
         expect(treatment(route.body, key)).not.toBe("dropped");
     }
   },
@@ -85,9 +181,25 @@ describe("over HTTP", () => {
       appendDirectiveText: jest.fn(),
     },
     ledgerFile: { updateFile: jest.fn(), deleteFile: jest.fn() },
+    ledgerRepo: {
+      changeFiles: jest.fn(async () => ({})),
+      checkProjectedFiles: jest.fn(async () => []),
+      listDirContent: jest.fn(async () => []),
+      getFilesContent: jest.fn(async () => []),
+    },
+    ledgerShell: {
+      queryShell: jest.fn(async () => ({
+        resultType: "table",
+        table: { types: [], rows: [], t: "t" },
+      })),
+      queryShellText: jest.fn(async () => ({ text: "" })),
+    },
     ledgerLifecycle: { updateLedger: jest.fn(), deleteLedger: jest.fn() },
     plaidSync: {
-      submitTransactionsToLedger: jest.fn(),
+      submitTransactionsToLedger: jest.fn(async () => ({
+        submitted: 0,
+        entries: [],
+      })),
       deleteTransactions: jest.fn(),
     },
     plaidItem: { unlinkItem: jest.fn() },
@@ -185,6 +297,60 @@ describe("over HTTP", () => {
       { name: "ci", scopes: ["ledger.read"], ledger_scope: "alice/main" },
       "ledger_scope",
     ],
+    // w31/076: misspelled flags and nested keys on the four previously non-strict bodies.
+    [
+      "PUT",
+      `${LEDGER}/files/main.bean`,
+      { content: "; test\n", message: "test", dryRun: true, dryrun: false },
+      "dryrun",
+    ],
+    [
+      "PUT",
+      `${LEDGER}/files/main.bean`,
+      { content: "; test\n", allowinvalid: true },
+      "allowinvalid",
+    ],
+    [
+      "DELETE",
+      `${LEDGER}/files/main.bean`,
+      { message: "test", dryRun: true, dryrun: false },
+      "dryrun",
+    ],
+    [
+      "DELETE",
+      `${LEDGER}/files/main.bean`,
+      { message: "test", dryRun: true, remove_include: true },
+      "remove_include",
+    ],
+    [
+      "POST",
+      `${LEDGER}/bank-transactions/submit?dry_run=true`,
+      {
+        transactions: [
+          {
+            transactionId: "ptxn_nonexistent",
+            targetAccount: "Expenses:Food:Coffee",
+            sourceAccout: "Assets:Cash",
+          },
+        ],
+      },
+      "sourceAccout",
+    ],
+    [
+      "POST",
+      `${LEDGER}/bank-transactions/submit?dry_run=true`,
+      {
+        transactions: [
+          {
+            transactionId: "ptxn_nonexistent",
+            targetAccount: "Expenses:Food:Coffee",
+            source_account: "Assets:Cash",
+          },
+        ],
+      },
+      "source_account",
+    ],
+    ["POST", `${LEDGER}/query`, { query: "BALANCES", bogusKey: 1 }, "bogusKey"],
   ])("%s %s is refused, naming the key", async (method, path, body, key) => {
     const response = await send(method, path, body);
     expect(response.status).toBe(400);
@@ -196,6 +362,49 @@ describe("over HTTP", () => {
       },
     });
     expect(calls()).toEqual([]);
+  });
+
+  it("still accepts valid documented fields and aliases on the four strict bodies (w31/076)", async () => {
+    const putRes = await send("PUT", `${LEDGER}/files/new.bean`, {
+      content: "; ok\n",
+      description: "preview create",
+      dry_run: true,
+      allow_invalid: true,
+    });
+    expect(putRes.status).toBe(200);
+    expect(services.ledgerRepo.changeFiles).toHaveBeenCalledTimes(1);
+
+    const delRes = await send("DELETE", `${LEDGER}/files/old.bean`, {
+      message: "preview delete",
+      dryRun: true,
+      allowInvalid: false,
+      remove_includes: false,
+    });
+    expect(delRes.status).toBe(200);
+
+    const submitRes = await send(
+      "POST",
+      `${LEDGER}/bank-transactions/submit?dry_run=true`,
+      {
+        transactions: [
+          {
+            transactionId: "ptxn_1",
+            targetAccount: "Expenses:Food:Coffee",
+            sourceAccount: "Assets:Cash",
+          },
+        ],
+      },
+    );
+    expect(submitRes.status).toBe(200);
+    expect(services.plaidSync.submitTransactionsToLedger).toHaveBeenCalledTimes(
+      1,
+    );
+
+    const queryRes = await send("POST", `${LEDGER}/query`, {
+      query: "BALANCES",
+    });
+    expect(queryRes.status).toBe(200);
+    expect(services.ledgerShell.queryShell).toHaveBeenCalledTimes(1);
   });
 
   it.each([

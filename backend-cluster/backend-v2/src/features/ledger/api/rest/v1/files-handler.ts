@@ -88,6 +88,7 @@ const putBodySchema = z
     ...dryRunBody,
     ...allowInvalidBody,
   })
+  .strict()
   .openapi("FileWrite", {
     description:
       "New content for one ledger file, at most 1 MiB of UTF-8 bytes",
@@ -106,6 +107,7 @@ const deleteBodySchema = z
     ...dryRunBody,
     ...allowInvalidBody,
   })
+  .strict()
   .openapi("FileDelete", { description: "Delete one ledger file" });
 
 const dirEntrySchema = z

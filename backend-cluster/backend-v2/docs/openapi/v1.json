@@ -257,6 +257,7 @@
         "required": [
           "query"
         ],
+        "additionalProperties": false,
         "description": "A BQL query to run against the ledger"
       },
       "LedgerDirEntry": {
@@ -436,6 +437,7 @@
         "required": [
           "content"
         ],
+        "additionalProperties": false,
         "description": "New content for one ledger file, at most 1 MiB of UTF-8 bytes"
       },
       "FileDelete": {
@@ -479,6 +481,7 @@
             "description": "Alias of allowInvalid, as MCP spells it."
           }
         },
+        "additionalProperties": false,
         "description": "Delete one ledger file"
       },
       "EntriesRequest": {
@@ -1343,7 +1346,8 @@
               "required": [
                 "transactionId",
                 "targetAccount"
-              ]
+              ],
+              "additionalProperties": false
             },
             "minItems": 1
           },

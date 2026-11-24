@@ -10,6 +10,7 @@ const queryBodySchema = z
       example: "SELECT account, sum(position) GROUP BY account",
     }),
   })
+  .strict()
   .openapi("BqlQuery", {
     description: "A BQL query to run against the ledger",
   });

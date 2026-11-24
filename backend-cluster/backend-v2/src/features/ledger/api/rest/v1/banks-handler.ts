@@ -248,21 +248,23 @@ export const BANK_ROUTES = [
       .object({
         transactions: z
           .array(
-            z.object({
-              transactionId: z.string().openapi({
-                description:
-                  "The staged row's `transactionId`. camelCase only here; the MCP bank tool also accepts `transaction_id`.",
-              }),
-              targetAccount: z.string().openapi({
-                description:
-                  "The ledger account to book this against. camelCase only here; the MCP bank tool also accepts `target_account`.",
-                example: "Expenses:Groceries",
-              }),
-              sourceAccount: z.string().optional().openapi({
-                description:
-                  "Overrides the source account normally derived from the mapping. camelCase only here; the MCP bank tool also accepts `source_account`.",
-              }),
-            }),
+            z
+              .object({
+                transactionId: z.string().openapi({
+                  description:
+                    "The staged row's `transactionId`. camelCase only here; the MCP bank tool also accepts `transaction_id`.",
+                }),
+                targetAccount: z.string().openapi({
+                  description:
+                    "The ledger account to book this against. camelCase only here; the MCP bank tool also accepts `target_account`.",
+                  example: "Expenses:Groceries",
+                }),
+                sourceAccount: z.string().optional().openapi({
+                  description:
+                    "Overrides the source account normally derived from the mapping. camelCase only here; the MCP bank tool also accepts `source_account`.",
+                }),
+              })
+              .strict(),
           )
           .min(1),
         filename: z.string().optional().openapi({
