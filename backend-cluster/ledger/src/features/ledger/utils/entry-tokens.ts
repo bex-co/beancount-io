@@ -6,16 +6,23 @@ import { BadUserInputError } from "@/shared/errors";
  * a tag ended the entry and started directives the caller never sent, and the
  * projected bean-check passed because the smuggled text was valid Beancount.
  *
- * Non-ASCII is accepted wherever Beancount's lexer accepts it, so Unicode
- * account names keep working; whitespace and control characters never are.
+ * Non-ASCII is accepted wherever rustledger's lexer accepts it, so Unicode
+ * account names keep working: a root starts with an uppercase, titlecase, or
+ * caseless letter (`Lu`, `Lt`, `Lo`), each `:` sub-component starts with one
+ * of those or an ASCII digit (`0-9` — non-ASCII `\p{Nd}` digits like `١` are
+ * not accepted by rustledger as component starts and silently truncate `open`/
+ * `close` to the parent account), and continuation characters allow any
+ * non-ASCII code point other than whitespace or controls (w31/082).
  * Tags and links are ASCII in both engines' lexers (`#café` read as `#caf`,
  * `#旅行` not at all), and a quoted flag (`'X`) is not Beancount syntax, so
  * neither is accepted (w21/653).
  */
 const NON_ASCII = "[^\\x00-\\x7F]";
+const ROOT_START = "[\\p{Lu}\\p{Lt}\\p{Lo}]";
+const COMPONENT_START = "[\\p{Lu}\\p{Lt}\\p{Lo}0-9]";
 const ACCOUNT = new RegExp(
-  `^(?:[A-Z]|${NON_ASCII})(?:[A-Za-z0-9-]|${NON_ASCII})*` +
-    `(?::(?:[A-Z0-9]|${NON_ASCII})(?:[A-Za-z0-9-]|${NON_ASCII})*)+$`,
+  `^${ROOT_START}(?:[A-Za-z0-9-]|${NON_ASCII})*` +
+    `(?::${COMPONENT_START}(?:[A-Za-z0-9-]|${NON_ASCII})*)+$`,
   "u",
 );
 // ZWNJ and ZWJ are format characters (`\p{Cf}`) that Persian and Indic

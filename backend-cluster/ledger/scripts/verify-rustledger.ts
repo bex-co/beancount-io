@@ -5646,19 +5646,58 @@ async function main(): Promise<void> {
   }
 
   // w21/649: an account with a ZWNJ or ZWJ is accepted, and the engine reads it.
-  for (const account of ["Assets:Bank:خانه\u200cها", "Assets:Bank:क्\u200dष"]) {
+  // w31/082: every accepted Unicode account-start category parses intact, and
+  // every rejected category (Ll, Sc, So, Pd, Ps, Cf at start, Lm, Nl, No, Mn,
+  // non-ASCII Nd) fails to parse intact in rustledger.
+  for (const [account, expected] of [
+    ["Assets:Bank:Épargne", true],
+    ["Assets:Bank:Café", true],
+    ["Assets:Bank:日本", true],
+    ["Assets:Bank:خانه\u200cها", true],
+    ["Assets:Bank:क्\u200dष", true],
+    ["Assets:Bank:1", true],
+    ["Assets:Bank:A١", true],
+    ["Assets:Bank:Foo—Bar", true],
+    ["Assets:Bank:ǅ", true],
+    ["Épargne:Bank", true],
+    ["资产:现金", true],
+    ["ǅ:Bank", true],
+    ["Assets:Bank:épargne", false],
+    ["Assets:épargne", false],
+    ["épargne:Bank", false],
+    ["Assets:Bank:€", false],
+    ["Assets:Bank:😀", false],
+    ["Assets:Bank:—", false],
+    ["Assets:Bank:「Foo」", false],
+    ["Assets:Bank:\u200cFoo", false],
+    ["Assets:Bank:\u200dFoo", false],
+    ["Assets:Bank:ʰ", false],
+    ["Assets:Bank:Ⅱ", false],
+    ["Assets:Bank:²", false],
+    ["Assets:Bank:\u0301Foo", false],
+    ["Assets:Bank:١", false],
+    ["Assets:١", false],
+    ["١:Bank", false],
+    ["€:Bank", false],
+    ["😀:Bank", false],
+  ] as const) {
+    const root = account.split(":")[0]!;
+    const rootOpt =
+      root === "Assets" ? "" : `option "name_assets" "${root}"\n`;
     const opened = await parseLedgerFiles(
-      { "main.bean": `2024-01-01 open ${account}\n` },
+      { "main.bean": `${rootOpt}2024-01-01 open ${account}\n` },
       "main.bean",
     );
+    const engineIntact =
+      opened.errors.length === 0 &&
+      opened.directives.some(
+        (directive) =>
+          directive.type === "open" && directive.account === account,
+      );
+    const validatorAccepts = accepts({ postings: [{ account }] });
     assert(
-      accepts({ postings: [{ account }] }) &&
-        opened.errors.length === 0 &&
-        opened.directives.some(
-          (directive) =>
-            directive.type === "open" && directive.account === account,
-        ),
-      `the validator accepts ${JSON.stringify(account)}, and the engine reads it`,
+      validatorAccepts === expected && engineIntact === expected,
+      `the validator and engine both ${expected ? "accept" : "refuse"} account ${JSON.stringify(account)} (validator=${validatorAccepts}, engine=${engineIntact})`,
     );
   }
 

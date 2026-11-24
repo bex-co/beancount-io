@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { BadUserInputError } from "@/shared/errors";
 import {
   assertEntryTokens,
   assertNoControlCharacters,
@@ -15,8 +16,17 @@ describe("assertEntryTokens", () => {
     "Assets:Cash",
     "Assets:Bank:Checking-2",
     "Assets:Café",
+    "Assets:Bank:Épargne",
+    "Assets:Bank:Café",
+    "Assets:Bank:日本",
+    "Assets:Bank:ǅ",
     "资产:现金",
+    "Épargne:Bank",
+    "ǅ:Bank",
     "Liabilities:CreditCard:2026",
+    "Assets:Bank:1",
+    "Assets:Bank:A١",
+    "Assets:Bank:Foo—Bar",
     // w21/649: ZWNJ and ZWJ, as Persian and Indic words carry them.
     "Assets:Bank:خانه\u200cها",
     "Assets:Bank:क्\u200dष",
@@ -40,12 +50,36 @@ describe("assertEntryTokens", () => {
     "Assets:Bank:خانه\u200bها",
     "Assets:Bank:خانه\u200eها",
     "Assets:Bank:خانه\u2060ها",
+    // w31/082: non-ASCII component starts rustledger cannot lex intact
+    // (Ll, Sc, So, Pd, Ps, Cf ZWNJ/ZWJ at start, Lm, Nl, No, Mn, non-ASCII Nd).
+    "Assets:Bank:épargne",
+    "Assets:épargne",
+    "épargne:Bank",
+    "Assets:Bank:€",
+    "Assets:Bank:😀",
+    "Assets:Bank:—",
+    "Assets:Bank:「Foo」",
+    "Assets:Bank:\u200cFoo",
+    "Assets:Bank:\u200dFoo",
+    "Assets:Bank:ʰ",
+    "Assets:Bank:Ⅱ",
+    "Assets:Bank:²",
+    "Assets:Bank:\u0301Foo",
+    "Assets:Bank:١",
+    "Assets:١",
+    "1Assets:Bank",
+    "١:Bank",
+    "€:Bank",
+    "😀:Bank",
   ])("refuses account %p", (account) => {
-    expect(() =>
+    const call = () =>
       assertEntryTokens([
-        { type: "close", item: { date: "2026-01-01", account } },
-      ]),
-    ).toThrow(/entry 0: account [\s\S]* is not a valid account/);
+        { type: "open", item: { date: "2026-11-24", account } },
+      ]);
+    expect(call).toThrow(BadUserInputError);
+    expect(call).toThrow(
+      `entry 0: account ${JSON.stringify(account)} is not a valid account`,
+    );
   });
 
   // w21/652: any capital letter, not only P, S, T, C, U, R and M.

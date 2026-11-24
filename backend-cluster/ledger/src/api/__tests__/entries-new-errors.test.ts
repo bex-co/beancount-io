@@ -259,4 +259,31 @@ describe("bulk entries refuse a write that adds ledger errors", () => {
       expect(committed).toEqual([]);
     },
   );
+
+  // w31/082: non-ASCII component starts rustledger cannot lex must be refused
+  // upfront with 400 before reading files or committing, even under dryRun or
+  // allowInvalid.
+  it.each([
+    { account: "Assets:Bank:épargne", dryRun: true, allowInvalid: false },
+    { account: "Assets:Bank:épargne", dryRun: false, allowInvalid: false },
+    { account: "Assets:Bank:😀", dryRun: false, allowInvalid: true },
+  ])(
+    "refuses non-ASCII invalid component start $account upfront (dryRun=$dryRun, allowInvalid=$allowInvalid)",
+    async ({ account, dryRun, allowInvalid }) => {
+      const response = await post({
+        entries: [open(account)],
+        dryRun,
+        allowInvalid,
+      });
+      const body = (await response.json()) as Record<string, any>;
+      expect(response.status).toBe(400);
+      expect(body.success).toBe(false);
+      expect(body.error).toBe(
+        `entry 0: account ${JSON.stringify(account)} is not a valid account`,
+      );
+      expect(fileReads).toBe(0);
+      expect(baselineReads).toBe(0);
+      expect(committed).toEqual([]);
+    },
+  );
 });
