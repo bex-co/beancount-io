@@ -3,6 +3,10 @@ module.exports = {
   testEnvironment: "node",
   testTimeout: 10000,
   forceExit: true,
+  // Recycle workers between suites once heap crosses 1 GB so 500+ test suites
+  // cannot accumulate VM/module-registry memory up to Node's 4 GB V8 heap OOM
+  // limit on CI's 3-worker runner.
+  workerIdleMemoryLimit: "1024MB",
   // `scripts/` too, not only `src/`: the MCP conformance checker is
   // production-facing tooling an operator runs against a live deployment, so
   // it is tested like the rest of the code rather than trusted because it is
@@ -21,6 +25,9 @@ module.exports = {
           ignoreCodes: ["TS2307", "TS7006"],
         },
         tsconfig: {
+          // Transpile per-file instead of holding a full TS LanguageService
+          // (~1.2 GB per worker); `yarn typecheck` already checks src/ and scripts/.
+          isolatedModules: true,
           esModuleInterop: true,
           allowSyntheticDefaultImports: true,
         },
@@ -34,6 +41,7 @@ module.exports = {
         "ts-jest",
         {
           tsconfig: {
+            isolatedModules: true,
             allowJs: true,
             esModuleInterop: true,
             allowSyntheticDefaultImports: true,
