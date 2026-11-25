@@ -3,7 +3,7 @@ name: rt-logic-simplifier
 description: Autonomous maintenance routine that finds one convoluted unit of
   business logic in a monorepo package — deep nesting, boolean spaghetti,
   interleaved concerns — pins its behavior with tests, simplifies it in place
-  with zero behavior change, and ships via /ship. Use only when the user
+  with zero behavior change, and lands via /land. Use only when the user
   explicitly invokes /rt-logic-simplifier or asks to simplify convoluted
   existing logic. SKIP for reviewing the current diff (/simplify), removing
   indirection layers (rt-abstraction-improver), and fixing wrong behavior
@@ -17,14 +17,14 @@ metadata: {"internal": true}
 Usage: `/rt-logic-simplifier [package-or-path]`
 
 Pick one genuinely convoluted unit, pin its current behavior with tests,
-rewrite it in place so it reads simply, prove nothing changed, and ship via
-`/ship`.
+rewrite it in place so it reads simply, prove nothing changed, and land via
+`/land`.
 
 ## Contract
 
 Read `.agents/skills/rt-shared/contract.md` first — preconditions,
-scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
-even without it: never ship red; one finding per ship; anything in a
+scope resolution, verify gates, land protocol, budget, universal STOPs. Floor
+even without it: never land red; one finding per landing; anything in a
 `DO_NOT_DO.md` is a hard STOP.
 
 ## Workflow
@@ -73,19 +73,19 @@ byte where observable.
 ### 5. Verify
 
 Pinning tests and the owning package's full gate, all green. The pinning tests
-ship with the change.
+land with the change.
 
-### 6. Ship
+### 6. Land
 
-Compose `/ship` for this one unit. Loop within budget.
+Compose `/land` for this one unit. Loop within budget.
 
 ## What NOT to do
 
 - **Never fold a behavior change into the refactor.** A bug discovered
   mid-simplify is its own finding and comes first: prove it with a failing
-  test and ship the fix by itself (contract, Symptom → owner). Then simplify,
+  test and land the fix by itself (contract, Symptom → owner). Then simplify,
   if the unit still clears the value bar.
-- Don't ship helpers that are each called once, renamed locals or named
+- Don't land helpers that are each called once, renamed locals or named
   conditions as the whole finding: that is below the value bar.
 - Don't remove indirection layers (single-impl interfaces, passthrough
   wrappers) — that is `rt-abstraction-improver`'s job.

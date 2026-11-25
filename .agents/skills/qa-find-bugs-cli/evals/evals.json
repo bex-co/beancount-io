@@ -9,7 +9,7 @@
     },
     {
       "id": 2,
-      "prompt": "Run $qa-find-bugs-cli batch/import automation w4 SHIP=1 DRY_RUN=1. A partial batch exits nonzero after writing two valid rows; successful cloud clone prints no JSON.",
+      "prompt": "Run $qa-find-bugs-cli batch/import automation w4 LAND=1 DRY_RUN=1. A partial batch exits nonzero after writing two valid rows; successful cloud clone prints no JSON.",
       "expected_output": "Exercises selected journeys against disposable fixtures and compares documented partial-result and JSON exceptions before alleging bugs. DRY_RUN allows fixture writes but prevents board edits, commits and push. Inspects actual state before retrying.",
       "files": []
     },
@@ -28,7 +28,7 @@
     {
       "id": 5,
       "prompt": "Use $qa-find-bugs-cli directives w5. Adding to an included file fails only when its path contains spaces. Find and schedule the fix.",
-      "expected_output": "Runs real add/list/check/query subprocesses with argument arrays, pristine synthetic include fixtures, before/after evidence and a working control. Reproduces, traces file:line and shared callers, deduplicates across queues/history, and files through pm without implementing or shipping.",
+      "expected_output": "Runs real add/list/check/query subprocesses with argument arrays, pristine synthetic include fixtures, before/after evidence and a working control. Reproduces, traces file:line and shared callers, deduplicates across queues/history, and files through pm without implementing or landing.",
       "files": []
     }
   ]

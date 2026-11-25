@@ -1,0 +1,4 @@
+interface:
+  display_name: "Land"
+  short_description: "Land main on origin"
+  default_prompt: "Use $land to commit and push main."

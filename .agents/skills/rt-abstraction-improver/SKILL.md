@@ -3,8 +3,8 @@ name: rt-abstraction-improver
 description: Autonomous maintenance routine that flattens over-engineered
   abstractions in a monorepo package — interfaces with one implementation and no
   stated reason, passthrough wrappers, one-product factories, delegate-only
-  manager layers — by inlining the single thing behind them and shipping via
-  /ship. Use only when the user explicitly invokes /rt-abstraction-improver
+  manager layers — by inlining the single thing behind them and landing via
+  /land. Use only when the user explicitly invokes /rt-abstraction-improver
   or asks to flatten needless indirection. SKIP for convoluted logic inside one
   unit (rt-logic-simplifier), imports crossing stated boundaries
   (rt-abstraction-police), and duplicated implementations
@@ -18,13 +18,13 @@ metadata: {"internal": true}
 Usage: `/rt-abstraction-improver [package-or-path]`
 
 Find a layer of indirection with exactly one thing behind it and no stated
-reason to exist, inline it, delete the layer, and ship via `/ship`.
+reason to exist, inline it, delete the layer, and land via `/land`.
 
 ## Contract
 
 Read `.agents/skills/rt-shared/contract.md` first — preconditions,
-scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
-even without it: never ship red; one finding per ship; anything in a
+scope resolution, verify gates, land protocol, budget, universal STOPs. Floor
+even without it: never land red; one finding per landing; anything in a
 `DO_NOT_DO.md` is a hard STOP.
 
 ## Workflow
@@ -76,9 +76,9 @@ identical.
 Typecheck + full owning-package gate, and a grep confirming no dangling
 references to the deleted layer.
 
-### 6. Ship
+### 6. Land
 
-Compose `/ship` for this one flattening. Loop within budget.
+Compose `/land` for this one flattening. Loop within budget.
 
 ## What NOT to do
 
@@ -86,7 +86,7 @@ Compose `/ship` for this one flattening. Loop within budget.
   justifies — a stated convention beats this routine's taste, every time.
 - Don't rewrite convoluted logic inside a unit (`rt-logic-simplifier`) or
   move code across layers (`rt-abstraction-police`).
-- Don't flatten two layers in one ship; each deletion stands alone.
+- Don't flatten two layers in one landing; each deletion stands alone.
 - Don't replace the deleted abstraction with a cleverer one — the fix is
   *less* structure, not different structure.
 

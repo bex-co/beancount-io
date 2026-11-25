@@ -1,16 +1,16 @@
 # rt-* shared contract
 
 Every `/rt-*` skill is an autonomous maintenance pass over this monorepo:
-**discover → prove → fix → verify → ship**, one finding at a time. This file is
+**discover → prove → fix → verify → land**, one finding at a time. This file is
 the shared contract; each skill's `SKILL.md` adds only what is specific to its
 defect class.
 
 ## Preconditions (verify once, up front)
 
-1. `git branch --show-current` is `main`. If not, STOP and ask (same rule as `/ship`).
+1. `git branch --show-current` is `main`. If not, STOP and ask (same rule as `/land`).
 2. `git status` — note pre-existing uncommitted changes. If the tree is dirty
    with work you didn't do, surface it and ask before starting; never sweep
-   unrelated changes into a routine's ship.
+   unrelated changes into a routine's landing.
 3. Read the root `.pm/DO_NOT_DO.md` and the target package's `.pm/DO_NOT_DO.md`
    when it exists (e.g. `mobile/.pm/DO_NOT_DO.md`). Anything they forbid is a
    hard STOP for any finding that would conflict.
@@ -32,7 +32,7 @@ still-green sabotaged test, a reference sweep that comes up empty, …). No proo
 → no fix; report the candidate as skipped instead.
 
 A fix to one of two copies that a boundary keeps apart (another package, or
-ADR014's engine/frontend split in `cli/`) ships with a drift guard in the same
+ADR014's engine/frontend split in `cli/`) lands with a drift guard in the same
 commit, whichever routine finds it; see "Guard every twin" in
 [`rt-dup-unifier`](../rt-dup-unifier/SKILL.md).
 
@@ -54,19 +54,19 @@ These never count on their own: a rename, removing an alias, binding a
 repeated expression to a local, naming a condition, extracting a helper that
 is called once, moving code without reducing coupling, deduplicating a few
 stable lines. That a change provably preserves behavior is what makes it
-safe, not what makes it worth shipping. Spend the run searching for a finding
-that clears this bar instead of shipping the first provable one. Zero findings
+safe, not what makes it worth landing. Spend the run searching for a finding
+that clears this bar instead of landing the first provable one. Zero findings
 beats a cosmetic one.
 
 - **Batch cleanup & minimum threshold:** for pure cleanup/refactor runs (no
   user-visible bug fix), sweep the target package completely and deliver all
   confirmed items in **one batched PR** (rather than opening separate tiny PRs
   per file). If the entire sweep yields only a single isolated non-bug cleanup
-  of `<=15` changed lines, skip it and ship nothing.
+  of `<=15` changed lines, skip it and land nothing.
 - **Whole-invariant & no-bug threshold (`rt-logic-bugfixer`):** when fixing an
   invariant, check every sibling projection or engine/frontend twin of the
   same contract in the same run so one invariant is not split across follow-up
-  PRs. If an audit finds no real behavioral bug, do **not** ship a PR for a
+  PRs. If an audit finds no real behavioral bug, do **not** land a PR for a
   single small test (`<30` lines), a comment-only edit, or a ledger update.
 
 ## Ledger
@@ -107,9 +107,9 @@ in its summary only.
   that commit. If main changed the files you touched, rebase onto it and rerun
   your checks before you push.
 
-## Verify gates (never ship your own red)
+## Verify gates (never land your own red)
 
-Run the checks the change touches and make them pass before shipping — always
+Run the checks the change touches and make them pass before landing — always
 `cd` into the package first. A check that already fails without your change is
 not yours and is not a reason to stop: fix it in its own commit when that is
 quick, otherwise carry on and name it in the summary (root `AGENTS.md`,
@@ -121,32 +121,32 @@ quick, otherwise carry on and name it in the summary (root `AGENTS.md`,
 - `skills/` or `.agents/skills/` → `python3 scripts/skills/ci-check.py` (from the repo root)
 - `backend-cluster/*`, `deploy/` → the commands in that package's scoped `AGENTS.md`
 - any `AGENTS.md` or skill change → `python3 scripts/check-agent-guidance.py` (from the repo root)
-- before every ship → `python3 scripts/scan-secrets.py` (from the repo root)
+- before every landing → `python3 scripts/scan-secrets.py` (from the repo root)
 
 **If no automated check covers the changed behavior** (backend-v2 and deploy
 have no package-wide CI workflow), STOP and report the finding
-instead of shipping it.
+instead of landing it.
 
-## Ship protocol
+## Land protocol
 
-Each proven, verified finding ships by composing `/ship`
-(`.agents/skills/ship/SKILL.md`). You made the changes this session, so
-`/ship` runs session-aware: stage exactly the files you touched, message from
-session knowledge. `/ship` has no test gate of its own — the gates above are the
-only gate. **One finding per ship for bug fixes**; for pure cleanup/refactor
+Each proven, verified finding lands by composing `/land`
+(`.agents/skills/land/SKILL.md`). You made the changes this session, so
+`/land` runs session-aware: stage exactly the files you touched, message from
+session knowledge. `/land` has no test gate of its own — the gates above are the
+only gate. **One finding per landing for bug fixes**; for pure cleanup/refactor
 runs (useless-test pruning, dead-code removal, duplication/abstraction
-cleanups), batch the target package's confirmed items into a single PR/ship
+cleanups), batch the target package's confirmed items into a single PR/landing
 instead of opening separate tiny PRs per file. Do not start the next finding
-until `/ship` reports the shipped HEAD SHA.
+until `/land` reports the landed HEAD SHA.
 
 ## Budget
 
-Default budget: **3 shipped findings per invocation**, then stop and summarize:
+Default budget: **3 landed findings per invocation**, then stop and summarize:
 
 - **candidates** — every candidate you examined, one line each (file:line,
   what it is, verdict). List them all, the ones you dropped at a glance
   included: this list is how the run's search is judged
-- **shipped** — SHA + what it changes for a user or maintainer (not "cleaner")
+- **landed** — SHA + what it changes for a user or maintainer (not "cleaner")
 - **found but skipped** — with the reason (no proof, below the value bar, STOP
   condition, out of budget)
 - **handed off** — what went into the ledger, and under which routine
@@ -178,7 +178,7 @@ summary is not a handoff: nobody reads it after the run.
 
 - **A real bug you can prove** — behavior a user or caller can observe is
   wrong, and a failing test shows it — is fixed in this run, whichever routine
-  owns the class. It is one finding with its own ship, its test included, and
+  owns the class. It is one finding with its own landing, its test included, and
   it outranks this routine's own findings. `rt-logic-bugfixer`'s rules still
   apply to it: the intent must be documented, and an ambiguous intent is a
   STOP.

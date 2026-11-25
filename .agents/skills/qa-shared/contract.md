@@ -27,7 +27,7 @@ use ledger contents and independent calculations as controls.
   feature gates, plan limits, and upstream behavior. Do not enable a feature to
   manufacture a finding.
 - Report mode is the default. `wN` requests filing through the repository's `pm`
-  skill; `SHIP=1` also requests shipping those findings through `ship`.
+  skill; `LAND=1` also requests landing those findings through `land`.
   `DRY_RUN=1` overrides both: local evidence and a report, no board writes or push.
   Do not carry a worker number or external product's parity requirements into
   this repository. Its workstreams are general worker queues.
@@ -179,12 +179,12 @@ tasks. Include exact repros and text evidence so ignored screenshots are not the
 only support. DoD bullets specify successful outcomes from journeys actually
 exercised. Give shared-code regression coverage its own task when warranted.
 
-For authorized shipping, read `../ship/SKILL.md`, validate changed files, scan for
-secrets, and ship only this run's work. Existing user changes stay out. A branch
-restriction in `ship` affects shipping, not independent QA or report preparation.
+For authorized landing, read `../land/SKILL.md`, validate changed files, scan for
+secrets, and land only this run's work. Existing user changes stay out. A branch
+restriction in `land` affects landing, not independent QA or report preparation.
 
 Finish with findings by severity, a coverage/skips list, dedupe/filing status,
 cleanup status, and validation. State whether fixes were implemented and whether
-anything was shipped. Restore local device appearance and previously booted
+anything was landed. Restore local device appearance and previously booted
 simulators; stop only helper processes started by this run. Report any test
 resource left behind precisely.

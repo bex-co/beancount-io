@@ -3,8 +3,8 @@ name: rt-flaky-test-fixer
 description: Autonomous maintenance routine that root-causes intermittently
   failing CI tests — mining GitHub Actions history for same-commit red-to-green
   reruns, reproducing locally with repeated runs, fixing the real
-  nondeterminism (timers, teardown, ordering, unawaited promises), and shipping
-  via /ship after 20 consecutive green runs. Use only when the user explicitly
+  nondeterminism (timers, teardown, ordering, unawaited promises), and landing
+  via /land after 20 consecutive green runs. Use only when the user explicitly
   invokes /rt-flaky-test-fixer or asks to hunt down flaky tests. SKIP for
   tests that can never fail (rt-useless-test-pruner) and for logic bugs
   that fail deterministically (rt-logic-bugfixer). The core trigger is
@@ -17,13 +17,13 @@ metadata: {"internal": true}
 Usage: `/rt-flaky-test-fixer [package-or-path]`
 
 Find a test that sometimes fails, reproduce or root-cause the nondeterminism,
-fix the real cause, prove determinism with repeated runs, and ship via `/ship`.
+fix the real cause, prove determinism with repeated runs, and land via `/land`.
 
 ## Contract
 
 Read `.agents/skills/rt-shared/contract.md` first — preconditions,
-scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
-even without it: never ship red; one finding per ship; anything in a
+scope resolution, verify gates, land protocol, budget, universal STOPs. Floor
+even without it: never land red; one finding per landing; anything in a
 `DO_NOT_DO.md` is a hard STOP.
 
 ## Workflow
@@ -74,9 +74,9 @@ still this routine's finding; fix it at the root.
 **20 consecutive green runs** of the fixed test (in-suite, not isolated, when
 order was implicated), then the owning package's full gate.
 
-### 6. Ship
+### 6. Land
 
-Compose `/ship` for this one flake. Loop within budget.
+Compose `/land` for this one flake. Loop within budget.
 
 ## What NOT to do
 

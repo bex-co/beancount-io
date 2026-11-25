@@ -19,7 +19,7 @@ user's go-ahead, as `mobile/AGENTS.md` says.
 Use **Expo MCP on iPhone 17e** unless the user names another device. A mobile
 viewport in Playwright is not a substitute for exercising the native app.
 
-Arguments: optional server URL, journey names, device name, `wN`, `SHIP=1`,
+Arguments: optional server URL, journey names, device name, `wN`, `LAND=1`,
 `DRY_RUN=1`. Default to the app's selected server and report mode; inspect the
 selected server before signing in or writing anything.
 

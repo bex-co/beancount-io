@@ -9,8 +9,8 @@
     },
     {
       "id": 2,
-      "prompt": "Run $qa-find-bugs-dashboard w4 SHIP=1 DRY_RUN=1. One failure is already covered by an open milestone, another is fixed on main but still live. The current branch has unrelated edits.",
-      "expected_output": "Preserves unrelated edits and conducts QA despite not preparing a ship. Classifies overlap and deployment lag without duplicate tasks. DRY_RUN prevents board writes, commits and push; evidence and a report are allowed.",
+      "prompt": "Run $qa-find-bugs-dashboard w4 LAND=1 DRY_RUN=1. One failure is already covered by an open milestone, another is fixed on main but still live. The current branch has unrelated edits.",
+      "expected_output": "Preserves unrelated edits and conducts QA despite not preparing a landing. Classifies overlap and deployment lag without duplicate tasks. DRY_RUN prevents board writes, commits and push; evidence and a report are allowed.",
       "files": []
     },
     {
@@ -22,7 +22,7 @@
     {
       "id": 4,
       "prompt": "Use $qa-find-bugs-dashboard w5 for journal and reports only. A shared filter bug affects both; budget writes are not authorized.",
-      "expected_output": "Exercises journal and report filter journeys, enumerates actual shared callers and working controls, and files non-duplicate findings through pm in w5 using its sizing and closing tasks. Does not expand into budget writes or ship without SHIP=1.",
+      "expected_output": "Exercises journal and report filter journeys, enumerates actual shared callers and working controls, and files non-duplicate findings through pm in w5 using its sizing and closing tasks. Does not expand into budget writes or land without LAND=1.",
       "files": []
     },
     {

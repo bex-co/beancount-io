@@ -6,4 +6,4 @@ Budget: 48 runs/day
 
 | name | command | every | when | paths |
 | --- | --- | --- | --- | --- |
-| mcp-qa | `/qa-find-bugs-mcp w31 SHIP=1` | 30m | always | backend-cluster/backend-v2 |
+| mcp-qa | `/qa-find-bugs-mcp w31 LAND=1` | 30m | always | backend-cluster/backend-v2 |

@@ -29,6 +29,7 @@
       "description": "Contributor workflows for this monorepo. Excluded from normal customer installs; these are not part of the ledger suite.",
       "skills": [
         "dont-code-but-answer",
+        "land",
         "loop-to-meet-webby-award-bar",
         "loopx",
         "mermaid",
@@ -49,7 +50,6 @@
         "rt-logic-simplifier",
         "rt-shipped-feature-inliner",
         "rt-useless-test-pruner",
-        "ship",
         "unblock"
       ]
     }

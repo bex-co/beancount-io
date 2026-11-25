@@ -940,9 +940,9 @@ class TestGitUpdatePath(Workspace):
             shutil.copytree(SUITE / name, self.origin / "skills" / name)
         (self.origin / "scripts" / "skills").mkdir(parents=True)
         shutil.copy2(SCRIPTS_DIR / "beancount-skills.py", self.origin / "scripts" / "skills")
-        dev = self.origin / ".agents" / "skills" / "ship" / "SKILL.md"
+        dev = self.origin / ".agents" / "skills" / "land" / "SKILL.md"
         dev.parent.mkdir(parents=True)
-        dev.write_text("---\nname: ship\ndescription: development only\n---\n")
+        dev.write_text("---\nname: land\ndescription: development only\n---\n")
         for args in (("init", "-q", "-b", "main"), ("add", "."), ("commit", "-qm", "suite")):
             self.git_ok(self.origin, *args)
         self.git_ok(self.origin, "config", "uploadpack.allowFilter", "true")

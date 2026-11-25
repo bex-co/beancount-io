@@ -1,6 +1,6 @@
 ---
 name: mobile-release
-description: Summarize mobile changes since the previous release, bump the Beancount mobile version, prepare localized release notes and listings, and release to the Apple App Store and Google Play. Use for $mobile-release or requests to cut a mobile store release. Skip ordinary code shipping, OTA-only updates, release-status questions, and requests to create or edit this skill.
+description: Summarize mobile changes since the previous release, bump the Beancount mobile version, prepare localized release notes and listings, and release to the Apple App Store and Google Play. Use for $mobile-release or requests to cut a mobile store release. Skip ordinary code landing, OTA-only updates, release-status questions, and requests to create or edit this skill.
 metadata: {"internal": true}
 ---
 
@@ -74,11 +74,11 @@ Run `./scripts/play-release.sh apply-play <plan-sha256>` with the exact SHA-256 
 
 API parity does not prove publication. Check the review/publishing state in Play Console and sample the public listings, including Bulgarian and Persian. If review is pending, report that state and resume verification when it completes. Do not manage tracks or release notes through the listing helper; those remain part of the platform release steps below.
 
-## Ship and follow both platforms
+## Land and follow both platforms
 
-Review the final diff and run the required secret scan before pushing. Use the repository's [ship skill](../ship/SKILL.md) for the reviewed release files, including notes and staging receipt. If rebasing changes release contents or bound inputs, update the notes, repeat affected checks and parity verification before the push.
+Review the final diff and run the required secret scan before pushing. Use the repository's [land skill](../land/SKILL.md) for the reviewed release files, including notes and staging receipt. If rebasing changes release contents or bound inputs, update the notes, repeat affected checks and parity verification before the push.
 
-The main push triggers `Release (mobile)`: checks → receipt verification → production OTA → EAS builds for both platforms with auto-submit, waiting for builds and submissions → tag/GitHub release. Use this workflow as the single build kickoff; do not also start duplicate local builds. Locate the run for the shipped SHA with `gh`, follow it, and capture the exact EAS build and submission IDs for both platforms. Poll long jobs in bounded waits while giving progress updates.
+The main push triggers `Release (mobile)`: checks → receipt verification → production OTA → EAS builds for both platforms with auto-submit, waiting for builds and submissions → tag/GitHub release. Use this workflow as the single build kickoff; do not also start duplicate local builds. Locate the run for the landed SHA with `gh`, follow it, and capture the exact EAS build and submission IDs for both platforms. Poll long jobs in bounded waits while giving progress updates.
 
 Complete each store's remaining steps with available authenticated tools, checking current CLI help/documentation:
 
@@ -93,4 +93,4 @@ Finish all automatable steps. If store review is pending, report it explicitly w
 
 ## Report
 
-Return the version and baseline, a short change summary, shipped SHA and workflow link, checks performed, and separate iOS/Android statuses with build/submission links. Distinguish build queued, uploaded, submitted for review, approved, and live. Claim both stores released only when both production states have been verified. Report an unfinished run as unfinished, leading with where it stopped and the next required step; never present preparation — a bump, localized notes, or green checks — as a release.
+Return the version and baseline, a short change summary, landed SHA and workflow link, checks performed, and separate iOS/Android statuses with build/submission links. Distinguish build queued, uploaded, submitted for review, approved, and live. Claim both stores released only when both production states have been verified. Report an unfinished run as unfinished, leading with where it stopped and the next required step; never present preparation — a bump, localized notes, or green checks — as a release.

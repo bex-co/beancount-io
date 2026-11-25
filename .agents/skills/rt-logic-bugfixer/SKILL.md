@@ -3,8 +3,8 @@ name: rt-logic-bugfixer
 description: Autonomous maintenance routine that picks one tricky logic unit in a
   monorepo package — state machines, date/period math, sign conventions, dedup
   windows, pagination — models its states and edge cases exhaustively, proves any
-  divergence from documented intent with a failing test, lands the minimal
-  root-cause fix plus regression test, and ships via /ship. Use only when the
+  divergence from documented intent with a failing test, makes the minimal
+  root-cause fix plus regression test, and lands via /land. Use only when the
   user explicitly invokes /rt-logic-bugfixer or asks to hunt for logic bugs.
   SKIP for test-infrastructure failures and intermittent tests
   (rt-flaky-test-fixer) and for merely convoluted-but-correct code
@@ -19,13 +19,13 @@ Usage: `/rt-logic-bugfixer [package-or-path]`
 
 Pick one unit of genuinely tricky logic, enumerate its states and edges, derive
 inputs that should break it, prove each bug with a failing test against
-documented intent, fix the root cause, and ship via `/ship`.
+documented intent, fix the root cause, and land via `/land`.
 
 ## Contract
 
 Read `.agents/skills/rt-shared/contract.md` first — preconditions,
-scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
-even without it: never ship red; one finding per ship; anything in a
+scope resolution, verify gates, land protocol, budget, universal STOPs. Floor
+even without it: never land red; one finding per landing; anything in a
 `DO_NOT_DO.md` is a hard STOP.
 
 ## Workflow
@@ -63,7 +63,7 @@ A bug exists only when you have **both**:
 Reproducible crashes found while modeling count as provable bugs (crashing is
 never the documented intent). If the intent is genuinely ambiguous — the test
 pins a choice nobody has made — **STOP for that finding** and report the
-ambiguity instead of shipping an opinion.
+ambiguity instead of landing an opinion.
 
 ### 4. Fix
 
@@ -77,13 +77,13 @@ New regression test green, full owning-package gate green, and a quick sweep of
 callers for anyone depending on the old wrong behavior (if someone does, that
 is an intent ambiguity — STOP and report).
 
-### 6. Ship
+### 6. Land
 
-Compose `/ship` for this one bug. Loop within budget.
+Compose `/land` for this one bug. Loop within budget.
 
 ## What NOT to do
 
-- Never ship a "fix" whose only justification is that the new behavior seems
+- Never land a "fix" whose only justification is that the new behavior seems
   more reasonable — no documented intent, no bug.
 - Never weaken or delete an existing test to make a fix pass; a conflicting
   test means conflicting intent — STOP and report.

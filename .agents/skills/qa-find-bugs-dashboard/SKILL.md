@@ -13,7 +13,7 @@ metadata: {"internal": true}
 Read [the shared QA contract](../qa-shared/contract.md) first. Read
 `dashboard/AGENTS.md`. Use Playwright MCP to test real browser behavior.
 
-Arguments: optional server URL, journey names, `wN`, `SHIP=1`, `DRY_RUN=1`.
+Arguments: optional server URL, journey names, `wN`, `LAND=1`, `DRY_RUN=1`.
 Default to production and report mode. A target URL changes the client under
 test; inspect its API origin independently. Record whether the running client
 matches local HEAD before declaring a source fix missing from production.

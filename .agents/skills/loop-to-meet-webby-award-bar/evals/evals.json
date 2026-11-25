@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Run $loop-to-meet-webby-award-bar /login. The working tree already has unrelated edits in backend-cluster/.",
-      "expected_output": "Reads dashboard/AGENTS.md, records the existing dirty files and leaves them alone, starts the local dashboard in a headless isolated browser, captures /login at the six viewports plus widths around the package's real breakpoints, runs the measured checks, and has a fresh-context reviewer score the six Webby criteria without seeing the diff or earlier scores. Improves the page, runs the dashboard format, lint and test checks, and reviews again with a new reviewer until the bar is met or a stop condition applies. Commits nothing, pushes nothing, does not run ship or write .pm, and reports before and after scores with the changed files.",
+      "expected_output": "Reads dashboard/AGENTS.md, records the existing dirty files and leaves them alone, starts the local dashboard in a headless isolated browser, captures /login at the six viewports plus widths around the package's real breakpoints, runs the measured checks, and has a fresh-context reviewer score the six Webby criteria without seeing the diff or earlier scores. Improves the page, runs the dashboard format, lint and test checks, and reviews again with a new reviewer until the bar is met or a stop condition applies. Commits nothing, pushes nothing, does not run land or write .pm, and reports before and after scores with the changed files.",
       "files": []
     },
     {

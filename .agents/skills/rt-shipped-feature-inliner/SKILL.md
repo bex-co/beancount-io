@@ -4,7 +4,7 @@ description: Autonomous maintenance routine that finds gates for fully shipped
   features — flags, env switches, boolean guards that have held one value
   everywhere for a long time — triages deliberate gates from forgotten ones,
   inlines the enabled path, deletes the dead branch and the flag itself, and
-  ships each removal via /ship. Use only when the user explicitly invokes
+  lands each removal via /land. Use only when the user explicitly invokes
   /rt-shipped-feature-inliner or asks to clean up shipped/stale feature
   flags. SKIP for unreachable code not behind a flag (rt-dead-code-removal)
   and for changing what any flag is set to — this routine never flips a value.
@@ -19,13 +19,13 @@ Usage: `/rt-shipped-feature-inliner [package-or-path]`
 
 Find a flag whose decision has already been made everywhere, prove it is
 forgotten rather than deliberate, inline the path it always takes, delete the
-other branch and the flag definition, and ship via `/ship`.
+other branch and the flag definition, and land via `/land`.
 
 ## Contract
 
 Read `.agents/skills/rt-shared/contract.md` first — preconditions,
-scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
-even without it: never ship red; one finding per ship; anything in a
+scope resolution, verify gates, land protocol, budget, universal STOPs. Floor
+even without it: never land red; one finding per landing; anything in a
 `DO_NOT_DO.md` is a hard STOP.
 
 ## Workflow
@@ -70,9 +70,9 @@ the way out — inline only flags already at their final value.**
 Owning package's full gate per the contract. If the flag guarded UI, verify the
 surviving path still renders (mobile: light and dark per `mobile/AGENTS.md`).
 
-### 6. Ship
+### 6. Land
 
-Compose `/ship` for this one flag. Loop within budget.
+Compose `/land` for this one flag. Loop within budget.
 
 ## What NOT to do
 

@@ -4,7 +4,7 @@ description: Autonomous maintenance routine that finds imports crossing a stated
   architectural boundary the wrong way — cross-package imports, dashboard
   features reaching into each other, backend-v2 transport adapters touching
   models, mobile routes bypassing screens — and fixes each violation by moving
-  code or inverting the dependency, shipping via /ship. Use only when the user
+  code or inverting the dependency, landing via /land. Use only when the user
   explicitly invokes /rt-abstraction-police or asks to fix layering
   violations. Only rules stated in a AGENTS.md count; SKIP for too-many-layers
   (rt-abstraction-improver) and duplicated logic (rt-dup-unifier). The
@@ -17,14 +17,14 @@ metadata: {"internal": true}
 Usage: `/rt-abstraction-police [package-or-path]`
 
 Find an import that violates a boundary this repo has written down, fix it by
-moving code to the right layer or inverting the dependency, and ship via
-`/ship`.
+moving code to the right layer or inverting the dependency, and land via
+`/land`.
 
 ## Contract
 
 Read `.agents/skills/rt-shared/contract.md` first — preconditions,
-scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
-even without it: never ship red; one finding per ship; anything in a
+scope resolution, verify gates, land protocol, budget, universal STOPs. Floor
+even without it: never land red; one finding per landing; anything in a
 `DO_NOT_DO.md` is a hard STOP.
 
 ## The one proof rule
@@ -88,9 +88,9 @@ concern and usually a universal STOP.
 Full owning-package gate, plus re-grep to show the violating pattern is gone
 and no new one was introduced.
 
-### 6. Ship
+### 6. Land
 
-Compose `/ship` for this one violation. Loop within budget.
+Compose `/land` for this one violation. Loop within budget.
 
 ## What NOT to do
 

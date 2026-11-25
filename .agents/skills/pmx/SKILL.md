@@ -1,6 +1,6 @@
 ---
 name: pmx
-description: Route one specific piece of work onto a named .pm workstream and drain that workstream in a single command — materialize the work through /pm (a loose inbox note when it is sub-hour, a milestone with the standing closing tasks when it is larger), ship that board addition, then run /loopx on the same workstream. Use only when the user explicitly invokes $pmx `<work> to <wN>` or asks to add specific work to a worker's queue and then work that queue. Do not use to only add or arrange board items (that is pm), to propose or brainstorm work (that is pm-brainstorm), to drain a workstream without adding anything (that is loopx), or for a single code change.
+description: Route one specific piece of work onto a named .pm workstream and drain that workstream in a single command — materialize the work through /pm (a loose inbox note when it is sub-hour, a milestone with the standing closing tasks when it is larger), land that board addition, then run /loopx on the same workstream. Use only when the user explicitly invokes $pmx `<work> to <wN>` or asks to add specific work to a worker's queue and then work that queue. Do not use to only add or arrange board items (that is pm), to propose or brainstorm work (that is pm-brainstorm), to drain a workstream without adding anything (that is loopx), or for a single code change.
 metadata: {"internal": true}
 ---
 
@@ -8,7 +8,7 @@ metadata: {"internal": true}
 
 Usage: `/pmx <work> to <wN> [--no-listen]` — e.g. `/pmx make bea doctor print a fix hint for every failed check to w3`
 
-`/pmx` is `/pm` → `/ship` → `/loopx <wN>` as one command: put the work on worker `<wN>`'s queue, ship the board addition by itself, then drain the whole queue. It adds no board conventions and no loop rules of its own. [`.agents/skills/pm/SKILL.md`](../pm/SKILL.md) stays the canonical board definition and [`.agents/skills/loopx/SKILL.md`](../loopx/SKILL.md) stays the canonical loop; read both when this file and your memory of them disagree. `/pm` remains the only writer to `.pm/`, so this skill never edits a board file by hand.
+`/pmx` is `/pm` → `/land` → `/loopx <wN>` as one command: put the work on worker `<wN>`'s queue, land the board addition by itself, then drain the whole queue. It adds no board conventions and no loop rules of its own. [`.agents/skills/pm/SKILL.md`](../pm/SKILL.md) stays the canonical board definition and [`.agents/skills/loopx/SKILL.md`](../loopx/SKILL.md) stays the canonical loop; read both when this file and your memory of them disagree. `/pm` remains the only writer to `.pm/`, so this skill never edits a board file by hand.
 
 ## 0. Parse the arguments
 
@@ -20,8 +20,8 @@ Usage: `/pmx <work> to <wN> [--no-listen]` — e.g. `/pmx make bea doctor print 
 
 ## 1. Preconditions (before anything is written)
 
-1. `git branch --show-current` is `main`; if not, STOP and ask (same rule as `/ship`).
-2. `git status` is clean. A tree dirty with work you did not do is surfaced and asked about, because the board addition ships alone in step 4.
+1. `git branch --show-current` is `main`; if not, STOP and ask (same rule as `/land`).
+2. `git status` is clean. A tree dirty with work you did not do is surfaced and asked about, because the board addition lands alone in step 4.
 3. Read `.pm/DO_NOT_DO.md`. If the work conflicts with a rule there, **STOP**, cite the rule, and write nothing. Routing is not a way around an anti-goal.
 
 A refusal here leaves the tree untouched, so no half-routed state needs cleaning up.
@@ -42,7 +42,7 @@ The user's request is the scope; do not widen it. Apply `/pm`'s **sizing rule** 
 
 - **≤ ~1h:** `/pm add <wN> <idea>` — one inbox note. Write what is wrong or wanted, the observable end state, and the paths or commands that are known. Make the acceptance testable.
 - **> ~1h and more than one task:** `/pm new milestone <wN> <title>` — tasks from `/pm`'s template, followed by the standing closing tasks it defines (Adoption surface when the work ships something a user or coding agent touches, then Simplify, Test coverage, Closeout). Fill `## Source + Goal linkage` with the source, the A1/A2/A3 pillar, the expected outcome, and why now.
-- **Several independent deliverables:** one item for each, so every one can land as its own ship later.
+- **Several independent deliverables:** one item for each, so every one can land on its own later.
 
 Provenance records that the user routed the work, in the form existing board lines already use: the note ends with `Routed to <wN> by the user via /pmx, <YYYY-MM-DD>.`, and the milestone's workstream line ends `← user request via /pmx, <YYYY-MM-DD>; user routed to <wN>`. `/loopx` reads `user routed to` as an explicit user decision, so triage blocks the item with a question instead of deleting it on suspicion.
 
@@ -50,22 +50,22 @@ If you cannot write a testable acceptance criterion from the request, that is a 
 
 Before moving on, confirm that each new file sits at its expected path, that its number is the next free one, and that the workstream `README.md` links to it.
 
-## 4. Ship the board addition
+## 4. Land the board addition
 
-Run `python3 scripts/scan-secrets.py` and read the result before shipping; the board is public. Then invoke `/ship` for the `.pm/` addition alone: `chore(pm): add <wN>/<id> — <title>`.
+Run `python3 scripts/scan-secrets.py` and read the result before landing; the board is public. Then invoke `/land` for the `.pm/` addition alone: `chore(pm): add <wN>/<id> — <title>`.
 
-It ships alone because `/loopx` expects a clean tree and ships exactly one outcome per commit. Left unshipped, the addition would ride along inside whichever item `/loopx` picks first.
+It lands alone because `/loopx` expects a clean tree and lands exactly one outcome per commit. Left unlanded, the addition would ride along inside whichever item `/loopx` picks first.
 
-If the scan reports anything, or `/ship` fails (a rebase conflict it cannot resolve, a rejected push), **STOP** and report; do not start `/loopx` on top of an unshipped board commit. A push failure would block every later ship anyway.
+If the scan reports anything, or `/land` fails (a rebase conflict it cannot resolve, a rejected push), **STOP** and report; do not start `/loopx` on top of an unlanded board commit. A push failure would block every later landing anyway.
 
 ## 5. Drain with `/loopx <wN>`
 
-Say in one line what was routed (the id and path) and the shipped SHA, then invoke `/loopx <wN>` (with `--no-listen` if it was given). From here the whole contract is `/loopx`'s — arm the guard, dispatch each item to a fresh-context worker, verify its outcome, keep going until its Exit. `/pmx` does not stop early, add checkpoints, or tell the user to resume.
+Say in one line what was routed (the id and path) and the landed SHA, then invoke `/loopx <wN>` (with `--no-listen` if it was given). From here the whole contract is `/loopx`'s — arm the guard, dispatch each item to a fresh-context worker, verify its outcome, keep going until its Exit. `/pmx` does not stop early, add checkpoints, or tell the user to resume.
 
 Two consequences of composing literally, which the report should state plainly:
 
 - `/loopx` drains the **whole** workstream, not just the item you added. It picks the lowest-numbered actionable milestone, then the lowest open inbox note, so older pending items in `<wN>` may run before the routed work.
-- The routed item goes through triage like any other. It can come out shipped, closed as already done, blocked, or deleted, with evidence for the outcome.
+- The routed item goes through triage like any other. It can come out landed, closed as already done, blocked, or deleted, with evidence for the outcome.
 - Draining is not the end. Unless `--no-listen` was given, `/loopx` writes a drained report, then runs the workstream's due routines (if it lists any) and listens for new items on `origin/main` for up to 24 idle hours, so its final Exit can arrive a day later. The drained report already carries the routed item's outcome.
 
 ## Final report
@@ -74,7 +74,7 @@ Put a routing header above `/loopx`'s **first drained report** (or above its Exi
 
 - what was routed — id, path, and why it is a note or a milestone;
 - the board-addition SHA from step 4, or the covering item when step 2 added nothing;
-- where the routed item ended — the shipped SHA, the close evidence, or the blocker and its **Unblock:** condition;
+- where the routed item ended — the landed SHA, the close evidence, or the blocker and its **Unblock:** condition;
 - everything else `/loopx` handled in the run, per its own report.
 
 ## Guardrails
@@ -82,7 +82,7 @@ Put a routing header above `/loopx`'s **first drained report** (or above its Exi
 - **Literal composition.** Nothing here overrides `/pm` or `/loopx`; if they change, follow them.
 - **Never guess the worker.** No `wN` means ask.
 - **Route, then drain.** No code changes before `/loopx`'s triage. The only change `/pmx` makes itself is the board addition.
-- **One request, one board-addition ship.** Never fold it into an implementation commit.
+- **One request, one board-addition landing.** Never fold it into an implementation commit.
 - **`/pm` owns the board.** No hand edits to `.pm/`.
 - **The board is public.** Nothing in a note, milestone, commit message, or report may contain secrets, user data, or references to private repositories.
 - **No early exit.** Only `/loopx`'s Done, Blocked, or hard-stop exits end the run; a drained queue listens rather than exits.

@@ -6,4 +6,4 @@ Budget: 48 runs/day
 
 | name | command | every | when | paths |
 | --- | --- | --- | --- | --- |
-| dashboard-qa | `/qa-find-bugs-dashboard w5 SHIP=1` | 30m | always | dashboard |
+| dashboard-qa | `/qa-find-bugs-dashboard w5 LAND=1` | 30m | always | dashboard |

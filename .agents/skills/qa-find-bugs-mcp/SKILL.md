@@ -21,7 +21,7 @@ and ADR 0008 (surface parity). Exercise the real endpoint over HTTP; unit tests
 and source inspection support a finding but do not replace a live journey.
 
 Arguments: optional base URL, journey names, ledger `owner/name`, `wN`,
-`SHIP=1`, `DRY_RUN=1`. Default to `https://beancount.io` and report mode.
+`LAND=1`, `DRY_RUN=1`. Default to `https://beancount.io` and report mode.
 A base URL changes the deployment under test; record the server name and
 version `initialize` reports and whether it matches local HEAD before calling a
 source fix missing from production. `DRY_RUN=1` still allows disposable writes
@@ -175,7 +175,7 @@ contract tests. A proposed fix names the owning package and, per the parity
 workflow, every eligible REST/GraphQL/MCP surface it must change together.
 
 Apply the shared root-cause, caller search, board/history dedupe and optional
-`pm`/`ship` steps. In the finding record, replace route/device evidence with
+`pm`/`land` steps. In the finding record, replace route/device evidence with
 base URL, `serverInfo`, protocol version, credential kind, scopes and pin
 (never the value), the exact helper command or JSON-RPC body, status,
 relevant headers, the sanitized response and the REST/GraphQL control. Include

@@ -2,8 +2,8 @@
 name: rt-dup-unifier
 description: Autonomous maintenance routine that finds duplicated implementations
   of the same logic within one monorepo package, merges them into the single best
-  copy, repoints every caller, deletes the rest, and ships each unification via
-  /ship. Use only when the user explicitly invokes /rt-dup-unifier or asks
+  copy, repoints every caller, deletes the rest, and lands each unification via
+  /land. Use only when the user explicitly invokes /rt-dup-unifier or asks
   to merge/deduplicate duplicated code. SKIP for code with no remaining callers
   (rt-dead-code-removal), needless indirection around a single
   implementation (rt-abstraction-improver), and duplication across two
@@ -20,13 +20,13 @@ Find two (or more) live copies of the same logic inside one package. Copies
 that have drifted apart are the finding this routine exists for: prove which
 side is wrong, fix it, and leave one copy. Copies that are still the same are
 merged when a missed edit to one of them would be a bug. Either way keep the
-best one, repoint all callers, delete the rest, and ship via `/ship`.
+best one, repoint all callers, delete the rest, and land via `/land`.
 
 ## Contract
 
 Read `.agents/skills/rt-shared/contract.md` first — preconditions,
-scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
-even without it: never ship red; one finding per ship; anything in a
+scope resolution, verify gates, land protocol, budget, universal STOPs. Floor
+even without it: never land red; one finding per landing; anything in a
 `DO_NOT_DO.md` is a hard STOP.
 
 ## Workflow
@@ -55,7 +55,7 @@ dependency: `npx --yes jscpd --min-tokens 50 <pkg>/src --output .internal/jscpd/
   bug — an export with its own serializer that missed the escaping the shared
   one gained; two modules registering the same global name, where the last to
   load wins. Write the test that fails on the stale copy, then unify onto the
-  correct behavior and ship it as a `fix`. The contract's rule for a proven
+  correct behavior and land it as a `fix`. The contract's rule for a proven
   bug applies: fix it here, do not hand it to `rt-logic-bugfixer`.
 - **Copies that are identical** must clear the contract's value bar: they
   have to change together, and a missed edit would be a bug (a retry or
@@ -77,9 +77,9 @@ confirm nothing was orphaned.
 
 Owning package's full gate per the contract.
 
-### 6. Ship
+### 6. Land
 
-Compose `/ship` for this one unification. Loop within budget.
+Compose `/land` for this one unification. Loop within budget.
 
 ## What NOT to do
 
@@ -93,8 +93,8 @@ Compose `/ship` for this one unification. Loop within budget.
   add a drift guard: a test that fails when the two disagree, by comparing
   the shared constants, patterns or tables directly or by running both over
   the same inputs. This holds for twins that agree today too: an unguarded
-  twin is a finding on its own, and its guard ships as a test-only commit
-  even when nothing has drifted. A fix for a drifted twin ships with its guard
+  twin is a finding on its own, and its guard lands as a test-only commit
+  even when nothing has drifted. A fix for a drifted twin lands with its guard
   in the same commit; without one the fix is incomplete. When no test can see
   both sides, say so in the pair's ledger entry.
 - If unification requires an abstraction more complex than either original

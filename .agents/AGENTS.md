@@ -14,10 +14,10 @@ Customer-facing `beancount-*` ledger skills belong in [`skills/<name>/`](../skil
 | `mermaid` | Draw and syntax-check architecture and dependency diagrams. |
 | `pm` | Maintain the public `.pm` board; canonical board conventions and the only workflow that writes board state (create, close, drop). |
 | `pm-brainstorm` | Propose roadmap work as text for `/pm` to materialize: at most three candidates, each backed by evidence that a user needs it, plus what to remove and what stays imagined. |
-| `pmx` | Route one specific piece of work onto a named workstream through `/pm`, ship that board addition on its own, then run `/loopx` on the same workstream (`/pmx <work> to <wN>`). |
+| `pmx` | Route one specific piece of work onto a named workstream through `/pm`, land that board addition on its own, then run `/loopx` on the same workstream (`/pmx <work> to <wN>`). |
 | `unblock` | Guide the owner in Chinese through concrete actions and decisions that let a worker resume, using quick choices or focused discussion and recording outcomes through `/pm`. |
-| `loopx` | Drain a workstream item by item — triage every pending milestone, task, and inbox note, then work and ship it, close it as already done, block it with an unblock condition, or delete it as invalid. Each item runs in a fresh-context worker; once drained, it runs routines from `.pm/<wN>/routine/README.md` on schedule (new board items always first; daily budget) and otherwise a zero-token background listener waits up to 24 h for new items (`--no-listen` exits instead). |
-| `ship` | Rebase, commit, and push the current `main` branch. |
+| `loopx` | Drain a workstream item by item — triage every pending milestone, task, and inbox note, then work and land it, close it as already done, block it with an unblock condition, or delete it as invalid. Each item runs in a fresh-context worker; once drained, it runs routines from `.pm/<wN>/routine/README.md` on schedule (new board items always first; daily budget) and otherwise a zero-token background listener waits up to 24 h for new items (`--no-listen` exits instead). |
+| `land` | Rebase, commit, and push the current `main` branch. |
 | `mobile-release` | Prepare and publish mobile store releases and localized listings. |
 | `qa-find-bugs-cli` | Exercise real `bea` commands against isolated synthetic ledgers. |
 | `qa-find-bugs-dashboard` | Exercise dashboard journeys with Playwright and reproduce findings. |
@@ -44,12 +44,12 @@ When adding a development skill, update this catalog and run the checks below. U
 
 ### Shared suite conventions — rt-*
 
-The `rt-*` skills are autonomous maintenance passes over this monorepo (discover → prove → fix → verify → ship). Their shared contract lives canonically at `.agents/skills/rt-shared/contract.md` (not a skill — no `SKILL.md`); every routine reads it first. The invariants it defines:
+The `rt-*` skills are autonomous maintenance passes over this monorepo (discover → prove → fix → verify → land). Their shared contract lives canonically at `.agents/skills/rt-shared/contract.md` (not a skill — no `SKILL.md`); every routine reads it first. The invariants it defines:
 
-- **One finding per `/ship`, never batched**; the next finding waits for the shipped SHA.
-- **Never ship your own red**: the owning package's checks (the same list as in `loopx`'s worker contract) are the gate before a push — `/ship` has none. A check that already fails without your change is not yours: fix it separately when that is quick, otherwise carry on (root `AGENTS.md`, "Failing checks"). A package with no covering automated check (backend-v2, deploy) means STOP, not ship.
+- **One finding per `/land`, never batched**; the next finding waits for the landed SHA.
+- **Never land your own red**: the owning package's checks (the same list as in `loopx`'s worker contract) are the gate before a push — `/land` has none. A check that already fails without your change is not yours: fix it separately when that is quick, otherwise carry on (root `AGENTS.md`, "Failing checks"). A package with no covering automated check (backend-v2, deploy) means STOP, not land.
 - **Proof over suspicion**: a detector hit or grep match is a candidate; each skill defines its proof (failing test, still-green sabotage, empty reference sweep).
-- **Budget**: 3 shipped findings per invocation, then a summary of shipped / skipped / nothing-found.
+- **Budget**: 3 landed findings per invocation, then a summary of landed / skipped / nothing-found.
 - **Universal STOPs**: new dependencies, cross-package API-contract changes, `DO_NOT_DO.md` conflicts, unpinnable behavior changes, a red check your own change causes and you cannot explain.
 - **Never touch**: lockfiles, codegen output, `.pm/` (routines never write the board), `.env*`, vendored fava, `AGENTS.md` files, the skills symlink.
 - **Scope argument**: `/rt-* [package-or-path]`; empty means survey, pick one target, announce it. The contract's symptom→owner table keeps the nine skills' territories disjoint.

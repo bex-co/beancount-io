@@ -57,7 +57,7 @@ class TestSkillTrees(unittest.TestCase):
         patches.start()
         self.addCleanup(patches.stop)
         self.write_skill(self.customer, "beancount-ask")
-        self.write_skill(self.development, "ship")
+        self.write_skill(self.development, "land")
 
     def write_skill(self, directory: Path, name: str) -> Path:
         path = directory / name / "SKILL.md"
@@ -73,7 +73,7 @@ class TestSkillTrees(unittest.TestCase):
             ci_check.check_symlinks()
             ci_check.check_skill_md()
         # ci-check prints repository paths in the platform's own spelling.
-        self.assertIn(f"OK frontmatter {Path('.agents/skills/ship/SKILL.md')}\n", output.getvalue())
+        self.assertIn(f"OK frontmatter {Path('.agents/skills/land/SKILL.md')}\n", output.getvalue())
         self.assertIn(f"OK frontmatter {Path('skills/beancount-ask/SKILL.md')}\n", output.getvalue())
 
     def test_old_shared_customer_symlink_is_rejected(self):
@@ -113,11 +113,11 @@ class TestSkillTrees(unittest.TestCase):
                 path.parent.rmdir()
 
     def test_invalid_development_frontmatter_is_rejected(self):
-        (self.development / "ship/SKILL.md").write_text("---\nname: ship\n---\n")
+        (self.development / "land/SKILL.md").write_text("---\nname: land\n---\n")
         error = io.StringIO()
         with contextlib.redirect_stderr(error), self.assertRaises(SystemExit):
             ci_check.check_skill_md()
-        self.assertIn(f"FAIL: {Path('.agents/skills/ship/SKILL.md')}: frontmatter missing 'description'", error.getvalue())
+        self.assertIn(f"FAIL: {Path('.agents/skills/land/SKILL.md')}: frontmatter missing 'description'", error.getvalue())
 
     def check_frontmatter(self, frontmatter: str) -> str:
         """Run the SKILL.md check on beancount-ask with FRONTMATTER; return stderr ('' when it passes)."""
@@ -182,11 +182,11 @@ class TestSkillTrees(unittest.TestCase):
 
     def test_a_development_skill_without_the_internal_flag_is_rejected(self):
         for frontmatter in (
-            "---\nname: ship\ndescription: d\n---\n",
-            '---\nname: ship\ndescription: d\nmetadata: {"internal": "true"}\n---\n',
+            "---\nname: land\ndescription: d\n---\n",
+            '---\nname: land\ndescription: d\nmetadata: {"internal": "true"}\n---\n',
         ):
             with self.subTest(frontmatter=frontmatter):
-                (self.development / "ship/SKILL.md").write_text(frontmatter)
+                (self.development / "land/SKILL.md").write_text(frontmatter)
                 error = io.StringIO()
                 with (
                     contextlib.redirect_stdout(io.StringIO()),
@@ -201,7 +201,7 @@ class TestSkillTrees(unittest.TestCase):
         self.assertIn("a customer skill must not set metadata internal", err)
 
     def test_development_eval_fixtures_are_checked(self):
-        evals = self.development / "ship/evals/evals.json"
+        evals = self.development / "land/evals/evals.json"
         evals.parent.mkdir()
         evals.write_text(json.dumps({"evals": [{"id": 1, "files": ["missing.csv"]}]}))
         error = io.StringIO()
@@ -423,7 +423,7 @@ class TestPluginManifests(unittest.TestCase):
         self.assertIn("plugin manifests disagree on version", self.check())
 
     def test_stale_skill_list_is_rejected(self):
-        for skills in (["./beancount-add"], ["./beancount-add", "./beancount-ask", "../.agents/skills/ship"]):
+        for skills in (["./beancount-add"], ["./beancount-add", "./beancount-ask", "../.agents/skills/land"]):
             with self.subTest(skills=skills):
                 self.write_manifests(entry={"skills": skills})
                 self.assertIn("skills must list every customer skill on disk", self.check())
@@ -563,7 +563,7 @@ class TestCatalogGroups(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.customer = self.root / "skills"
         self.development = self.root / ".agents/skills"
-        for base, name in [(self.customer, "beancount-ask"), (self.development, "ship")]:
+        for base, name in [(self.customer, "beancount-ask"), (self.development, "land")]:
             skill = base / name / "SKILL.md"
             skill.parent.mkdir(parents=True)
             skill.write_text("x")
@@ -571,7 +571,7 @@ class TestCatalogGroups(unittest.TestCase):
             "notGrouped": "bottom",
             "groupings": [
                 {"title": "Beancount.io suite", "skills": ["beancount-ask"]},
-                {"title": "Repository development", "skills": ["ship"]},
+                {"title": "Repository development", "skills": ["land"]},
             ],
         }
         patch = mock.patch.multiple(
@@ -600,7 +600,7 @@ class TestCatalogGroups(unittest.TestCase):
         self.assertIn("Beancount.io suite must contain exactly", self.check())
 
     def test_contributor_skill_cannot_enter_the_customer_suite(self):
-        self.config["groupings"][0]["skills"].append("ship")
+        self.config["groupings"][0]["skills"].append("land")
         self.assertIn("Beancount.io suite must contain exactly", self.check())
 
     def test_contributor_inventory_cannot_go_stale(self):

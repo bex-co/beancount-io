@@ -224,7 +224,7 @@ class GuardTest(GuardFixture):
         self.run_guard("start", "w2", session=A)
         for _ in range(20):
             self.stop(A)
-        (self.repo / ".pm" / "w2" / "m53").rmdir()  # one item shipped
+        (self.repo / ".pm" / "w2" / "m53").rmdir()  # one item landed
         for _ in range(20):
             self.assertEqual(self.stop(A)["decision"], "block")
 
@@ -675,7 +675,7 @@ class InflightTest(GuardFixture):
         self.run_guard("dispatch", "w2/113", session=A)
         self.assertEqual(self.stop(A), {})  # not "left the open tree": it was never in it
 
-    def test_an_item_gone_without_a_ship_is_lost_after_the_grace_period(self) -> None:
+    def test_an_item_gone_without_a_landing_is_lost_after_the_grace_period(self) -> None:
         self.run_guard("start", "w2", session=A)
         self.run_guard("dispatch", "w2/089.md", session=A)
         (self.repo / ".pm" / "w2" / "089.md").unlink()  # the worker moved it, then went quiet
@@ -699,11 +699,11 @@ class FinishedWorkerTest(RemoteFixture):
         self.run_guard("start", "w2", session=A)
         self.run_guard("dispatch", "w2/007.md", session=A)
 
-    def test_the_loop_is_held_again_once_the_item_is_shipped(self) -> None:
+    def test_the_loop_is_held_again_once_the_item_is_landed(self) -> None:
         self.assertEqual(self.stop(A), {})  # the item is still open: the worker is running
         (self.repo / ".pm/w2/done").mkdir(exist_ok=True)
         self.git(self.repo, "mv", ".pm/w2/007.md", ".pm/w2/done/007.md")
-        self.assertEqual(self.stop(A), {})  # moved but not committed: still shipping
+        self.assertEqual(self.stop(A), {})  # moved but not committed: still landing
         self.git(self.repo, "commit", "-q", "-m", "close w2/007")
         self.assertEqual(self.stop(A), {})  # committed but not pushed
         self.git(self.repo, "push", "-q", "origin", "HEAD:main")
@@ -902,9 +902,9 @@ class RoutineTest(RemoteFixture):
         self.assertEqual(self.due(), {"due": None, "reason": "no routine list", "problems": [], "next_in": None})
 
     def test_always_rows_run_on_a_fixed_cadence_without_a_change_gate(self) -> None:
-        self.schedule("| cli-qa | /qa-find-bugs-cli w2 SHIP=1 | 30m | always | cli |\n", budget="Budget: 48 runs/day\n\n")
+        self.schedule("| cli-qa | /qa-find-bugs-cli w2 LAND=1 | 30m | always | cli |\n", budget="Budget: 48 runs/day\n\n")
         self.assertEqual(self.due()["due"], {
-            "name": "cli-qa", "command": "/qa-find-bugs-cli w2 SHIP=1",
+            "name": "cli-qa", "command": "/qa-find-bugs-cli w2 LAND=1",
             "when": "always", "paths": ["cli"], "interval_hours": 0.5,
         })
         for _ in range(3):  # empty runs never back off
@@ -918,7 +918,7 @@ class RoutineTest(RemoteFixture):
         self.assertEqual(self.due()["due"]["name"], "cli-qa")
 
     def test_a_row_without_when_runs_on_its_schedule(self) -> None:
-        self.schedule("| cli-qa | /qa-find-bugs-cli w2 SHIP=1 | 30m |\n")
+        self.schedule("| cli-qa | /qa-find-bugs-cli w2 LAND=1 | 30m |\n")
         self.assertEqual(self.due()["due"]["when"], "always")
         self.done("cli-qa", "empty")
         reply = self.due()
@@ -927,7 +927,7 @@ class RoutineTest(RemoteFixture):
         self.assertEqual(self.state()["routines"]["cli-qa"]["interval"], 1800)  # no backoff
 
     def test_wait_wakes_on_the_routine_schedule_not_the_backed_off_poll(self) -> None:
-        self.schedule("| cli-qa | /qa-find-bugs-cli w2 SHIP=1 | 0.03m | always |\n")  # due 1.8 s after a run
+        self.schedule("| cli-qa | /qa-find-bugs-cli w2 LAND=1 | 0.03m | always |\n")  # due 1.8 s after a run
         self.done("cli-qa", "empty")
         started = time.time()
         # The board poll alone would not look again for 20 s.
@@ -936,13 +936,13 @@ class RoutineTest(RemoteFixture):
         self.assertLess(time.time() - started, 10)
 
     def test_a_scheduled_routine_outlasts_the_idle_limit(self) -> None:
-        self.schedule("| cli-qa | /qa-find-bugs-cli w2 SHIP=1 | 0.03m | always |\n")
+        self.schedule("| cli-qa | /qa-find-bugs-cli w2 LAND=1 | 0.03m | always |\n")
         self.done("cli-qa", "empty")
         result = self.run_guard("wait", "w2", "--min", "20", "--max", "20", "--give-up", "0.1")
         self.assertEqual(result.returncode, 5, result.stdout + result.stderr)
 
     def test_board_work_wins_over_a_due_routine(self) -> None:
-        self.schedule("| cli-qa | /qa-find-bugs-cli w2 SHIP=1 | 30m | always |\n")
+        self.schedule("| cli-qa | /qa-find-bugs-cli w2 LAND=1 | 30m | always |\n")
         self.assertIsNotNone(self.due()["due"])
         self.write(".pm/w2/m9/README.md", "milestone\n")
         self.push("board work")
@@ -951,7 +951,7 @@ class RoutineTest(RemoteFixture):
         self.assertIn("next pick w2/m9", result.stdout)
 
     def test_a_spent_budget_says_when_it_frees_up(self) -> None:
-        self.schedule("| cli-qa | /qa-find-bugs-cli w2 SHIP=1 | 1m |\n", budget="Budget: 1 runs/day\n\n")
+        self.schedule("| cli-qa | /qa-find-bugs-cli w2 LAND=1 | 1m |\n", budget="Budget: 1 runs/day\n\n")
         self.done("cli-qa", "found")
         reply = self.due()
         self.assertIn("budget of 1", reply["reason"])
@@ -962,7 +962,7 @@ class RoutineTest(RemoteFixture):
         self.assertIn("when must be changed or always", " ".join(self.due()["problems"]))
 
     def test_three_failed_runs_drop_a_routine_to_one_try_a_day(self) -> None:
-        self.schedule("| cli-qa | `/qa-find-bugs-cli w2 SHIP=1` | 30m | always | cli |\n", budget="Budget: 48 runs/day\n\n")
+        self.schedule("| cli-qa | `/qa-find-bugs-cli w2 LAND=1` | 30m | always | cli |\n", budget="Budget: 48 runs/day\n\n")
         for count in (1, 2):
             out = self.done("cli-qa", "failed").stdout
             self.assertNotIn("/pm add", out)
@@ -1049,7 +1049,7 @@ class BoardTest(RemoteFixture):
         self.assertEqual(self.board()["blocked"]["review"], ["113.md", "m3"])
 
     def test_a_due_routine_is_next_only_when_nothing_is_ready(self) -> None:
-        self.write(".pm/w2/routine/README.md", "| name | command | every |\n| --- | --- | --- |\n| cli-qa | `/qa-find-bugs-cli w2 SHIP=1` | 30m |\n")
+        self.write(".pm/w2/routine/README.md", "| name | command | every |\n| --- | --- | --- |\n| cli-qa | `/qa-find-bugs-cli w2 LAND=1` | 30m |\n")
         self.push("a routine")
         self.pull()
         facts = self.board()

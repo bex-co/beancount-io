@@ -46,13 +46,13 @@ spent. A row runs on its own schedule: `when: always` (the default) means
 every interval, whatever changed; `when: changed` also requires one of the
 row's `paths` (any path when it lists none) to have changed since the last
 run, and `routine-done` doubles such a row's interval after an empty run
-(capped at 14 days), resetting it after a run that shipped something. A row
+(capped at 14 days), resetting it after a run that landed something. A row
 that fails three runs in a row drops to one try a day until a run succeeds.
 `wait` never sleeps past the next routine's due time, so a schedule holds even
 while the board poll is backed off; board work still wins whenever both are
 ready. Run state stays in `.git/loopx/`, never on the public board.
 
-`/ship` ends at the push and nobody reads CI afterwards, so the guard does:
+`/land` ends at the push and nobody reads CI afterwards, so the guard does:
 `outcome` records the commits a worker pushed, and `board` and `wait` ask `gh`
 whether one of those commits is where a workflow on main first went red.
 Red that started on someone else's commit is not reported. Without `gh` the
@@ -128,8 +128,8 @@ EXIT_WORK, EXIT_GAVE_UP, EXIT_FETCH, EXIT_ROUTINE, EXIT_CI, EXIT_CHUNK, EXIT_BUS
 INFLIGHT_MAX = 12 * 3600.0
 # A routine or CI-fix worker has no board signal, so only this timer ends its mark.
 INFLIGHT_UNTRACKED_MAX = 3 * 3600.0
-# Once an item has left the open tree, its worker has this long to finish shipping.
-INFLIGHT_SHIP_GRACE = 30 * 60.0
+# Once an item has left the open tree, its worker has this long to finish landing.
+INFLIGHT_LAND_GRACE = 30 * 60.0
 # A routine that failed this many runs in a row retries once per paused interval.
 ROUTINE_FAILURES_BEFORE_PAUSE = 3
 ROUTINE_PAUSED_INTERVAL = 24 * 3600.0
@@ -537,7 +537,7 @@ def inflight_verdict(inflight: dict) -> str:
         gone = inflight["gone_since"] = now
     if tree_clean() and nothing_unpushed():
         return "finished"
-    return "running" if now - gone < INFLIGHT_SHIP_GRACE else "lost"
+    return "running" if now - gone < INFLIGHT_LAND_GRACE else "lost"
 
 
 def settle_label(label: str) -> bool:
@@ -565,7 +565,7 @@ def parse_duration(text: str) -> float | None:
 def parse_routines(text: str) -> tuple[list[dict], int, list[str]]:
     """Routines, the daily budget, and problems from a routine README.
 
-    Rows look like `| cli-qa | /qa-find-bugs-cli w1 SHIP=1 | 30m | always | |`:
+    Rows look like `| cli-qa | /qa-find-bugs-cli w1 LAND=1 | 30m | always | |`:
     a name, any command, an interval, an optional `when` (`always`, the
     default, or `changed`), and optional comma-separated `paths` that gate a
     `changed` row. A line like `Budget: 4 runs/day` overrides the default

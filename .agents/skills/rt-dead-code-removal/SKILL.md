@@ -3,7 +3,7 @@ name: rt-dead-code-removal
 description: Autonomous maintenance routine that deletes provably unreachable code
   from one monorepo package using the repo's own detectors (yarn lint:deadcode /
   make deadcode / scripts/lint-deadcode.sh), verifies every hit against dynamic
-  references before deleting, and ships each removal via /ship. Use only when the
+  references before deleting, and lands each removal via /land. Use only when the
   user explicitly invokes /rt-dead-code-removal or asks to find and delete
   dead or unused code. SKIP for dead branches behind a feature flag
   (rt-shipped-feature-inliner), live duplicates whose callers need repointing
@@ -20,14 +20,14 @@ Usage: `/rt-dead-code-removal [package-or-path]`
 
 Run the target package's dead-code detector, prove each hit is truly
 unreachable, delete it (with the tests and fixtures that only existed for it),
-make the package's checks pass, and ship each removal via `/ship`.
+make the package's checks pass, and land each removal via `/land`.
 
 ## Contract
 
 Read `.agents/skills/rt-shared/contract.md` first — it defines
-preconditions, scope resolution, verify gates, the ship protocol, the budget,
+preconditions, scope resolution, verify gates, the land protocol, the budget,
 and universal STOPs. This file adds only what is specific to dead code. Floor
-even without it: never ship red; one finding per ship; anything in a
+even without it: never land red; one finding per landing; anything in a
 `DO_NOT_DO.md` is a hard STOP.
 
 ## Workflow
@@ -83,9 +83,9 @@ so the detector stays trustworthy.
 Run the owning package's full gate from the contract's table, plus a clean
 re-run of the detector to confirm nothing was orphaned by the deletion.
 
-### 6. Ship
+### 6. Land
 
-Compose `/ship` for this one removal. Loop back to step 2 while candidates and
+Compose `/land` for this one removal. Loop back to step 2 while candidates and
 budget remain.
 
 ## What NOT to do

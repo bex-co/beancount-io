@@ -28,7 +28,7 @@ award; never report it as one.
 ## Ground rules
 
 - **Nothing is committed.** Leave every change in the working tree of the
-  repository that owns it. Do not commit, push, run `/ship`, or write `.pm/`.
+  repository that owns it. Do not commit, push, run `/land`, or write `.pm/`.
 - Change only presentation and experience: layout, hierarchy, typography,
   spacing, color, motion, copy clarity, states, accessibility. Product
   behavior, APIs, data, and permissions stay as they are. A needed behavior

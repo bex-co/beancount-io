@@ -10,7 +10,7 @@ Usage: `/unblock <wN>` (for example, `/unblock w4`).
 
 Help the reader answer **“我现在做什么，能让 worker 继续？”** in plain Chinese, even when the board is in English. The deliverable is a practical way forward and a conversation that helps the reader take it. Success means the reader can make an informed choice, perform a concrete action, or hand a specific request to the right person. Investigating and cleaning stale records supports that outcome; a blocker inventory or status survey alone does not fulfill the command.
 
-Investigate discoverable facts yourself, batch easy decisions, and give complex tradeoffs room for conversation. This is an interactive coordination skill; it does not implement code, deploy changes, operate external settings, send messages to others, ship, or start `/loopx`.
+Investigate discoverable facts yourself, batch easy decisions, and give complex tradeoffs room for conversation. This is an interactive coordination skill; it does not implement code, deploy changes, operate external settings, send messages to others, land, or start `/loopx`.
 
 ## 1. Prepare in the background
 

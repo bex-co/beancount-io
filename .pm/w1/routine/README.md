@@ -6,4 +6,4 @@ Budget: 48 runs/day
 
 | name | command | every | when | paths |
 | --- | --- | --- | --- | --- |
-| cli-qa | `/qa-find-bugs-cli w1 SHIP=1` | 30m | always | cli |
+| cli-qa | `/qa-find-bugs-cli w1 LAND=1` | 30m | always | cli |

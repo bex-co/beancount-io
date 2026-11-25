@@ -21,8 +21,8 @@
     },
     {
       "id": 4,
-      "prompt": "Use $qa-find-bugs-mobile w4 SHIP=1 to hunt native bugs. A completed milestone describes the same defect, and config.features.agentChat is false.",
-      "expected_output": "Keeps the deliberate agentChat gate disabled, rechecks the completed milestone's DoD for a reproduced regression, files through pm only after dedupe, and ships only the authorized filing after validation and secret scan. Reports native coverage and cleanup separately from implementation.",
+      "prompt": "Use $qa-find-bugs-mobile w4 LAND=1 to hunt native bugs. A completed milestone describes the same defect, and config.features.agentChat is false.",
+      "expected_output": "Keeps the deliberate agentChat gate disabled, rechecks the completed milestone's DoD for a reproduced regression, files through pm only after dedupe, and lands only the authorized filing after validation and secret scan. Reports native coverage and cleanup separately from implementation.",
       "files": []
     }
   ]

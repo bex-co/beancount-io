@@ -18,7 +18,7 @@ unit tests and source inspection support a finding but do not replace a CLI
 journey.
 
 Arguments: optional executable path, journey names, ledger path, server URL,
-`wN`, `SHIP=1`, `DRY_RUN=1`. Default to this checkout's `uv run bea`, local
+`wN`, `LAND=1`, `DRY_RUN=1`. Default to this checkout's `uv run bea`, local
 synthetic ledgers, and report mode. A server argument selects a hosted target;
 it does not turn every local journey into a cloud test. `DRY_RUN=1` still allows
 disposable local fixture writes needed to reproduce bugs.
@@ -108,7 +108,7 @@ Trace server causes under backend package guidance and retain eligible
 REST/GraphQL/MCP parity in a proposed server fix.
 
 Apply shared root-cause, caller search, board/history dedupe and optional
-`pm`/`ship` steps. In the finding record, replace route/device evidence with
+`pm`/`land` steps. In the finding record, replace route/device evidence with
 executable/version, OS, cwd, exact command and fixture setup, stdin/TTY mode,
 exit code, separate output streams and file diff. State expected behavior and
 its documented or independently calculated basis. Include a minimal synthetic

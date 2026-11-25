@@ -1,13 +1,13 @@
 ---
-name: ship
-description: Ship pending changes on main by pulling with rebase, committing intentionally, and pushing to origin/main. Use only when the user explicitly invokes $ship or asks to ship or publish the current main branch.
+name: land
+description: Land pending changes on main by pulling with rebase, committing intentionally, and pushing to origin/main. Use only when the user explicitly invokes $land or asks to land or publish the current main branch.
 allowed-tools: Bash(git status:*), Bash(git pull:*), Bash(git fetch:*), Bash(git diff:*), Bash(git show:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*), Bash(git push:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git rebase:*)
 metadata: {"internal": true}
 ---
 
-# Task: Ship the current main branch
+# Task: Land the current main branch
 
-Usage: `/ship [optional commit message context...]`
+Usage: `/land [optional commit message context...]`
 
 Bring the local `main` up to date, commit any pending work, and push to `origin/main`.
 
@@ -53,7 +53,7 @@ If the working tree is clean, skip Step 4 but still pull and push.
 git pull --rebase origin main
 ```
 
-If the pull/rebase has conflicts, resolve them proactively and continue shipping.
+If the pull/rebase has conflicts, resolve them proactively and continue landing.
 
 1. Inspect `git status`, `git diff --name-only --diff-filter=U`, each combined diff, relevant surrounding code, and history. For difficult conflicts, inspect both index stages with `git show :2:<path>` and `git show :3:<path>`.
 2. Infer both sides' intent and produce the smallest coherent resolution that preserves both whenever possible. Update dependent code, tests, generated outputs, or documentation when the combined result requires it.
@@ -90,10 +90,10 @@ If the push is rejected as non-fast-forward, re-run Step 3, resolve conflicts us
 
 ## Step 6 — Report
 
-Print the shipped HEAD SHA and commit subject. Example:
+Print the landed HEAD SHA and commit subject. Example:
 
 ```
-Shipped: a1b2c3d feat(mobile): add account filters
+Landed: a1b2c3d feat(mobile): add account filters
 ```
 
 ## Optional User Context

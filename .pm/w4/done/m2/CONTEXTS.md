@@ -119,7 +119,7 @@ cd dashboard && VITE_API_URL=http://localhost:4107/api-gateway/ yarn dev --port 
 ## 8. 待办与风险
 
 - [ ] 实施第 6 节的树表改造(用户明确要求,尚未开工)。
-- [ ] `/ship` 前先 `git pull --rebase`:注意 `.pm/w4/README.md` 头部两行远端改动 vs 本地底部 m3 行的小冲突;m2+m3 全部未提交改动一起发布,dashboard 属 substantial,需盯 CI (dashboard) + Secret scan。
+- [ ] `/land` 前先 `git pull --rebase`:注意 `.pm/w4/README.md` 头部两行远端改动 vs 本地底部 m3 行的小冲突;m2+m3 全部未提交改动一起发布,dashboard 属 substantial,需盯 CI (dashboard) + Secret scan。
 - [ ] 新后端部署前,其他人跑 `yarn codegen` 需 `CODEGEN_SCHEMA_FILE` 覆盖(见 codegen.ts 注释)。
 - [ ] rustledger meta 透传补一次真栈验证。
 - [ ] 本地遗留:测试用户 m3e2e/m3e2e2、4107/5175 两个常驻进程、旧栈 `un_4g4hlgyyv3gw/my-book`(owner 缺失,基本不可用,可考虑清理)。

@@ -4,7 +4,7 @@ description: Autonomous maintenance routine that finds tests that cannot fail �
   no real assertions, tautologies that assert a mock returns what it was told,
   mock-everything tests that never touch the unit — proves it mechanically by
   breaking the covered behavior and watching the test stay green, deletes them,
-  and ships via /ship. Use only when the user explicitly invokes
+  and lands via /land. Use only when the user explicitly invokes
   /rt-useless-test-pruner or asks to prune useless/worthless tests. SKIP
   for tests that fail intermittently (rt-flaky-test-fixer), tests of code
   being deleted (they travel with their code), and slow-but-valid tests. The
@@ -17,14 +17,14 @@ metadata: {"internal": true}
 Usage: `/rt-useless-test-pruner [package-or-path]`
 
 Find tests that pass no matter what the code does, prove it by sabotaging the
-covered behavior and watching them stay green, delete them, and ship via
-`/ship`.
+covered behavior and watching them stay green, delete them, and land via
+`/land`.
 
 ## Contract
 
 Read `.agents/skills/rt-shared/contract.md` first — preconditions,
-scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
-even without it: never ship red; one finding per ship; anything in a
+scope resolution, verify gates, land protocol, budget, universal STOPs. Floor
+even without it: never land red; one finding per landing; anything in a
 `DO_NOT_DO.md` is a hard STOP.
 
 ## Workflow
@@ -61,13 +61,13 @@ replacement is a few lines — otherwise deletion is the honest change.
 ### 5. Verify
 
 - **`git diff` must show only test changes — every sabotage fully reverted.**
-  This check is part of the finding, not cleanup; a shipped sabotage is the
+  This check is part of the finding, not cleanup; a landed sabotage is the
   worst outcome this routine has.
 - Owning package's full gate green.
 
-### 6. Ship
+### 6. Land
 
-Compose `/ship` for this one pruning. Loop within budget.
+Compose `/land` for this one pruning. Loop within budget.
 
 ## What NOT to do
 
@@ -76,7 +76,7 @@ Compose `/ship` for this one pruning. Loop within budget.
   or attached to code some other routine is deleting.
 - Never leave sabotage in the tree — verify the revert with `git diff` before
   staging, every time.
-- Don't batch prunings across files into one ship; each finding stays
+- Don't batch prunings across files into one landing; each finding stays
   reviewable on its own.
 
 ## Arguments
