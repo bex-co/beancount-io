@@ -99,6 +99,9 @@ newest first.
 
 ### Skipped
 
+- 2026-11-25 ledger quoted in-string directive shapes (`file-map-loader` INCLUDE_RE, `collect-plugins` PLUGIN_LINE_RE, `beancount-options` OPTION_LINE_RE, `option-validation` OPTION_RE, `document-discovery` DOCUMENTS_OPTION, `average-booking` booking OPTION, `sell-gains` defaultTolerances, `transaction-balance` scanInferredToleranceDefaults) — quoted in-string directive lines are engine-invalid (live WASM probe: narration truncated + `parse errors in main.bean`; beancount 3.2.3 also errors), so TS treating them as directives agrees with the engine; no divergence on valid ledgers. The quoteless sibling (`balance-tolerance-syntax`) shipped this run.
+- 2026-11-25 ledger `meta-order.ts` writtenKeys + `block-index.ts` entryLocator holds() — quoteless in-string lines can match posting/key-shaped prose, but impact is heuristic key ordering / error-line attribution only; below the bar for this run.
+- 2026-11-25 ledger engine probe family (`sourceHasPad`/`sourceHasNoteSyntax`/`sourceHasTaggedDocument`, `sourceMayShadowPushedMeta`) — documented loose by design (probe-only perf cost); `parseable-files` string/comment alternation, `stock-syntax-errors`, `withoutMetaStacks`, `splitIntoBlocks` consumers verified string-aware or engine-equivalent; examined, no divergence.
 - 2026-11-25 ledger `bql-int-literals` adjacent edges (`--`/`#` line comments with quotes, `matchAll` lastIndex reuse, LIMIT after-`$`, nested `int(int('<dead>'))`, `GROUP BY -N`/`ORDER BY +N` signs) — line comments are rejected by both oracles so quote confusion in them is unreachable, sticky regexes set lastIndex per use, `$` is not BQL, nested-int still fails loud at the outer render, signed keys are expressions the rewrite handles; examined, no divergence.
 - 2026-11-24 cli beancount crash-vs-error variance (`10/0/2`, `100/-0-5`, `10/0-5`, `10/(3-3)/(4-4)` SystemError entries vs `10/0`, `10/2/0` segfaults) — the guard refuses every variant before parsing either way; examined, no change.
 - 2026-11-24 cli guard over-refusal shapes (`10/0,0` Invalid-number, `10/.0.0` Invalid-token, slash-currency-adjacent) — beancount clean-errors, guard refuses with the divisor message; message-only divergence, no crash; left alone.
@@ -114,11 +117,7 @@ newest first.
 - 2026-11-22 backend-cluster/ledger `directive-filter` `monthOffset` clamp-vs-raise — `monthOffset` clamps the day while Python `month_offset` raises, but every call site (`getFiscalPeriod` quarter starts, `substitute` day-1 inputs) provably carries day 1; examined, no divergence.
 
 - 2026-11-21 dashboard `decode-csv-bytes.ts` + `use-csv-parser.ts` empty path — empty/whitespace-only bytes throw `CsvEmptyError` at the caller, BOM-only UTF-16 decodes to empty and throws the same way; no-BOM UTF-16 is out of the documented scope (same choice as `FileReader.readAsText`); examined, no divergence.
-- 2026-11-21 cli engine/frontend date-inference split (`bea_engine/csv_mapper.py` vs `cli/csv_mapper.py`) — the pair agrees on all 12 built-in formats; the engine's extra `%j`/`%U`/`%W` rollover refusal (w5/986, w5/1022) only fires on custom `--date-format`s where the frontend already forwarded the recalled format, so the strict side refuses loudly instead of diverging silently; the engine's own `infer_date_format` is dead code, handed to `rt-dead-code-removal` as Deferred.
 - 2026-11-21 cli OFX vs frontend `_source_accounts`/`_ofx_identities` twin scans — textually identical modulo bytes/str decode (non-ASCII ids only); the w5/1069 recipient and w5/1031 same-number-different-bank cases agree; examined, no drift.
-- 2026-11-21 cli `report_csv.py` vs `bea_engine/query.py` CSV-injection handling — trigger sets agree; every report user-text cell is in `_TEXT_COLUMNS`, numbers exempt by column; examined, no divergence.
-- 2026-11-21 cli `rows._alternating_nuls` vs `csv_mapper._refuse_utf16` parity half — deliberate documented floor (w5/738); examined, no divergence.
-- 2026-11-21 cli `bea_engine/importing.py` duplicate pool vs dashboard unbooked-dup fix — probed live: exact-ID rows matching an unbalanced ledger txn stay `duplicate` per the documented always-skip rule, failing ledgers refuse without `--allow-errors`; no intent pins error entries out; ambiguous, no fix.
 
 ## rt-logic-simplifier
 
