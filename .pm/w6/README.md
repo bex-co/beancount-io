@@ -2,6 +2,30 @@
 
 **Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty.
 
+## Updates — 2026-11-25 UTC
+
+- **Hermes remote MCP catalog submitted:** opened
+  [NousResearch/hermes-agent PR #159949](https://github.com/NousResearch/hermes-agent/pull/159949)
+  using the hosted HTTP/OAuth endpoint (manifest validated locally against
+  Hermes v0.23.3); recorded in
+  [hermes/README.md](../../backend-cluster/backend-v2/docs/marketplace-submissions/hermes/README.md)
+  and [mcp-marketplaces.md](../../backend-cluster/backend-v2/docs/mcp-marketplaces.md).
+  Local skill-suite admission remains separate in [m6.5/t005](blocked/m6.5/t005.md).
+- **Skill-suite distribution [m6.5/t012](blocked/m6.5/done/t012.md) done:**
+  original 13-skill / 61-file Pack delivery verified with Skills CLI 1.9.0; on
+  2026-11-22 the owner closed skills.rest and SkillsMP follow-through and
+  removed them from m6.5 acceptance criteria (`m6.5` is now 10/12 done).
+- **LobeHub definition propagation cleared & direct HTTP docs added:**
+  [m10/t012](blocked/m10/t012.md#definition-propagation-cleared--2026-11-21-utc)
+  verified all 44/67/4 public definitions match the accepted Oct 31 candidate
+  (only the erroneous `bea init` stdio option remains);
+  [mcp.md](../../backend-cluster/backend-v2/docs/mcp.md#from-the-mcp-registry)
+  now documents direct HTTP/OAuth setup while listings wait.
+- **Awesome MCP Servers [048](blocked/048.md#priority-review-backlink-notice--2026-11-24-utc):**
+  maintainer posted `glama-backlink-notice` on 2026-11-24 offering priority
+  review if the repo README or website links back to Glama (optional owner
+  decision).
+
 ## Current Glama/PR outcome — 2026-11-18 UTC
 
 [048](blocked/048.md) has fresh [maintainer feedback](https://github.com/punkpeye/awesome-mcp-servers/pull/18050#issuecomment-6931379253):
@@ -198,7 +222,7 @@ with their original owners. No item closes from a receipt or green check alone.
 | --- | --- |
 | [m2/t001](blocked/m2/t001.md) and19engine notes016–038 | Rustledger publishes each supported producer/semantic correction; worker adopts and runs exact native/API acceptance. Current stable artifact remains0.24.0 with unchanged integrity; a main commit is insufficient.20roots. |
 | [m6.5/t005](blocked/m6.5/t005.md), [039](blocked/039.md) | Hermes supplies compatible portable metadata and retained init-policy admission, then worker verifies full-suite native install/discovery/update without force. Stable remainsv0.22.5; no unchanged scanner retry.2roots. |
-| [m6.5/t012](blocked/m6.5/t012.md) | Index services correct the existing consolidated-suite scope/paths; Pack supplies all61files on both destinations. Next index manualNov1UTC; Pack not beforeNov1T00:19:21Z or demonstrated relevant recovery.1root. |
+| [m6.5/t012](blocked/m6.5/done/t012.md) | Index services correct the existing consolidated-suite scope/paths; Pack supplies all61files on both destinations. Next index manualNov1UTC; Pack not beforeNov1T00:19:21Z or demonstrated relevant recovery.1root. |
 | [m8/t002](blocked/m8/t002.md) | Smithery/Arcade supplies surviving direct-directory intake or curated inclusion for the existing request. Next manualNov7or actual reply/new route.1root. |
 | [m9/t004](blocked/m9/t004.md), [t016](blocked/m9/t016.md), [t017](blocked/m9/t017.md) | Cline/official Cursor/Docker reviewers handle existing submissions and publish/import; worker handles actionable corrections and verifies advertised installation. Cline/Cursor manualNov3; Docker access assessmentNov1or actual request/failure/secure update route. Do not renew a reviewer key without supported private delivery and a bounded window.3roots. |
 | [m9/t018](blocked/m9/t018.md) | Supported native control targets the isolated official VSCode instance, or permits grant-preserving fresh auth; worker verifies actual busy-default/fallback callback. Gallery/native accounting baseline remains complete; no credential copy, logout or simulated callback.1root. |

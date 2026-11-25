@@ -4,6 +4,10 @@
 
 **Implementation estimate:** ~2h, excluding external review queues and the standing closing tasks.
 
+## LobeHub definition propagation cleared — 2026-11-21 UTC
+
+[t012](t012.md#definition-propagation-cleared--2026-11-21-utc) verified all 44 tools, 67 resources, and 4 prompts publicly match the accepted Oct 31 candidate. Only LobeHub's erroneous recommended `bea init` stdio option / Hybrid classification remains pending maintainer action.
+
 ## Tasks (in order)
 
 | id | title | est | depends_on |

@@ -154,8 +154,10 @@ Cursor desktop 3.24.18 community connection completed native OAuth, a synthetic
 balance query and a dry-run preview on 2026-10-22. Its
 [dated desktop record](./marketplace-submissions/cursor/native-desktop-rehearsal-20261022.md)
 preserves the approved grant's retention and native-card visibility limits.
-Official Cursor publication and VS Code's native gallery/Copilot journey remain
-separate. The other hosts have not been verified with a real sign-in yet.
+The VS Code gallery installation completed a synthetic read and dry-run preview
+with an existing signed-in account on 2026-10-29. A fresh sign-in with the
+default callback port occupied remains unverified. See the
+[VS Code native acceptance record](./marketplace-submissions/github/native-accounting-acceptance-20261029.json).
 
 | Host                                | Identifies itself by                                            | Redirect the fixture authorizes with                                                                                  | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ----------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -187,6 +189,13 @@ no header and no package, so a client that installs it meets the same `401` and
 discovery chain as one configured by hand, and signs in with the OAuth flow
 above. Claude Code and Codex do not browse the registry; configure them with the
 URL as described earlier in this section.
+
+You can connect directly while a directory listing is under review or has
+outdated instructions. In a client that supports remote MCP over HTTP and OAuth,
+add `https://beancount.io/api-gateway/mcp` as an HTTP server and sign in when
+prompted. In VS Code, run **MCP: Add Server** and choose **HTTP**. On LobeHub,
+choose **Connect via HTTP**. The listing's **Manual stdio** option points to
+`bea init`, which creates a local ledger.
 
 A self-hosted deployment is not in the listing; configure its URL by hand.
 
@@ -335,7 +344,7 @@ the principal inputs; inspect the schema before constructing a call.
 | `refreshBankConnection`         | `itemId`; re-reads a connection's health.                                                                                                                                                                                                                                                                                                                                                                                 | Admin              |
 | `unlinkBankConnection`          | `itemId`, optional `dry_run`; severs a linked bank.                                                                                                                                                                                                                                                                                                                                                                       | Admin              |
 | `listBankConnections`           | `{}`; linked bank connections and their accounts (with mapping) — the `banks` and `bank-accounts` resources as a tool. Each row's own `id` is what the bank tools take as `itemId` or `accountId`; the rows' `itemId` and `accountId` fields are Plaid's.                                                                                                                                                                 | Admin              |
-| `listStagedBankTransactions`    | Optional `accountId`, `page`, `limit` (at most 100); transactions staged for import, newest first, with the ids `importStagedBankTransactions` and `discardStagedBankTransactions` take — the `bank-transactions/unsynced` resource as a tool. Omit `page` and `limit` for every row (`page` alone reads pages of 30); after importing or discarding a page, read page 1 again.                                       | Read               |
+| `listStagedBankTransactions`    | Optional `accountId`, `page`, `limit` (at most 100); transactions staged for import, newest first, with the ids `importStagedBankTransactions` and `discardStagedBankTransactions` take — the `bank-transactions/unsynced` resource as a tool. Omit `page` and `limit` for every row (`page` alone reads pages of 30); after importing or discarding a page, read page 1 again.                                           | Read               |
 | `updateLedger`                  | `name`, `description`, `private`, optional `dry_run`; renames a ledger or changes its description or visibility. A preview returns the current→new diff, with a flip to public called out. Commits echo `dry_run: false`.                                                                                                                                                                                                 | Admin              |
 | `deleteLedger`                  | Optional `dry_run`; permanently deletes a ledger, including its history and linked-bank cleanup. A preview returns the destroy summary — identity, emptiness, size, and warnings. Commits echo `dry_run: false`.                                                                                                                                                                                                          | Admin              |
 | `setLedgerCollaborator`         | `collaborator`, optional `permission` (read, write, or admin; omitted uses the repository default), `dry_run`; grants or changes access. A preview returns the would-be grant, current→requested. Commits echo `dry_run: false`.                                                                                                                                                                                          | Admin              |
@@ -898,7 +907,7 @@ After linking:
 To book a whole backlog to one account, repeat one `targetAccount`. The import
 takes its target per row on REST and GraphQL as on MCP and has no "default
 target" argument; the dashboard's Bank Sync table does the same for a selection
-with its *Set for selected* control. Read a page of `listStagedBankTransactions`
+with its _Set for selected_ control. Read a page of `listStagedBankTransactions`
 (a `limit` of at most 100) and send one `importStagedBankTransactions` whose
 `transactions` carry each row's `transactionId` (not its `id`) and the same
 `targetAccount`, an account the ledger already has, such as
@@ -1190,7 +1199,7 @@ lists the accounting and bank suffixes; replace the braces with your ledger and 
 | Analysis without required arguments (10) | `overview`, `documents`, `trial-balance`, `holdings`, `capital-gains`, `interval-totals`, `account-last-entries`, `entries-count`, `postings-per-account`, `account-directives` |
 | Analysis with required arguments (6)     | `account-report/{accountName}`, `register/{account}`, `payee-transactions/{payee}`, `narration-transactions{?narration}`, `payee-accounts/{payee}`, `entry-context/{entryHash}` |
 | Bank connections and accounts (4)        | `banks`, `banks/{itemId}`, `banks/{itemId}/accounts`, `bank-accounts`                                                                                                           |
-| Bank staging and suggestions (3)         | `bank-transactions/unsynced{?accountId,page,limit}`, `bank-transactions/suggested-categories{?accountId}`, `banks/{itemId}/suggested-mapping`                                              |
+| Bank staging and suggestions (3)         | `bank-transactions/unsynced{?accountId,page,limit}`, `bank-transactions/suggested-categories{?accountId}`, `banks/{itemId}/suggested-mapping`                                   |
 | File contents (1)                        | `files/{+path}`                                                                                                                                                                 |
 
 The file template uses reserved expansion, `{+path}`, so nested paths work:
@@ -1781,7 +1790,7 @@ The signal rides beside the result, in one shape on every surface:
 | Surface      | Where                                                                                           |
 | ------------ | ----------------------------------------------------------------------------------------------- |
 | MCP tool     | `structuredContent.page`, next to `ok` and `result`                                             |
-| MCP resource | the content's `_meta.page`, and a second content item `{"page": …}` (`application/json`)      |
+| MCP resource | the content's `_meta.page`, and a second content item `{"page": …}` (`application/json`)        |
 | REST         | `X-Has-More`, `X-Total-Count` (only when the total is known) and `Link: <…>; rel="next"`        |
 | GraphQL      | the response's `extensions.page`, keyed by each field's response key (its alias, if it has one) |
 

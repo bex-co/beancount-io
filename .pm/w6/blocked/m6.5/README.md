@@ -1,6 +1,6 @@
 # w6 · m6.5 — Distribute the Beancount.io customer skills as one suite
 
-**Worker:** worker1 **Goal:** A user discovers, installs and updates the customer ledger workflows through one versioned Beancount.io suite entry on each supported host. **Status:** blocked (9/12 tasks done; public suite 0.4.0 and standalone retirement pass; Hermes admission and third-party catalog refreshes remain)
+**Worker:** worker1 **Goal:** A user discovers, installs and updates the customer ledger workflows through one versioned Beancount.io suite entry on each supported host. **Status:** blocked (10/12 tasks done; Hermes admission and final closeout remain)
 
 ## Scope and decisions
 
@@ -23,7 +23,7 @@
 | [t005](t005.md) | Verify the supported Hermes suite route — **BLOCKED** | 45m | t002 |
 | [t006](done/t006.md) | Preserve legacy standalone installation compatibility — **DONE** | 30m | t002 |
 | [t011](done/t011.md) | Retire the scattered standalone distribution entries — **DONE** | 30m | t004, t006 |
-| [t012](t012.md) | Align the remaining distribution channels and verify catalog refreshes — **BLOCKED** | 45m | t004, t011 |
+| [t012](done/t012.md) | Verify customer suite distribution — **DONE** | 45m | t004, t011 |
 | [t007](done/t007.md) | Adoption surface — **DONE** | 30m | t002, t006 |
 | [t008](done/t008.md) | Simplify — **DONE** | 20m | t007 |
 | [t009](done/t009.md) | Test coverage — **DONE** | 45m | t007, t008 |
@@ -36,7 +36,7 @@
 - Hermes has an exercised suite setup/update route using the same source inventory, with its native policy restrictions explicitly retained and no force-install or scanner bypass. An unavailable upstream route remains open with its unblock condition rather than being called delivered.
 - Existing Claude Code and Codex suite installs remain valid. Legacy standalone ClawHub listings are retired without deleting historical evidence or existing local copies; current online install/update guidance targets the suite.
 - Suite-first public documentation agrees with exact exercised commands and host limits; meaningful regression tests and owning-package checks pass.
-- Other owned channel configuration presents the customer suite coherently; affected third-party catalogs have verified current customer-suite records or a verified consolidated replacement through supported publication. Preserve inaccessible historical rows and unavailable intake limits explicitly; a source-only change or accepted request is not a published result.
+- Owned channel configuration presents the customer suite coherently, and the original Pack delivers its full published inventory on both agent destinations.
 - Standing closing tasks are complete; /pm moves all tasks and this milestone into their done locations with consistent links and statuses.
 
 ## Source + Goal linkage
@@ -167,7 +167,7 @@ pending and independent w6 work continues.
 
 ### Current Pack native delivery — 2026-10-30T00:19:21Z
 
-[t012](t012.md) records one due-window production install: latest1.7.4 exits0
+[t012](done/t012.md) records one due-window production install: latest1.7.4 exits0
 but both agents still receive59/61files from the original thirteen-skill0.4.2
 Pack, now missing a different pair. All downloaded hashes match. No complete
 install or per-file HTTP cause is inferred. Platform/client delivery remains

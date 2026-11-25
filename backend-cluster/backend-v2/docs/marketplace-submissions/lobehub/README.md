@@ -1,8 +1,24 @@
 # LobeHub published connector and native accounting verified
 
-Current outcome **2026-10-25T01:41:31Z**: the [canonical listing](https://lobehub.com/mcp/beancount-io) remains claimed/published at1.0.0. Actual native OAuth,44-tool sync, five-call accounting and one dry-run preview pass. Cash49.75USD, commit/counts and independent file hash are unchanged. [Native evidence and exact visibility limits](./native-rehearsal-20261025.json). Public name search now returns the canonical entry first among5results. The crawler stdio defect remains m10/t012; publication and native connection do not close that task.
+Publication/native baseline **2026-10-25T01:41:31Z**: the [canonical listing](https://lobehub.com/mcp/beancount-io) remains claimed/published at1.0.0. Actual native OAuth,44-tool sync, five-call accounting and one dry-run preview pass. Cash49.75USD, commit/counts and independent file hash are unchanged. [Native evidence and exact visibility limits](./native-rehearsal-20261025.json). Public name search now returns the canonical entry first among5results. The crawler stdio defect remains m10/t012; publication and native connection do not close that task.
 
-## Current definition update; public effectiveness pending — 2026-10-29 UTC
+## Current public definitions verified — 2026-11-21 UTC
+
+Anonymous official-SDK detail/manifest reads at `2026-11-21T21:44:46.969Z`
+verify that every public definition in `beancount-io@1.0.0` matches the
+accepted Oct 31 [candidate](lhm.plugin.json): 44 tools, 67 resources, and 4
+prompts by name and full body (SHA-256
+`e5b26b3125f0ea347bb76cae236af8ecb1c051aef7c38005315c78075475fc2d`). This clears
+the pending definition-propagation gate.
+
+The [Installation Method tab](https://lobehub.com/mcp/beancount-io?activeTab=deployment)
+still shows the erroneous recommended Manual stdio option (`bea init`) alongside
+the working HTTP endpoint, and the
+[correction request](https://github.com/lobehub/lobehub/issues/18706#issuecomment-6392098911)
+has no maintainer reply yet. Only that deployment correction remains under
+[w6/m10/t012](../../../../../.pm/w6/blocked/m10/t012.md).
+
+## Historical definition update; effectiveness then pending — 2026-10-29 UTC
 
 Fresh hosted generic-only SDK discovery still has44tools/67templates/4prompts,
 but10tools and7templates have changed since Oct28. The reviewed
