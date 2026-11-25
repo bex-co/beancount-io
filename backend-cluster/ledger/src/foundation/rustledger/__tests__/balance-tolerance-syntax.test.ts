@@ -49,4 +49,21 @@ describe("midCurrencyToleranceErrors (w23/197)", () => {
   ])("leaves %p alone", (line) => {
     expect(run(`${line}\n`)).toEqual([]);
   });
+
+  it("ignores a balance-shaped line inside a multiline narration", () => {
+    // Beancount strings span lines, so a narration can hold a line shaped
+    // like a mid-currency tolerance without being one (verified against
+    // beancount 3.2.3: zero parse errors for this source).
+    const errors = run(
+      [
+        '2026-08-30 * "Landlord" "Monthly rent',
+        "2026-08-29 balance Assets:Cash 49.75 USD ~ 0.05 USD",
+        'end of memo"',
+        "  Expenses:Food:Groceries  1.00 USD",
+        "  Assets:Bank:Checking",
+        "",
+      ].join("\n"),
+    );
+    expect(errors).toEqual([]);
+  });
 });
