@@ -49,6 +49,31 @@ describe("intervalRanges", () => {
       "0098-12-29",
     );
   });
+
+  it("saturates at 9999-12-31 past the last representable year, like fava", () => {
+    // Fava's every get_next catches the year-10000 overflow and returns
+    // date.max; the port built "10000-01-01", which sorts before every
+    // four-digit year, so the range loop spun to its 100_000 guard and
+    // emitted garbage ranges with five-digit years.
+    const shape = (ranges: Array<{ begin: string; end: string }>) =>
+      ranges.map((r) => [r.begin, r.end]);
+    expect(shape(intervalRanges("9999-12-15", "9999-12-16", "month"))).toEqual([
+      ["9999-12-01", "9999-12-31"],
+    ]);
+    expect(
+      shape(intervalRanges("9999-12-15", "9999-12-16", "quarter")),
+    ).toEqual([["9999-10-01", "9999-12-31"]]);
+    expect(shape(intervalRanges("9999-12-15", "9999-12-16", "year"))).toEqual([
+      ["9999-01-01", "9999-12-31"],
+    ]);
+    // A week straddling New Year 10000 leaps past it the same way.
+    expect(shape(intervalRanges("9999-12-28", "9999-12-30", "week"))).toEqual([
+      ["9999-12-27", "9999-12-31"],
+    ]);
+    expect(
+      shape(intervalRanges("9999-12-28", "9999-12-30", "week", false)),
+    ).toEqual([["9999-12-28", "9999-12-30"]]);
+  });
 });
 
 describe("interval key normalization — every IntervalKey member", () => {
