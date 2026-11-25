@@ -2929,6 +2929,12 @@ async function main(): Promise<void> {
     "SELECT flag ORDER BY 9223372036854775808 LIMIT 1",
     "SELECT COUNT(*) GROUP BY 99999999999999999999999",
     "SELECT flag, payee, COUNT(*) GROUP BY 1, 2 PIVOT BY 0, 2",
+    // At or past 2^32 the raw engine traps (GROUP BY 4294967296 is
+    // `unreachable`) or silently mis-answers, so the guard refuses while
+    // real ordinals answer — including a directed ordinal, which the
+    // integer router leaves bare for the guard instead of constant-folding.
+    "SELECT COUNT(*) GROUP BY 4294967296",
+    "SELECT flag ORDER BY 9007199254740992 DESC",
   ]) {
     const refusedOrdinal = await queryLedgerFilesResult(
       FILES,

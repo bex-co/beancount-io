@@ -33,10 +33,13 @@
  *   offset to preserve; signed and fractional LIMITs stay untouched
  *   for the engine to report.
  *
- * Bare ordinals inside GROUP BY / ORDER BY key lists are exempt: a huge
- * ordinal is an out-of-range error on both sides today, and rewriting
- * it into a constant expression would turn that loud error into a
- * silent one-group answer. Expression keys rewrite normally.
+ * Bare ordinals inside GROUP BY / ORDER BY key lists are exempt — with or
+ * without a direction (`ORDER BY 5 DESC` is still an ordinal sort key): a
+ * huge ordinal is an out-of-range error on both sides today, and rewriting
+ * it into a constant expression would turn that loud error into a silent
+ * one-group answer. The ordinal-range guard downstream refuses the
+ * magnitudes the engine reads unreliably, so every exempt shape stays loud.
+ * Expression keys rewrite normally.
  *
  * Runs after the terminator (dead literals never hide behind a `;`) and
  * before the fold (whose generated queries carry no numerals). Like the
@@ -126,7 +129,10 @@ function exemptOrdinalSpans(query: string): Array<[number, number]> {
       let offset = 0;
       for (const key of list.split(",")) {
         const trimmed = key.trim();
-        if (/^\d+$/.test(trimmed)) {
+        // A direction does not make an ordinal an expression: `ORDER BY 5
+        // DESC` sorts by the fifth column, descending. The ordinal-range
+        // guard judges these; rewriting one would hide it as a constant.
+        if (/^\d+(?:\s+(?:asc|desc))?$/i.test(trimmed)) {
           const start = base + offset + key.indexOf(trimmed);
           spans.push([start, start + trimmed.length]);
         }

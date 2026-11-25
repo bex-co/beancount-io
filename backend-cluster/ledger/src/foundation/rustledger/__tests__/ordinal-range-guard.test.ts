@@ -10,6 +10,20 @@ describe("ordinalRangeError (w23/187)", () => {
       "SELECT flag, month(date), COUNT(*) GROUP BY 1, 2 PIVOT BY 9223372036854775808, 2",
       "PIVOT BY",
     ],
+    // At or past 2^32 the engine traps (`GROUP BY 4294967296` is
+    // `unreachable`) or silently mis-answers (`GROUP BY 4294967297`
+    // collapses to one group, `ORDER BY 4294967296` sorts nothing), where
+    // stock beanquery reports out-of-range loudly — so the guard refuses.
+    ["SELECT COUNT(*) GROUP BY 4294967296", "GROUP BY"],
+    ["SELECT COUNT(*) GROUP BY 9007199254740992", "GROUP BY"],
+    ["SELECT COUNT(*) GROUP BY 0004294967296", "GROUP BY"],
+    ["SELECT flag ORDER BY 4294967296", "ORDER BY"],
+    ["SELECT flag ORDER BY 9007199254740992 DESC", "ORDER BY"],
+    ["SELECT flag ORDER BY 4294967296 LIMIT 5", "ORDER BY"],
+    [
+      "SELECT flag, month(date), COUNT(*) GROUP BY 1, 2 PIVOT BY 4294967296, 2",
+      "PIVOT BY",
+    ],
     [
       "SELECT flag, month(date), COUNT(*) GROUP BY 1, 2 PIVOT BY 0, 2",
       "PIVOT BY",
@@ -28,8 +42,11 @@ describe("ordinalRangeError (w23/187)", () => {
   });
 
   it.each([
-    // i64::MAX and below stay the engine's own loud error.
+    // Below 2^32 and i64::MAX itself the engine reports out-of-range loudly,
+    // so they stay the engine's error.
     "SELECT flag ORDER BY 9223372036854775807",
+    "SELECT flag ORDER BY 4294967295",
+    "SELECT COUNT(*) GROUP BY 2147483648",
     "SELECT flag ORDER BY 1",
     "SELECT flag, COUNT(*) GROUP BY 1 ORDER BY 2 DESC LIMIT 5",
     "SELECT flag, month(date), COUNT(*) GROUP BY 1, 2 PIVOT BY 1, 2",

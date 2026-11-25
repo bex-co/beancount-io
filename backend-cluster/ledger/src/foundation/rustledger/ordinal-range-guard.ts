@@ -5,14 +5,23 @@ import type { QueryResult } from "@rustledger/wasm";
  * (w23/187).
  *
  * Stock beanquery refuses a key-list ordinal that names no SELECT column
- * (`invalid ORDER-BY column index …`). rustledger 0.24.0 does the same up to
- * i64::MAX, but past it it cannot lex the numeral as an ordinal and
- * constant-folds it instead: `ORDER BY 9223372036854775808` sorts nothing,
- * `GROUP BY 99999999999999999999999` collapses every row into one group, and
- * `PIVOT BY 0` silently reads as column 1. Each answers a query the writer
- * did not ask, so the ordinal is refused before it runs: a bare numeral past
- * i64::MAX in any of the three key lists, and `0` in a PIVOT BY (the
- * sibling clauses already refuse 0 loudly).
+ * (`invalid ORDER-BY column index …`). rustledger 0.24.0 does the same for
+ * small ordinals, but at or past 2^32 its ordinal reader is unreliable:
+ * `GROUP BY 4294967296` traps the WASM instance (`unreachable`), while
+ * neighboring magnitudes silently answer what was not asked (`GROUP BY
+ * 4294967297` collapses every row into one group, `ORDER BY 4294967296`
+ * sorts nothing), and past i64::MAX it cannot lex the numeral as an ordinal
+ * and constant-folds it instead (`ORDER BY 9223372036854775808` sorts
+ * nothing, `GROUP BY 99999999999999999999999` collapses every row into one
+ * group, and `PIVOT BY 0` silently reads as column 1). The breakage is not
+ * monotonic — magnitudes just below or at i64::MAX report out-of-range
+ * loudly — but no real SELECT list has 2^32 columns, so every bare ordinal
+ * at or past 2^32 is out of range by construction and is refused before it
+ * runs, except i64::MAX itself, which the engine still reports loudly (and
+ * which stays the engine's error). Each refusal answers a query the writer
+ * did not ask, so: a bare numeral at or past 2^32 (other than i64::MAX) in
+ * any of the three key lists, and `0` in a PIVOT BY (the sibling clauses
+ * already refuse 0 loudly).
  *
  * Syntactic and abstaining on doubt: only a key-list item that is exactly a
  * numeral (an ORDER BY item may carry ASC/DESC) is judged, calls and
@@ -21,6 +30,8 @@ import type { QueryResult } from "@rustledger/wasm";
  * in `scripts/verify-rustledger.ts` shows when.
  */
 const I64_MAX = "9223372036854775807";
+/** First magnitude the engine's ordinal reader stops reading reliably. */
+const U32 = "4294967296";
 const CLAUSE = /\b(group\s+by|order\s+by|pivot\s+by)\b/gi;
 const LIST_END = /^(?:having|order\s+by|pivot\s+by|limit)\b/i;
 
@@ -34,11 +45,11 @@ export function ordinalRangeError(query: string): QueryResult | undefined {
     for (const item of items) {
       const ordinal = /^(\d+)(?:\s+(?:asc|desc))?$/i.exec(item)?.[1];
       if (ordinal === undefined) continue;
-      if (exceedsI64(ordinal)) {
+      if (unreliableOrdinal(ordinal)) {
         return refusal(
           clause.toUpperCase(),
           ordinal,
-          "is past the largest column index this engine reads",
+          "is past the largest column index this engine reads reliably",
         );
       }
       if (clause === "pivot by" && /^0+$/.test(ordinal)) {
@@ -83,11 +94,18 @@ function keyList(text: string, from: number): string[] {
   return items;
 }
 
-function exceedsI64(digits: string): boolean {
+/**
+ * Whether a bare key-list ordinal's magnitude is one the engine reads
+ * unreliably: at or past 2^32 it traps (`unreachable`) or silently
+ * mis-answers at several magnitudes, so the guard owns the whole band.
+ * i64::MAX itself is the one band member the engine still reports loudly,
+ * and stays the engine's error.
+ */
+function unreliableOrdinal(digits: string): boolean {
   const n = digits.replace(/^0+(?=\d)/, "");
-  return (
-    n.length > I64_MAX.length || (n.length === I64_MAX.length && n > I64_MAX)
-  );
+  if (n === I64_MAX) return false;
+  if (n.length !== U32.length) return n.length > U32.length;
+  return n >= U32;
 }
 
 function refusal(clause: string, ordinal: string, why: string): QueryResult {
@@ -96,7 +114,7 @@ function refusal(clause: string, ordinal: string, why: string): QueryResult {
     rows: [],
     errors: [
       {
-        message: `Invalid ${clause} column index ${ordinal}: it ${why}, and this query engine would silently ignore it instead of refusing. Use a column position within the SELECT list (starting at 1) or name the column.`,
+        message: `Invalid ${clause} column index ${ordinal}: it ${why}, and this query engine would silently mis-answer or fail instead of refusing. Use a column position within the SELECT list (starting at 1) or name the column.`,
         code: null,
         phase: "query",
         hint: `Replace ${clause} ${ordinal} with a SELECT column position from 1 or a column name.`,

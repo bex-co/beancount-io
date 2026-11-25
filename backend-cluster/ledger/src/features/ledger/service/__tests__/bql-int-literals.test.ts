@@ -106,6 +106,11 @@ describe("routeIntegerLiterals", () => {
     "SELECT payee, count(*) FROM postings GROUP BY 9007199254740992, 9007199254740992",
     "SELECT * FROM postings ORDER BY 9007199254740992",
     "SELECT * FROM postings ORDER BY 9007199254740992, 1",
+    // A direction does not make an ordinal an expression: these stay bare
+    // for the ordinal-range guard instead of hiding as constants.
+    "SELECT * FROM postings ORDER BY 9007199254740992 DESC",
+    "SELECT * FROM postings ORDER BY 9007199254740992 ASC",
+    "SELECT * FROM postings ORDER BY payee, 9007199254740992 desc",
   ])("leaves %p alone", (query) => {
     expect(routeIntegerLiterals(query)).toBe(query);
   });

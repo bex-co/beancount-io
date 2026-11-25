@@ -99,6 +99,7 @@ newest first.
 
 ### Skipped
 
+- 2026-11-25 ledger `bql-int-literals` adjacent edges (`--`/`#` line comments with quotes, `matchAll` lastIndex reuse, LIMIT after-`$`, nested `int(int('<dead>'))`, `GROUP BY -N`/`ORDER BY +N` signs) — line comments are rejected by both oracles so quote confusion in them is unreachable, sticky regexes set lastIndex per use, `$` is not BQL, nested-int still fails loud at the outer render, signed keys are expressions the rewrite handles; examined, no divergence.
 - 2026-11-24 cli beancount crash-vs-error variance (`10/0/2`, `100/-0-5`, `10/0-5`, `10/(3-3)/(4-4)` SystemError entries vs `10/0`, `10/2/0` segfaults) — the guard refuses every variant before parsing either way; examined, no change.
 - 2026-11-24 cli guard over-refusal shapes (`10/0,0` Invalid-number, `10/.0.0` Invalid-token, slash-currency-adjacent) — beancount clean-errors, guard refuses with the divisor message; message-only divergence, no crash; left alone.
 - 2026-11-23 ledger `average-booking.ts` — read fully; every branch pins a past fix (w21/708 AVERAGE refusal, w21/721 saleLocator, w21/722 last-option-wins, w21/733 flagged-sale POSTING); examined, no divergence.
