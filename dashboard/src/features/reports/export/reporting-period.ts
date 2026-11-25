@@ -34,7 +34,21 @@ function utcInstant(year: number, monthIndex: number, day: number): Date {
   return value;
 }
 
+/**
+ * Whether `value` is a date the engines can hold: Fava's `datetime.date` and
+ * the backend's `isIsoDate` both refuse years outside 1–9999, so a selection
+ * resolving there is not a period the numbers cover.
+ */
+function isCoverableDate(value: Date): boolean {
+  const year = value.getUTCFullYear();
+  return year >= 1 && year <= 9999;
+}
+
 function utcDate(year: number, month: number, day: number): Date | null {
+  // Year 0 reaches every token branch through here (and fiscal periods through
+  // `fiscalPeriod`'s year-before arithmetic): reject it where the engines do
+  // instead of labeling an explicit period no report can hold.
+  if (year < 1 || year > 9999) return null;
   const value = utcInstant(year, month - 1, day);
   return value.getUTCFullYear() === year &&
     value.getUTCMonth() === month - 1 &&
@@ -170,9 +184,19 @@ export function parseConcreteTimeFilter(
     return null;
   }
 
+  // Week arithmetic from a late-9999 start (and any future arithmetic past
+  // New Year 10000) leaves `endExclusive` past what `toISOString` renders in
+  // four digits, slicing an expanded year into garbage like `+010000-01`.
+  // The engines cannot hold those days either, so the selection is one the
+  // export cannot date, not a period ending then.
+  const endDate = addDays(endRange.endExclusive, -1);
+  if (!isCoverableDate(startRange.start) || !isCoverableDate(endDate)) {
+    return null;
+  }
+
   return {
     startDate: toISODate(startRange.start),
-    endDate: toISODate(addDays(endRange.endExclusive, -1)),
+    endDate: toISODate(endDate),
   };
 }
 
