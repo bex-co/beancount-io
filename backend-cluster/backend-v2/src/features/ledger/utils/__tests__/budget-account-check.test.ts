@@ -58,6 +58,14 @@ describe("extractSingleBudgetAccount", () => {
     ).toBe("Expenses:日本");
   });
 
+  it("finds a budget under an org-mode heading Beancount skips", () => {
+    expect(
+      extractSingleBudgetAccount(
+        '* Monthly caps\n2026-02-10 custom "budget" Expenses:NoSuch "monthly" 100 USD\n',
+      ),
+    ).toBe("Expenses:NoSuch");
+  });
+
   it("returns undefined for non-budget directives and non-account tokens", () => {
     expect(
       extractSingleBudgetAccount('2026-02-10 * "Cafe"\n  Expenses:Food 5 USD'),
