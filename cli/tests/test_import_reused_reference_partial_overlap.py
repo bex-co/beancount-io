@@ -83,6 +83,37 @@ def test_both_occurrences_present_are_both_skipped(tmp_path: Path) -> None:
     assert _cash(tmp_path) == "-15.50"
 
 
+HANDWRITTEN_FIRST = (
+    '2024-02-29 * "Autopay"\n  import-id: "bank:autopay-001"\n  Assets:Cash  -7.75 USD\n  Expenses:Food\n'
+)
+
+
+def test_a_handwritten_entry_leaves_the_partial_overlap_open(tmp_path: Path) -> None:
+    """A migrated entry keys its reference under `import-id` only.
+
+    The partial-overlap guard compares that spelling against the statement's
+    raw rows, which key the same reference under `bank`. The full tuples never
+    met, so with either payment already present as a migrated entry both rows
+    matched the one occurrence within the week and were skipped as duplicates,
+    even under `--duplicates include`, understating spending.
+    """
+    (tmp_path / "main.bean").write_text(LEDGER + HANDWRITTEN_FIRST)
+    (tmp_path / "combined.csv").write_text(HEADER + FIRST + SECOND)
+    before = (tmp_path / "main.bean").read_bytes()
+
+    preview = _import(tmp_path, "combined.csv")
+    refused = _import(tmp_path, "combined.csv", "--apply")
+    unchanged = (tmp_path / "main.bean").read_bytes() == before
+    included = _import(tmp_path, "combined.csv", "--apply", "--duplicates", "include")
+
+    assert _statuses(preview) == ["duplicate", "possible_duplicate"]
+    assert refused.returncode == 4, refused.stdout  # type: ignore[attr-defined]
+    assert unchanged
+    assert json.loads(included.stdout)["data"]["written"] == 1  # type: ignore[attr-defined]
+    assert _cash(tmp_path) == "-15.50"
+    assert _bea(tmp_path, "check").returncode == 0
+
+
 def test_empty_books_review_the_second_row(tmp_path: Path) -> None:
     _books(tmp_path, "")
 

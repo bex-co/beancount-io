@@ -534,6 +534,11 @@ def answer(
     claimed, owners = _claim_payeeless_ids(hashed, identities, account)
     batch_rows: dict[int, int] = {}
     reused_here = _reused_references(entries, account, keys)
+    # The spelled reference without its namespace: raw rows key a bank
+    # reference under `bank` while stamped rows look it up under `import-id`,
+    # so the full tuples never meet and the partial-overlap guard below stayed
+    # shut for CSV/OFX references against hand-written ledger entries.
+    reused_spellings = {(name, value) for name, _, value in reused_here}
     first_uses = _first_uses(entries, Transaction)
     # Each transfer another account's import wrote has one other side here, and
     # each row is the other side of at most one transfer (w5/821, w5/882).
@@ -681,7 +686,8 @@ def answer(
                     # dates is no unique id: the ledger entry on another date
                     # is that other occurrence, not this row corrected, whatever
                     # the distance (w5/948).
-                    if days >= _REUSED_REFERENCE_DAYS or (days and any(key in reused_here for key, _, _ in hits)):
+                    statement_reuses = any((name, value) in reused_spellings for (name, _, value), _, _ in hits)
+                    if days >= _REUSED_REFERENCE_DAYS or (days and statement_reuses):
                         status = "possible_duplicate"
                         reference = (
                             f"{matched_value} is already in the ledger on {match.date}, {days} days from this row; "
