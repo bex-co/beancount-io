@@ -236,6 +236,19 @@ describe("amountDifference (w4/m52)", () => {
   });
 });
 
+describe("getBalanceAmounts", () => {
+  it("skips a null or empty amount instead of rowing a zero", () => {
+    // `balanceToAmounts` already skips a null amount (unit-amounts.test.ts);
+    // a zero row here would put the currency on the chart's legend with a
+    // flat line for a point that holds nothing.
+    expect(getBalanceAmounts({ USD: null })).toEqual([]);
+    expect(getBalanceAmounts({ USD: "" })).toEqual([]);
+    expect(getBalanceAmounts({ USD: 0 })).toEqual([
+      { currency: "USD", value: 0, exact: "0" },
+    ]);
+  });
+});
+
 /**
  * Money movement averages come from the ledger's decimals (w4/1029): rounding
  * a double to cents made a 0.003 BTC average 0 and turned

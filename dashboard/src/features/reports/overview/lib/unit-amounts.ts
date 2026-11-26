@@ -36,11 +36,20 @@ export function mergeAmounts(into: UnitAmounts, from: UnitAmounts): void {
 }
 
 /**
- * One rule for turning an API amount into a number: `Number`, so a malformed
- * value becomes NaN and is skipped rather than silently truncated the way
- * `parseFloat("12abc")` would.
+ * One rule for turning an API amount into a number: a finite `number`, or a
+ * string the ledger's decimal grammar accepts (`parseDecimalNumber`), read
+ * with `Number`. Anything else — null, empty, a boolean, hex, or trailing
+ * junk — is not an amount and is skipped, rather than silently truncated the
+ * way `parseFloat("12abc")` would or coerced the way `Number("")` and
+ * `Number(true)` do.
  */
 export function toFiniteAmount(value: unknown): number | null {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value !== "string" || parseDecimalNumber(value) === null) {
+    return null;
+  }
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : null;
 }
