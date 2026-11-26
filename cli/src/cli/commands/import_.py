@@ -758,20 +758,14 @@ def _date_proof(entry: dict[str, Any] | None) -> tuple[str, str] | None:
     return None
 
 
-def _date_order(date_format: str) -> str | None:
-    """`day-first` or `month-first` for a format that leads with the day or month, else None."""
-    lead = re.search(r"%[dmbBYy]", date_format)
-    if lead is None or lead.group() in {"%Y", "%y"}:
-        return None
-    return "day-first" if lead.group() == "%d" else "month-first"
-
-
 def _proven_date_note(name: str, date_format: str, proof: tuple[str, str] | None) -> str:
     """What a run's unambiguous dates proved, beside what an earlier export of its source proved."""
+    from cli.csv_mapper import date_order
+
     shown = shlex.join(["--date-format", date_format])
     if proof is None or proof[0] == date_format:
         return f"Read the date format from {name}: {shown}."
-    now, was = _date_order(date_format), _date_order(proof[0])
+    now, was = date_order(date_format), date_order(proof[0])
     if now is not None and was is not None and now != was:
         return (
             f"The date convention changed: {name}'s dates read {now} ({shown}), where {proof[1]}'s read {was}. "
@@ -1115,6 +1109,7 @@ def import_entries(
     applying.
     """
     from cli.csv_mapper import (
+        date_order,
         detect_delimiter,
         infer_date_format,
         inspect_date_column,
@@ -1766,7 +1761,7 @@ def import_entries(
                         "proven_date_source": source.name,
                     }
             elif earlier_proof is not None and date_format == earlier_proof[0]:
-                order = _date_order(date_format)
+                order = date_order(date_format)
                 inferred_notes.append(
                     f"Read {source.name} {f'{order} ' if order else ''}as {earlier_proof[1]} was "
                     f"({shlex.join(['--date-format', date_format])}): no day in it passes the twelfth, so its own "

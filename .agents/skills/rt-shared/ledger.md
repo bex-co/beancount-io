@@ -99,6 +99,7 @@ newest first.
 
 ### Skipped
 
+- 2026-11-26 cli `inspect_date_column` ambiguous proof-contradiction shape — brute-forced every day/month/year/width/separator date against every ordered builtin prefer: whenever the column stays ambiguous with the proof ruled out, a same-convention twin of the proof always survives, so keeping the proof is correct; the cross-shape (dash after slash) convention fallback shipped this run.
 - 2026-11-26 backend-v2 bare `budget` keyword (kind `Budget`) skipping `extractDirectiveBudgetAccounts` — beancount knows no bare `budget` directive, so the append server rejects it as a bean-check error; no silent commit, no validation to bypass.
 - 2026-11-26 backend-v2 budget-invariant siblings (`addLedgerEntries`, append, `moveSourceSlices`/delete/undo/legacy) — all validated or text-free; only `updateSourceSlice` missed org-headed budgets, shipped this run.
 - 2026-11-26 mobile `series-util` alignment + `selectIncomeExpenseChartSeries` independent filtering, dashboard budget interval stepping, fiscal-year twins — examined; windows agree on shared statement months, `Date`-based stepping has no `date.max` contract, FYE ports already cross-fixed.

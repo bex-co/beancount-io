@@ -964,7 +964,9 @@ def inspect_date_column(
     instead of silently booking half a year into the wrong month. ``prefer``
     breaks that tie: when it still reads every date it is the one returned,
     still flagged ambiguous, so an account's earlier export that proved its
-    convention decides a later one that cannot (w1/379).
+    convention decides a later one that cannot (w1/379). When the proved format
+    itself cannot read the file, a survivor of its convention is preferred over
+    the default all the same.
 
     The whole column is read: the deciding day can arrive at any row, and a
     sample that stopped at 200 chose month-first for an export whose 201st date
@@ -1009,7 +1011,34 @@ def inspect_date_column(
         return None, False, None
     if not seen:
         return None, False, None
-    return (prefer if prefer in working else working[0]), len(working) > 1, None
+    if prefer in working:
+        return prefer, len(working) > 1, None
+    # The proved format may not read this file — a dash-separated export after
+    # slash-separated proofs — while its convention still does. A day-first
+    # proof's day-first twin reads what the proof cannot, so it wins the tie
+    # over the month-first default; when no twin survived, the proof says
+    # nothing about this file and the default stands.
+    chosen = working[0]
+    if prefer is not None:
+        proved = date_order(prefer)
+        if proved is not None:
+            same = [candidate for candidate in working if date_order(candidate) == proved]
+            if same:
+                chosen = same[0]
+    return chosen, len(working) > 1, None
+
+
+def date_order(date_format: str) -> str | None:
+    """`day-first` or `month-first` for a format that leads with the day or month, else None.
+
+    A year-first format (`%Y-%m-%d`) carries no day/month convention, and
+    neither does one with no day or month field: neither can decide a tie
+    between `%m/%d/%Y` and `%d/%m/%Y`.
+    """
+    lead = re.search(r"%[dmbBYy]", date_format)
+    if lead is None or lead.group() in {"%Y", "%y"}:
+        return None
+    return "day-first" if lead.group() == "%d" else "month-first"
 
 
 def _parses(value: str, date_format: str) -> bool:
