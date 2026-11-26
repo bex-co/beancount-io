@@ -6,7 +6,7 @@ import { useMutation } from "@apollo/client/react";
 import { LogoutDocument } from "@/graphql/definitions";
 import { clearUserId } from "@/common/analytics";
 import { redirectToLogin } from "@/features/auth/lib/redirect-to-login";
-import { clearStoredQueryHistories } from "@/features/bql/hooks/use-query-history";
+import { clearStoredQueryHistories } from "@/common/lib/storage/query-history-storage";
 
 /**
  * Logout page component

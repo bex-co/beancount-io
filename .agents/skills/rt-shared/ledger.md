@@ -23,6 +23,14 @@ newest first.
 
 ### Skipped
 
+- 2026-11-26 dashboard `reports/account` → `journal/*` (7 imports), `reports/overview` → `journal-table`/`entry-context-dialog`/`ai-agent QuickAskInput` — account report deliberately embeds the journal's table/filters/pagination and the overview embeds the journal table + quick-ask; moving journal display into `common/` churns both features with no bug or drift hazard; below the value bar.
+- 2026-11-26 dashboard `oauth/*` → `auth/*` forms/hooks (`consent-steps`, identity/mobile consent pages) — consent flow deliberately reuses auth's login/register/OTP forms; same-domain sharing, no duplicated rule; moving to `common/` reduces no coupling.
+- 2026-11-26 dashboard `ledger-data/.../collaborators-section` → `collaboration/*` row/dialog/types — settings page deliberately composes collaborator management UI; single consumer, no drift; below the value bar.
+- 2026-11-26 dashboard `user-settings/.../oidc-section` → `auth/lib/oidc-error` (`oidcErrorKey`) — one-line shared map lookup used identically by auth login page; no disagreement, single isolated cleanup below the threshold; left in place.
+- 2026-11-26 backend-v2 handlers reading `layers.database.models` (`admin-api-handler`, `git-proxy-handler`, `oidc-route`, `stripe-webhook-handler`) + workflows importing `@/server/api/identity|authorization` — longstanding transport plumbing; `Identity` matches the pass-identity-as-input rule, and restructuring model access into services is out of routine scope with no proven boundary bug.
+- 2026-11-26 mobile `app/` routes — thin, mount screens from `src/screens/`; no screen logic in `app/`, no violation.
+- 2026-11-26 repo-wide cross-package import grep (`mobile|dashboard|cli|backend-v2|ledger|deploy|skills` across all `src/`) — zero hits; nothing to fix.
+
 ## rt-dead-code-removal
 
 ### Deferred
