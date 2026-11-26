@@ -182,11 +182,21 @@ export class CliAuthService implements ICliAuthService {
     );
   }
 
-  /** Deny a pending request named by its user code. */
+  /**
+   * Deny a pending request named by its user code. The denial is the
+   * session's one decision too: without the claim, an approval that read
+   * "pending" before this write lands would still mint and store a
+   * credential over the denial — and a denial racing an approval the other
+   * way would flip an authorized session back. Exactly one of them lands.
+   */
   async denySession(userCode: string, identity: Identity): Promise<void> {
     assertSessionIdentity(identity, "Denying CLI authentication");
     const session = await this.findByUserCode(userCode, identity);
     assertPending(session);
+    await this.claimOnce(
+      CACHE_KEYS.auth.cliAuthApprovalClaim(session.id),
+      "CLI denial",
+    );
     await this.models.cliAuthSession.deny(session.id);
   }
 

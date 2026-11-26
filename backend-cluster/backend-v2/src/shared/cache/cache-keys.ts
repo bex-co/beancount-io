@@ -86,7 +86,7 @@ export const CACHE_KEYS = {
       `auth:sign_in_recovery:proof:${challengeDigest}`,
     signInRecoverySpent: (challengeDigest: string) =>
       `auth:sign_in_recovery:spent:${challengeDigest}`,
-    /** Atomic single-approval claim for one CLI auth session. */
+    /** Atomic single-decision claim for one CLI auth session: the approval and the denial contend for it, so exactly one lands. */
     cliAuthApprovalClaim: (id: string) => `auth:cli_auth_approval_claim:${id}`,
     /** Atomic single-redemption claim for one CLI auth session. */
     cliAuthRedemptionClaim: (id: string) =>

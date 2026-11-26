@@ -348,6 +348,61 @@ describe("CliAuthService", () => {
     );
   });
 
+  describe("concurrent approval and denial", () => {
+    // Both requests read before either writes: the loser acts on a stale
+    // pending snapshot, exactly as a request that arrived a millisecond
+    // earlier would. The counter below is key-aware like Redis INCR, so the
+    // two decisions contend for the session's single claim.
+    const keyedCounter = () => {
+      const counts = new Map<string, number>();
+      mockIncrementInWindow.mockImplementation(async (key: string) => {
+        const count = (counts.get(key) ?? 0) + 1;
+        counts.set(key, count);
+        return { count, resetInMs: 60_000 };
+      });
+    };
+
+    it("a denial that lands first is not overridden by a concurrent approval", async () => {
+      keyedCounter();
+      mockCliAuthSession.findByUserCode.mockResolvedValue(session());
+      mockJwt.create.mockResolvedValue({
+        token: "jwt-token",
+        expireAt: new Date("2026-01-31T00:00:00.000Z"),
+      });
+
+      await service.denySession(USER_CODE, browserIdentity);
+      await expect(
+        service.authorizeSession(USER_CODE, browserIdentity),
+      ).rejects.toThrow("already been used");
+
+      expect(mockCliAuthSession.deny).toHaveBeenCalledWith("clis_1");
+      expect(mockJwt.create).not.toHaveBeenCalled();
+      expect(mockCliAuthSession.authorize).not.toHaveBeenCalled();
+    });
+
+    it("an approval that lands first is not overridden by a concurrent denial", async () => {
+      keyedCounter();
+      mockCliAuthSession.findByUserCode.mockResolvedValue(session());
+      mockJwt.create.mockResolvedValue({
+        token: "jwt-token",
+        expireAt: new Date("2026-01-31T00:00:00.000Z"),
+      });
+
+      await service.authorizeSession(USER_CODE, browserIdentity);
+      await expect(
+        service.denySession(USER_CODE, browserIdentity),
+      ).rejects.toThrow("already been used");
+
+      expect(mockCliAuthSession.authorize).toHaveBeenCalledWith(
+        "clis_1",
+        "jwt-token",
+        new Date("2026-01-31T00:00:00.000Z").toISOString(),
+        "user-1",
+      );
+      expect(mockCliAuthSession.deny).not.toHaveBeenCalled();
+    });
+  });
+
   describe("getSessionStatus", () => {
     it.each<CliAuthSessionStatus>([
       "pending",
