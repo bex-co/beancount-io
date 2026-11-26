@@ -6,16 +6,24 @@ on:
     paths:
       - "bex.yaml"
       - "deploy/bex/**"
+      - "deploy/docker/**"
+      - "deploy/docker-single-psql/**"
       - "scripts/check-bex-blueprint.py"
       - "scripts/test_check_bex_blueprint.py"
+      - "scripts/check-docker-targets.py"
+      - "scripts/test_check_docker_targets.py"
       - ".github/workflows/ci-deploy.yml"
   pull_request:
     branches: [main]
     paths:
       - "bex.yaml"
       - "deploy/bex/**"
+      - "deploy/docker/**"
+      - "deploy/docker-single-psql/**"
       - "scripts/check-bex-blueprint.py"
       - "scripts/test_check_bex_blueprint.py"
+      - "scripts/check-docker-targets.py"
+      - "scripts/test_check_docker_targets.py"
       - ".github/workflows/ci-deploy.yml"
 
 concurrency:
@@ -34,3 +42,21 @@ jobs:
         run: python3 scripts/test_check_bex_blueprint.py
       - name: Gitea wrapper creates its own schema (real Postgres)
         run: deploy/bex/gitea/test-entrypoint.sh
+
+  docker-targets:
+    name: Docker targets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: OAuth key from AUTH_SECRET, Git through the proxy
+        run: python3 scripts/check-docker-targets.py
+      - name: Docker target guard tests
+        run: python3 scripts/test_check_docker_targets.py
+      - name: Compose files render with the example environment
+        run: |
+          for target in deploy/docker deploy/docker-single-psql; do
+            (cd "$target" &&
+              docker compose --env-file .env.example config --quiet &&
+              SSH_PROXY_HOST_KEY=placeholder docker compose --env-file .env.example \
+                -f docker-compose.yml -f docker-compose.ssh.yml config --quiet)
+          done

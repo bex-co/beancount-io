@@ -40,7 +40,8 @@ Edit `.env`:
 
 1. Set `APP_DOMAIN`, `API_DOMAIN`, `GIT_DOMAIN`, and `ACME_EMAIL`.
 2. Replace every `change-me` value. `openssl rand -hex 32` produces values that
-   are both strong and safe inside the generated PostgreSQL URI.
+   are both strong and safe inside the generated PostgreSQL URI. Leave
+   `OAUTH_JWKS_FROM_AUTH_SECRET=true` as it is ([OAuth signing key](#oauth-signing-key)).
 3. Configure optional integrations only when you need them. AI stays off until
    you set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`; the `bea ask` model proxy
    needs `OPENAI_API_KEY`.
@@ -65,22 +66,10 @@ Once the health checks pass, open:
 | --- | --- |
 | Dashboard | `https://<APP_DOMAIN>` |
 | API | `https://<API_DOMAIN>/api-gateway/` |
+| Mobile app server address | `https://<APP_DOMAIN>` ([Use the mobile app](#use-the-mobile-app)) |
+| MCP endpoint | `https://<APP_DOMAIN>/api-gateway/mcp` ([Connect an MCP host](#connect-an-mcp-host)) |
+| Git over HTTPS | `https://<API_DOMAIN>/git/<owner>/<ledger>.git` ([Git over HTTPS](#git-over-https)) |
 | Gitea | `https://<GIT_DOMAIN>` |
-
-### OAuth signing key
-
-Set `OAUTH_JWKS` in `.env` to a JSON JWK set stored only on the host (never in
-git). Empty or invalid → backend boots and serves legacy login/API traffic, but
-every `/oauth/*` and well-known OAuth metadata route returns `503
-oauth_not_configured`, so the native mobile app cannot complete discovery.
-`DASHBOARD_URL` / `SERVER_URL` are derived from `APP_DOMAIN` / `API_DOMAIN` in
-Compose; see [`backend-v2` OAuth deployment contract](../../backend-cluster/backend-v2/README.md#oauth-deployment-contract)
-for the reverse-proxy well-known routes.
-
-The OAuth issuer is `https://<APP_DOMAIN>`, so the Caddyfile also sends
-`/api-gateway/*` on the app domain to backend-v2 (GraphQL and
-`/api-gateway/oauth/*`). Enter `https://<APP_DOMAIN>` as the server URL in the
-mobile app; the API domain alone does not match the issuer.
 
 If startup stops at either one-shot service, inspect it directly:
 
@@ -88,6 +77,63 @@ If startup stops at either one-shot service, inspect it directly:
 docker compose logs gitea-init backend-migrate
 docker compose logs backend-v2 ledger gitea
 ```
+
+### OAuth signing key
+
+The mobile app's sign-in, MCP hosts that sign in with OAuth, and every
+`/oauth/*` route need a signing key. You do not have to make one:
+`.env.example` sets `OAUTH_JWKS_FROM_AUTH_SECRET=true`, and with `OAUTH_JWKS`
+empty the backend derives the key from `AUTH_SECRET`. It is the same key on
+every restart, and there is nothing more to store or back up. To check it,
+`curl -sS https://<APP_DOMAIN>/.well-known/oauth-authorization-server` answers
+with `"issuer":"https://<APP_DOMAIN>"`, and the `jwks_uri` it names serves one
+ES256 key.
+
+- **Rotating `AUTH_SECRET` rotates the key.** Every OAuth client, the app and
+  MCP hosts alike, is signed out and signs in again, as is every dashboard
+  session the secret signed.
+- **To use a key of your own,** put a private P-256 ES256 JWK set in
+  `OAUTH_JWKS`, single-quoted, in `.env`. A supplied `OAUTH_JWKS` always wins
+  over the derived key. After the first build, this prints one:
+
+  ```zsh
+  docker compose run --rm --no-deps -T --entrypoint node backend-v2 -e 'const c=require("node:crypto");const k=c.generateKeyPairSync("ec",{namedCurve:"P-256"}).privateKey.export({format:"jwk"});console.log(JSON.stringify({keys:[{...k,kid:c.randomUUID(),alg:"ES256",use:"sig"}]}))'
+  ```
+
+  Keep it with `.env`, never in Git, and run `docker compose up -d` to apply it.
+- **An `.env` made before `.env.example` had the line** keeps OAuth off: the
+  backend boots and serves the dashboard and the API, but every OAuth route
+  answers `503 oauth_not_configured`, and the app says the server is not set
+  up for sign-in yet. Add `OAUTH_JWKS_FROM_AUTH_SECRET=true` (or a key) to
+  `.env` and run `docker compose up -d`.
+
+`DASHBOARD_URL` and `SERVER_URL` are derived from `APP_DOMAIN` and
+`API_DOMAIN` in Compose. The OAuth issuer is `https://<APP_DOMAIN>`, so the
+Caddyfile also sends `/api-gateway/*` and `/.well-known/*` on the app domain to
+backend-v2; see the [`backend-v2` OAuth deployment contract](../../backend-cluster/backend-v2/README.md#oauth-deployment-contract)
+for the routes a different reverse proxy must forward.
+
+### Use the mobile app
+
+The App Store and Google Play apps can use this stack. On the app's welcome
+screen, tap the gear (Server), enter `https://<APP_DOMAIN>`, tap **Test
+connection**, then **Save**, and sign in. Enter the app domain, not the API
+domain: the API domain does not match the OAuth issuer, and the app refuses it.
+
+### Connect an MCP host
+
+The MCP endpoint is `https://<APP_DOMAIN>/api-gateway/mcp`. A host that signs
+in with OAuth finds this stack's sign-in from the endpoint itself. In Claude
+Code:
+
+```zsh
+claude mcp add --transport http beancount https://<APP_DOMAIN>/api-gateway/mcp
+```
+
+then sign in from `/mcp`. A host that takes a header can instead send a
+personal access token from Settings → Personal access tokens as
+`Authorization: Bearer <token>`. The [MCP docs](../../backend-cluster/backend-v2/docs/mcp.md)
+have the tools, the credentials, and notes for each client.
 
 ## Network and data model
 
@@ -133,31 +179,93 @@ The default dependency image tags follow patch releases within their selected
 major/minor lines. Pin full tags or image digests in `.env` if your rollout
 policy requires byte-for-byte repeatability.
 
-## Git over SSH (optional)
+## Git over HTTPS
 
-Ledger clone addresses name `GIT_DOMAIN`: this file sets `EXTERNAL_GITEA_HOST_NAME`
-from it, and an explicit value always wins. (A self-hosted stack that sets none
-learns the address from Gitea's `ROOT_URL` at start; it never uses
-beancount.io's Git host. See `../bex/README.md`, "Where ledger clone addresses
-come from".) With `SELF_HOST=true` and the SSH overlay below off, ledger
-responses carry `sshUrl: null`, and `bea cloud ledger clone` says this
-deployment serves no Git over SSH instead of trying; from `bea` 0.4.1 it
-also prints the HTTPS `git clone` command and says the operator can turn on
-Git over SSH (the SSH overlay below) for `bea` itself to clone.
+Git over HTTPS works by default, through backend-v2's Git proxy on the API
+domain: users clone and push `https://<API_DOMAIN>/git/<owner>/<ledger>.git`.
+This file sets `GIT_PUBLIC_URL` to `https://<API_DOMAIN>/git`, so ledgers'
+`httpUrl`, the dashboard's Git Clone menu and `bea cloud git setup` all use
+it. Gitea's own address, `https://<GIT_DOMAIN>`, takes neither a token nor the
+account password. A stack started from this file before 2026-11-25 gave ledgers that
+address; pull the update and run `docker compose up -d`.
 
-Git over HTTPS works by default. Users clone `https://<GIT_DOMAIN>/git/<owner>/<ledger>.git`
-with any username and a personal access token as the password, minted in the
-dashboard under Settings → Personal access tokens (`/settings/api-keys`); every user of a
-self-hosted stack can mint one. The account password is still accepted for
-now, with a `remote:` hint to switch, because backend-v2's
-`gitHttp.passwordAuth` ships as `warn`. It is a code setting in
-`backend-cluster/backend-v2/src/config/config.ts` (`allow`, `warn`, or `deny`),
-not an environment variable: to refuse passwords, change it to `deny` and
-rebuild the image. A user whose Git client keeps sending an old password
-clears it with
-`printf 'protocol=https\nhost=<GIT_DOMAIN>\n\n' | git credential reject`, the
+Git signs in one of two ways:
+
+- **With `bea` 0.5.0 or later**, once per machine, and then plain `git` asks
+  for nothing:
+
+  ```zsh
+  export BEA_API_URL=https://<APP_DOMAIN>
+  export BEA_DASHBOARD_URL=https://<APP_DOMAIN>
+  bea cloud login
+  bea cloud git setup
+  git clone https://<API_DOMAIN>/git/<owner>/<ledger>.git
+  ```
+
+  `bea cloud git setup` mints a personal access token for Git and registers
+  `bea` as Git's credential helper for `https://<API_DOMAIN>` alone; see
+  `cli/docs/USAGE.md`, "Cloud: Git sign-in on a self-hosted server".
+- **Without `bea`**, any username and a personal access token as the password,
+  minted in the dashboard under Settings → Personal access tokens
+  (`/settings/api-keys`); every user of a self-hosted stack can mint one.
+
+The account password is still accepted for now, with a `remote:` hint to
+switch, because backend-v2's `gitHttp.passwordAuth` ships as `warn`. It is a
+code setting in `backend-cluster/backend-v2/src/config/config.ts` (`allow`,
+`warn`, or `deny`), not an environment variable: to refuse passwords, change it
+to `deny` and rebuild the image. A user whose Git client keeps sending an old
+password clears it with
+`printf 'protocol=https\nhost=<API_DOMAIN>\n\n' | git credential reject`, the
 host's Keychain item on macOS, or its line in `~/.git-credentials`. See
 `backend-cluster/backend-v2/docs/authentication-rate-limits.md`.
+
+## Bring books in
+
+A ledger here is a Git repository, so books come in with their history: from
+another self-hosted stack, from beancount.io, or from a folder of Beancount
+files. Two stacks are brought together ledger by ledger. Accounts, personal
+access tokens, settings, bank connections and uploaded receipts do not move;
+make them again on this stack.
+
+1. Get a copy of the books, with their history:
+   - **From another self-hosted stack**, clone the ledger there, signed in as
+     that stack asks: on a Docker stack,
+     `git clone https://<its API_DOMAIN>/git/<owner>/<ledger>.git old`.
+   - **From beancount.io**, Git signs in with an SSH key. Add yours in the
+     dashboard under Settings → SSH Keys, then, before you point `bea` at this
+     stack (no `BEA_API_URL` set), run `bea cloud login` and
+     `bea cloud ledger clone <owner>/<ledger> --dir old`.
+   - **From a folder of files**, run `git init` and commit them in it.
+2. In this stack's dashboard, create a ledger.
+3. Clone it, merge the books into it, and push. Git signs in as in
+   [Git over HTTPS](#git-over-https):
+
+   ```zsh
+   git clone https://<API_DOMAIN>/git/<owner>/<ledger>.git books
+   cd books
+   git fetch ../old HEAD
+   git merge --allow-unrelated-histories -X theirs -m "Bring in my books" FETCH_HEAD
+   git push origin HEAD
+   ```
+
+The server refuses a forced push to a ledger's `main`, so the history goes in
+as one merge on top of the new ledger's first commit; `-X theirs` makes your
+files win over the starter `main.bean`. The ledger reads `main.bean`, so make
+that your main file or have it `include` yours. Then open the ledger in the
+dashboard, or run `bea --file main.bean check` in the clone, to see that it
+loads.
+
+## Git over SSH (optional)
+
+With `SELF_HOST=true` and the SSH overlay below off, ledger responses carry
+`sshUrl: null`, and `bea cloud ledger clone` says this deployment serves no
+Git over SSH instead of trying; from `bea` 0.4.1 it also prints the HTTPS
+`git clone` command and says the operator can turn on Git over SSH for `bea`
+itself to clone. SSH clone addresses name `GIT_DOMAIN`: this file sets
+`EXTERNAL_GITEA_HOST_NAME` from it, and an explicit value always wins. (A
+self-hosted stack that sets none learns the address from Gitea's `ROOT_URL` at
+start; it never uses beancount.io's Git host. See `../bex/README.md`, "Where
+ledger clone addresses come from".)
 
 To publish SSH, backend-v2 must terminate the
 connection so its write policy applies. It must present Gitea's existing private

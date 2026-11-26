@@ -37,4 +37,6 @@ docker compose --env-file .env.example config --quiet
 SSH_PROXY_HOST_KEY=placeholder docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.ssh.yml config --quiet
 ```
 
+From the repository root, `python3 scripts/check-docker-targets.py` (tests: `scripts/test_check_docker_targets.py`) checks both targets' sign-in and Git wiring: backend-v2 gets `OAUTH_JWKS_FROM_AUTH_SECRET` from `.env` with no default (an older `.env` keeps OAuth off), `.env.example` sets it to `true` and leaves `OAUTH_JWKS` empty, and `GIT_PUBLIC_URL` is `https://${API_DOMAIN}/git`, backend-v2's Git proxy, since Gitea's own address takes no Beancount.io credential. `CI (deploy)` runs it and both Compose renders.
+
 Use `docker compose up -d --build` only when an actual stack run is needed; it mutates containers and persistent data. For bex changes, cross-check `../bex.yaml` against `bex/README.md` and the referenced service Dockerfiles.

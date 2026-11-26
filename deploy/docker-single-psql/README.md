@@ -60,9 +60,14 @@ Three one-shot services should finish with exit code 0, in this order:
 Then open `https://<APP_DOMAIN>`, `https://<API_DOMAIN>/api-gateway/`, and
 `https://<GIT_DOMAIN>` as in `../docker/README.md`.
 
-Ledger clone addresses name `GIT_DOMAIN`, which sets `EXTERNAL_GITEA_HOST_NAME`;
-the rule, and why `sshUrl` is null with `SELF_HOST=true` until the SSH overlay
-is on, are in `../docker/README.md`, "Git over SSH".
+The addresses and steps in `../docker/README.md` apply unchanged: the
+[OAuth signing key](../docker/README.md#oauth-signing-key), derived from
+`AUTH_SECRET` by default; [the mobile app](../docker/README.md#use-the-mobile-app),
+which takes `https://<APP_DOMAIN>` as its server address; [MCP hosts](../docker/README.md#connect-an-mcp-host),
+at `https://<APP_DOMAIN>/api-gateway/mcp`; [Git over HTTPS](../docker/README.md#git-over-https)
+and [over SSH](../docker/README.md#git-over-ssh-optional); and
+[bringing books in](../docker/README.md#bring-books-in) from another stack or
+from beancount.io.
 
 If startup stalls, the shared server makes the ordering worth checking first:
 
@@ -103,7 +108,8 @@ them is unacceptable for your deployment, use `../docker/` instead.
 - **Not a migration path.** This target starts an empty cluster. It cannot
   consolidate the two existing volumes of a running `../docker/` deployment;
   moving requires `pg_dump` from each old server and `pg_restore` into the new
-  databases.
+  databases. To move only the ledgers, bring each one in from the old stack
+  ([Bring books in](../docker/README.md#bring-books-in)).
 - **Superuser password rotation.** Changing `POSTGRES_SUPERUSER_PASSWORD` after
   first boot does not rotate the initialized superuser role — the image only
   applies `POSTGRES_PASSWORD` at cluster creation — and the mismatch makes

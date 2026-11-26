@@ -135,13 +135,12 @@ services:
       COOKIE_SECRETS: ${COOKIE_SECRETS:?Set COOKIE_SECRETS in .env}
       ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env}
       METRICS_API_TOKEN: ${METRICS_API_TOKEN:?Set METRICS_API_TOKEN in .env}
-      # The OAuth authorization server's private signing JWKS. Optional to
-      # boot, but every OAuth route answers 503 `oauth_not_configured`
-      # without it — including `/.well-known/oauth-protected-resource`,
-      # which is where the MCP endpoint's 401 sends clients to discover
-      # how to authenticate. Leaving it unset makes MCP unreachable.
-      # Generate per `backend-cluster/backend-v2/README.md`.
+      # OAuth signing key (README.md, "OAuth signing key"): a supplied
+      # OAUTH_JWKS wins, else OAUTH_JWKS_FROM_AUTH_SECRET=true derives one from
+      # AUTH_SECRET. With neither, every OAuth route answers 503, including the
+      # protected-resource document the MCP endpoint's 401 points clients to.
       OAUTH_JWKS: ${OAUTH_JWKS:-}
+      OAUTH_JWKS_FROM_AUTH_SECRET: ${OAUTH_JWKS_FROM_AUTH_SECRET:-}
       # Native app-link vouchers. Unset → /.well-known AASA and assetlinks 404.
       # Official MCP Registry domain proof. Unset → /.well-known/mcp-registry-auth 404.
       MCP_REGISTRY_AUTH_PROOF: ${MCP_REGISTRY_AUTH_PROOF:-}
@@ -154,8 +153,12 @@ services:
       FAVA_API_ADMIN_PASSWORD: ${FAVA_API_ADMIN_PASSWORD:?Set FAVA_API_ADMIN_PASSWORD in .env}
       GITEA_HOST_NAME: gitea
       GITEA_HTTP_PORT: 3000
+      # SSH clone addresses use GIT_DOMAIN. HTTPS goes through backend-v2's Git
+      # proxy (Gitea's own address takes no token or password); GIT_PUBLIC_URL
+      # puts the proxy in every ledger's httpUrl (README.md, "Git over HTTPS").
       EXTERNAL_GITEA_HOST_NAME: ${GIT_DOMAIN:?Set GIT_DOMAIN in .env}
       EXTERNAL_GITEA_HTTP_PORT: 443
+      GIT_PUBLIC_URL: https://${API_DOMAIN:?Set API_DOMAIN in .env}/git
       GITEA_SSH_PORT: ${SSH_PORT:-2222}
       SSH_PROXY_ENABLED: ${SSH_PROXY_ENABLED:-false}
       SSH_PROXY_PORT: ${SSH_PORT:-2222}
