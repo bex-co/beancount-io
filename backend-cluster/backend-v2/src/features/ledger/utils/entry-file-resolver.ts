@@ -64,6 +64,10 @@ export function resolveEntryFile(
     Custom: null,
     Event: null,
   };
-  const template = typeMap[entryType] ?? opts.default_file;
+  // An option set to the empty string (a valueless `custom
+  // "beancountio-option" "transaction_file"` stores `""`, mirroring Python)
+  // is unset, not a file named "": fall through at each level so the order
+  // above holds.
+  const template = typeMap[entryType] || opts.default_file || "main.bean";
   return interpolateFilePath(template, entryDate);
 }
