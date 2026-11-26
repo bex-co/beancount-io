@@ -16,7 +16,7 @@ The suite shares [command recipes](beancount-init/references/bea-cli.md) that se
 | [beancount-property](beancount-property/SKILL.md) | Record property purchases, mortgages, escrow, rent, deposits, and sales from the figures you provide. |
 | [beancount-import](beancount-import/SKILL.md) | Import bank/card statements (including PDFs), broker and crypto-exchange activity exports, and payment-processor payouts, with duplicate review and opening-lot support. |
 | [beancount-importer-author](beancount-importer-author/SKILL.md) | Write or repair a reusable, tested bank importer. |
-| [beancount-reconcile](beancount-reconcile/SKILL.md) | Compare an account with a bank or broker statement. |
+| [beancount-reconcile](beancount-reconcile/SKILL.md) | Compare an account with a bank or broker statement, starting from what the statement covers and whether its own arithmetic holds. |
 | [beancount-migrate](beancount-migrate/SKILL.md) | Migrate transaction history from another finance app. |
 | [beancount-ask](beancount-ask/SKILL.md) | Answer ledger questions with reproducible queries, including holdings per lot at cost and market value, profit by client or project, and quarter payroll totals. No investment or tax advice. |
 | [beancount-roll-forward](beancount-roll-forward/SKILL.md) | Explain one balance-sheet account's movement over a period, opening to closing. |
@@ -24,7 +24,7 @@ The suite shares [command recipes](beancount-init/references/bea-cli.md) that se
 | [beancount-invoices](beancount-invoices/SKILL.md) | Record invoices you issue and bills you receive, apply payments to them, and see who owes what and how overdue. |
 | [beancount-report-pack](beancount-report-pack/SKILL.md) | Package a period's statements into CSV files with a summary whose tie-outs between them must pass. |
 | [beancount-business-metrics](beancount-business-metrics/SKILL.md) | Answer net burn, cash and runway questions from the ledger's cash movements, and decline ARR/CAC/LTV-style figures it cannot support. |
-| [beancount-close](beancount-close/SKILL.md) | Reconcile and close an accounting period. |
+| [beancount-close](beancount-close/SKILL.md) | Reconcile and close an accounting period, with each account's evidence and state: tied, partial, partly covered, unverified or blocked. |
 | [beancount-options](beancount-options/SKILL.md) | Record options trades and lifecycle events. |
 
 ## Install

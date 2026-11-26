@@ -53,7 +53,7 @@
 - [x] **m45** — [Record stock, fund, and crypto trades with correct lots, and report realized gains](done/m45/README.md) (11 tasks) ← /pm-brainstorm 2026-10-18 (online skills research: beancount#940, #564, #614) — sequenced after m40; follows m41's compact style
 - [ ] **m46** — [Fix, recategorize, and reorganize an existing ledger through a reviewed diff with one-step undo](./blocked/m46/README.md) (11 tasks) ← /pm-brainstorm research into published Beancount skills and community requests, 2026-10-18 — **blocked:** t001's `beancount-edit` contract is drafted; the owner confirms (or declines) that one skill may change existing entries
 - [ ] **m47** — [Turn PDF statements and receipt photos into checked entries with documents attached](./blocked/m47/README.md) (9 tasks) ← /pm-brainstorm 2026-10-18 (online skills research) — **blocked:** t001–t002 shipped (PDF import owns statements); m40 is complete; t003 receipt-file trigger changes need authenticated Claude before/after routing — 2026-11-11: Claude works on the macOS checkout, but Codex runs only on the Linux runtime
-- [ ] **m48** — [Reconciliation coverage and close review state (ADR 020 P0)](blocked/m48/README.md) (8 tasks) ← ADR 020 P0 rows, from the skills brainstorm 2026-10-18 — **blocked:** original Codex 31/31 passes on a preserved unshipped candidate; Claude authentication and full-pass gate remain — 2026-11-11: Claude works on the macOS checkout, but the candidates and Codex are only on the Linux runtime
+- [x] **m48** — [Reconciliation coverage and close review state (ADR 020 P0)](done/m48/README.md) (8 tasks) ← ADR 020 P0 rows, from the skills brainstorm 2026-10-18
 - [x] **m49** — [See what a portfolio holds and what it is worth](done/m49/README.md) (7 tasks) ← user walkthrough as a personal investor (real estate, crypto, stocks, daily spending), 2026-10-19 — sequenced after m45's lots
 - [x] **m50** — [Import investment activity in bulk, with lots intact](done/m50/README.md) (9 tasks) ← user walkthrough as a personal investor (real estate, crypto, stocks, daily spending), 2026-10-19 — builds on m45's single-event correctness
 - [x] **m51** — [Track a home, its mortgage, and a rental in the same ledger](done/m51/README.md) (10 tasks) ← user walkthrough as a personal investor (real estate, crypto, stocks, daily spending), 2026-10-19 — the suite's first real-estate model — **complete:** original Codex 7/7, native property tests and both remote skills CI jobs pass
@@ -64,7 +64,7 @@
 - [x] **m56** — [Invoice clients and pay bills, with collected tax and an aging you can trust](./done/m56/README.md) (12 tasks) ← same review (items 2 and 5) — sequenced after m55/t001
 - [x] **m57** — [Record a payroll run from the provider's summary](./done/m57/README.md) (9 tasks) ← same review (item 4) — sequenced after m55/t001
 - [x] **m58** — [Import payment-processor payouts as gross, fees, tax, and net](./done/m58/README.md) (8 tasks) ← same review (item 6, payout half) — sequenced after m56/t002
-- [ ] **m59** — [Close the books for a business: agings, liabilities, and owner equity](./blocked/m59/README.md) (7 tasks) ← same review (item 7) — sequenced last, after m56, m57, and w2/m48 (w3/m58 was dropped 2026-11-14) — **blocked:** t001 waits on w2/m48's closeout (Claude authentication/full-pass gate)
+- [ ] **m59** — [Close the books for a business: agings, liabilities, and owner equity](./m59/README.md) (7 tasks) ← same review (item 7) — sequenced last, after m56, m57, and w2/m48 (w3/m58 was dropped 2026-11-14)
 
 ## Dropped
 
@@ -74,6 +74,7 @@
 
 ## Inbox
 
+- [141](./141.md) — Claude sometimes writes a placeholder instead of an instruction-shaped statement line; owner decides whether the suite keeps requiring it verbatim (A1; from the m48 cohort)
 - [140](./140.md) — `beancount-ask` evals 4 (monthly burn outlier) and 16 (variance driver under threshold) fail on both clients on `main` (A1; found by the m49 regression run)
 - [135 — Signed in, a Gallery search for a common term takes 4–5 s per request (under 1.2 s signed out)](./blocked/135.md) — ledger service read every Gitea page of an owner search in turn — **blocked:** fix shipped in `7355c52f1`; the operator redeploys `beancount-ledger`, then the search is re-measured
 

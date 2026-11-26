@@ -12,8 +12,8 @@ Seven of the ten candidates are on `main`. Three are not built.
 
 | Priority | Candidate | State |
 | --- | --- | --- |
-| P0 | Reconciliation coverage preflight | On `main`: [`beancount-reconcile`](../../skills/beancount-reconcile/SKILL.md) runs a Coverage phase before Match. Still open: [w2/m48](../../.pm/w2/blocked/m48/README.md)'s cross-client eval gate (t004) and closeout. |
-| P0 | Close dependencies and review state | On `main`: [`beancount-close`](../../skills/beancount-close/SKILL.md) records each account as tied, partial, partly covered, unverified, or blocked. Its eval gate and closeout are the same open w2/m48 tasks. |
+| P0 | Reconciliation coverage preflight | On `main`: [`beancount-reconcile`](../../skills/beancount-reconcile/SKILL.md) runs a Coverage phase before Match. Done 2026-11-26: [w2/m48](../../.pm/w2/done/m48/README.md) passed its cross-client eval gate on Claude Code and Codex and closed. |
+| P0 | Close dependencies and review state | On `main`: [`beancount-close`](../../skills/beancount-close/SKILL.md) records each account as tied, partial, partly covered, unverified, or blocked. Done 2026-11-26 with the same w2/m48 gate. |
 | P1 | `beancount-roll-forward` | Shipped: [w3/m55](../../.pm/w3/done/m55/README.md). |
 | P1 | `beancount-accruals` | Shipped: [w3/m57](../../.pm/w3/done/m57/README.md). |
 | P1 | Variance explanation | Shipped: a `beancount-ask` recipe that `beancount-close` reuses ([w3/m56](../../.pm/w3/done/m56/README.md)). `bea report budget` covers budget against actual ([w21/m7](../../.pm/w21/done/m7/README.md)). |

@@ -20,7 +20,7 @@
 
 ## Previous blocker
 
-- **t003 onward (2026-10-19)** — t001 (holdings recipes) and t002 (price-refresh ownership) are shipped, and t003's Claude Code half passes (evals 4/4, routing 92/92; evidence in [t003](t003.md), including one real failure found and fixed). t003's acceptance requires both clients, and Codex returns its account usage-limit error until 2026-11-17, so t004–t007 wait behind it. **Unblock:** Codex usage returns (2026-11-17); rerun evals 10–13 and the 92-prompt routing set on Codex, close t003, then t004 (adoption) starts. **Who can clear it:** the operator (Codex usage).
+- **t003 onward (2026-10-19)** — t001 (holdings recipes) and t002 (price-refresh ownership) are shipped, and t003's Claude Code half passes (evals 4/4, routing 92/92; evidence in [t003](done/t003.md), including one real failure found and fixed). t003's acceptance requires both clients, and Codex returns its account usage-limit error until 2026-11-17, so t004–t007 wait behind it. **Unblock:** Codex usage returns (2026-11-17); rerun evals 10–13 and the 92-prompt routing set on Codex, close t003, then t004 (adoption) starts. **Who can clear it:** the operator (Codex usage).
 
 ## Definition of done
 
@@ -45,7 +45,7 @@ rerun without weakening the eval.
 
 ## Current blocker — 2026-11-08
 
-[t003](t003.md) now has real Codex results: three original cases pass after a
+[t003](done/t003.md) now has real Codex results: three original cases pass after a
 locally preserved per-lot clarification; eval 13 fails because ask is never
 selected and the response gives investment/tax advice. Historical 92-entry
 routing is unchanged and audited, but does not cover that mixed-question miss.

@@ -1,6 +1,6 @@
 # w2 · m48 — Reconciliation coverage and close review state (ADR 020 P0)
 
-**Worker:** worker2 **Goal:** before `beancount-reconcile` reports a single match, it states what the supplied statement covers: the account it belongs to, its currency and period, how many rows it holds and what they total, and every row left out and why. `beancount-close` records each step's evidence and state, so an account no statement covered, a period a statement covers only partly, or a blocked step is never presented as verified. **Status:** blocked (Codex original cohort complete; Claude authentication and full-pass gate remain)
+**Worker:** worker2 **Goal:** before `beancount-reconcile` reports a single match, it states what the supplied statement covers: the account it belongs to, its currency and period, how many rows it holds and what they total, and every row left out and why. `beancount-close` records each step's evidence and state, so an account no statement covered, a period a statement covers only partly, or a blocked step is never presented as verified. **Status:** done
 
 ## Tasks (in order)
 
@@ -9,15 +9,19 @@
 | [t001](done/t001.md) | Add a coverage preflight to `beancount-reconcile` — **DONE** | 75m | w2/m41/t004 |
 | [t002](done/t002.md) | Record each close step's evidence and state — **DONE** | 45m | t001 |
 | [t003](done/t003.md) | Write evals from ADR 020's fixtures — **DONE** | 60m | t001, t002 |
-| t004 | Run the evals on Claude Code and Codex | 45m | t003 |
-| t005 | Adoption surface | 30m | t004 |
-| t006 | Simplify | 15m | t005 |
-| t007 | Test coverage | 45m | t005, t006 |
-| t008 | Closeout | 15m | t007 |
+| [t004](done/t004.md) | Run the evals on Claude Code and Codex — **DONE** | 45m | t003 |
+| [t005](done/t005.md) | Adoption surface — **DONE** | 30m | t004 |
+| [t006](done/t006.md) | Simplify — **DONE** | 15m | t005 |
+| [t007](done/t007.md) | Test coverage — **DONE** | 45m | t005, t006 |
+| [t008](done/t008.md) | Closeout — **DONE** | 15m | t007 |
+
+## Closeout
+
+2026-11-26. Every definition-of-done item holds on both clients (Claude Code 2.1.332, Codex CLI 0.171.0). A reconcile proposal opens with Coverage: target and statement account, currency, period, source rows and total, the ledger's window, and every excluded row with its reason. Statement arithmetic is checked before matching, and a failure is reported as extraction. Another account or currency is excluded and named, and ambiguity and split settlements are asked about (reconcile 19–22 and the coverage recipes). Precision is kept, and a tolerance exists only as user policy (reconcile 22). Close records each account's evidence and state and never calls the period verified unless every account is tied (close 8–9), with `check` labelled ledger validity. The original 31 reconcile and close evals pass on the final text (t004), and the new recipe tests run in `test_beancount_skills.py` (t007). Ships with the preserved candidate `88468623a`, t004's fixes and suite 0.4.47. One residual, Claude sometimes declining to copy an instruction-shaped statement line verbatim, is [w2/141](../../141.md).
 
 ## Previous blocker
 
-- **t004 (2026-10-19)** — all 31 reconcile/close evals run on one client (20 pass + 2 partial reconcile, 7 pass + 2 partial close; evidence in [t004](t004.md)); the second client's 31 runs all ended at its account usage limit before any work. **Unblock:** Codex usage returns (2026-11-17); rerun the set there and close t004. t005 onward wait behind it. **Who can clear it:** the operator (Codex usage).
+- **t004 (2026-10-19)** — all 31 reconcile/close evals run on one client (20 pass + 2 partial reconcile, 7 pass + 2 partial close; evidence in [t004](done/t004.md)); the second client's 31 runs all ended at its account usage limit before any work. **Unblock:** Codex usage returns (2026-11-17); rerun the set there and close t004. t005 onward wait behind it. **Who can clear it:** the operator (Codex usage).
 
 ## Definition of done
 
@@ -53,7 +57,7 @@ milestones; this dated cohort is the original 31 plus its confirm-turn subset.
 
 ## Current blocker — 2026-11-08
 
-[t004](t004.md) records the original Codex cohort **31/31** on a locally
+[t004](done/t004.md) records the original Codex cohort **31/31** on a locally
 preserved candidate, including confirmed write paths. Claude's four historical
 partials remain unresolved; normal client authentication is unavailable. The
 candidate is **not shipped** and main's product files are restored.

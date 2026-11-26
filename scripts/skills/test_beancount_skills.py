@@ -2339,6 +2339,44 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual(answer[1:], ["2902.70", "0.00", "933.80"])
         self.assertEqual(ledger.read_bytes(), before)
 
+    def test_coverage_window_keeps_its_last_day_reports_an_empty_window_and_keeps_precision(self):
+        # w2/m48/t007: the window's edges, an empty window, and a fund's
+        # three-decimal units, none of which the counting test above reaches.
+        ledger = self.books / "main.bean"
+        ledger.write_text(
+            'option "operating_currency" "USD"\n'
+            "2023-01-01 open Assets:Checking USD\n"
+            "2023-01-01 open Assets:Fund FUND\n"
+            "2023-01-01 open Equity:OpeningBalances\n"
+            '2026-04-30 * "Day before"\n  Assets:Checking 5.00 USD\n  Equity:OpeningBalances\n'
+            '2026-05-01 * "First day"\n  Assets:Checking 100.00 USD\n  Equity:OpeningBalances\n'
+            '2026-05-31 * "Last day"\n  Assets:Checking -20.00 USD\n  Equity:OpeningBalances\n'
+            '2026-06-01 * "Day after"\n  Assets:Checking -9.00 USD\n  Equity:OpeningBalances\n'
+            '2026-05-10 * "Units"\n  Assets:Fund 1.235 FUND\n  Equity:OpeningBalances -1.235 FUND\n'
+            '2026-05-20 * "Units"\n  Assets:Fund 0.010 FUND\n  Equity:OpeningBalances -0.010 FUND\n'
+        )
+        before = ledger.read_bytes()
+        self.values.update(
+            ledger=str(ledger), account="Assets:Checking", currency="USD",
+            start="2026-05-01", end_plus_1="2026-06-01",
+        )
+        # The statement's first and last day are inside; the days around them are not.
+        self.assertEqual(self.recipe("coverage-ledger-side")["rows"], [["USD", 2, "80.00"]])
+        # A window with no postings returns no row: "none", which the skill reports, never 0.
+        self.values.update(start="2026-07-01", end_plus_1="2026-08-01")
+        self.assertEqual(self.recipe("coverage-ledger-side")["rows"], [])
+        # Three-decimal units keep their precision in the count, total and gap.
+        self.values.update(
+            account="Assets:Fund", currency="FUND", start="2026-05-01", end_plus_1="2026-06-01",
+            opening="0", included_total="(1.235 + 0.010)", printed_ending="1.240",
+        )
+        self.assertEqual(self.recipe("coverage-ledger-side")["rows"], [["FUND", 2, "1.245"]])
+        self.assertEqual(
+            self.recipe("statement-arithmetic")["rows"],
+            [["1.245", "1.245", "-0.005", "1.245"]],
+        )
+        self.assertEqual(ledger.read_bytes(), before)
+
     def test_reconcile_stages_an_approved_open_on_its_known_assertion_then_checks_green(self):
         files = SUITE / "beancount-reconcile/evals/files"
         ledger = self.books / "red.bean"

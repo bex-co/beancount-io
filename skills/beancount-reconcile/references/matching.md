@@ -44,7 +44,7 @@ The statement has it; the ledger doesn't. This is the only class the skill fixes
 
 ### missing-on-statement (suspect)
 
-The ledger has a posting the statement doesn't. Causes: a transaction entered in the wrong account, a future-dated or duplicated entry, or a real item that will appear on the *next* statement (in-transit at the period boundary). **Report it, don't remove it** — an in-transit item is legitimate and belongs in the ledger; deleting it would be the actual error. It will make the period-end balance assertion differ, which is the correct signal for the user to investigate.
+The ledger has a posting the statement doesn't. Causes: a transaction entered in the wrong account, a future-dated or duplicated entry, or a real item that will appear on the *next* statement (in-transit at the period boundary). **Report it and explicitly explain the possible timing difference to the user**, in these words: "This may be a legitimate in-transit item that clears on the next statement. Keep it in the ledger; do not delete it." Do not remove an entry merely because this statement omits it. It will make the period-end balance assertion differ, which is the correct signal for the user to investigate.
 
 ### amount-mismatch
 
