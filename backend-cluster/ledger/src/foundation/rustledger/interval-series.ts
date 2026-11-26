@@ -147,6 +147,21 @@ export interface DateRange {
   endInclusive: string;
 }
 
+/** Fava's `date.max`: no engine date exists past it. */
+const MAX_DATE = "9999-12-31";
+
+/**
+ * Fava's every `get_next` catches the year-10000 overflow and saturates at
+ * `date.max`. Without that, a step past New Year 10000 builds "10000-01-01",
+ * which sorts before every four-digit year and spins the range loop below to
+ * its guard, emitting garbage ranges — so saturate here, where every step
+ * passes. A plain `next > MAX_DATE` cannot see it (`"10000-…" < "9999-…"`
+ * lexicographically), hence the length check.
+ */
+function saturate(date: string): string {
+  return date.length > MAX_DATE.length || date > MAX_DATE ? MAX_DATE : date;
+}
+
 /**
  * Faithful port of fava's `dateranges(first, last, interval, complete)`
  * (`fava/util/date.py::interval_ends`). With `complete` (the default, matching
@@ -174,7 +189,7 @@ export function intervalRanges(
   let guard = 0;
   while (current < lastDate && guard < 100_000) {
     ends.push(current);
-    current = interval.getNext(current);
+    current = saturate(interval.getNext(current));
     guard += 1;
   }
   // Final yielded end: `current if complete else end`.
