@@ -73,6 +73,19 @@ describe("toFiniteAmount", () => {
     expect(toFiniteAmount("12abc")).toBeNull();
     expect(toFiniteAmount(Infinity)).toBeNull();
   });
+
+  it("rejects the values Number accepts that are not amounts", () => {
+    // `Number` reads these as 0 or 1 instead of NaN; the API carries real
+    // amounts as numbers or decimal strings, and `balanceToAmounts` already
+    // skips a null amount (pinned above), so this rule must too.
+    expect(toFiniteAmount(null)).toBeNull();
+    expect(toFiniteAmount(undefined)).toBeNull();
+    expect(toFiniteAmount("")).toBeNull();
+    expect(toFiniteAmount("   ")).toBeNull();
+    expect(toFiniteAmount(true)).toBeNull();
+    expect(toFiniteAmount(false)).toBeNull();
+    expect(toFiniteAmount("0x10")).toBeNull();
+  });
 });
 
 describe("mergeAmounts", () => {
