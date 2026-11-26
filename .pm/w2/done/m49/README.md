@@ -1,6 +1,6 @@
 # w2 · m49 — See what a portfolio holds and what it is worth
 
-**Worker:** worker2 **Goal:** a user who asks "what do I hold, what is it worth, and how is it allocated" gets per-lot holdings at cost and — when prices exist — at market value with unrealized gains, from shown queries; missing prices are named, never silently replaced by cost. **Status:** blocked (mixed facts/advice routing failure; authenticated two-client controls needed)
+**Worker:** worker2 **Goal:** a user who asks "what do I hold, what is it worth, and how is it allocated" gets per-lot holdings at cost and — when prices exist — at market value with unrealized gains, from shown queries; missing prices are named, never silently replaced by cost. **Status:** done
 
 ## Tasks (in order)
 
@@ -8,11 +8,15 @@
 | ---- | ----- | --- | ---------- |
 | [t001](done/t001.md) | Add holdings, allocation, and unrealized-gain recipes to beancount-ask — **DONE** | 60m | — |
 | [t002](done/t002.md) | Give price refresh an owner and a documented path — **DONE** | 45m | t001 |
-| t003 | Write evals for holdings questions and run them on both clients | 45m | t001, t002 |
-| t004 | Adoption surface | 30m | t003 |
-| t005 | Simplify | 15m | t004 |
-| t006 | Test coverage | 45m | t004, t005 |
-| t007 | Closeout | 15m | t006 |
+| [t003](done/t003.md) | Write evals for holdings questions and run them on both clients — **DONE** | 45m | t001, t002 |
+| [t004](done/t004.md) | Adoption surface — **DONE** | 30m | t003 |
+| [t005](done/t005.md) | Simplify — **DONE** | 15m | t004 |
+| [t006](done/t006.md) | Test coverage — **DONE** | 45m | t004, t005 |
+| [t007](done/t007.md) | Closeout — **DONE** | 15m | t006 |
+
+## Closeout
+
+2026-11-26. Every definition-of-done item holds on both clients: per-lot holdings with market value and unrealized gain only where a price exists, and unpriced ACME named as a gap (evals 10–11); allocation 83.33/16.67 over the 36000.00 priced total, with the cost basis tied to the book-value recipe (eval 12 and the t001 recipe test); the price-refresh path named on missing prices (eval 11). Evals 10–13 passed 16/16 across two runs per client, and 12/12 on the final text, with Claude Code 2.1.332 and Codex CLI 0.171.0 (t003). The fix ships with the preserved candidate `4f078e663` and suite 0.4.45. Pre-existing misses elsewhere in `beancount-ask` (evals 4 and 16) are [w2/140](../../140.md).
 
 ## Previous blocker
 

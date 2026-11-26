@@ -18,7 +18,7 @@ The suite shares [command recipes](beancount-init/references/bea-cli.md) that se
 | [beancount-importer-author](beancount-importer-author/SKILL.md) | Write or repair a reusable, tested bank importer. |
 | [beancount-reconcile](beancount-reconcile/SKILL.md) | Compare an account with a bank or broker statement. |
 | [beancount-migrate](beancount-migrate/SKILL.md) | Migrate transaction history from another finance app. |
-| [beancount-ask](beancount-ask/SKILL.md) | Answer ledger questions with reproducible queries, including profit by client or project and quarter payroll totals. |
+| [beancount-ask](beancount-ask/SKILL.md) | Answer ledger questions with reproducible queries, including holdings per lot at cost and market value, profit by client or project, and quarter payroll totals. No investment or tax advice. |
 | [beancount-roll-forward](beancount-roll-forward/SKILL.md) | Explain one balance-sheet account's movement over a period, opening to closing. |
 | [beancount-accruals](beancount-accruals/SKILL.md) | Prepare supported accrual drafts for a period from a stated schedule. |
 | [beancount-invoices](beancount-invoices/SKILL.md) | Record invoices you issue and bills you receive, apply payments to them, and see who owes what and how overdue. |

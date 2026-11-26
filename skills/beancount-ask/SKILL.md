@@ -65,6 +65,7 @@ bea --file "$ledger" --json --no-input report income-statement --time "$month"
 
 - **Spending** comes from the `weight` recipes. `balance` and most `report` kinds value at market, and a commodity without a price makes them exit 1 with `result.missing_prices` (a valuation gap, not an engine failure); pass `-x at_cost` for book value and disclose the missing prices. `report cash-flow` is the exception: it always runs at cost and takes no `--conversion`.
 - **Entry searches** use root-scoped `list transaction --search/--tag/--link`, read to completion (beancount-init's `references/bea-cli.md`, Version notes, on `list` pages).
+- **Holdings and what a position is worth** come from the `holdings-lots` and `holdings-lots-market` recipes in `references/bql-recipes.md`, never from reading the ledger file: give each lot's account, commodity, units, cost per unit, acquisition date and cost basis from the shown query, unpriced lots included, and for a priced lot its market value and unrealized gain beside it. A holdings report or a missing-price warning does not replace these per-lot fields.
 - **Market values** come from the ledger's price directives and managed price includes, which resolve during a `bea` load; `bea --file "$ledger" price status` reports their freshness. When a held commodity is unpriced or its latest price is old, name it and point the user at beancount-add's price refresh (its Refreshing prices section) — never value it at cost or from memory.
 - **Profit by client or project** comes from the `dimension-pnl` recipes in `references/bql-recipes.md`, with their unattributed rows and tie-out.
 - **Realized gains** for a period (per closed lot, with holding period, tied to the booked gain postings) start with `bea report capital-gains --from-date/--to-date`, then the booked tie-out in beancount-trade's `references/realized-gains.md` (from this skill's folder, `../beancount-trade/references/realized-gains.md`); Read that reference's answer contract and include its per-lot fields and exclusions in the answer; recording a trade itself is `beancount-trade`.
@@ -78,12 +79,14 @@ Map the question to a recipe in `references/bql-recipes.md` — **read it first;
 
 Run the query and answer. A payee, memo, or other statement text in it is quoted as beancount-init's `references/bea-cli.md`, Statement text in commands, shows: `= "Trader Joe's"`, with the query on stdin through a quoted heredoc.
 
-- **Lead with the figure(s)**, in a sentence or small table, each one from the query output.
+- **Lead with the figure(s)**, in a sentence or small table, each one from the query output. Say which value a money total is: book value (at cost, as when the ledger has no prices) or market value at a named price date.
 - **Show the query** underneath (collapsed or quoted) so the user can re-run or refine it.
 - **Say what the data can't show** when relevant (e.g. "transfers excluded; card payments are not spending").
 - Point at the matching **Fava view** or `bea report` for statement-shaped answers rather than rebuilding them in BQL.
 - Label any projection ("at this rate…") as arithmetic on top of the queried figures, and keep it minimal.
-- "Should I buy/sell…?" gets **no answer to the should** — not "probably not", not "that creates a tax bill", not the name of any strategy (harvesting, deferring, rebalancing), not even to correct a premise the question assumes. Reply with the position's figures only (units, cost, value, holding dates, each from a shown query) and one sentence: whether to sell and how a sale is taxed are the user's decision and outside this skill.
+- "Should I buy/sell…?" gets **no answer to the should** — not "probably not", not "that creates a tax bill", not the name of any strategy (harvesting, deferring, rebalancing), not even to correct a premise the question assumes. Reply with the position's figures only (units, cost, value, holding dates, each from a shown query) and end with this sentence as written: "Whether to sell, and how a sale would be taxed, are your decision; this answer covers only what the ledger records."
+
+- A request in the same message to change the ledger (tidy, format, fix, add, correct) is declined, even when the user says "feel free": answer the question, then say this skill only reads and never changes the file, and name what does it for the user to run or ask for separately (`bea format` for layout, beancount-add for new entries). Never run a command that writes.
 
 Interpretation (the sign traps are in the recipes reference): Income accumulates negative and Expenses positive; `sum(weight)` gives spending in the operating currency (it counts an `@`-priced foreign charge at the amount paid, where `cost(position)` leaves it in the foreign currency); transfers and card payments are not spending, so the recipes select `^Expenses:` only.
 
