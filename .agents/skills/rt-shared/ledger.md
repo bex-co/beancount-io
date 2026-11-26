@@ -99,6 +99,7 @@ newest first.
 
 ### Skipped
 
+- 2026-11-25 mobile `detect-recurrence.ts` (`monthDayAnchor`/`semiMonthlyDays`/`exactlyTwoDays`/`projectBillDue`) — modeled anchor, semimonthly-vs-biweekly, overdue/lapse edges against their pins (w21/799, 853, 530, 458, 973, 459, 529, 408, 271); every derived edge matches a documented choice, and the 4-date Feb biweekly/semimonthly overlap is genuinely ambiguous; examined, no divergence.
 - 2026-11-25 ledger quoted in-string directive shapes (`file-map-loader` INCLUDE_RE, `collect-plugins` PLUGIN_LINE_RE, `beancount-options` OPTION_LINE_RE, `option-validation` OPTION_RE, `document-discovery` DOCUMENTS_OPTION, `average-booking` booking OPTION, `sell-gains` defaultTolerances, `transaction-balance` scanInferredToleranceDefaults) — quoted in-string directive lines are engine-invalid (live WASM probe: narration truncated + `parse errors in main.bean`; beancount 3.2.3 also errors), so TS treating them as directives agrees with the engine; no divergence on valid ledgers. The quoteless sibling (`balance-tolerance-syntax`) shipped this run.
 - 2026-11-25 ledger `meta-order.ts` writtenKeys + `block-index.ts` entryLocator holds() — quoteless in-string lines can match posting/key-shaped prose, but impact is heuristic key ordering / error-line attribution only; below the bar for this run.
 - 2026-11-25 ledger engine probe family (`sourceHasPad`/`sourceHasNoteSyntax`/`sourceHasTaggedDocument`, `sourceMayShadowPushedMeta`) — documented loose by design (probe-only perf cost); `parseable-files` string/comment alternation, `stock-syntax-errors`, `withoutMetaStacks`, `splitIntoBlocks` consumers verified string-aware or engine-equivalent; examined, no divergence.
@@ -117,8 +118,6 @@ newest first.
 - 2026-11-22 backend-cluster/ledger `directive-filter` `monthOffset` clamp-vs-raise — `monthOffset` clamps the day while Python `month_offset` raises, but every call site (`getFiscalPeriod` quarter starts, `substitute` day-1 inputs) provably carries day 1; examined, no divergence.
 
 - 2026-11-21 dashboard `decode-csv-bytes.ts` + `use-csv-parser.ts` empty path — empty/whitespace-only bytes throw `CsvEmptyError` at the caller, BOM-only UTF-16 decodes to empty and throws the same way; no-BOM UTF-16 is out of the documented scope (same choice as `FileReader.readAsText`); examined, no divergence.
-- 2026-11-21 cli OFX vs frontend `_source_accounts`/`_ofx_identities` twin scans — textually identical modulo bytes/str decode (non-ASCII ids only); the w5/1069 recipient and w5/1031 same-number-different-bank cases agree; examined, no drift.
-
 ## rt-logic-simplifier
 
 ### Deferred

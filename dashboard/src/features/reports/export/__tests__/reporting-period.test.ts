@@ -21,6 +21,24 @@ describe("statement reporting period", () => {
     });
   });
 
+  it("rejects selections no engine date can cover", () => {
+    // Fava raises on year 0 and the backend refuses it, so the export must
+    // not label an explicit year-0 period the numbers cannot cover.
+    expect(parseConcreteTimeFilter("0000")).toBeNull();
+    expect(parseConcreteTimeFilter("0000-01-01")).toBeNull();
+    expect(parseConcreteTimeFilter("0000-w01")).toBeNull();
+    expect(parseConcreteTimeFilter("fy0000")).toBeNull();
+    expect(parseConcreteTimeFilter("fy0001", { month: 6, day: 30 })).toBeNull();
+    // Week arithmetic past 9999-12-31 must not render the expanded-year
+    // slice (`+010000-01`) as the statement's end date.
+    expect(parseConcreteTimeFilter("9999-w52")).toBeNull();
+    // Years the ledger accepts keep resolving.
+    expect(parseConcreteTimeFilter("0099")).toEqual({
+      startDate: "0099-01-01",
+      endDate: "0099-12-31",
+    });
+  });
+
   it("respects the ledger fiscal-year end", () => {
     expect(parseConcreteTimeFilter("FY2026", { month: 3, day: 31 })).toEqual({
       startDate: "2025-04-01",
