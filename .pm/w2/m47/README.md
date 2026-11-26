@@ -1,6 +1,6 @@
 # w2 · m47 — Turn PDF statements and receipt photos into checked entries with documents attached
 
-**Worker:** worker2 **Goal:** a user whose bank offers only PDF statements, or who has a photo or PDF of a receipt, gets the same reviewed, deduplicated entries a CSV export produces, with the source file attached to the ledger. Extracted rows never count as imported until a `balance` assertion ties them to the statement's closing balance. **Status:** blocked (t003 needs authenticated Claude routing controls)
+**Worker:** worker2 **Goal:** a user whose bank offers only PDF statements, or who has a photo or PDF of a receipt, gets the same reviewed, deduplicated entries a CSV export produces, with the source file attached to the ledger. Extracted rows never count as imported until a `balance` assertion ties them to the statement's closing balance. **Status:** todo (t001–t002 done; t003 next)
 
 ## Tasks (in order)
 
@@ -18,14 +18,14 @@
 
 ## Previous blocker
 
-- **t003 onward (2026-10-19)** — t001 (placement, `pdf:sha256`, Layer 2c) and t002 (the PDF import path) are shipped. t003 depends on [m40](../../done/m40/README.md)'s closeout (t010), which waits for Codex usage or the owner's exception decision, so t003–t009 cannot proceed. **Unblock:** m40 closes; then t003 starts (t005 additionally needs Codex for its both-client runs, including the t001 probe rerun). **Who can clear it:** the operator (Codex usage) or the repository owner (m40 exception).
+- **t003 onward (2026-10-19)** — t001 (placement, `pdf:sha256`, Layer 2c) and t002 (the PDF import path) are shipped. t003 depends on [m40](../done/m40/README.md)'s closeout (t010), which waits for Codex usage or the owner's exception decision, so t003–t009 cannot proceed. **Unblock:** m40 closes; then t003 starts (t005 additionally needs Codex for its both-client runs, including the t001 probe rerun). **Who can clear it:** the operator (Codex usage) or the repository owner (m40 exception).
 
 ## Definition of done
 
 - A PDF statement imports through the skill that t001 chose. The skill proposes entries only when opening balance + extracted movements = closing balance. It reports success only after a `balance` assertion dated the day after the statement period passes `bea check`. A statement that does not tie stops before any write, and the skill names the gap.
 - Every written row carries an `import-id` in the form t001 adds to `beancount-import/references/dedup.md`. Re-importing the same PDF adds zero entries. A later CSV export covering the same period shows every overlapping row as a suspected duplicate instead of writing it again.
 - A receipt image or PDF becomes a proposed `beancount-add` entry. After a yes, the transaction and its `document` directive share a link, and the file sits where the ledger keeps documents. `bea check` passes, and it fails when the file is missing.
-- An instruction embedded in a statement or receipt is recorded or flagged, and never followed ([079](../../done/079.md)'s rule).
+- An instruction embedded in a statement or receipt is recorded or flagged, and never followed ([079](../done/079.md)'s rule).
 - The routing set includes PDF-statement and receipt-file prompts, and they route correctly on both clients. The new evals pass on Claude Code and Codex, recorded with versions and dates.
 
 ## Decisions
@@ -40,7 +40,7 @@
 - **Source:** `/pm-brainstorm` 2026-10-18, item 7, from online research into published Beancount skills and user needs. Evidence: a user who has Claude [read a PDF when the PDF-to-beancount script breaks](https://alexcwatt.com/beancount/); [Beanhand](https://github.com/Rudd-O/beanhand) (receipts to transactions, receipts linked to entries); Fava's open request for [document upload from the transaction form](https://github.com/beancount/fava/issues/566); receipt and PDF stages in [cfo-stack](https://github.com/MikeChongCan/cfo-stack) and [auto-bean](https://github.com/SamArgt/auto-bean).
 - **Goal linkage:** **A1 — Agent-native accounting:** an agent records what a statement or receipt shows, with the suite's proposal, dedup, and check rails, instead of the user retyping it. **A2 — Frictionless onboarding:** a newcomer whose bank has no CSV or OFX export can still start a ledger from the PDFs they already have.
 - **Expected outcome:** an import or receipt request that names a PDF or an image produces entries tied out by a passing balance assertion, with the file linked from the ledger. Signals: routing-set recall for the new prompts, and invocations of `beancount-import` and `beancount-add` with file inputs.
-- **Why now:** `beancount-reconcile` already reads PDF statements and writes missing transactions with generated `import-id`s. Those ids hash the PDF's wording, and `dedup.md`'s fuzzy layer only looks at entries without an `import-id`. So a later CSV of the same month can likely double-book every row, and t001 confirms or rules out this inference. Defining PDF row identity now fixes that path, and it gives the new import path a sound base. The milestone depends on [079](../../done/079.md), because statement and receipt text are an injection surface, and on [m40](../../done/m40/README.md), which ships `beancount-add`. Adoption surface is included because two customer skills gain a new input type.
+- **Why now:** `beancount-reconcile` already reads PDF statements and writes missing transactions with generated `import-id`s. Those ids hash the PDF's wording, and `dedup.md`'s fuzzy layer only looks at entries without an `import-id`. So a later CSV of the same month can likely double-book every row, and t001 confirms or rules out this inference. Defining PDF row identity now fixes that path, and it gives the new import path a sound base. The milestone depends on [079](../done/079.md), because statement and receipt text are an injection surface, and on [m40](../done/m40/README.md), which ships `beancount-add`. Adoption surface is included because two customer skills gain a new input type.
 
 ## Out of scope
 
@@ -50,7 +50,11 @@
 - Brokerage statements with holdings and lots (w2/m45), and statements that cover several accounts at once.
 - Changing `bea import`'s duplicate detector. If t001 finds the CLI must change, file that as a follow-up note.
 
-## Current blocker — 2026-11-08
+## Blocker cleared — 2026-11-26
+
+**Unblocked 2026-11-26** — Claude Code 2.1.332 and Codex CLI 0.171.0 both run real turns on the same macOS checkout (used that day to close w2/m48, m49 and m50 on both clients), which is the updated unblock condition below. t003 can start: its before/after routing runs and the later two-client evals run on one tree. No receipt work was started; the history below is kept.
+
+## Previous blocker — 2026-11-08
 
 m40 closed, so its dependency is resolved. t003 still needs receipt-file support,
 a shared document recipe and new descriptions/routing entries; these are absent

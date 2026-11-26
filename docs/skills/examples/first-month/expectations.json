@@ -103,6 +103,25 @@
           "currency": "USD"
         }
       ]
+    },
+    "parking": {
+      "date": "2026-08-02",
+      "flag": "*",
+      "payee": "Synthetic Parking",
+      "narration": "Parking",
+      "import_id": null,
+      "postings": [
+        {
+          "account": "Expenses:Transport",
+          "number": "12.50",
+          "currency": "USD"
+        },
+        {
+          "account": "Liabilities:CreditCard",
+          "number": "-12.50",
+          "currency": "USD"
+        }
+      ]
     }
   },
   "checkpoints": {
@@ -117,47 +136,62 @@
       "net_income": "0.00",
       "assertions": []
     },
+    "manual": {
+      "transaction_keys": [
+        "opening",
+        "parking"
+      ],
+      "transaction_count": 2,
+      "balance": "1000.00",
+      "income": "0.00",
+      "expenses": "12.50",
+      "net_income": "-12.50",
+      "assertions": []
+    },
     "imported": {
       "transaction_keys": [
         "opening",
+        "parking",
         "salary",
         "groceries",
         "coffee"
       ],
-      "transaction_count": 4,
+      "transaction_count": 5,
       "balance": "2945.00",
       "income": "2000.00",
-      "expenses": "55.00",
-      "net_income": "1945.00",
+      "expenses": "67.50",
+      "net_income": "1932.50",
       "assertions": []
     },
     "reimported": {
       "transaction_keys": [
         "opening",
+        "parking",
         "salary",
         "groceries",
         "coffee"
       ],
-      "transaction_count": 4,
+      "transaction_count": 5,
       "balance": "2945.00",
       "income": "2000.00",
-      "expenses": "55.00",
-      "net_income": "1945.00",
+      "expenses": "67.50",
+      "net_income": "1932.50",
       "assertions": []
     },
     "reconciled": {
       "transaction_keys": [
         "opening",
+        "parking",
         "salary",
         "groceries",
         "coffee",
         "fee"
       ],
-      "transaction_count": 5,
+      "transaction_count": 6,
       "balance": "2942.00",
       "income": "2000.00",
-      "expenses": "58.00",
-      "net_income": "1942.00",
+      "expenses": "70.50",
+      "net_income": "1929.50",
       "assertions": [
         {
           "date": "2026-09-01",
@@ -170,16 +204,17 @@
     "asked": {
       "transaction_keys": [
         "opening",
+        "parking",
         "salary",
         "groceries",
         "coffee",
         "fee"
       ],
-      "transaction_count": 5,
+      "transaction_count": 6,
       "balance": "2942.00",
       "income": "2000.00",
-      "expenses": "58.00",
-      "net_income": "1942.00",
+      "expenses": "70.50",
+      "net_income": "1929.50",
       "assertions": [
         {
           "date": "2026-09-01",
@@ -192,16 +227,17 @@
     "closed": {
       "transaction_keys": [
         "opening",
+        "parking",
         "salary",
         "groceries",
         "coffee",
         "fee"
       ],
-      "transaction_count": 5,
+      "transaction_count": 6,
       "balance": "2942.00",
       "income": "2000.00",
-      "expenses": "58.00",
-      "net_income": "1942.00",
+      "expenses": "70.50",
+      "net_income": "1929.50",
       "assertions": [
         {
           "date": "2026-09-01",
@@ -214,8 +250,8 @@
   },
   "branches": {
     "declined_import": {
-      "from": "initialized",
-      "ledger_matches": "initialized",
+      "from": "manual",
+      "ledger_matches": "manual",
       "ledger_bytes_unchanged": true,
       "git_index_and_head_unchanged": true
     },
@@ -256,10 +292,15 @@
       "main.bean"
     ],
     "commit_count_delta": 1,
-    "subject": "close: 2026-08 — 1 tied, 0 not tied",
+    "subject": "close: 2026-08 \u2014 1 tied, 1 not tied",
     "push": false,
     "flags_carried": 0,
     "recurring_gaps": 0,
-    "recurring_history": "No prior months supplied; recurring completeness cannot be established."
+    "recurring_history": "No prior months supplied; recurring completeness cannot be established.",
+    "assertions_pinned": 1,
+    "assertions_unpinned": 1,
+    "unverified_accounts": [
+      "Liabilities:CreditCard"
+    ]
   }
 }

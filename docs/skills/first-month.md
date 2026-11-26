@@ -1,7 +1,7 @@
 # First month: from an empty ledger to a confirmed close
 
 Use the installed Beancount skills to keep one synthetic August 2026 ledger:
-initialize, import, reimport, reconcile, ask, and close. The same prompts work in
+initialize, record a manual card purchase, import, reimport, reconcile, ask, and close. The same prompts work in
 Claude Code and Codex. Review each proposal before confirming it; the verifier
 checks the resulting files and Git state independently.
 
@@ -43,7 +43,7 @@ cd "$BOOKS"
 Start `claude` or `codex` from this terminal, so it inherits the paths and
 `GIT_OPTIONAL_LOCKS=0`. The latter prevents Git status reads from refreshing
 index bytes during unchanged-state checks. Pick one agent per run; use a new
-`RUN` for the other. Confirm that the agent discovers the nine installed
+`RUN` for the other. Confirm that the agent discovers the sixteen installed
 `beancount-*` skills. Keep any saved transcripts or tool logs under
 `$RUN/evidence`, outside `books`.
 
@@ -86,10 +86,34 @@ an existing HEAD; it does not create either.
 git -C "$BOOKS" add -- main.bean
 git -C "$BOOKS" commit -m "Initialize synthetic August ledger"
 python3 "$VERIFY" verify --workspace "$BOOKS" --checkpoint initialized --bea "$BEA"
-python3 "$VERIFY" snapshot --workspace "$BOOKS" --output "$RUN/evidence/before-import-decline.json"
 ```
 
 Expected: one opening transaction, checking **1000.00 USD**, no assertion.
+
+## Record a manual card purchase
+
+<!-- prompt: manual-entry -->
+```text
+Use beancount-add to record a manual purchase in ./main.bean: on 2026-08-02 I paid 12.50 USD for parking using Liabilities:CreditCard, categorized to the already-open Expenses:Transport. Payee "Synthetic Parking", narration "Parking". Show the exact entry and destination, then wait for confirmation. Do not stage, commit, or push.
+```
+
+Review the date, payee and the two postings: `Expenses:Transport 12.50 USD`
+and `Liabilities:CreditCard -12.50 USD`. No bank import ID or new account
+belongs to this manually described purchase. Approve only that proposal:
+
+<!-- prompt: manual-approve -->
+```text
+Yes. Write only the reviewed parking transaction to main.bean and validate it. Preserve the existing entries. Do not stage, commit, or push.
+```
+
+```sh
+python3 "$VERIFY" verify --workspace "$BOOKS" --checkpoint manual --bea "$BEA"
+python3 "$VERIFY" snapshot --workspace "$BOOKS" --output "$RUN/evidence/before-import-decline.json"
+```
+
+Expected: two transactions, checking still **1000.00 USD**, credit card
+**-12.50 USD**, transport expense **12.50 USD**, and no assertion. The card
+has no statement in this scenario, so the close must disclose it as unverified.
 
 ## Preview import, decline it, then approve it
 
@@ -124,7 +148,7 @@ python3 "$VERIFY" verify --workspace "$BOOKS" --checkpoint imported --bea "$BEA"
 python3 "$VERIFY" snapshot --workspace "$BOOKS" --output "$RUN/evidence/before-reimport.json"
 ```
 
-Expected: four transactions including opening; checking **2945.00 USD**.
+Expected: five transactions including opening and parking; checking **2945.00 USD**.
 
 <!-- prompt: reimport -->
 ```text
@@ -162,11 +186,12 @@ Start a **fresh agent session** in `unresolved-books`, then send:
 
 <!-- prompt: unresolved-statement -->
 ```text
-Use beancount-close to review August 2026 for this workspace's ./main.bean. The only supplied statement is FIRST_MONTH_INPUTS/statement-unresolved.md; do not read statement.md or other reference expectations. Use beancount-reconcile for checking. I cannot explain the statement discrepancy and do not approve corrective entries, padding, or assertions. Report unresolved accounts and missing assertions honestly; leave all files, Git index, and HEAD unchanged. Do not stage, commit, or push.
+Use beancount-close to review August 2026 for this workspace's ./main.bean. The only supplied statement is "$FIRST_MONTH_INPUTS/statement-unresolved.md"; resolve FIRST_MONTH_INPUTS from the inherited environment before reading it. Do not read statement.md or other reference expectations. Use beancount-reconcile for checking. I cannot explain the statement discrepancy and do not approve corrective entries, padding, or assertions. Report unresolved accounts and missing assertions honestly; leave all files, Git index, and HEAD unchanged. Do not stage, commit, or push.
 ```
 
 Expect a **4.00 USD unexplained difference**, checking partial/unresolved, and
-an unpinned account. The statement's own rows imply 2945, but it claims 2941;
+an unpinned account. The credit card remains unverified and unpinned too.
+The statement's own rows imply 2945, but it claims 2941;
 no source supports a corrective entry. Check:
 
 ```sh
@@ -237,7 +262,7 @@ python3 "$VERIFY" verify --workspace "$BOOKS" --checkpoint reconciled --bea "$BE
 python3 "$VERIFY" snapshot --workspace "$BOOKS" --output "$RUN/evidence/before-ask.json"
 ```
 
-Expected: five transactions, one dated assertion, checking **2942.00 USD**.
+Expected: six transactions, one dated assertion, checking **2942.00 USD**.
 
 ## Ask a read-only question
 
@@ -246,8 +271,8 @@ Expected: five transactions, one dated assertion, checking **2942.00 USD**.
 Use beancount-ask on this workspace's ./main.bean. What were my August 2026 expenses by category, total income, total expenses, and net income? Show the actual rerunnable bea queries/reports supplying the figures. Do not change files, stage, commit, or push.
 ```
 
-Expect groceries **50**, dining **5**, fees **3**; income **2000**, expenses
-**58**, net income **1942 USD**. Opening equity is not income. Re-run the agent's
+Expect groceries **50**, dining **5**, fees **3**, transport **12.50**; income
+**2000**, expenses **70.50**, net income **1929.50 USD**. Opening equity is not income. Re-run the agent's
 shown reads rather than trusting its arithmetic, then verify no state changed:
 
 ```sh
@@ -259,15 +284,16 @@ python3 "$VERIFY" snapshot --workspace "$BOOKS" --output "$RUN/evidence/before-c
 
 <!-- prompt: close -->
 ```text
-Use beancount-close for August 2026 on this workspace's ./main.bean. The supplied complete statement is FIRST_MONTH_INPUTS/statement.md. Checking is already reconciled and asserted; inspect existing entries and do not duplicate them or rewrite config. No other asset/liability account has activity or a nonzero balance. Review all close phases and actual bea reports. No prior months are supplied, so recurring-history completeness is unavailable, not certified complete. Run bea check. Propose a commit containing only main.bean; do not stage or commit until I explicitly approve. Never push.
+Use beancount-close for August 2026 on this workspace's ./main.bean. The supplied complete checking statement is FIRST_MONTH_INPUTS/statement.md. Checking is already reconciled and asserted; inspect existing entries and do not duplicate them or rewrite config. Liabilities:CreditCard has the parking purchase but no statement is supplied for it; list that account as unverified and unpinned. No other asset/liability account has activity or a nonzero balance. Review all close phases and actual bea reports. No prior months are supplied, so recurring-history completeness is unavailable, not certified complete. Run bea check. Propose a commit containing only main.bean; do not stage or commit until I explicitly approve. Never push.
 
 For a reproducible checkpoint, use these labeled fields in the proposed commit body, deriving each value from the actual ledger checks and reports: Checking: <amount> USD; Income: <amount> USD; Expenses: <amount> USD; Net: <amount> USD; Unverified: <count>; Assertions: <count> pinned, <count> unpinned; Flags carried: <count>; Recurring gaps: <count>; Recurring history: unavailable; check: <result>. Name the reconciled account and state the August period. Use the skill's close subject with the actual tied/not-tied counts. Show the proposed message and exact files first.
 ```
 
 Review the report, `bea check`, and file list. The expected subject is
-`close: 2026-08 — 1 tied, 0 not tied`; checking is 2942, income 2000,
-expenses 58, net +1942 USD. Expect one pinned assertion, zero unpinned, zero
-unverified accounts, and zero carried flags. Zero detected recurring gaps must
+`close: 2026-08 — 1 tied, 1 not tied`; checking is 2942, income 2000,
+expenses 70.50, net +1929.50 USD. Expect one pinned assertion, one unpinned,
+one unverified account (`Liabilities:CreditCard — unverified`, stated on its
+own line in the commit body), and zero carried flags. Zero detected recurring gaps must
 still disclose unavailable history. The durable import rules and skill
 links remain outside the approved commit; do not use `git add .`.
 

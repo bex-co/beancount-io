@@ -9,6 +9,11 @@ and an opening transaction on **2026-08-01**, using **1000.00 USD** in
 `Assets:Checking` against `Equity:OpeningBalances`. Both these accounts and every
 category below already exist in the standard `bea init` template.
 
+A manual purchase on **2026-08-02** records **12.50 USD** of parking from
+`Liabilities:CreditCard` to `Expenses:Transport`, payee `Synthetic Parking`,
+narration `Parking`, without a bank import ID. It leaves checking unchanged
+and creates a card balance of **-12.50 USD**. No card statement is supplied.
+
 | File | Purpose |
 | --- | --- |
 | `bank-export.csv` | Three transactions downloaded before the monthly fee posted |
@@ -34,14 +39,17 @@ transactions, postings, or balance assertions belong to these checkpoints.
 | Checkpoint | Transactions | Checking USD | Income / expenses / net USD | Assertions |
 | --- | ---: | ---: | --- | --- |
 | initialized | 1 | 1000.00 | 0.00 / 0.00 / 0.00 | none |
-| imported | 4 | 2945.00 | 2000.00 / 55.00 / 1945.00 | none |
-| reimported | 4 | 2945.00 | 2000.00 / 55.00 / 1945.00 | none |
-| reconciled | 5 | 2942.00 | 2000.00 / 58.00 / 1942.00 | 2026-09-01, checking 2942.00 USD |
-| asked | 5 | 2942.00 | 2000.00 / 58.00 / 1942.00 | unchanged |
-| closed | 5 | 2942.00 | 2000.00 / 58.00 / 1942.00 | unchanged |
+| manual | 2 | 1000.00 | 0.00 / 12.50 / -12.50 | none |
+| imported | 5 | 2945.00 | 2000.00 / 67.50 / 1932.50 | none |
+| reimported | 5 | 2945.00 | 2000.00 / 67.50 / 1932.50 | none |
+| reconciled | 6 | 2942.00 | 2000.00 / 70.50 / 1929.50 | 2026-09-01, checking 2942.00 USD |
+| asked | 6 | 2942.00 | 2000.00 / 70.50 / 1929.50 | unchanged |
+| closed | 6 | 2942.00 | 2000.00 / 70.50 / 1929.50 | unchanged |
 
 Source arithmetic: `1000 + 2000 - 50 - 5 = 2945`; after the statement's fee,
-`2945 - 3 = 2942`. Expense categories are Groceries 50, Dining 5, Fees 3.
+`2945 - 3 = 2942`. Expense categories are Groceries 50, Dining 5, Fees 3 and Transport 12.50.
+The card expense adds no checking movement; total expense is 70.50 and net
+income is 1929.50. Checking is tied at close while the card remains unverified.
 The opening equity movement is not income. Derive observed figures with `bea`
 queries and reports and compare them to these independent expected facts.
 A passing `bea check` is required at every completed checkpoint.
@@ -59,7 +67,7 @@ Run each branch from its named checkpoint in a fresh workspace or isolated Git
 branch, not on top of a successful close. Preserve a byte-for-byte snapshot of
 ledger files plus Git HEAD and index before the action under test.
 
-- **Decline import:** start initialized, refuse the proposed mutation; no ledger
+- **Decline import:** start manual, refuse the proposed mutation; no ledger
   or config/rules write, staging, or commit occurs.
 - **Decline reconciliation:** start imported, show the complete statement, then
   refuse the proposed fee/assertion; no ledger bytes or Git state change.
@@ -78,7 +86,9 @@ confirmed partial-close commit: disclose unresolved/unverified accounts and
 unpinned assertions in its report. Such a commit must contain only explicitly
 approved, actually changed ledger files. If none changed, explain that there is
 nothing to commit; never fabricate a ledger change or empty commit to meet a count.
-A partial-close branch does not satisfy the fully reconciled `closed` checkpoint.
+The main `closed` checkpoint requires checking to be tied and the card to be
+explicitly unverified. An unresolved or missing checking statement does not
+satisfy that checkpoint.
 
 ## Approved close
 
@@ -88,8 +98,8 @@ CSV, statement, import rules, verifier output, or unrelated files. The approved
 close adds exactly one commit from the pre-close HEAD and never pushes.
 
 The commit body retains the period report: checking reconciled, one assertion
-pinned, no unverified accounts or carried flags, income 2000.00 USD, expenses
-58.00 USD, net 1942.00 USD, and `bea check` passing. With no prior months supplied,
+pinned, the credit card unverified and unpinned, no carried flags, income
+2000.00 USD, expenses 70.50 USD, net 1929.50 USD, and `bea check` passing. With no prior months supplied,
 report that recurring-history coverage is unavailable; zero detected gaps is not
 proof of recurring completeness. Its subject is
-`close: 2026-08 — 1 reconciled, 0 unverified`.
+`close: 2026-08 — 1 tied, 1 not tied`.

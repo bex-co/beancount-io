@@ -119,3 +119,5 @@ The headline counts **tied accounts only** as reconciled and names the not-tied 
 ### 7. Commit
 
 Re-run `bea --file "$ledger" --json --no-input check` after all reconciliation writes. A red check blocks the commit proposal. When it passes, show what will be staged (the ledger files the close touched) and the commit message — subject `close: <period> — <n> tied, <m> not tied` (n counts tied accounts only), body = the close report — and **commit only on an explicit yes**. On no, leave the working tree exactly as it is; the report stays in the conversation. When the user already said not to commit, in the request or earlier, skip the question: show the message for later use, say the close is left uncommitted for their review, and do not offer to commit again. Pushing stays with the user.
+
+Pass the approved message to `git commit --file -` on stdin; do not leave a commit-message draft in the workspace. Stage only the approved ledger paths and preserve every other workspace file.

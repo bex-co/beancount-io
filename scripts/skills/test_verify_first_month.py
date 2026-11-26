@@ -117,7 +117,7 @@ class VerifyFirstMonthTests(unittest.TestCase):
         return code, out.getvalue() + err.getvalue()
 
     def test_correct_checkpoints_and_readonly_state(self):
-        for checkpoint in ['initialized', 'imported', 'reconciled', 'reimported', 'asked',
+        for checkpoint in ['initialized', 'manual', 'imported', 'reconciled', 'reimported', 'asked',
                            'declined_import', 'declined_reconcile', 'declined_commit',
                            'unresolved_statement', 'missing_statement']:
             with self.subTest(checkpoint=checkpoint):
@@ -144,6 +144,23 @@ class VerifyFirstMonthTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn('Transaction identities/counts/postings', message)
 
+    def test_manual_card_expense_requires_its_stated_account_and_source_identity(self):
+        self.write_checkpoint('manual')
+        code, message = self.call('manual')
+        self.assertEqual(code, 0, message)
+        original = self.ledger.read_text()
+        header = '2026-08-02 * "Synthetic Parking" "Parking"\n'
+        for label, changed in (
+            ('wrong payment account', original.replace('Liabilities:CreditCard  -12.50 USD', 'Assets:Checking  -12.50 USD')),
+            ('invented bank identity', original.replace(header, header + '  import-id: "bank:manual-parking"\n')),
+        ):
+            with self.subTest(corruption=label):
+                self.assertNotEqual(changed, original)
+                self.ledger.write_text(changed)
+                code, message = self.call('manual')
+                self.assertEqual(code, 1, message)
+                self.assertIn('Transaction identities/counts/postings', message)
+
     def test_wrong_assertion_date_fails_even_when_check_passes(self):
         self.write_checkpoint('reconciled')
         self.ledger.write_text(self.ledger.read_text().replace('2026-09-01 balance', '2026-09-02 balance'))
@@ -152,6 +169,7 @@ class VerifyFirstMonthTests(unittest.TestCase):
         self.assertIn('Balance assertion', message)
 
     def test_decline_detects_untracked_file_change(self):
+        self.write_checkpoint('manual')
         before = self.snapshot()
         (self.workspace / 'unrelated.txt').write_text('unexpected write')
         code, message = self.call('declined_import', before)
@@ -161,7 +179,7 @@ class VerifyFirstMonthTests(unittest.TestCase):
     def test_close_checks_commit_paths_and_report(self):
         self.write_checkpoint('reconciled')
         before = self.snapshot()
-        message = self.expected['close']['subject'] + '\n\nAssets:Checking reconciled\nAssertions: 1 pinned, 0 unpinned\nIncome: 2,000 USD\nExpenses: 58.00 USD\nNet: +1942 USD\ncheck: PASS\nChecking: 2,942 USD\nUnverified: 0\nFlags carried: 0\nRecurring gaps: 0\nRecurring history: unavailable\n'
+        message = self.expected['close']['subject'] + '\n\nAssets:Checking reconciled\nLiabilities:CreditCard — unverified (no statement)\nAssertions: 1 pinned, 1 unpinned\nIncome: 2,000 USD\nExpenses: 70.50 USD\nNet: +1929.50 USD\ncheck: PASS\nChecking: 2,942 USD\nUnverified: 1\nFlags carried: 0\nRecurring gaps: 0\nRecurring history: unavailable\n'
         self.commit(message)
         code, output = self.call('closed', before)
         self.assertEqual(code, 0, output)
@@ -269,15 +287,17 @@ class VerifyFirstMonthTests(unittest.TestCase):
     def test_close_rejects_incomplete_and_wrong_amount_reports(self):
         self.write_checkpoint('reconciled')
         before = self.snapshot()
-        report = ('close: 2026-08 — 1 tied, 0 not tied\n\n'
-                  'Assets:Checking reconciled\nAssertions: 1 pinned, 0 unpinned\n'
-                  'Income: 2000 USD\nExpenses: 58 USD\nNet: 1942 USD\n'
-                  'Checking: 2942 USD\nUnverified: 0\nFlags carried: 0\n'
+        report = ('close: 2026-08 — 1 tied, 1 not tied\n\n'
+                  'Assets:Checking reconciled\nLiabilities:CreditCard — unverified (no statement)\nAssertions: 1 pinned, 1 unpinned\n'
+                  'Income: 2000 USD\nExpenses: 70.50 USD\nNet: 1929.50 USD\n'
+                  'Checking: 2942 USD\nUnverified: 1\nFlags carried: 0\n'
                   'Recurring gaps: 0\nRecurring history: unavailable\ncheck: PASS\n')
         self.commit(report)
         for label, bad_report, reason in [
             ('incomplete', report.replace('Recurring history: unavailable\n', ''), 'Recurring history'),
             ('wrong amount', report.replace('Checking: 2942', 'Checking: 2945'), 'Checking amount'),
+            ('missing unverified account', report.replace('Liabilities:CreditCard — unverified (no statement)\n', ''), 'unverified account'),
+            ('wrong assertion count', report.replace('1 pinned, 1 unpinned', '1 pinned, 0 unpinned'), 'Assertions'),
         ]:
             with self.subTest(report=label):
                 self.git('commit', '-q', '--amend', '-m', bad_report)
@@ -332,6 +352,10 @@ class VerifyFirstMonthTests(unittest.TestCase):
         self.assertEqual(len(created['accounts']), 14)
         self.commit('Initialize a real CLI-created synthetic ledger')
         checkpoint('initialized')
+        values.update(entry_date='2026-08-02', payee='Synthetic Parking', narration='Parking',
+                      posting_1='Expenses:Transport 12.50 USD', posting_2='Liabilities:CreditCard -12.50 USD')
+        recipe('transaction')
+        checkpoint('manual')
         before = self.snapshot()
         preview = recipe('csv-preview')
         with (FIXTURES / 'bank-export.csv').open() as source:
@@ -385,13 +409,15 @@ class VerifyFirstMonthTests(unittest.TestCase):
         before = self.snapshot()
         rows = query("SELECT account, sum(cost(position)) AS total WHERE account ~ '^Expenses:' AND date >= 2026-08-01 AND date < 2026-09-01 GROUP BY account ORDER BY account")
         totals = {row[0]: Decimal(row[1][0]['units']['number']) for row in rows}
-        self.assertEqual(totals, {'Expenses:Dining': Decimal('5'), 'Expenses:Fees': Decimal('3'), 'Expenses:Groceries': Decimal('50')})
+        self.assertEqual(totals, {'Expenses:Dining': Decimal('5'), 'Expenses:Fees': Decimal('3'),
+                                  'Expenses:Groceries': Decimal('50'), 'Expenses:Transport': Decimal('12.50')})
         checkpoint('asked', before)
         checkpoint('declined_commit', before)
-        self.commit('close: 2026-08 — 1 tied, 0 not tied\n\n'
+        self.commit('close: 2026-08 — 1 tied, 1 not tied\n\n'
                     'Assets:Checking reconciled\nChecking: 2942 USD\nIncome: 2000 USD\n'
-                    'Expenses: 58 USD\nNet: 1942 USD\nUnverified: 0\n'
-                    'Assertions: 1 pinned, 0 unpinned\nFlags carried: 0\n'
+                    'Expenses: 70.50 USD\nNet: 1929.50 USD\nUnverified: 1\n'
+                    'Liabilities:CreditCard — unverified (no statement)\n'
+                    'Assertions: 1 pinned, 1 unpinned\nFlags carried: 0\n'
                     'Recurring gaps: 0\nRecurring history: unavailable\ncheck: PASS')
         checkpoint('closed', before)
         self.assertEqual(self.git('diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD').decode().strip(), 'main.bean')

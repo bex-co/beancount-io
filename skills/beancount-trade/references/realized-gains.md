@@ -10,11 +10,17 @@ more than one year), alongside the booked-gains tie-out. State explicitly that
 open lots and unrealized gains are excluded. Keep these fields and exclusions
 in the user-facing answer as well as the reproducible commands.
 
-Start with the command, not a query:
+Check `bea report --help` first. When `capital-gains` is listed, start with
+the command:
 
 ```sh
 bea --file "$ledger" --json --no-input report capital-gains --from-date 2026-01-01 --to-date 2026-12-31
 ```
+
+When that subcommand is absent, use the per-lot and holding-bucket BQL
+queries below through the same `bea` install, together with the booked-gains
+tie-out. Show the same lot fields, holding buckets and totals; do not require
+another runtime or invent a gain to compensate for the missing report.
 
 It lists one row per closed lot — account, commodity, acquired and sold
 dates, held days, quantity, proceeds, basis, and gain — and buckets the

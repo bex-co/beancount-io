@@ -1,6 +1,6 @@
 # w2 · m53 — Onboard an investor household, and prove it with a first-year journey
 
-**Worker:** worker2 **Goal:** a new user with brokerage, crypto, and property accounts starts a ledger that already has the right accounts and booking methods, then follows one documented first-year journey — income, investments, a home, year-end gains — across the skills m49-m52 complete. **Status:** blocked (only t007; 102/103 need the remaining-client release gate)
+**Worker:** worker2 **Goal:** a new user with brokerage, crypto, and property accounts starts a ledger that already has the right accounts and booking methods, then follows one documented first-year journey — income, investments, a home, year-end gains — across the skills m49-m52 complete. **Status:** done
 
 ## Tasks (in order)
 
@@ -12,7 +12,11 @@
 | [t004](done/t004.md) | Adoption surface — **DONE** | 30m | t003 |
 | [t005](done/t005.md) | Simplify — **DONE** | 15m | t004 |
 | [t006](done/t006.md) | Test coverage — **DONE** | 45m | t004, t005 |
-| t007 | Closeout | 15m | t006 |
+| [t007](done/t007.md) | Closeout — **DONE** | 15m | t006 |
+
+## Closeout
+
+2026-11-26. Both definition-of-done items hold. The investor init proposes the investment and property accounts with booking methods (brokerage `USD,VTI "FIFO"`, wallet STRICT) and writes no `open` before the yes. The rehearsed ledger passes `bea check`, and the April broker activity books with no extra opens. The first-year guide ran verbatim on Claude Code 2.1.332 and Codex CLI 0.171.0, on one macOS checkout with published-minimum `bea` 0.3.1. All eight `verify-first-year-investor.py` checkpoints passed on both clients, including `closed_june` against a pre-close snapshot (one commit, only `main.bean`, no draft left) and `year_end` (realized 5,000.00 USD tied to the booked gains through the BQL fallback). The release gates that held this closeout, [102](../../done/102.md) (no commit-message draft) and [103](../../done/103.md) (capability-checked realized gains), ship in the same commit with suite 0.4.48, together with [090](../../done/090.md)'s first-month candidate. w2/m48's close changes landed before them (`3b87c0690`).
 
 ## Previous blocker
 

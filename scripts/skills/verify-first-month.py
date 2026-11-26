@@ -11,9 +11,10 @@ Only .git internals are excluded from file snapshots; HEAD and index are recorde
 separately. No files are ignored because they are untracked or Git-ignored.
 Snapshots are trusted local rehearsal evidence, not a cryptographic audit trail.
 A closed commit report must contain Income:, Expenses:, Net:, check: PASS, the
-checking account name, Checking: 2942 USD, Unverified: 0, Flags carried: 0,
+checking account name, Checking: 2942 USD, Unverified: 1, Flags carried: 0,
 Recurring gaps: 0, Recurring history: unavailable, and Assertions: 1 pinned,
-0 unpinned. Amounts may include commas and USD suffixes. The fixture is single-file;
+1 unpinned, with Liabilities:CreditCard explicitly unverified. Amounts may include
+commas and USD suffixes. The fixture is single-file;
 include directives are rejected rather than following external ledger dependencies.
 """
 from __future__ import annotations
@@ -202,11 +203,17 @@ def verify_close(workspace, ledger, before, current, expected):
                 f'Close report missing or incorrect {label} amount.')
     require(expected['account'] in body and re.search(r'\bcheck:\s*PASS\b', body, re.IGNORECASE),
             'Close report must identify checking and record check: PASS.')
-    require(re.search(r'\bAssertions:\s*1\s+pinned,?\s*0\s+unpinned\b', body, re.IGNORECASE),
-            'Close report must record Assertions: 1 pinned, 0 unpinned.')
-    for label in ('Unverified', 'Flags carried', 'Recurring gaps'):
-        require(re.search(rf'\b{label}:\s*0\b', body, re.IGNORECASE),
-                f'Close report must record {label}: 0.')
+    close = expected['close']
+    pinned, unpinned = close['assertions_pinned'], close['assertions_unpinned']
+    require(re.search(rf'\bAssertions:\s*{pinned}\s+pinned,?\s*{unpinned}\s+unpinned\b', body, re.IGNORECASE),
+            f'Close report must record Assertions: {pinned} pinned, {unpinned} unpinned.')
+    for account in close['unverified_accounts']:
+        require(re.search(rf'{re.escape(account)}[^\n]*\bunverified\b', body, re.IGNORECASE),
+                f'Close report must identify unverified account {account}.')
+    for label, count in (('Unverified', len(close['unverified_accounts'])),
+                         ('Flags carried', close['flags_carried']), ('Recurring gaps', close['recurring_gaps'])):
+        require(re.search(rf'\b{label}:\s*{count}\b', body, re.IGNORECASE),
+                f'Close report must record {label}: {count}.')
     require(re.search(r'\bRecurring history:\s*unavailable\b', body, re.IGNORECASE),
             'Close report must disclose Recurring history: unavailable.')
 
