@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for check-docker-targets.py: the real Docker targets pass, and each
 setting that keeps sign-in and Git working fails on its own when it is removed
-or changed, in either target.
+or changed, in either production target and, for Git, in docker-mac.
 
     python3 scripts/test_check_docker_targets.py
 """
@@ -20,9 +20,11 @@ assert spec and spec.loader
 guard = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(guard)
 
-TARGETS = guard.DEFAULT_TARGETS
+TARGETS = guard.PRODUCTION_TARGETS
+LOCAL = guard.LOCAL_TARGET
 PASS_LINE = "      OAUTH_JWKS_FROM_AUTH_SECRET: ${OAUTH_JWKS_FROM_AUTH_SECRET:-}\n"
 GIT_LINE = "      GIT_PUBLIC_URL: https://${API_DOMAIN:?Set API_DOMAIN in .env}/git\n"
+LOCAL_GIT_LINE = "      GIT_PUBLIC_URL: ${SERVER_URL:-http://localhost:42601}/git\n"
 EXAMPLE_LINE = "OAUTH_JWKS_FROM_AUTH_SECRET=true\n"
 
 
@@ -40,6 +42,12 @@ class RealTargets(unittest.TestCase):
         for target in TARGETS:
             with self.subTest(target=target.name):
                 self.assertEqual(guard.check(*files(target)), [])
+
+    def test_docker_mac_passes(self) -> None:
+        self.assertEqual(guard.check_local(files(LOCAL)[0]), [])
+
+    def test_every_target_is_checked_by_default(self) -> None:
+        self.assertEqual(guard.DEFAULT_TARGETS, [*TARGETS, LOCAL])
 
     def test_main_exits_zero_on_the_repository(self) -> None:
         self.assertEqual(guard.main(["check-docker-targets.py"]), 0)
@@ -101,8 +109,32 @@ class EachSettingFailsAlone(unittest.TestCase):
                     self.assert_one_problem(replaced(compose, GIT_LINE, new), example, "GIT_PUBLIC_URL")
 
     def test_a_compose_file_without_backend_v2_fails(self) -> None:
-        found = guard.check("services:\n  dashboard:\n    environment:\n      PORT: 3000\n", EXAMPLE_LINE)
-        self.assertEqual(found, ["docker-compose.yml: no `environment:` found for the backend-v2 service"])
+        no_backend = "services:\n  dashboard:\n    environment:\n      PORT: 3000\n"
+        self.assertEqual(guard.check(no_backend, EXAMPLE_LINE), [guard.NO_BACKEND])
+        self.assertEqual(guard.check_local(no_backend), [guard.NO_BACKEND])
+
+
+class DockerMacGitAddress(unittest.TestCase):
+    """docker-mac once named Gitea's port, 42602, which refuses a token (w0/057)."""
+
+    def test_dropping_or_redirecting_the_git_proxy_address_fails(self) -> None:
+        compose = files(LOCAL)[0]
+        for new in (
+            "",
+            "      # " + LOCAL_GIT_LINE.lstrip(),
+            "      GIT_PUBLIC_URL: http://localhost:42602\n",
+            "      GIT_PUBLIC_URL: ${SERVER_URL:-http://localhost:42601}\n",
+            "      GIT_PUBLIC_URL: ${DASHBOARD_URL:-http://localhost:42600}/git\n",
+        ):
+            with self.subTest(new=new):
+                found = guard.check_local(replaced(compose, LOCAL_GIT_LINE, new))
+                self.assertEqual(len(found), 1, found)
+                self.assertIn("GIT_PUBLIC_URL must be `${SERVER_URL}/git`", found[0])
+
+    def test_no_oauth_settings_are_required(self) -> None:
+        # It signs OAuth with a development key, so the production checks do not apply.
+        self.assertNotIn("OAUTH_JWKS_FROM_AUTH_SECRET", files(LOCAL)[0])
+        self.assertEqual(guard.check_local(files(LOCAL)[0]), [])
 
 
 class CommandLine(unittest.TestCase):
@@ -113,6 +145,15 @@ class CommandLine(unittest.TestCase):
             compose = broken / "docker-compose.yml"
             compose.write_text(replaced(compose.read_text(), PASS_LINE, ""))
             self.assertEqual(guard.main(["check-docker-targets.py", str(TARGETS[1]), str(broken)]), 1)
+
+    def test_a_broken_docker_mac_exits_one(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            broken = pathlib.Path(scratch) / "docker-mac"
+            broken.mkdir()
+            compose = files(LOCAL)[0]
+            (broken / "docker-compose.yml").write_text(replaced(compose, LOCAL_GIT_LINE, ""))
+            self.assertEqual(guard.main(["check-docker-targets.py", str(LOCAL)]), 0)
+            self.assertEqual(guard.main(["check-docker-targets.py", str(broken)]), 1)
 
 
 if __name__ == "__main__":

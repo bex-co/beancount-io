@@ -3,7 +3,7 @@
 
 `deploy/docker` and `deploy/docker-single-psql` are what a self-hoster follows
 step by step, and two settings in them decide whether the mobile app, OAuth
-MCP hosts and Git over HTTPS work at all (w0/m10). For each target this checks:
+MCP hosts and Git over HTTPS work at all (w0/m10). For each of them this checks:
 
   * backend-v2 is passed `OAUTH_JWKS_FROM_AUTH_SECRET` from `.env`, with no
     default, so an `.env` without the line keeps OAuth off as it always did;
@@ -13,6 +13,10 @@ MCP hosts and Git over HTTPS work at all (w0/m10). For each target this checks:
     every clone of this public repository a token issuer;
   * backend-v2's `GIT_PUBLIC_URL` is `https://<API_DOMAIN>/git`, its own Git
     proxy, because Gitea's address takes no Beancount.io credential.
+
+`deploy/docker-mac` signs OAuth with a development key, so only the Git check
+applies there: its `GIT_PUBLIC_URL` is `${SERVER_URL}/git`, the published
+backend port, not Gitea's (w0/057).
 
     python3 scripts/check-docker-targets.py [target directory ...]
 
@@ -27,13 +31,17 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-DEFAULT_TARGETS = [ROOT / "deploy" / "docker", ROOT / "deploy" / "docker-single-psql"]
+PRODUCTION_TARGETS = [ROOT / "deploy" / "docker", ROOT / "deploy" / "docker-single-psql"]
+LOCAL_TARGET = ROOT / "deploy" / "docker-mac"
+DEFAULT_TARGETS = [*PRODUCTION_TARGETS, LOCAL_TARGET]
+NO_BACKEND = "docker-compose.yml: no `environment:` found for the backend-v2 service"
 
 SERVICE = re.compile(r"^  ([A-Za-z0-9_.-]+):\s*$")
 ENVIRONMENT = re.compile(r"^    environment:\s*$")
 ENV_ENTRY = re.compile(r"^      ([A-Z0-9_]+):\s*(.*?)\s*$")
 PASS_THROUGH = re.compile(r"^\$\{OAUTH_JWKS_FROM_AUTH_SECRET(:?-)?\}$")
 GIT_PROXY = re.compile(r"^https://\$\{API_DOMAIN(:?[?-][^}]*)?\}/git$")
+LOCAL_GIT_PROXY = re.compile(r"^\$\{SERVER_URL(:?-[^}]*)?\}/git$")
 
 
 def without_comment(line: str) -> str:
@@ -70,11 +78,27 @@ def env_example_values(text: str) -> dict[str, str]:
     return values
 
 
+def git_problems(env: dict[str, str], pattern: re.Pattern[str], wanted: str) -> list[str]:
+    git_url = env.get("GIT_PUBLIC_URL")
+    if git_url is not None and pattern.match(git_url):
+        return []
+    return [
+        f"docker-compose.yml: backend-v2's GIT_PUBLIC_URL must be `{wanted}`, its own Git proxy; "
+        f"without it ledgers name Gitea's address, which takes no token or password: {git_url or 'unset'}"
+    ]
+
+
+def check_local(compose: str) -> list[str]:
+    """docker-mac: only the Git address applies."""
+    env = backend_environment(compose)
+    return git_problems(env, LOCAL_GIT_PROXY, "${SERVER_URL}/git") if env else [NO_BACKEND]
+
+
 def check(compose: str, env_example: str) -> list[str]:
     problems: list[str] = []
     env = backend_environment(compose)
     if not env:
-        return ["docker-compose.yml: no `environment:` found for the backend-v2 service"]
+        return [NO_BACKEND]
 
     flag = env.get("OAUTH_JWKS_FROM_AUTH_SECRET")
     if flag is None:
@@ -88,13 +112,7 @@ def check(compose: str, env_example: str) -> list[str]:
             f"default (`${{OAUTH_JWKS_FROM_AUTH_SECRET:-}}`), so an .env without it keeps OAuth off: {flag}"
         )
 
-    git_url = env.get("GIT_PUBLIC_URL")
-    if git_url is None or not GIT_PROXY.match(git_url):
-        problems.append(
-            "docker-compose.yml: backend-v2's GIT_PUBLIC_URL must be `https://${API_DOMAIN}/git`, its "
-            "own Git proxy; without it ledgers name Gitea's address, which takes no token or password: "
-            f"{git_url or 'unset'}"
-        )
+    problems += git_problems(env, GIT_PROXY, "https://${API_DOMAIN}/git")
 
     values = env_example_values(env_example)
     if values.get("OAUTH_JWKS_FROM_AUTH_SECRET") != "true":
@@ -114,15 +132,16 @@ def main(argv: list[str]) -> int:
     targets = [pathlib.Path(arg) for arg in argv[1:]] or DEFAULT_TARGETS
     failed = False
     for target in targets:
-        problems = check(
-            (target / "docker-compose.yml").read_text(),
-            (target / ".env.example").read_text(),
-        )
+        compose = (target / "docker-compose.yml").read_text()
+        local = target.name == LOCAL_TARGET.name
+        problems = check_local(compose) if local else check(compose, (target / ".env.example").read_text())
         if problems:
             failed = True
             print(f"{target}: {len(problems)} problem(s)", file=sys.stderr)
             for problem in problems:
                 print(f"  {problem}", file=sys.stderr)
+        elif local:
+            print(f"OK: {target.name} serves Git through its proxy")
         else:
             print(f"OK: {target.name} derives its OAuth key from AUTH_SECRET and serves Git through its proxy")
     return 1 if failed else 0

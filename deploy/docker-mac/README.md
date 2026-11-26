@@ -31,8 +31,8 @@ checks for conflicts: `lsof -iTCP:42600-42602 -sTCP:LISTEN`.
 | Host port | Service    | URL                                        |
 |-----------|------------|--------------------------------------------|
 | 42600     | dashboard  | http://localhost:42600                     |
-| 42601     | backend-v2 | http://localhost:42601/api-gateway/ (GraphQL), `/healthz` |
-| 42602     | gitea      | http://localhost:42602 (web UI, HTTP clone) |
+| 42601     | backend-v2 | http://localhost:42601/api-gateway/ (GraphQL), `/healthz`, `/git/<owner>/<ledger>.git` ([Git over HTTP](#git-over-http)) |
+| 42602     | gitea      | http://localhost:42602 (web UI)            |
 
 Everything else — both PostgreSQL instances, Redis, and the ledger service —
 is **not** published to the host. They are reachable only inside the compose
@@ -71,6 +71,24 @@ All state lives in `./data/` (gitignored): `gitea/`, `postgres/`,
 `postgres-backend/`, `redis/`. Delete a subdirectory (while stopped) to reset
 that service; on next start Gitea/PostgreSQL re-initialize and the post script
 re-provisions.
+
+## Git over HTTP
+
+Ledgers clone and push through backend-v2's Git proxy, at
+`http://localhost:42601/git/<owner>/<ledger>.git`. Compose sets
+`GIT_PUBLIC_URL` to `SERVER_URL` followed by `/git`, so every ledger's
+`httpUrl` and the dashboard's Git Clone menu name it. Gitea's own port, 42602,
+takes neither a personal access token nor the account password.
+
+Sign in with any username and a personal access token as the password, minted
+in the dashboard under Settings → Personal access tokens (`/settings/api-keys`).
+Minting is a paid feature on this stack unless `SELF_HOST=true`; to test it
+without Stripe, use `DEV_PREMIUM_USER_IDS` as in [Quick start](#quick-start).
+Your account email and password are still accepted for now, with a `remote:`
+hint to switch to a token.
+
+A stack started from an older copy of this file gave ledgers Gitea's port.
+Pull the update and run `docker compose up -d backend-v2`.
 
 ## Git over SSH (optional)
 

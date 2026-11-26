@@ -7,6 +7,7 @@ on:
       - "bex.yaml"
       - "deploy/bex/**"
       - "deploy/docker/**"
+      - "deploy/docker-mac/**"
       - "deploy/docker-single-psql/**"
       - "scripts/check-bex-blueprint.py"
       - "scripts/test_check_bex_blueprint.py"
@@ -19,6 +20,7 @@ on:
       - "bex.yaml"
       - "deploy/bex/**"
       - "deploy/docker/**"
+      - "deploy/docker-mac/**"
       - "deploy/docker-single-psql/**"
       - "scripts/check-bex-blueprint.py"
       - "scripts/test_check_bex_blueprint.py"
@@ -60,3 +62,4 @@ jobs:
               SSH_PROXY_HOST_KEY=placeholder docker compose --env-file .env.example \
                 -f docker-compose.yml -f docker-compose.ssh.yml config --quiet)
           done
+          (cd deploy/docker-mac && docker compose --env-file .env.example config --quiet)
