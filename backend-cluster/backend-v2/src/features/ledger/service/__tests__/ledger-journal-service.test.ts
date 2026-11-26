@@ -1360,6 +1360,37 @@ describe("LedgerJournalService", () => {
         );
       });
 
+      it("refuses a commit for an unopened budget under an org-mode heading", async () => {
+        stubAccounts(["Expenses:Food:Coffee", "Expenses:Food:Groceries"]);
+        mockUpdateSourceSlice.mockResolvedValue(okSliceResponse());
+
+        const failure = await service
+          .updateSourceSlice({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entryHash: HASH_OLD,
+            sha256sum: SHA_OLD,
+            newContent: `* Monthly caps\n${UNOPENED_BUDGET}`,
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(ValidationError);
+        expect(failure).toMatchObject({
+          category: "VALIDATION_FAILED",
+          message: expect.stringContaining(
+            "entry 0: budget account Expenses:DoesNotExist is not opened",
+          ),
+        });
+        // Probed without mutating: the commit never ran.
+        expect(mockUpdateSourceSlice).toHaveBeenCalledTimes(1);
+        expect(mockUpdateSourceSlice).toHaveBeenCalledWith(
+          "testowner",
+          "testledger",
+          expect.objectContaining({ dryRun: true }),
+          {},
+        );
+      });
+
       it("commits unopened budget when allowInvalid is true without reading accounts", async () => {
         mockUpdateSourceSlice.mockResolvedValue(okSliceResponse());
 
