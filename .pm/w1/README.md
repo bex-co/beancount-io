@@ -27,7 +27,7 @@ m46–m48 were materialized on 2026-11-14 from `/pm-brainstorm for w1` items 1, 
 - [x] **m48** — ["The operator has not set this up" fails one way on REST, GraphQL and MCP](./done/m48/README.md) (8 tasks) ← user request via /pmx, 2026-11-14 (`/pm-brainstorm for w1` item 5, ADR029 D5); user routed to w1
 - [x] **m49** — [A period's income and expenses have one value, whatever the interval](./done/m49/README.md) (7 tasks) ← promoted from inbox note w1/336 (routine cli-qa, 2026-11-20): the income statement valued flows at the as-of rate in the headline and at each interval's rate in the rows
 - [x] **m50** — [A batch recategorization costs one ledger load, not one per row](./done/m50/README.md) (6 tasks) ← promoted from inbox note w1/374 (routine cli-qa, 2026-11-23): `bea update transactions` reloaded the ledger once per row when one row was rejected (134 s against 11 s for 500 rows) and rescanned and rediffed the whole ledger per row
-- [ ] **m42** — [Bring an existing Beancount ledger to `bea` and a coding agent](./blocked/m42/README.md) (10 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 1); user routed to w1 — **blocked:** all shipped except the Codex rehearsal; Codex cannot refresh its expired sign-in; `codex login status` passes but a real turn fails with 401 (rechecked 2026-11-15; `codex logout` + `codex login`)
+- [x] **m42** — [Bring an existing Beancount ledger to `bea` and a coding agent](./done/m42/README.md) (10 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 1); user routed to w1
 - [ ] **m43** — [Rename an account across a hosted ledger in one previewed commit](./blocked/m43/README.md) (10 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 2, from [228](./done/228.md)); user routed to w1 — **blocked:** shipped and deployed; the hosted check's undo step waits on w23/242
 - [x] **m44** — [List entries with their source text in one call](./done/m44/README.md) (7 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 3, from [228](./done/228.md)); user routed to w1
 - [ ] **m45** — [Move entries to another file in one atomic commit](./blocked/m45/README.md) (9 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 4, from [228](./done/228.md)); user routed to w1 — **blocked:** shipped; the hosted check waits on a deploy at or after `58107fb90` and on w23/242
@@ -84,6 +84,8 @@ m46–m48 were materialized on 2026-11-14 from `/pm-brainstorm for w1` items 1, 
 
 ## Inbox
 
+- [382](./382.md) — Codex swaps in another `bea` when the installed one fails, and once rewrote the generated `AGENTS.md` (A1; from the w1/m42/t006 Codex rehearsal)
+- [383](./383.md) — The first-query and install guides' `codex exec --sandbox read-only` fails on macOS too (A2; from the w1/m42/t006 Codex rehearsal)
 - [241](./blocked/241.md) — Port the CLI off typer's private click so typer 0.29+ can install (A2; follow-up to the 239 stopgap) — **blocked:** its 2026-11-14 promotion (w3/m67) was dropped the same day; owner re-funds the port or drops the note
 
 

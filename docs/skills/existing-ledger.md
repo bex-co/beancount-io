@@ -18,8 +18,8 @@ You need `bea` and the skills installed for Claude Code, Codex, or both.
 Follow one method in [Install the Beancount skills](installation.md) through
 its discovery check.
 
-`bea init --existing` is new: it first ships in the `bea` release after
-0.3.1. Check that yours has it:
+`bea init --existing` first shipped in `bea` 0.4.0. Check that yours has
+it:
 
 ```sh
 bea init --help | grep -q -- --existing && echo "ready" || echo "upgrade bea first: bea upgrade"
@@ -109,7 +109,22 @@ Or ask without an interactive session (on Windows, use the
 ```sh
 claude -p "How much did I spend on groceries in February 2026?" \
   --allowedTools "Skill" "Read" "Bash(bea:*)" "Bash(PYTHONPATH=. bea:*)"
-codex exec --sandbox read-only "How much did I spend on groceries in February 2026?"
+```
+
+For Codex, `--sandbox read-only` stops `bea` from creating the temporary
+files its query engine needs, on macOS as well as Linux. Grant writes only to
+a fresh scratch directory instead; the books stay read-only and network
+access stays off. [Allow scratch files](first-query.md#linux-allow-scratch-files-while-keeping-the-ledger-read-only)
+explains this profile and the older Codex settings that override it.
+
+```sh
+BEA_QUERY_TMP="$(mktemp -d)"
+TMPDIR="$BEA_QUERY_TMP" XDG_CACHE_HOME="$BEA_QUERY_TMP/cache" \
+BEA_CONFIG_DIR="$BEA_QUERY_TMP/config" \
+codex exec -c 'default_permissions="bea_query"' \
+  -c 'permissions.bea_query={filesystem={":root"="read",":tmpdir"="write"},network={enabled=false}}' \
+  "How much did I spend on groceries in February 2026?"
+rm -rf "$BEA_QUERY_TMP"
 ```
 
 ## 5. Confirm nothing changed
@@ -148,6 +163,12 @@ $after = Get-ChildItem -Recurse -Include *.beancount, *.py | ForEach-Object { (G
   the file that includes the others: `bea init --existing PATH`.
 - **The agent says a plugin cannot be imported:** run it from the ledger's
   folder with `PYTHONPATH=.`, as `AGENTS.md` says.
+- **Codex says `bea` could not install its engine packages:** a `bea`
+  installed with `uv tool install` sets up its engine the first time a
+  command reads a ledger, and that needs the network, which Codex's sandbox
+  turns off. Run step 3 in your own terminal first, then ask again.
+- **Codex says `bea` found no usable temporary directory:** use the
+  scratch-only command in step 4 instead of `--sandbox read-only`.
 - **The agent does not use the skill:** run `verify` from
   [the installation guide](installation.md#3-confirm-the-agents-see-them),
   then start a new session.
@@ -158,8 +179,18 @@ On 2026-11-13 on macOS, Claude Code 2.1.322 with a workspace install took the
 setup prompt to `beancount-init`'s existing-ledger branch and answered the
 February question with 119.35 USD through `beancount-ask`, running `bea` with
 `PYTHONPATH=.` as the written `AGENTS.md` says. Every ledger checksum was
-unchanged. It ran the checkout's `bea`, since no release has `init --existing`
-yet. Codex has not been run yet, and the PowerShell block has not been run.
+unchanged. It ran the checkout's `bea`, since no release had `init --existing`
+yet.
+
+On 2026-11-25 on macOS, Codex CLI 0.171.0 (`gpt-6.2-sol`) with a workspace
+install and published `bea` 0.5.0 from `uv tool install` took the same setup
+prompt to that branch, which ran `bea init --existing` and wrote `AGENTS.md`
+and `CLAUDE.md`. It answered the February question with 119.35 USD through
+`beancount-ask` under the scratch-only command in step 4. Every ledger
+checksum was unchanged, and nothing was staged. The run found the two Codex
+items under "If something goes wrong": `--sandbox read-only` blocks `bea`'s
+temporary files on macOS too, and a first-use engine install cannot run
+inside Codex's sandbox. The PowerShell block has not been run.
 
 ## Next
 

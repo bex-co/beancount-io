@@ -1,6 +1,6 @@
 # w1 · m42 — Bring an existing Beancount ledger to `bea` and a coding agent
 
-**Worker:** worker1 **Goal:** someone who already keeps a Beancount ledger, with their own root file name, `include` tree and plugins, installs `bea`, runs one documented command, and has a coding agent answer a question about that ledger in minutes, without a single ledger file changing. **Status:** blocked (t001–t005, t007–t009 done; t006 blocked on Codex sign-in; t010 waits on t006)
+**Worker:** worker1 **Goal:** someone who already keeps a Beancount ledger, with their own root file name, `include` tree and plugins, installs `bea`, runs one documented command, and has a coding agent answer a question about that ledger in minutes, without a single ledger file changing. **Status:** done
 
 ## Tasks (in order)
 
@@ -11,19 +11,21 @@
 | t003 | Report what in an existing ledger needs attention before an agent uses it — **DONE** | 60m | t001 |
 | t004 | `beancount-init` adopts an existing ledger without changing it — **DONE** | 60m | t002, t003 |
 | t005 | Existing-ledger guide with an executable recipe, linked from every entry point — **DONE** | 60m | t002, t004 |
-| t006 | Rehearse the guide on Claude Code and Codex from a fresh install — **BLOCKED** (Codex sign-in; Claude Code passed) | 45m | t005 |
+| t006 | Rehearse the guide on Claude Code and Codex from a fresh install — **DONE** | 45m | t005 |
 | t007 | Adoption surface — **DONE** | 30m | t005 |
 | t008 | Simplify — **DONE** | 15m | t007 |
 | t009 | Test coverage — **DONE** | 45m | t007, t008 |
-| t010 | Closeout | 15m | t006, t009 |
+| t010 | Closeout — **DONE** | 15m | t006, t009 |
 
 Re-sequenced 2026-11-13: Adoption surface (t007) now follows t005, and Closeout (t010) waits on t006. Adoption surface, Simplify and Test coverage do not need the Codex run, so only closing the milestone waits on it, as w1/m41 did with its production check.
 
-## Blocked
+## Blocked (cleared)
+
+**Unblocked and closed 2026-11-25** — Codex signed in again (CLI 0.171.0 on macOS). t006's Codex run passed: setup through `beancount-init`'s existing-ledger branch, 119.35 USD through `beancount-ask`, checksums unchanged, routing 4/4 on both clients. Its findings fixed the guide's Codex command and filed [w1/382](../../382.md) and [w1/383](../../383.md). The history below is kept.
 
 **Milestone blocked 2026-11-13.** Everything but the Codex rehearsal is shipped: the command (`fd8914559`, `fe2ff1284`), the skill branch (`8a645730b`), the guide (`76c9457aa`), the adoption surfaces (`d43412d0f`), Simplify (`d2faee550`) and Test coverage (`300b7bad7`). Closeout (t010) waits on t006, the only open task that can still change anything. **Unblock:** the user signs Codex in again (`codex logout`, then `codex login`) so that a real turn succeeds, not just `codex login status`. The worker then runs the guide's setup and question turns with Codex, records versions and dates in t006's text, and closes t006 and t010. **Who can clear it:** the user.
 
-- **t006 (2026-11-13)** — the Codex half of the rehearsal. Claude Code passed; its versions and result are recorded in t006's `## Blocked` section (the committed evidence file was removed 2026-11-14 with the other run records). Codex CLI 0.163.0 cannot refresh its expired sign-in on this host, and the Linux container route reuses that credential. **Unblock:** the user signs Codex in again (`codex logout`, then `codex login`); the worker then runs the guide's setup and question turns with Codex and records them. **Who can clear it:** the user.
+- **t006 (2026-11-13)** — the Codex half of the rehearsal. Claude Code passed; its versions and result are recorded in t006's `## Result` section (the committed evidence file was removed 2026-11-14 with the other run records). Codex CLI 0.163.0 cannot refresh its expired sign-in on this host, and the Linux container route reuses that credential. **Unblock:** the user signs Codex in again (`codex logout`, then `codex login`); the worker then runs the guide's setup and question turns with Codex and records them. **Who can clear it:** the user.
 - **Rechecked 2026-11-15 — still blocked.** `codex login status` (Codex CLI 0.163.0) now reports "Logged in using ChatGPT", but that only reads the stored credential file. A one-line `codex exec` turn still fails: every token refresh answers "your refresh token has expired. Please log out and sign in again", and the request ends with `workspace routing discovery unauthorized (401)`. The stored credential has not changed since 2026-11-11. So a `login status` check is not evidence that the block has cleared; the next worker must first get a trivial `codex exec` turn to succeed. Signing in with an API key instead of ChatGPT would also clear it, but that is a billing choice only the user can make.
 
 ## Definition of done
