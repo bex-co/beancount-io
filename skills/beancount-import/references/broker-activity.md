@@ -109,7 +109,10 @@ way (`format: broker-csv`; the account is the exchange account). Rules
 that differ from a stock broker's:
 
 - **Precision is data.** Quantities and prices keep the exact printed
-  precision (`0.01234567 BTC`), in the entries and in the hash input.
+  precision (`0.01234567 BTC`) in the entries. Hash inputs follow
+  `references/dedup.md`: strip trailing zeroes without rounding the value.
+  Numerically identical spellings have the same ID; genuinely different
+  quantities, costs or prices remain distinct.
 - **Fees may be charged in the asset.** When the fee column is in the
   traded asset, units acquired are the credited quantity and the fee's
   value is inside the cash total — say so in the review; when it is a

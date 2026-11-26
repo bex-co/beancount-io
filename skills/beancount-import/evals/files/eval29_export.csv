@@ -1,0 +1,3 @@
+Timestamp,Type,Asset,Quantity,Spot Price,Subtotal,Fees,Total
+2026-04-01,Buy,BTC,0.05,60000,3000,15.00,3015.00
+2026-04-15,Staking Reward,ETH,0.01,3000,30.00,0,30.00

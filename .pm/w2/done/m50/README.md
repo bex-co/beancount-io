@@ -1,6 +1,6 @@
 # w2 · m50 — Import investment activity in bulk, with lots intact
 
-**Worker:** worker2 **Goal:** a user with a year of broker or exchange activity — or an existing portfolio to onboard — gets those events into the ledger as correct lots through one reviewed batch proposal, instead of dictating trades one at a time. **Status:** blocked (Codex expanded cohort complete; new assertions need Claude authentication)
+**Worker:** worker2 **Goal:** a user with a year of broker or exchange activity — or an existing portfolio to onboard — gets those events into the ledger as correct lots through one reviewed batch proposal, instead of dictating trades one at a time. **Status:** done
 
 ## Tasks (in order)
 
@@ -10,11 +10,15 @@
 | [t002](done/t002.md) | Import a broker activity export as lots — **DONE** | 90m | t001 |
 | [t003](done/t003.md) | Import exchange activity and opening lots from a cost-basis export — **DONE** | 75m | t001 |
 | [t004](done/t004.md) | Write evals, fixtures, and routing entries for bulk intake — **DONE** | 60m | t001, t002, t003 |
-| t005 | Run the evals and routing set on both clients | 45m | t004 |
-| t006 | Adoption surface | 30m | t005 |
-| t007 | Simplify | 15m | t006 |
-| t008 | Test coverage | 45m | t006, t007 |
-| t009 | Closeout | 15m | t008 |
+| [t005](done/t005.md) | Run the evals and routing set on both clients — **DONE** | 45m | t004 |
+| [t006](done/t006.md) | Adoption surface — **DONE** | 30m | t005 |
+| [t007](done/t007.md) | Simplify — **DONE** | 15m | t006 |
+| [t008](done/t008.md) | Test coverage — **DONE** | 45m | t006, t007 |
+| [t009](done/t009.md) | Closeout — **DONE** | 15m | t008 |
+
+## Closeout
+
+2026-11-26. Every definition-of-done item holds on both clients (Claude Code 2.1.332, Codex CLI 0.171.0): a batch is proposed once and written after one yes (trade 9), and lot ambiguity is asked per event (trade 10). Broker and exchange activity import as lots with canonical `import-id`s; a re-import is a no-op (import 17, 29), and a sell against an unheld lot stops before any write (import 18). Opening lots tie to the export's 2600.00 (import 19). Routing keeps bank imports, single trades and bulk intake apart: 63/63 on each client. Evidence is in t005. Ships with the preserved candidate `67053c495` and suite 0.4.46.
 
 ## Previous blocker
 

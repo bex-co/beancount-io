@@ -119,7 +119,7 @@
       "id": 9,
       "name": "batch-of-paycheck-buys-one-proposal",
       "prompt": "Record my last four 401(k) buys in ./ledger.beancount (Assets:Retirement:401k): 2 VTI on 2026-01-15 at $250, 2 on 2026-02-13 at $260, 2 on 2026-03-13 at $255, and 2 on 2026-04-15 at $270. No fees.",
-      "expected_output": "One proposal showing all four buy entries in full (each 2 VTI at its stated cost against cash), one yes/no for the whole set. Nothing written before the yes; on confirmation all four write (one batch) and the check passes, leaving 8 VTI across four lots and 5000 - 2080 = 2920.00 cash.",
+      "expected_output": "One proposal showing all four buy entries in full (each 2 VTI at its stated cost against cash), one yes/no for the whole set. Nothing written before the yes; on confirmation all four write (one batch) and the check passes, leaving 8 VTI across four lots and 5000 - 2070 = 2930.00 cash.",
       "files": [
         "evals/files/eval9_ledger.beancount"
       ],

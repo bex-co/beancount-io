@@ -1,0 +1,34 @@
+;; beancount-import config
+;; source: crypto-exchange
+;;   account: Assets:Crypto:Exchange
+;;   format: broker-csv  columns: date=Timestamp,action=Type,symbol=Asset,quantity=Quantity,price=Spot Price,subtotal=Subtotal,fees=Fees,amount=Total  date_format: %Y-%m-%d
+;;   action_map: Buy=buy,Staking Reward=staking-reward
+;;   sign: Buy=negative USD Total; Staking Reward=positive asset units against negative USD income, no cash movement
+;;   fees: separate USD expense to Expenses:Fees
+;;   reward_income: Income:Staking
+;;   precision: preserve printed quantity and price precision in entries and lot hash inputs
+;;   append_target: ./ledger.beancount
+;;   imports: 1
+
+;; fixture — existing exchange imports with legacy printed-decimal IDs
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Crypto:Exchange USD,BTC,ETH
+2026-01-01 open Income:Staking USD
+2026-01-01 open Expenses:Fees USD
+2026-01-01 open Equity:Opening-Balances
+
+2026-01-02 * "Cash in"
+  Assets:Crypto:Exchange  10000.00 USD
+  Equity:Opening-Balances
+
+2026-04-01 * "Buy"
+  import-id: "csv:sha256:e399fa26f06a6519"
+  Assets:Crypto:Exchange  0.05000000 BTC {60000.00 USD}
+  Assets:Crypto:Exchange    -3015.00 USD
+  Expenses:Fees                15.00 USD
+
+2026-04-15 * "Staking Reward"
+  import-id: "csv:sha256:2a1930405e3d39fb"
+  Assets:Crypto:Exchange  0.01000000 ETH {3000.00 USD}
+  Income:Staking              -30.00 USD

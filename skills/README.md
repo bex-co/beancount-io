@@ -12,9 +12,9 @@ The suite shares [command recipes](beancount-init/references/bea-cli.md) that se
 | ----- | --------- |
 | [beancount-init](beancount-init/SKILL.md) | Create a ledger with `bea init`, including investor account and booking choices (optional Fava browser setup); or set up books you already keep in Beancount for an agent with `bea init --existing`, changing no ledger file. |
 | [beancount-add](beancount-add/SKILL.md) | Record a purchase, transfer, payroll run, new or closed account, price, or note you describe. |
-| [beancount-trade](beancount-trade/SKILL.md) | Record stock, fund, and crypto events with correct lots — including swaps, staking/airdrop income and own-wallet network fees — and report realized gains. |
+| [beancount-trade](beancount-trade/SKILL.md) | Record stock, fund, and crypto events with correct lots, one at a time or as a batch confirmed once — including swaps, staking/airdrop income and own-wallet network fees — and report realized gains. |
 | [beancount-property](beancount-property/SKILL.md) | Record property purchases, mortgages, escrow, rent, deposits, and sales from the figures you provide. |
-| [beancount-import](beancount-import/SKILL.md) | Import bank/card statements (including PDFs), broker exports, and payment-processor payouts, with duplicate review and opening-lot support. |
+| [beancount-import](beancount-import/SKILL.md) | Import bank/card statements (including PDFs), broker and crypto-exchange activity exports, and payment-processor payouts, with duplicate review and opening-lot support. |
 | [beancount-importer-author](beancount-importer-author/SKILL.md) | Write or repair a reusable, tested bank importer. |
 | [beancount-reconcile](beancount-reconcile/SKILL.md) | Compare an account with a bank or broker statement. |
 | [beancount-migrate](beancount-migrate/SKILL.md) | Migrate transaction history from another finance app. |

@@ -322,7 +322,8 @@
       "expectations": [
         "The BTC quantity keeps its printed precision (0.05000000) and the fee is its own 15.00 leg",
         "The staking ETH is booked at the stated value against staking income, not zero cost",
-        "Nothing is written before confirmation"
+        "Nothing is written before confirmation",
+        "The generated import IDs use the shared canonical numeric hash inputs (trailing zeroes stripped without rounding): csv:sha256:bc245b320b912584 for the buy and csv:sha256:db8b66f5dcf7c471 for the staking reward, while the posted quantities keep their printed precision"
       ]
     },
     {
@@ -448,6 +449,21 @@
         "txn_b books 80.00 gross to Income:Sales",
         "payout-tie shows gap 0.00 and the payout moves 1,048.08 to Assets:Checking",
         "Nothing is written before an explicit yes"
+      ]
+    },
+    {
+      "id": 29,
+      "name": "legacy-exchange-decimal-id-reimport",
+      "prompt": "Import ./export.csv into ./ledger.beancount. It's my crypto exchange activity for Assets:Crypto:Exchange.",
+      "expected_output": "The two source rows already exist under older import IDs hashed with printed trailing zeroes. Their numeric units, cost, date, account and actions agree despite the shorter numeric spellings in the re-downloaded CSV. Recompute the older printed-posting spelling as a lookup-only key and skip the matched rows; if that key cannot be established, show suspected duplicates and ask rather than append. Do not rewrite old IDs or the saved config. No entries are written and the original ledger stays byte-identical.",
+      "files": [
+        "evals/files/eval29_ledger.beancount",
+        "evals/files/eval29_export.csv"
+      ],
+      "expectations": [
+        "Both existing BTC buy and ETH staking reward are recognized as already imported through legacy lookup or shown as suspected duplicates pending a user decision; neither is treated as an unambiguous new transaction",
+        "The existing import IDs csv:sha256:e399fa26f06a6519 and csv:sha256:2a1930405e3d39fb are not rewritten or replaced",
+        "The ledger and its config remain byte-for-byte unchanged; no transaction is appended without a duplicate decision and explicit write confirmation"
       ]
     }
   ]
