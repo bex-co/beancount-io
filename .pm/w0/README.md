@@ -13,6 +13,7 @@
 - [x] **m7** — [Login limits key on a trusted client address and on the account](./done/m7/README.md) (6 tasks) ← from security review 2026-10-18
 - [x] **m8** — [Ledger archive downloads stream straight from Gitea](./done/m8/README.md) (7 tasks) ← from security review 2026-10-18; owner chose forwarding over removal
 - [x] **m9** — [An abandoned first Checkout gets one short recovery email](./done/m9/README.md) (10 tasks) ← from ADR027 2026-11-08
+- [ ] **m10** — [Docker self-hosts sign in from the mobile app and MCP hosts, and bring books in, as written](./m10/README.md) (8 tasks) ← user request via /pmx, 2026-11-25 (`/pm-brainstorm another for w0` item 1); user routed to w0
 
 ## Dropped
 
