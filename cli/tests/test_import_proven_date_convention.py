@@ -43,6 +43,7 @@ def book(tmp_path: Path, bea_config_dir: Path) -> Path:
         "us-august.csv": "08/03/2026,TESCO,-15.20\n",
         "switched.csv": "08/13/2026,TESCO,-3.00\n",
         "october.csv": "02/10/2026,PRET,-1.50\n",
+        "dash.csv": "03-08-2026,TESCO,-15.20\n05-08-2026,PRET,-5.80\n",
     }
     for name, rows in exports.items():
         (tmp_path / name).write_text(HEADER + rows)
@@ -186,6 +187,22 @@ def test_the_remembered_line_pasted_back_reads_the_same_dates(book: Path) -> Non
 
     assert pasted["config_source"] == "--csv"
     assert _dates(pasted) == _dates(recalled) == ["2026-08-03", "2026-08-07", "2026-08-11"]
+
+
+def test_an_ambiguous_export_in_another_shape_follows_the_proved_convention(book: Path, bea_config_dir: Path) -> None:
+    # July proved day-first with slashes. A dash-separated export whose days
+    # never pass the twelfth rules out that exact format but reads either way
+    # within dashes — the proved convention still decides it, not the
+    # month-first default (w1/379: the proof is the convention, not the string).
+    _import(book, "july.csv", *ACCOUNT, "--apply")
+
+    data = _import(book, "dash.csv")
+
+    assert _dates(data) == ["2026-08-03", "2026-08-05"]
+    assert data["date_format"] == "%d-%m-%Y"
+    # Nothing exact was proved, so july.csv's proof stands for the next file.
+    entry = _record(bea_config_dir)
+    assert (entry["proven_date_format"], entry["proven_date_source"]) == ("%d/%m/%Y", "july.csv")
 
 
 def test_a_refresh_that_proves_the_other_convention_says_it_changed(book: Path, bea_config_dir: Path) -> None:
