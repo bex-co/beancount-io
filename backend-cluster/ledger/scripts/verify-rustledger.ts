@@ -79,6 +79,7 @@ import {
 } from "./entry-move";
 import { verifyProjectedDocuments } from "./projected-documents";
 import { verifyProjectedIncludes } from "./projected-includes";
+import { verifySlashDatedEntries } from "./slash-dated-entries";
 import { BadUserInputError } from "@/shared/errors";
 import type { SerializableTreeNodePublic } from "@/foundation/ledger-api-types";
 import {
@@ -5877,6 +5878,7 @@ poptag #trip
   await verifyEntryMove();
   await verifyScopedEntryMove();
   await verifyOwnKeyUnderPushmeta();
+  await verifySlashDatedEntries();
   await verifyProjectedIncludes();
   await verifyProjectedDocuments();
 

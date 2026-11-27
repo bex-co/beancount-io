@@ -1,4 +1,5 @@
 import type { DirectiveJson, FileMap } from "@rustledger/wasm";
+import { SOURCE_DATE, sourceDateOf } from "./source-date";
 import { loadedFiles, splitIntoBlocks } from "./source-slice";
 
 /** Beancount's `SORT_ORDER`; every other directive sorts as a transaction. */
@@ -23,7 +24,8 @@ const KEYWORD_TYPES = new Set<string>([
   "custom",
 ]);
 
-const DATED_HEADER = /^(\d{4}-\d{2}-\d{2})\s+(\S+)/;
+/** A dated header's keyword or flag; the date may be `2026/08/30` (w31/106). */
+const DATED_HEADER = new RegExp(String.raw`^${SOURCE_DATE}\s+(\S+)`, "u");
 
 /** The directive type a dated header line starts, from its keyword or flag. */
 function headerType(keyword: string): string {
@@ -52,9 +54,10 @@ function sourceLines(
   for (const name of names) {
     for (const block of splitIntoBlocks(files[name]!)) {
       if (!block.isDated) continue;
-      const match = DATED_HEADER.exec(block.text);
-      if (!match) continue;
-      const key = `${match[1]}|${headerType(match[2])}`;
+      const keyword = DATED_HEADER.exec(block.text)?.[1];
+      if (keyword === undefined) continue;
+      // Keyed as the engine dates the directive: `2026/08/30` is `2026-08-30`.
+      const key = `${sourceDateOf(block.text)}|${headerType(keyword)}`;
       const bucket = lines.get(key);
       if (bucket) bucket.push(block.startLine + 1);
       else lines.set(key, [block.startLine + 1]);

@@ -1,4 +1,5 @@
 import type { FileMap } from "@rustledger/wasm";
+import { SOURCE_DATE, sourceDateOf } from "./source-date";
 import {
   includeTraversalOrder,
   splitIntoBlocks,
@@ -35,8 +36,9 @@ export function indexBlocks(files: FileMap) {
 
 export type BlockIndex = ReturnType<typeof indexBlocks>;
 
-const OPEN = /^\d{4}-\d{2}-\d{2}\s+open\s+(\S+)/u;
-const CLOSE = /^\d{4}-\d{2}-\d{2}\s+close\s+(\S+)/u;
+// A written `2026/08/30 close` is no close_tree close (w31/106).
+const OPEN = new RegExp(String.raw`^${SOURCE_DATE}\s+open\s+(\S+)`, "u");
+const CLOSE = new RegExp(String.raw`^${SOURCE_DATE}\s+close\s+(\S+)`, "u");
 
 /** Where each account's first directive matching `pattern` is written, in include order. */
 function accountLocations(
@@ -94,7 +96,8 @@ export function entryLocator(files: FileMap, entryPoint: string) {
     for (const file of order) {
       for (const block of index.blocks(file)) {
         const key = `${file}\u0000${block.startLine}`;
-        if (!block.text.startsWith(date) || claimed.has(key)) continue;
+        // `date` is the engine's `2026-08-30`, however the source spells it.
+        if (sourceDateOf(block.text) !== date || claimed.has(key)) continue;
         if (!block.text.split("\n").slice(1).some(holds)) continue;
         if (claim) claimed.add(key);
         return { file, line: block.startLine + 1 };

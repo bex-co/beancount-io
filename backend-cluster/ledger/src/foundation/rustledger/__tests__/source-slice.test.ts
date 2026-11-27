@@ -7,6 +7,7 @@ import {
   entryBalances,
   findEntrySlice,
   findEntrySliceBySourceSha,
+  indexDatedBlocks,
   normalizeSliceReplacement,
   replaceSliceInFile,
   replacementLineEnding,
@@ -1346,5 +1347,124 @@ describe("slicesWithPushScopes", () => {
     expect(moved(files, "other.bean", "2026-09-02")).toEqual([
       sliceOf(files, "other.bean", "2026-09-02").slice,
     ]);
+  });
+});
+
+// w31/106: Beancount's lexer reads `2026/08/30` and `2026-8-30` as dates, and
+// the engine loads them, but only a `YYYY-MM-DD` line opened a dated block. Such
+// an entry had no slice: `source: null` on the journal, and every read or edit
+// by its hash was NOT_FOUND.
+describe("every date spelling the lexer reads", () => {
+  const BALANCE = "2026-08-29 balance Assets:Cash  49.75 USD";
+  const entry = (date: string, narration = "probe") =>
+    [
+      `${date} * "qa" "${narration}"`,
+      "  Assets:Cash                 -1.00 USD",
+      "  Expenses:Food:Coffee         1.00 USD",
+    ].join("\n");
+
+  it.each(["2026/08/30", "2026-8-30", "2026/8/30", "2026-08/30", "2026-08-30"])(
+    "splits and indexes an entry dated %s like a dash-dated one",
+    (date) => {
+      const text = entry(date);
+      const source = `${BALANCE}\n\n${text}\n`;
+      const blocks = splitIntoBlocks(source);
+      expect(blocks.map((block) => [block.text, block.isDated])).toEqual([
+        [BALANCE, true],
+        [text, true],
+      ]);
+      const slice = indexDatedBlocks("main.bean", source).byStartLine.get(2);
+      expect(slice).toEqual({
+        file: "main.bean",
+        slice: text,
+        sha256: sliceSha256(text),
+        startLine: 2,
+        endLine: 5,
+        localOccurrence: 0,
+      });
+      expect(
+        findEntrySliceBySourceSha("main.bean", source, sliceSha256(text), 0),
+      ).toEqual(slice);
+    },
+  );
+
+  it("gives a slash-dated entry between two dash-dated ones its own slice", () => {
+    const before = entry("2026-08-29", "before");
+    const slashed = entry("2026/08/30", "slashed");
+    const after = entry("2026-08-31", "after");
+    // No blank lines: each header still ends the block above it.
+    const source = `${[before, slashed, after].join("\n")}\n`;
+    const index = indexDatedBlocks("main.bean", source);
+    expect([...index.byStartLine.values()].map((slice) => slice.slice)).toEqual(
+      [before, slashed, after],
+    );
+    expect(index.byStartLine.get(3)).toMatchObject({
+      slice: slashed,
+      startLine: 3,
+      endLine: 6,
+    });
+    expect(deleteSliceFromFile(source, 3, 6)).toBe(`${before}\n${after}\n`);
+  });
+
+  it("opens no block at a column-0 line that is not a date", () => {
+    const notDates = [
+      '20260830 * "qa" "no separators"',
+      '2026.08.30 * "qa" "dots"',
+      '26/08/30 * "qa" "two-digit year"',
+      '2026/08/300 * "qa" "three-digit day"',
+      "* An org heading",
+      "Assets:Cash  1.00 USD",
+    ];
+    const source = notDates
+      .flatMap((line) => [line, "  Expenses:Food  1.00 USD"])
+      .join("\n");
+    expect(splitIntoBlocks(`${source}\n${BALANCE}\n`)).toEqual([
+      expect.objectContaining({ text: BALANCE, isDated: true }),
+    ]);
+  });
+
+  it("marks slash-dated and unpadded entries in the source-details probe", () => {
+    const source = [
+      "2026/01/01 open Assets:Cash USD",
+      "2026-1-1 open Expenses:Food USD",
+      "",
+      entry("2026/08/30"),
+      "",
+      '2026-8-31 note Assets:Cash "counted" #float ^till-1',
+      "",
+    ].join("\n");
+    const probe = buildSourceDetailsProbe({ "main.bean": source });
+    expect([...probe.detailsByMarker.values()]).toEqual([
+      { filename: "main.bean", lineno: 1 },
+      { filename: "main.bean", lineno: 2 },
+      { filename: "main.bean", lineno: 4 },
+      {
+        filename: "main.bean",
+        lineno: 8,
+        syntaxTags: ["float"],
+        syntaxLinks: ["till-1"],
+      },
+    ]);
+  });
+
+  it("writes a push scope onto a slash-dated entry it moves", () => {
+    const text = entry("2026/09/02");
+    const files: FileMap = {
+      "main.bean": `pushtag #trip\n${text}\npoptag #trip\n`,
+    };
+    const [block] = splitIntoBlocks(files["main.bean"]).filter(
+      (candidate) => candidate.isDated,
+    );
+    const [moved] = slicesWithPushScopes(files, [
+      {
+        file: "main.bean",
+        slice: block.text,
+        sha256: sliceSha256(block.text),
+        startLine: block.startLine,
+        endLine: block.endLine,
+        localOccurrence: 0,
+      },
+    ]);
+    expect(moved.split("\n")[0]).toBe('2026/09/02 * "qa" "probe" #trip');
   });
 });

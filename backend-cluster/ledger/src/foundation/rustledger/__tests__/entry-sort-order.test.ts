@@ -86,6 +86,30 @@ describe("restoreEntrySortOrder", () => {
     ]);
   });
 
+  // w31/106: the engine dates `2026/08/05` and `2026-8-5` as `2026-08-05`, so
+  // their lines are that day's too.
+  it.each([
+    ["2026/08/05", "2026/08/06"],
+    ["2026-8-5", "2026-8-6"],
+  ])("orders a day written %s by type rank, then line", (day, next) => {
+    const source = SOURCE.replaceAll("2026-08-05", day).replace(
+      "2026-08-06",
+      next,
+    );
+    expect(source).not.toContain("2026-08-0");
+    expect(
+      restoreEntrySortOrder(ENGINE_ORDER, { "main.bean": source }),
+    ).toEqual([
+      open("Assets:Pad"),
+      open("Income:Salary"),
+      salary,
+      note,
+      pad,
+      price,
+      balance,
+    ]);
+  });
+
   it("puts a same-day balance and open first and a close last", () => {
     const close: DirectiveJson = {
       type: "close",

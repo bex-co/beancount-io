@@ -16,6 +16,7 @@ import {
   isUrlIncludeTarget,
   resolveIncludeTarget,
 } from "./file-map-loader";
+import { SOURCE_DATE } from "./source-date";
 
 /**
  * Fava-EXACT source-slice location + editing — a faithful port of
@@ -131,8 +132,11 @@ const TOP_LEVEL_KEYWORDS = new Set([
   "popmeta",
 ]);
 
-/** A `YYYY-MM-DD` date anchored at the start of a line. */
-const DATE_PREFIX = /^\d{4}-\d{2}-\d{2}\b/;
+/**
+ * A date anchored at the start of a line, in any spelling the lexer reads
+ * (`2026-08-30`, `2026/08/30`, `2026-8-30`; w31/106).
+ */
+const DATE_PREFIX = new RegExp(String.raw`^${SOURCE_DATE}\b`, "u");
 
 /** A `pushtag`/`poptag`/`pushmeta`/`popmeta` statement's keyword. */
 const STACK_KEYWORD_RE = /^(pushtag|poptag|pushmeta|popmeta)[^\S\r\n]+/;
@@ -821,8 +825,10 @@ export function buildEntrySourceDetailsMap(
 }
 
 /** A Document or Note header line; `suffix` follows its quoted string. */
-const SYNTAX_LINE_RE =
-  /^\d{4}-\d{2}-\d{2}\s+(?:document|note)\s+\S+\s+"(?:\\.|[^"\\])*"(?<suffix>.*)$/u;
+const SYNTAX_LINE_RE = new RegExp(
+  String.raw`^${SOURCE_DATE}\s+(?:document|note)\s+\S+\s+"(?:\\.|[^"\\])*"(?<suffix>.*)$`,
+  "u",
+);
 const TAG_LINK_RE = /(?<sigil>[#^])(?<value>[A-Za-z0-9\-_/.]+)/gu;
 
 /** What follows a Document or Note's string, before any comment. */
@@ -962,7 +968,10 @@ const DATED_KEYWORDS = new Set([
 ]);
 /** The directives besides transactions that Beancount gives pushed tags (`_finalize_tags_links`, w21/655). */
 const STACK_TAGGED_KEYWORDS = new Set(["note", "document"]);
-const DATED_HEADER_RE = /^\d{4}-\d{2}-\d{2}[^\S\r\n]+(\S+)/;
+const DATED_HEADER_RE = new RegExp(
+  String.raw`^${SOURCE_DATE}[^\S\r\n]+(\S+)`,
+  "u",
+);
 const OWN_TAG_RE = /#([A-Za-z0-9\-_/.]+)/gu;
 const OWN_KEY_RE = /^([a-z][A-Za-z0-9_-]*):/;
 

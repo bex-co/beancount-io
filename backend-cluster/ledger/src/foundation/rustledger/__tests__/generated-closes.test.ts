@@ -118,6 +118,58 @@ describe("inactiveAfterGeneratedCloses", () => {
       ]),
     ).toEqual([]);
   });
+
+  // w31/106: a `2024/04/01` or `2024-4-1` close is a written one too, and a
+  // slash-dated transaction is still where the error goes.
+  it("reads opens, closes and transactions in every date spelling", () => {
+    const spelled = source
+      .replace("2024-04-01 close", "2024/04/01 close")
+      .replace("2024-04-01 *", "2024/4/1 *")
+      .replace("2024-05-01 *", "2024/05/01 *")
+      .replace("2024-01-01 open", "2024-1-1 open");
+    expect(spelled).not.toContain("2024-0");
+    expect(
+      located(
+        inactiveAfterGeneratedCloses(
+          [
+            close("Assets:Broker"),
+            close("Assets:Broker:VTI"),
+            transaction("2024-05-01", [
+              "Assets:Broker:VTI",
+              "Assets:Broker:VTI",
+              "Assets:Cash",
+            ]),
+          ],
+          { "main.bean": spelled },
+          "main.bean",
+        ),
+      ),
+    ).toEqual(
+      Array(2).fill([
+        "E1003",
+        6,
+        "Posting to inactive account Assets:Broker:VTI on 2024-05-01 (closed on 2024-04-01)",
+      ]),
+    );
+    expect(
+      located(
+        inactiveAfterGeneratedCloses(
+          [
+            close("Assets:Broker:VTI"),
+            transaction("2024-05-01", ["Assets:Broker:VTI", "Assets:Cash"]),
+          ],
+          {
+            "main.bean": [
+              'plugin "beancount.plugins.close_tree"',
+              "2024-01-01 open Assets:Broker:VTI",
+              "2024/04/01 close Assets:Broker:VTI",
+            ].join("\n"),
+          },
+          "main.bean",
+        ),
+      ),
+    ).toEqual([]);
+  });
 });
 
 describe("openAutoAccounts", () => {
