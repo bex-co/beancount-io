@@ -14,8 +14,10 @@ import type { LedgerEntryInput } from "@/foundation/ledger-api-types/ledger-entr
 import { BadUserInputError, UnbalancedTransactionError } from "@/shared/errors";
 import { ledgerIdOf, servicesForRequest } from "./service-context";
 import {
+  atLinesBeforeEdits,
   projectNewLedgerErrors,
   refuseProjectedErrors,
+  type LineEdit,
 } from "@/features/ledger/utils/new-ledger-errors";
 import {
   checkTransactionBalance,
@@ -360,6 +362,9 @@ export function setEntriesHandler(router: Router): void {
         }),
       );
       const included = [...byFile.keys()].filter((path) => !loaded.has(path));
+      // The entries go at the end of each file, which moves no error, but
+      // an include line goes in above the entry point's entries (w31/116).
+      const includeEdits = new Map<string, LineEdit[]>();
       if (included.length > 0) {
         for (const path of included) {
           assertLiteralIncludePath(path, "filename");
@@ -369,7 +374,15 @@ export function setEntriesHandler(router: Router): void {
           (await readFile(DEFAULT_ENTRY_POINT));
         currentContents.set(DEFAULT_ENTRY_POINT, {
           ...entry,
-          current: addIncludes(entry.current, included, "filename"),
+          current: addIncludes(
+            entry.current,
+            included,
+            "filename",
+            (start, lines) =>
+              includeEdits.set(DEFAULT_ENTRY_POINT, [
+                { start, end: start, lines },
+              ]),
+          ),
         });
       }
 
@@ -434,8 +447,10 @@ export function setEntriesHandler(router: Router): void {
       const projection = await projectNewLedgerErrors(after, () =>
         data.getErrors({ ledgerId, userId: undefined }),
       );
+      // A refusal and a preview name the line the reader has (w31/116).
+      const current = atLinesBeforeEdits(projection, includeEdits);
       if (!allowInvalid) {
-        refuseProjectedErrors(projection, "add");
+        refuseProjectedErrors(current, "add");
         // A parse error already in the file (an unclosed quote) can swallow
         // what is written after it, and the same message at another line
         // counts as nothing new: look for the entries themselves (w21/682).
@@ -458,9 +473,9 @@ export function setEntriesHandler(router: Router): void {
           entry_hashes: [],
           included_files: included,
           preview,
-          errors_before: projection.errorsBefore,
-          errors_after: projection.errorsAfter,
-          new_errors: projection.newErrors,
+          errors_before: current.errorsBefore,
+          errors_after: current.errorsAfter,
+          new_errors: current.newErrors,
         });
         return;
       }

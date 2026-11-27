@@ -56,11 +56,19 @@ jest.mock("@/core/directive-limit", () => ({
 }));
 
 // A stand-in for bean-check: a second `open` of one account is the engine's
-// duplicate-open error on the line that repeats it.
-function errorsOf(text: string) {
+// duplicate-open error on the line that repeats it, and a year-end assertion
+// in main.bean fails once a routed file opens its account (w31/116).
+function errorsOf(text: string, routed = "") {
   const seen = new Set<string>();
   const errors = [...baselineErrors];
   text.split("\n").forEach((line, index) => {
+    const asserted = /^2026-12-31 balance (\S+)/.exec(line)?.[1];
+    if (asserted && routed.includes(`open ${asserted}`)) {
+      errors.push({
+        message: `Balance failed for ${asserted}: expected 5.00 USD, got 0 USD`,
+        source: { filename: "main.bean", lineno: index + 1 },
+      });
+    }
     const account = /\bopen (\S+)/.exec(line)?.[1];
     if (!account) return;
     if (seen.has(account)) {
@@ -92,7 +100,11 @@ jest.mock("../service-context", () => ({
         overlays: { path: string; content: string }[];
       }) => {
         const main = overlays.find((overlay) => overlay.path === "main.bean");
-        return errorsOf(main ? fromB64(main.content) : mainContent);
+        const routed = overlays
+          .filter((overlay) => overlay.path !== "main.bean")
+          .map((overlay) => fromB64(overlay.content))
+          .join("\n");
+        return errorsOf(main ? fromB64(main.content) : mainContent, routed);
       },
       // Every file the write touches is already included unless marked unloaded.
       projectedSourceFiles: async ({
@@ -319,6 +331,66 @@ describe("bulk entries refuse a write that adds ledger errors", () => {
       expect(committed).toEqual([]);
     },
   );
+
+  // w31/116: a routed entry adds its file's include after main.bean's last
+  // include, so every main.bean line below sits one lower in the text the
+  // check reads. The refusal and the preview name the line the reader has; a
+  // forced commit names the line after the write.
+  describe("an include line routed in above a new error", () => {
+    const ASSERTION = "2026-12-31 balance Assets:Savings 5.00 USD";
+    const routedOpen = (flags: Record<string, boolean> = {}) =>
+      post({
+        entries: [{ ...open("Assets:Savings"), filename: "txns/2026.bean" }],
+        ...flags,
+      });
+
+    beforeEach(() => {
+      mainContent = `include "prior.bean"\n${DEFAULT_MAIN}${ASSERTION}\n`;
+      extraFiles["txns/2026.bean"] = "";
+      unloadedPaths.add("txns/2026.bean");
+    });
+    const current = () => mainContent.split("\n").indexOf(ASSERTION) + 1;
+    const failed = (lineno: number) => ({
+      message:
+        "Balance failed for Assets:Savings: expected 5.00 USD, got 0 USD",
+      source: { filename: "main.bean", lineno },
+    });
+
+    it.each([false, true])(
+      "is refused at its current line (dryRun: %s)",
+      async (dryRun) => {
+        const response = await routedOpen({ dryRun });
+        const body = (await response.json()) as Record<string, any>;
+        expect(response.status).toBe(400);
+        expect(body.details.detail).toBe(
+          `${failed(0).message} (main.bean:${current()})`,
+        );
+        expect(committed).toEqual([]);
+      },
+    );
+
+    it("is previewed at its current line", async () => {
+      const response = await routedOpen({ dryRun: true, allowInvalid: true });
+      const body = (await response.json()) as Record<string, any>;
+      expect(response.status).toBe(200);
+      expect(body.data.included_files).toEqual(["txns/2026.bean"]);
+      expect(body.data.new_errors).toEqual([failed(current())]);
+      expect(committed).toEqual([]);
+    });
+
+    it("is reported at the line after the write on a forced commit", async () => {
+      const response = await routedOpen({ allowInvalid: true });
+      const body = (await response.json()) as Record<string, any>;
+      expect(response.status).toBe(200);
+      const main = committed[0].files.find((file) => file.path === "main.bean");
+      const written = fromB64(main!.content).split("\n");
+      expect(written[1]).toBe('include "txns/2026.bean"');
+      expect(body.data.new_errors).toEqual([
+        failed(written.indexOf(ASSERTION) + 1),
+      ]);
+      expect(written.indexOf(ASSERTION) + 1).toBe(current() + 1);
+    });
+  });
 
   // w31/097: an auto-routed bulk entry adding an include to main.bean must not
   // splice inside a multiline narration containing an `include ...` line.

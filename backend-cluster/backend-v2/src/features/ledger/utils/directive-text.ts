@@ -1,4 +1,5 @@
 import { BadUserInputError } from "@/shared/errors";
+import type { LineInsertion } from "./bean-check-errors";
 import { splitByteOrderMark } from "./byte-order-mark";
 import { isSkippedLine } from "./skipped-line";
 
@@ -453,6 +454,12 @@ export interface InsertionResult {
   readonly content: string;
   readonly inserted: readonly InsertedDirective[];
   /**
+   * Every block this call wrote, separators and push lines included, in the
+   * order it wrote them: what maps an error below them back to its line in
+   * the file as it stands (w31/116).
+   */
+  readonly insertions: readonly LineInsertion[];
+  /**
    * True when the file's existing directives were not already in date order,
    * so the new ones were appended at the end rather than threaded in. Saying
    * so is the point: silently "sorting" into an unsorted file would move an
@@ -506,6 +513,7 @@ export function insertDirectives(
   );
 
   const inserted: { line: number }[] = [];
+  const insertions: LineInsertion[] = [];
   const working = [...lines];
   // Applied newest-first would shift the offsets of the ones after it, so
   // each insertion recomputes against the file as it now stands.
@@ -537,6 +545,7 @@ export function insertDirectives(
       ...suffix,
     ];
     working.splice(at, 0, ...written);
+    insertions.push({ at, lines: written.length });
     // A directive already placed at or below this one moves down with it;
     // the reported lines locate the entries' hashes (w23/060).
     for (const earlier of inserted) {
@@ -546,7 +555,7 @@ export function insertDirectives(
   }
 
   const content = `${bom}${working.join(eol).replace(/(?:\r?\n)+$/, "")}${eol}`;
-  return { content, inserted, appended: !sorted };
+  return { content, inserted, insertions, appended: !sorted };
 }
 
 /**

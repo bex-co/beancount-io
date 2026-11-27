@@ -224,6 +224,27 @@ describe("addIncludeLines", () => {
     expect(addIncludeLines("x\n", [])).toBe("x\n");
   });
 
+  // w31/116: where the lines went maps an error below them back to its line.
+  it("says where it put the lines", () => {
+    const seen: { at: number; lines: number }[] = [];
+    const record = (insertion: { at: number; lines: number }) =>
+      seen.push(insertion);
+    const main = 'option "title" "T"\ninclude "a.bean"\n\n2020-01-01 open A\n';
+    const after = addIncludeLines(main, ["b.bean", "c.bean"], "path", record);
+    expect(after.split("\n").slice(2, 4)).toEqual([
+      'include "b.bean"',
+      'include "c.bean"',
+    ]);
+    addIncludeLines("2020-01-01 open A\n\n", ["b.bean"], "path", record);
+    addIncludeLines("", ["b.bean"], "path", record);
+    addIncludeLines("x\n", [], "path", record);
+    expect(seen).toEqual([
+      { at: 2, lines: 2 },
+      { at: 1, lines: 1 },
+      { at: 0, lines: 1 },
+    ]);
+  });
+
   // w31/093: glob metacharacters in an include target cannot be matched literally.
   it.each([
     "books/q[1].bean",

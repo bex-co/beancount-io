@@ -19,8 +19,10 @@ import { LEDGER_ENTRY_POINT } from "@/features/ledger/utils/ledger-entry-point";
 import { assertWritableText } from "@/shared/file-content";
 import { unifiedDiff } from "@/shared/unified-diff";
 import {
+  atLinesBeforeInserts,
   diffBeanCheckErrors,
   toBeanCheckErrors,
+  type LineInsertion,
 } from "@/features/ledger/utils/bean-check-errors";
 import {
   checkBudgetAccountsExist,
@@ -191,10 +193,16 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
       });
       if (entryPoint) existing.set(LEDGER_ENTRY_POINT, entryPoint);
     }
-    const withIncludes = (target: string, content: string) =>
-      target === LEDGER_ENTRY_POINT
-        ? addIncludeLines(content, included)
-        : content;
+    const withIncludes = (target: string, content: string) => {
+      const insertions: LineInsertion[] = [];
+      const written =
+        target === LEDGER_ENTRY_POINT
+          ? addIncludeLines(content, included, "path", (insertion) =>
+              insertions.push(insertion),
+            )
+          : content;
+      return { content: written, insertions };
+    };
 
     // One record per touched file rather than five collections keyed on the
     // same path: the sha, the projected text, and where each directive landed
@@ -204,28 +212,29 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
       // Inserting re-encodes the whole file (w23/030).
       if (current) assertWritableText(current);
       const before = current?.content ?? "";
-      const result = insertDirectives(
-        withIncludes(target, before),
-        targetDirectives,
-      );
+      const includes = withIncludes(target, before);
+      const result = insertDirectives(includes.content, targetDirectives);
       return {
         path: target,
         sha: current?.sha,
         before: current ? before : null,
         content: result.content,
         lines: result.inserted.map((inserted) => inserted.line),
+        insertions: [...includes.insertions, ...result.insertions],
         appended: result.appended,
       };
     });
     const entryPoint = existing.get(LEDGER_ENTRY_POINT);
     if (included.length > 0 && entryPoint && !byPath.has(LEDGER_ENTRY_POINT)) {
       assertWritableText(entryPoint);
+      const includes = withIncludes(LEDGER_ENTRY_POINT, entryPoint.content);
       targets.push({
         path: LEDGER_ENTRY_POINT,
         sha: entryPoint.sha,
         before: entryPoint.content,
-        content: withIncludes(LEDGER_ENTRY_POINT, entryPoint.content),
+        content: includes.content,
         lines: [],
+        insertions: includes.insertions,
         appended: false,
       });
     }
@@ -259,11 +268,18 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
         : this.checkBudgetAccounts(ledgerId, identity, budgets, openedInCall),
     ]);
     const beanCheckNewErrors = diffBeanCheckErrors(baseline, projected);
+    // A refusal and a preview commit nothing, so each names an error at its
+    // line in the file as it stands, above the lines the write would insert;
+    // a commit reports the line the error has once written (w31/116).
+    const currentNewErrors = atLinesBeforeInserts(
+      beanCheckNewErrors,
+      new Map(targets.map((target) => [target.path, target.insertions])),
+    );
     const validation = withBudgetIssues(
       {
         errorsBefore: baseline.length,
         errorsAfter: projected.length,
-        newErrors: beanCheckNewErrors,
+        newErrors: dryRun ? currentNewErrors : beanCheckNewErrors,
         valid: beanCheckNewErrors.length === 0,
       },
       budgetIssues,
@@ -274,8 +290,8 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
     // alternative taught agents to preview with `allowInvalid` and then commit
     // the same call — recording exactly what this refusal guards against.
     if (!allowInvalid && !dryRun) {
-      if (beanCheckNewErrors.length > 0) {
-        throw unbalancedOrValidationError(beanCheckNewErrors);
+      if (currentNewErrors.length > 0) {
+        throw unbalancedOrValidationError(currentNewErrors);
       }
       if (budgetIssues[0]) {
         throw budgetIssues[0];

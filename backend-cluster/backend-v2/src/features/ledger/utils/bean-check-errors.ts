@@ -201,6 +201,45 @@ export function atCurrentLines(
 }
 
 /**
+ * Lines one step of a write put into a file: `lines` of them, starting at the
+ * 0-based line `at` of the text as that step found it.
+ */
+export interface LineInsertion {
+  readonly at: number;
+  readonly lines: number;
+}
+
+/** Each file's insertions, by path, in the order the write made them. */
+export type InsertedLines = ReadonlyMap<string, readonly LineInsertion[]>;
+
+/**
+ * `errors` at their lines in the files as they stand, before a write inserts
+ * lines: bean-check reads the written text, where every line below an
+ * insertion sits that much lower, so an append's refusal named `main.bean:91`
+ * in an 87-line file (w31/116). An error on a line the write adds has no line
+ * in the file as it stands and keeps its own, the one the preview's diff
+ * shows. The inverse of {@link atCurrentLines}, for lines a write adds.
+ */
+export function atLinesBeforeInserts(
+  errors: readonly BeanCheckError[],
+  inserted: InsertedLines,
+): BeanCheckError[] {
+  return errors.map((error) => {
+    const located = error.source?.match(/^(.+):(\d+)$/);
+    const insertions = located && inserted.get(located[1]);
+    if (!located || !insertions) return error;
+    // Undo the insertions last to first, each in the text it produced.
+    let index = Number(located[2]) - 1;
+    for (const { at, lines } of [...insertions].reverse()) {
+      if (index < at) continue;
+      if (index < at + lines) return error;
+      index -= lines;
+    }
+    return { ...error, source: `${located[1]}:${index + 1}` };
+  });
+}
+
+/**
  * Errors in `after` that `before` did not have, matched by message and file
  * but not line: a write that inserts or removes lines moves every error below
  * it without introducing one, and keying on `file:line` refused a valid append

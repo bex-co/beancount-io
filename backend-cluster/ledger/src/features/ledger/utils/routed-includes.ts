@@ -30,12 +30,14 @@ export function assertLiteralIncludePath(path: string, field = "path"): void {
  * without an include the entry commits and no report sees it.
  *
  * Each line goes after the entry point's last `include`, so a per-year list
- * stays together, or at its end when it has none.
+ * stays together, or at its end when it has none. `onInsert` learns the
+ * 0-based line the block starts on and how many lines it has (w31/116).
  */
 export function addIncludes(
   content: string,
   paths: readonly string[],
   field = "path",
+  onInsert?: (start: number, lines: number) => void,
 ): string {
   if (paths.length === 0) return content;
   for (const path of paths) assertLiteralIncludePath(path, field);
@@ -63,8 +65,10 @@ export function addIncludes(
   }
   if (last >= 0) {
     lines.splice(last + 1, 0, ...block);
+    onInsert?.(last + 1, block.length);
     return lines.join(eol);
   }
   const body = content.replace(/(?:\r?\n)+$/, "");
+  onInsert?.(body ? body.split("\n").length : 0, block.length);
   return `${body}${body ? eol : ""}${block.join(eol)}${eol}`;
 }

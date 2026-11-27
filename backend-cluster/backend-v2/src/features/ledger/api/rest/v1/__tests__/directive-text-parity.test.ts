@@ -99,6 +99,16 @@ async function fixture(caller = identity) {
     projectedErrors: [] as { message: string; source?: null }[],
     /** Errors the ledger already has: the check with no overlay. */
     baselineErrors: [] as { message: string; source?: null }[],
+    /**
+     * When set, both checks derive the errors from the files instead, with
+     * the overlays applied: where an error is reported is under test (w31/116).
+     */
+    errorsOf: undefined as
+      | undefined
+      | ((files: ReadonlyMap<string, string>) => {
+          message: string;
+          source: { filename: string; lineno: number };
+        }[]),
     routeTransactionsTo: null as string | null,
     /** The ledger's include closure; every fixture file unless narrowed. */
     sourceFiles: undefined as string[] | undefined,
@@ -125,11 +135,22 @@ async function fixture(caller = identity) {
     return envelope(null);
   });
   const checkProjectedErrors = jest.fn(
-    async (_o, _n, body: { files: unknown[] }) =>
+    async (_o, _n, body: { files: { path: string; content: string }[] }) => {
+      if (state.errorsOf) {
+        const projected = new Map(state.files);
+        for (const file of body.files) {
+          projected.set(
+            file.path,
+            Buffer.from(file.content, "base64").toString("utf8"),
+          );
+        }
+        return envelope(state.errorsOf(projected));
+      }
       // No overlay is the baseline read; an overlay is the projection.
-      envelope(
+      return envelope(
         body.files.length === 0 ? state.baselineErrors : state.projectedErrors,
-      ),
+      );
+    },
   );
 
   // The projected include closure: the narrowed closure when a test sets one
@@ -300,19 +321,28 @@ async function fixture(caller = identity) {
       if (surface === "gql") {
         const result = await graphql({
           schema,
-          source: `mutation { appendLedgerText(ledgerId: "alice/main", text: ${JSON.stringify(args.text)}${args.path !== undefined ? `, path: ${JSON.stringify(args.path)}` : ""}${args.dryRun !== undefined ? `, dryRun: ${args.dryRun}` : ""}${args.dry_run !== undefined ? `, dry_run: ${args.dry_run}` : ""}${args.allowInvalid !== undefined ? `, allowInvalid: ${args.allowInvalid}` : ""}${args.allow_invalid !== undefined ? `, allow_invalid: ${args.allow_invalid}` : ""}${args.requestId !== undefined ? `, requestId: ${JSON.stringify(args.requestId)}` : ""}) { success message dryRun count wrote { path line } entryHashes diff { path diff } errorsBefore errorsAfter newErrors { message } valid appendedUnsorted } }`,
+          source: `mutation { appendLedgerText(ledgerId: "alice/main", text: ${JSON.stringify(args.text)}${args.path !== undefined ? `, path: ${JSON.stringify(args.path)}` : ""}${args.dryRun !== undefined ? `, dryRun: ${args.dryRun}` : ""}${args.dry_run !== undefined ? `, dry_run: ${args.dry_run}` : ""}${args.allowInvalid !== undefined ? `, allowInvalid: ${args.allowInvalid}` : ""}${args.allow_invalid !== undefined ? `, allow_invalid: ${args.allow_invalid}` : ""}${args.requestId !== undefined ? `, requestId: ${JSON.stringify(args.requestId)}` : ""}) { success message dryRun count wrote { path line } entryHashes diff { path diff } errorsBefore errorsAfter newErrors { message source } valid appendedUnsorted } }`,
           contextValue: {
             identity: caller,
             getCurrentIdentity: () => caller,
             platform: "web",
           },
         });
-        return result.errors
-          ? { ok: false as const, error: result.errors[0] }
-          : {
-              ok: true as const,
-              data: (result.data as Record<string, unknown>).appendLedgerText,
-            };
+        if (result.errors)
+          return { ok: false as const, error: result.errors[0] };
+        const data = (result.data as Record<string, unknown>)
+          .appendLedgerText as { newErrors: { source?: string | null }[] };
+        return {
+          ok: true as const,
+          data: {
+            ...data,
+            // A null `source` is the other surfaces' absent one.
+            newErrors: data.newErrors.map(({ source, ...error }) => ({
+              ...error,
+              ...(source != null && { source }),
+            })),
+          },
+        };
       }
       const result = await client.callTool({
         name: "appendLedgerText",
@@ -1305,6 +1335,162 @@ describe.each(["rest", "gql", "mcp"] as const)(
         const commit = await f.call(surface, { text: BUY });
         expect(commit.ok).toBe(false);
         expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
+// w31/116: an append threads its text in by date, so everything below the
+// insertion sits that many lines lower in the text bean-check reads. A preview
+// and a refusal commit nothing, so both name a new error at its line in the
+// file as it stands, the one addLedgerEntries names; the note's refusal
+// cited main.bean:91 in an 87-line file. An error in the new text keeps the
+// line the preview's diff shows, and a forced commit reports the line the
+// error has once written.
+describe.each(["rest", "gql", "mcp"] as const)(
+  "where appendLedgerText names a new error, via %s",
+  (surface) => {
+    const BALANCE = "2026-08-29 balance Assets:Cash 49.75 USD";
+    const FAILED =
+      "Balance failed for Assets:Cash: expected 49.75 USD, got 48.75 USD";
+    const NEVER = "Account Expenses:Nope was never opened";
+    const MAIN = [
+      'include "prices.bean"',
+      "",
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Expenses:Food:Coffee USD",
+      "",
+      '2026-08-10 * "Earlier"',
+      "  Assets:Cash  -1.00 USD",
+      "  Expenses:Food:Coffee  1.00 USD",
+      "",
+      '2026-08-28 * "FARMERS MARKET"',
+      "  Assets:Cash  -23.50 USD",
+      "  Expenses:Food:Coffee  23.50 USD",
+      "",
+      BALANCE,
+      "",
+    ].join("\n");
+    const AT = `main.bean:${MAIN.split("\n").indexOf(BALANCE) + 1}`;
+    const COFFEE = [
+      '2026-08-20 * "qa-20261127-coffee"',
+      "  Assets:Cash  -1.00 USD",
+      "  Expenses:Food:Coffee  1.00 USD",
+    ].join("\n");
+    const UNOPENED = COFFEE.replace("Food:Coffee", "Nope").replace(
+      "qa-20261127-coffee",
+      "qa-unopened",
+    );
+
+    /** The stand-in engine: the coffee breaks the assertion; Expenses:Nope is unopened. */
+    const errorsOf = (files: ReadonlyMap<string, string>) => {
+      const coffee = [...files.values()].some((text) =>
+        text.includes("qa-20261127-coffee"),
+      );
+      return [...files].flatMap(([filename, text]) =>
+        text.split("\n").flatMap((line, index) => {
+          const source = { filename, lineno: index + 1 };
+          if (line === BALANCE && coffee) return [{ message: FAILED, source }];
+          if (line.includes("Expenses:Nope"))
+            return [{ message: NEVER, source }];
+          return [];
+        }),
+      );
+    };
+
+    async function ledger(route?: string) {
+      // Its own caller, so these calls spend no other test's write budget.
+      const f = await fixture({
+        ...identity,
+        userId: `usr_text_error_lines_${surface}`,
+      });
+      f.state.files = new Map([
+        ["main.bean", MAIN],
+        ["prices.bean", ""],
+      ]);
+      f.state.errorsOf = errorsOf;
+      if (route) {
+        // The routed file is new, so the entry point gains its include.
+        f.state.routeTransactionsTo = route;
+        f.state.sourceFiles = ["main.bean", "prices.bean"];
+      }
+      return f;
+    }
+    const newErrorsOf = (res: { ok: boolean; data?: unknown }) => {
+      expect(res.ok).toBe(true);
+      const data = res.ok ? (res.data as Record<string, unknown>) : {};
+      return ((data.validation ?? data) as { newErrors: unknown[] }).newErrors;
+    };
+    const refusedAt = (res: { ok: boolean; error?: unknown }) => {
+      expect(res.ok).toBe(false);
+      const { message } = (res as { error: { message: string } }).error;
+      return message.match(/main\.bean:\d+/g);
+    };
+
+    it("previews and refuses an error below the inserted text at its current line", async () => {
+      const f = await ledger();
+      try {
+        expect(
+          newErrorsOf(await f.call(surface, { text: COFFEE, dryRun: true })),
+        ).toEqual([{ message: FAILED, source: AT }]);
+        expect(refusedAt(await f.call(surface, { text: COFFEE }))).toEqual([
+          AT,
+        ]);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("maps past the include line a routed write adds above the error", async () => {
+      const f = await ledger("txns/2026.bean");
+      try {
+        const preview = await f.call(surface, { text: COFFEE, dryRun: true });
+        expect(newErrorsOf(preview)).toEqual([{ message: FAILED, source: AT }]);
+        expect(refusedAt(await f.call(surface, { text: COFFEE }))).toEqual([
+          AT,
+        ]);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("keeps the written line of an error inside the new text", async () => {
+      const f = await ledger();
+      try {
+        const preview = newErrorsOf(
+          await f.call(surface, { text: UNOPENED, dryRun: true }),
+        );
+        const forced = newErrorsOf(
+          await f.call(surface, { text: UNOPENED, allowInvalid: true }),
+        );
+        const written = f.state.files.get("main.bean")!.split("\n");
+        const line = written.indexOf("  Expenses:Nope  1.00 USD") + 1;
+        expect(line).toBeGreaterThan(0);
+        expect(preview).toEqual([
+          { message: NEVER, source: `main.bean:${line}` },
+        ]);
+        expect(forced).toEqual(preview);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("reports the line after the write on a commit allowInvalid lets through", async () => {
+      const f = await ledger();
+      try {
+        const forced = newErrorsOf(
+          await f.call(surface, { text: COFFEE, allowInvalid: true }),
+        );
+        const written = f.state.files.get("main.bean")!.split("\n");
+        const line = written.indexOf(BALANCE) + 1;
+        expect(`main.bean:${line}`).not.toBe(AT);
+        expect(forced).toEqual([
+          { message: FAILED, source: `main.bean:${line}` },
+        ]);
       } finally {
         await f.close();
       }

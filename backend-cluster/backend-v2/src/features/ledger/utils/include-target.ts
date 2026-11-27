@@ -1,5 +1,6 @@
 import { posix } from "path";
 import { BadUserInputError } from "@/shared/errors";
+import type { LineInsertion } from "./bean-check-errors";
 import { splitByteOrderMark } from "./byte-order-mark";
 import { isSkippedLine } from "./skipped-line";
 
@@ -111,11 +112,13 @@ export function formatIncludeLine(line: IncludeLine, target: string): string {
  * `content` with an `include` line for each path after its last `include`,
  * or at its end: how a file a write routes to joins the include closure
  * (w23/062). The ledger service's `addIncludes` is the bulk route's twin.
+ * `onInsert` learns where the lines went (w31/116).
  */
 export function addIncludeLines(
   content: string,
   paths: readonly string[],
   field = "path",
+  onInsert?: (insertion: LineInsertion) => void,
 ): string {
   if (paths.length === 0) return content;
   for (const path of paths) assertLiteralIncludePath(path, field);
@@ -130,9 +133,14 @@ export function addIncludeLines(
   if (last >= 0) {
     const lines = scanned.map((entry) => entry.line);
     lines.splice(last + 1, 0, ...block);
+    onInsert?.({ at: last + 1, lines: block.length });
     return lines.join("\n");
   }
   const body = content.replace(/\n+$/, "");
+  onInsert?.({
+    at: body ? body.split("\n").length : 0,
+    lines: block.length,
+  });
   return `${body}${body ? "\n" : ""}${block.join("\n")}\n`;
 }
 

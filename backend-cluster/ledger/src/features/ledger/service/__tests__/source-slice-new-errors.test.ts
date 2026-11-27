@@ -111,6 +111,15 @@ function fakeErrors(content: string) {
       line: lineOf(content, DUPLICATE_OPEN),
     });
   }
+  content.split("\n").forEach((line, index) => {
+    if (line.includes("Expenses:Nope")) {
+      errors.push({
+        message: "Account Expenses:Nope was never opened",
+        file: "main.bean",
+        line: index + 1,
+      });
+    }
+  });
   if (content.includes(FARMERS_UNBALANCED)) {
     errors.push({
       message: "Transaction does not balance: residual -0.50 USD",
@@ -394,6 +403,24 @@ describe("source-slice previews that would break the ledger", () => {
   });
 });
 
+/** The `file:line`s a refused write names in its message. */
+async function refusedAt(refused: Promise<unknown>): Promise<string[]> {
+  const error = await refused.then(
+    () => undefined,
+    (reason: unknown) => reason,
+  );
+  expect(error).toBeInstanceOf(NewLedgerErrorsError);
+  return (error as Error).message.match(/main\.bean:\d+/g) ?? [];
+}
+
+/** The `file:line` of each new error a write reports. */
+const reportedAt = (validation: {
+  newErrors: { source?: { filename: string; lineno: number } | null }[];
+}) =>
+  validation.newErrors.map(
+    ({ source }) => source && `${source.filename}:${source.lineno}`,
+  );
+
 // w31/101: a delete that commits nothing names each new error where the
 // reader finds it, in the file as it stands, so the preview an agent runs
 // first agrees with the refusal of the same call (w5/1202). A committed
@@ -425,24 +452,6 @@ describe("where a delete's new errors are reported", () => {
       ...opts,
     });
 
-  /** The `file:line` a refused delete names in its message. */
-  async function refusedAt(refused: Promise<unknown>): Promise<string> {
-    const error = await refused.then(
-      () => undefined,
-      (reason: unknown) => reason,
-    );
-    expect(error).toBeInstanceOf(NewLedgerErrorsError);
-    const [, at] = /\((main\.bean:\d+)\)$/.exec((error as Error).message) ?? [];
-    return at;
-  }
-
-  const reportedAt = (validation: {
-    newErrors: { source?: { filename: string; lineno: number } | null }[];
-  }) =>
-    validation.newErrors.map(
-      ({ source }) => source && `${source.filename}:${source.lineno}`,
-    );
-
   it.each([
     ["deleteSourceSlice", deleteOne],
     ["deleteMultiSourceSlices", deleteBoth],
@@ -452,7 +461,7 @@ describe("where a delete's new errors are reported", () => {
       const before = files["main.bean"];
       const current = `main.bean:${lineOf(before, BALANCE)}`;
 
-      expect(await refusedAt(remove({}))).toBe(current);
+      expect(await refusedAt(remove({}))).toEqual([current]);
       // backend-v2 sends every preview with allowInvalid (w23/m7/t008).
       const preview = await remove({ allowInvalid: true, dryRun: true });
 
@@ -480,6 +489,87 @@ describe("where a delete's new errors are reported", () => {
       ]);
     },
   );
+});
+
+// w31/116: an edit that makes an entry longer or shorter moves every line
+// below it, so the projection reported the assertion under the edit one line
+// off. A preview and a refusal name it where the reader finds it; a forced
+// commit names the line it has after the edit, and an error inside the new
+// text keeps its line there.
+describe("where an edit's new errors are reported", () => {
+  beforeEach(() => {
+    files = { "main.bean": ledger(FARMERS, COFFEE, BALANCE) };
+  });
+
+  // The note's edit: one posting longer, so the assertion no longer holds.
+  const LONGER = [
+    '2026-08-28 * "FARMERS MARKET"',
+    "  Assets:Cash  -24.50 USD",
+    "  Expenses:Food  23.50 USD",
+    "  Expenses:Food  1.00 USD",
+  ].join("\n");
+  const SHORTER = '2026-08-28 * "FARMERS MARKET"\n  Assets:Cash  -23.50 USD';
+  const UNOPENED = `${LONGER}\n  Expenses:Nope  0.00 USD`;
+
+  const edit = (
+    newContent: string,
+    opts: { allowInvalid?: boolean; dryRun?: boolean },
+  ) =>
+    service().updateSourceSlice({
+      ledgerId: LEDGER_ID,
+      userId: "user-1",
+      entryHash: "farmers",
+      sha256sum: sliceSha256(FARMERS),
+      newContent,
+      ...opts,
+    });
+
+  it.each([
+    ["one line longer", LONGER],
+    ["one line shorter", SHORTER],
+  ])(
+    "previews and refuses an entry made %s at the assertion's current line",
+    async (_name, newContent) => {
+      const before = files["main.bean"];
+      const current = `main.bean:${lineOf(before, BALANCE)}`;
+
+      expect(await refusedAt(edit(newContent, {}))).toEqual([current]);
+      // backend-v2 sends every preview with allowInvalid (w23/m7/t008).
+      const preview = await edit(newContent, {
+        allowInvalid: true,
+        dryRun: true,
+      });
+
+      expect(reportedAt(preview.validation)).toEqual([current]);
+      expect(commitMock).not.toHaveBeenCalled();
+      expect(files["main.bean"]).toBe(before);
+    },
+  );
+
+  it("keeps the edited text's own line for an error inside it", async () => {
+    const before = files["main.bean"];
+    const preview = await edit(UNOPENED, { allowInvalid: true, dryRun: true });
+    const written = before.replace(FARMERS, UNOPENED);
+
+    expect(reportedAt(preview.validation).sort()).toEqual(
+      [
+        `main.bean:${lineOf(before, BALANCE)}`,
+        `main.bean:${lineOf(written, "  Expenses:Nope  0.00 USD")}`,
+      ].sort(),
+    );
+  });
+
+  it("reports the line after the edit once a forced edit commits", async () => {
+    const before = files["main.bean"];
+
+    const updated = await edit(LONGER, { allowInvalid: true });
+
+    const after = files["main.bean"];
+    expect(lineOf(after, BALANCE)).toBe(lineOf(before, BALANCE) + 1);
+    expect(reportedAt(updated.validation)).toEqual([
+      `main.bean:${lineOf(after, BALANCE)}`,
+    ]);
+  });
 });
 
 describe("source-slice writes on a ledger that already has errors", () => {

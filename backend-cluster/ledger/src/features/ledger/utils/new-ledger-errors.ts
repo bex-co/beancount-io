@@ -117,6 +117,51 @@ export async function projectNewLedgerErrors(
 }
 
 /**
+ * Lines one edit of a write replaced in a file: the 0-based lines
+ * `[start, end)` of the text as the edit found it, now `lines` long. A cut
+ * entry is a replacement by nothing; an added include line replaces nothing.
+ */
+export interface LineEdit {
+  start: number;
+  end: number;
+  lines: number;
+}
+
+/** Each file's edits, by path, in the order the write made them. */
+export type SourceLineEdits = ReadonlyMap<string, readonly LineEdit[]>;
+
+/**
+ * The projection with each new error at its line in the file as it stands.
+ * The engine reads the written text, where an edit above an error moves it,
+ * so a refused delete named the line after the cut (w5/1202) and an edit
+ * that made an entry one line longer named the line below the error
+ * (w31/116). A refusal and a preview commit nothing, so both name the
+ * reader's line. An error on a line the write itself wrote has no line in
+ * the file as it stands and keeps its own, the one the preview shows.
+ */
+export function atLinesBeforeEdits(
+  projection: ProjectedLedgerErrors,
+  edits: SourceLineEdits,
+): ProjectedLedgerErrors {
+  return {
+    ...projection,
+    newErrors: projection.newErrors.map((error) => {
+      const source = error.source;
+      const made = source && edits.get(source.filename);
+      if (!source || !made) return error;
+      // Undo the edits last to first, each in the text it produced.
+      let index = source.lineno - 1;
+      for (const { start, end, lines } of [...made].reverse()) {
+        if (index < start) continue;
+        if (index < start + lines) return error;
+        index += end - start - lines;
+      }
+      return { ...error, source: { ...source, lineno: index + 1 } };
+    }),
+  };
+}
+
+/**
  * Refuse a write whose projection has errors the ledger did not have. Every
  * structured write — add, edit, delete — goes through here (w0/m2, w21/m1).
  */

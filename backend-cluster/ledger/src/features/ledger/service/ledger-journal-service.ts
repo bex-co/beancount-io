@@ -95,8 +95,10 @@ import type { DirectiveLimitOptions } from "@/core/directive-limit";
 import { entryCommitMessage } from "@/features/ledger/utils/commit-message";
 import { toBeancountErrorsPublic } from "@/features/ledger/service/ledger-data-mappers";
 import {
+  atLinesBeforeEdits,
   projectNewLedgerErrors,
   refuseProjectedErrors,
+  type LineEdit,
   type ProjectedLedgerErrors,
 } from "@/features/ledger/utils/new-ledger-errors";
 import type { CacheHelper } from "@/shared/cache";
@@ -233,7 +235,8 @@ function relocateSlices(
   });
 }
 
-type DeletedSourceLines = Map<string, { start: number; end: number }[]>;
+/** Where each transform edited its file, recorded when it runs (w31/116). */
+type LineEdits = Map<string, LineEdit[]>;
 
 /**
  * A {@link LedgerFileTransform} that deletes one or more entries' blocks from a
@@ -243,16 +246,16 @@ type DeletedSourceLines = Map<string, { start: number; end: number }[]>;
 function makeDeleteTransform(
   file: string,
   targets: SliceTarget[],
-  deletedLines?: DeletedSourceLines,
+  edits?: LineEdits,
 ): LedgerFileTransform {
   return async (current) => {
     if (current === null) {
       throw new NotFoundError("Entry", targets[0]?.base ?? file);
     }
     const located = relocateSlices(file, current, targets);
-    const ranges: { start: number; end: number }[] = [];
-    const recordCut = deletedLines
-      ? (start: number, end: number) => ranges.push({ start, end })
+    const ranges: LineEdit[] = [];
+    const recordCut = edits
+      ? (start: number, end: number) => ranges.push({ start, end, lines: 0 })
       : undefined;
     let content = current;
     located
@@ -265,7 +268,7 @@ function makeDeleteTransform(
           recordCut,
         );
       });
-    deletedLines?.set(file, ranges.reverse());
+    edits?.set(file, ranges);
     return content;
   };
 }
@@ -292,6 +295,7 @@ function makeReplaceTransform(
   target: SliceTarget,
   newContent: string,
   onApplied?: (applied: AppliedReplace) => void,
+  edits?: LineEdits,
 ): LedgerFileTransform {
   return async (current) => {
     if (current === null) throw new NotFoundError("Entry", target.base);
@@ -302,13 +306,21 @@ function makeReplaceTransform(
       slice.endLine,
       newContent,
     );
+    const stored = normalizeSliceReplacement(
+      newContent,
+      replacementLineEnding(current, slice.startLine, slice.endLine),
+    );
+    edits?.set(file, [
+      {
+        start: slice.startLine,
+        end: slice.endLine,
+        lines: stored.split("\n").length,
+      },
+    ]);
     onApplied?.({
       content,
       startLine: slice.startLine,
-      stored: normalizeSliceReplacement(
-        newContent,
-        replacementLineEnding(current, slice.startLine, slice.endLine),
-      ),
+      stored,
       previous: current,
     });
     return content;
@@ -720,17 +732,18 @@ export class LedgerJournalService implements ILedgerJournalService {
    * had never block. The check always runs: `allowInvalid` suppresses only
    * the refusal, and the projection is reported on the response (w23/161).
    *
-   * Given the lines a delete cuts, a refusal or a `dryRun` names each new
-   * error at its line in the file as it stands, since neither commits
-   * (w5/1202, w31/101). A committed delete reports the line after the cut,
-   * where the error now lives.
+   * Given where the transforms edited each file (the lines a delete cuts,
+   * an edit replaces, an include goes in), a refusal or a `dryRun` names each
+   * new error at its line in the file as it stands, since neither commits
+   * (w5/1202, w31/101, w31/116). A committed write reports the line after
+   * the edit, where the error now lives.
    */
   private async projectWriteErrors(
     loaded: LoadedLedgerWithManagedPrices,
     transforms: Map<string, LedgerFileTransform>,
     action: LedgerWriteAction,
     { allowInvalid, dryRun }: { allowInvalid?: boolean; dryRun?: boolean },
-    deletedLines?: DeletedSourceLines,
+    edits?: LineEdits,
   ): Promise<ProjectedLedgerErrors> {
     const { files, entryPoint, repoPaths } = loaded;
     const projected: FileMap = { ...files };
@@ -745,23 +758,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       await errorsOf(projected),
       () => errorsOf(files),
     );
-    const current = deletedLines
-      ? {
-          ...projection,
-          newErrors: projection.newErrors.map((error) => {
-            const source = error.source;
-            const cuts = source && deletedLines.get(source.filename);
-            if (!source || !cuts) return error;
-            // Reverse the edits to recover the current file's 1-based line.
-            const lineno = cuts.reduce(
-              (line, { start, end }) =>
-                line > start ? line + end - start : line,
-              source.lineno,
-            );
-            return { ...error, source: { ...source, lineno } };
-          }),
-        }
-      : projection;
+    const current = edits ? atLinesBeforeEdits(projection, edits) : projection;
     if (!allowInvalid) refuseProjectedErrors(current, action);
     return dryRun ? current : projection;
   }
@@ -1249,7 +1246,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       sourceEntryHash,
       sha256sum,
     );
-    const deletedLines: DeletedSourceLines = new Map();
+    const edits: LineEdits = new Map();
     const transforms = new Map([
       [
         found.file,
@@ -1263,7 +1260,7 @@ export class LedgerJournalService implements ILedgerJournalService {
               sha256sum,
             ),
           ],
-          deletedLines,
+          edits,
         ),
       ],
     ]);
@@ -1272,7 +1269,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       transforms,
       "delete",
       { allowInvalid, dryRun },
-      deletedLines,
+      edits,
     );
     let commit: CommitSha = {};
     if (!dryRun) {
@@ -1310,11 +1307,11 @@ export class LedgerJournalService implements ILedgerJournalService {
       );
     }
     const loaded = await this.loadFileMap(ledgerId, userId);
-    const deletedLines: DeletedSourceLines = new Map();
+    const edits: LineEdits = new Map();
     const { removed, transforms } = await this.planSliceRemoval(
       loaded,
       entries,
-      deletedLines,
+      edits,
     );
     const deletedHashes = removed.map(({ hash }) => hash);
 
@@ -1323,7 +1320,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       transforms,
       "delete",
       { allowInvalid, dryRun },
-      deletedLines,
+      edits,
     );
     let commit: CommitSha = {};
     if (!dryRun) {
@@ -1365,7 +1362,7 @@ export class LedgerJournalService implements ILedgerJournalService {
   private async planSliceRemoval(
     loaded: LoadedLedgerWithManagedPrices,
     entries: readonly { entryHash: string; sha256sum: string }[],
-    deletedLines?: DeletedSourceLines,
+    edits?: LineEdits,
   ): Promise<{
     /** Each removed entry once, as the caller named it, in request order. */
     removed: { hash: string; slice: EntrySlice }[];
@@ -1411,7 +1408,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       transforms: new Map(
         [...byFile.entries()].map(
           ([file, targets]) =>
-            [file, makeDeleteTransform(file, targets, deletedLines)] as const,
+            [file, makeDeleteTransform(file, targets, edits)] as const,
         ),
       ),
     };
@@ -1481,9 +1478,11 @@ export class LedgerJournalService implements ILedgerJournalService {
     if (includeFrom !== undefined && !reached) {
       assertLiteralIncludePath(toPath, "toPath");
     }
+    const edits: LineEdits = new Map();
     const { removed, transforms } = await this.planSliceRemoval(
       loaded,
       entries,
+      edits,
     );
     if (removed.some(({ slice }) => slice.file === toPath)) {
       throw new BadUserInputError(
@@ -1519,20 +1518,22 @@ export class LedgerJournalService implements ILedgerJournalService {
       const target = posix.relative(posix.dirname(includeFrom), toPath);
       const prior = transforms.get(includeFrom);
       // Escaped, in the file's line ending, after its last include (w23/062).
-      transforms.set(includeFrom, async (current) =>
-        addIncludes(
-          prior ? await prior(current) : (current ?? ""),
-          [target],
-          "toPath",
-        ),
-      );
+      // It goes in after the file's cuts, in the text they left (w31/116).
+      transforms.set(includeFrom, async (current) => {
+        const cut = prior ? await prior(current) : (current ?? "");
+        const cuts = prior ? (edits.get(includeFrom) ?? []) : [];
+        return addIncludes(cut, [target], "toPath", (start, lines) =>
+          edits.set(includeFrom, [...cuts, { start, end: start, lines }]),
+        );
+      });
     }
 
     const validation = await this.projectWriteErrors(
       loaded,
       transforms,
       "move",
-      { allowInvalid },
+      { allowInvalid, dryRun },
+      edits,
     );
     let commit: CommitSha = {};
     if (!dryRun) {
@@ -1611,6 +1612,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       assertDashedEntryDate(newContent, "newContent");
     }
     const applied: { current?: AppliedReplace } = {};
+    const edits: LineEdits = new Map();
     const transforms = new Map([
       [
         found.file,
@@ -1626,6 +1628,7 @@ export class LedgerJournalService implements ILedgerJournalService {
           (result) => {
             applied.current = result;
           },
+          edits,
         ),
       ],
     ]);
@@ -1635,7 +1638,8 @@ export class LedgerJournalService implements ILedgerJournalService {
       loaded,
       transforms,
       "update",
-      { allowInvalid },
+      { allowInvalid, dryRun },
+      edits,
     );
     let commit: CommitSha = {};
     if (!dryRun) {

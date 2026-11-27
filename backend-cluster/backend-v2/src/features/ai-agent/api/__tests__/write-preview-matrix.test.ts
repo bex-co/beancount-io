@@ -100,6 +100,12 @@ const WRITE_PREVIEW_RULES: Record<string, Entry> = {
         file: `${REST_V1}/directive-text-parity.test.ts`,
         test: "previews a write that would break the ledger, with its new errors, via %s",
       },
+      // A preview and a refusal name the line the caller has when the text
+      // and a routed include go in above it (w31/116).
+      {
+        file: `${REST_V1}/directive-text-parity.test.ts`,
+        test: "where appendLedgerText names a new error, via %s",
+      },
     ],
     differential: ONE_PROJECTION_CALL,
   },

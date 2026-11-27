@@ -34,6 +34,27 @@ describe("addIncludes", () => {
     expect(addIncludes("", ["a.bean"])).toBe('include "a.bean"\n');
   });
 
+  // w31/116: where the lines went maps an error below them back to its line.
+  it("says where it put the lines, in a CRLF file too", () => {
+    const seen: [number, number][] = [];
+    const record = (start: number, lines: number) => seen.push([start, lines]);
+    const main =
+      'option "t" "B"\r\ninclude "a.bean"\r\n\r\n2020-01-01 open A\r\n';
+    const written = addIncludes(main, ["b.bean", "c.bean"], "path", record);
+    expect(written.split("\r\n").slice(2, 4)).toEqual([
+      'include "b.bean"',
+      'include "c.bean"',
+    ]);
+    addIncludes("2020-01-01 open A\n\n", ["b.bean"], "path", record);
+    addIncludes("", ["b.bean"], "path", record);
+    addIncludes("x\n", [], "path", record);
+    expect(seen).toEqual([
+      [2, 2],
+      [1, 1],
+      [0, 1],
+    ]);
+  });
+
   it("quotes a path so it reads back intact, and changes nothing for none", () => {
     expect(addIncludes("", ['odd "name".bean'])).toBe(
       'include "odd \\"name\\".bean"\n',

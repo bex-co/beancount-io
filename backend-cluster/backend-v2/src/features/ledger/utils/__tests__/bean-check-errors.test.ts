@@ -1,5 +1,6 @@
 import {
   atCurrentLines,
+  atLinesBeforeInserts,
   diffBeanCheckErrors,
 } from "@/features/ledger/utils/bean-check-errors";
 
@@ -418,5 +419,77 @@ describe("atCurrentLines", () => {
         new Map([["a:b.bean", [2]]]),
       ),
     ).toEqual([{ message: never, source: "a:b.bean:10", code: "E1001" }]);
+  });
+});
+
+// w31/116: an append inserts lines, and bean-check reports the written file,
+// that many lines lower below each insertion.
+describe("atLinesBeforeInserts", () => {
+  const failed = "Balance failed for Assets:Cash: expected 49.75 USD";
+  const inserts = (...steps: [number, number][]) =>
+    new Map([["main.bean", steps.map(([at, lines]) => ({ at, lines }))]]);
+
+  it("moves an error below an insertion up to where it stands now", () => {
+    // Four lines inserted at index 40 (lines 41-44): the assertion at 87 is at 91.
+    expect(
+      atLinesBeforeInserts([error(failed, "main.bean:91")], inserts([40, 4])),
+    ).toEqual([error(failed, "main.bean:87")]);
+  });
+
+  it("keeps an error above the insertion where it is", () => {
+    expect(
+      atLinesBeforeInserts([error(failed, "main.bean:40")], inserts([40, 4])),
+    ).toEqual([error(failed, "main.bean:40")]);
+  });
+
+  it("keeps the written line of an error inside the inserted text", () => {
+    const errors = [
+      error(failed, "main.bean:41"),
+      error(failed, "main.bean:44"),
+    ];
+    expect(atLinesBeforeInserts(errors, inserts([40, 4]))).toEqual(errors);
+  });
+
+  it("undoes each step in the text it produced, last first", () => {
+    // An include at index 2 (line 3), then a 3-line block at index 6 of that
+    // text (lines 7-9). Written line 12 was line 9 after the include, and 8
+    // before it.
+    const steps = inserts([2, 1], [6, 3]);
+    expect(
+      atLinesBeforeInserts(
+        [
+          error(failed, "main.bean:2"),
+          error(failed, "main.bean:5"),
+          error(failed, "main.bean:12"),
+          error(failed, "main.bean:3"),
+          error(failed, "main.bean:8"),
+        ],
+        steps,
+      ),
+    ).toEqual([
+      error(failed, "main.bean:2"),
+      error(failed, "main.bean:4"),
+      error(failed, "main.bean:8"),
+      error(failed, "main.bean:3"),
+      error(failed, "main.bean:8"),
+    ]);
+  });
+
+  it("leaves errors in other files, and errors with no file, alone", () => {
+    const errors = [
+      error(failed, "books/2026.bean:91"),
+      error(failed, "other-main.bean:91"),
+      error("Load failed"),
+    ];
+    expect(atLinesBeforeInserts(errors, inserts([40, 4]))).toEqual(errors);
+  });
+
+  it("keeps the message and code it does not move", () => {
+    expect(
+      atLinesBeforeInserts(
+        [{ message: failed, source: "a:b.bean:9", code: "E2001" }],
+        new Map([["a:b.bean", [{ at: 1, lines: 2 }]]]),
+      ),
+    ).toEqual([{ message: failed, source: "a:b.bean:7", code: "E2001" }]);
   });
 });

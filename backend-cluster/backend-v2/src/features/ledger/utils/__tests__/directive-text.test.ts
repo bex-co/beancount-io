@@ -1373,3 +1373,77 @@ describe("insertDirectives among dates the file spells otherwise (w31/109)", () 
     },
   );
 });
+
+// w31/116: the insertions map an error below them back to its line in the
+// file as it stands, so taking them out again, last first, must give back
+// exactly the file the write started from.
+describe("where insertDirectives says it wrote", () => {
+  const existing = [
+    'option "title" "T"',
+    "",
+    txn("2026-01-05", "Jan"),
+    "",
+    txn("2026-03-05", "Mar"),
+    "",
+  ].join("\n");
+  const scoped = [
+    "pushtag #trip",
+    txn("2026-09-02", "First"),
+    "",
+    txn("2026-09-05", "Last"),
+    "poptag #trip",
+    "",
+  ].join("\n");
+  const unsorted = [txn("2026-05-01", "Late"), "", txn("2026-01-01", "Early")]
+    .join("\n")
+    .concat("\n");
+
+  /** `content` with each insertion taken out again, last first. */
+  const undo = (
+    content: string,
+    insertions: readonly { at: number; lines: number }[],
+  ) => {
+    const lines = content.replace(/\r\n/g, "\n").split("\n");
+    for (const { at, lines: count } of [...insertions].reverse()) {
+      lines.splice(at, count);
+    }
+    return lines.join("\n").replace(/\n+$/, "");
+  };
+
+  it.each([
+    ["one directive threaded mid-file", existing, txn("2026-02-05", "Feb")],
+    [
+      "a later directive threaded above an earlier one",
+      existing,
+      `${txn("2026-04-01", "Apr")}\n\n${txn("2026-02-01", "Feb")}`,
+    ],
+    ["the newest directive, last", existing, txn("2026-12-31", "Dec")],
+    ["an append to an unsorted file", unsorted, txn("2026-03-01", "Mid")],
+    [
+      "an entry inside a pushtag scope, which closes and reopens it",
+      scoped,
+      txn("2026-09-03", "New"),
+    ],
+    ["a CRLF file", existing.replace(/\n/g, "\r\n"), txn("2026-02-05", "Feb")],
+    ["an empty file", "", txn("2026-02-05", "Feb")],
+  ])("%s", (_name, file, text) => {
+    const result = insertDirectives(file, parseDirectiveText(text));
+    expect(result.content).not.toBe(file);
+    expect(undo(result.content, result.insertions)).toBe(
+      file.replace(/\r\n/g, "\n").replace(/\n+$/, ""),
+    );
+    // Every directive's first line is one the insertions cover.
+    const covered = (line: number) => {
+      let index = line - 1;
+      for (const { at, lines } of [...result.insertions].reverse()) {
+        if (index < at) continue;
+        if (index < at + lines) return true;
+        index -= lines;
+      }
+      return false;
+    };
+    expect(result.inserted.map(({ line }) => covered(line))).toEqual(
+      result.inserted.map(() => true),
+    );
+  });
+});

@@ -527,3 +527,95 @@ describe("moveSourceSlices out of a pushtag/pushmeta scope (w31/016)", () => {
     ]);
   });
 });
+
+// w31/116: a move cuts entries out of their file and can add an include line
+// to `includeFrom`; both move every line below them. A preview and a refusal
+// name the new error where the reader finds it in the file as it stands, and
+// a forced move names the line it has afterwards.
+describe("where a move's new errors are reported (w31/116)", () => {
+  const BALANCE = "2026-09-01 balance Assets:Cash -8.00 USD";
+
+  beforeEach(() => {
+    // Located in the file as it stands, wherever the fixture put them.
+    findMock.mockImplementation(
+      async (fileMap: Record<string, string>, _e: unknown, hash: string) => {
+        const text = hash === TEA_ID ? TEA : hash === CAKE_ID ? CAKE : null;
+        if (text === null) return null;
+        const startLine = fileMap["main.bean"]
+          .split("\n")
+          .indexOf(text.split("\n")[0]);
+        return {
+          file: "main.bean",
+          slice: text,
+          sha256: sliceSha256(text),
+          startLine,
+          endLine: startLine + 3,
+          localOccurrence: 0,
+        };
+      },
+    );
+    // Moving Tea out of main.bean breaks the assertion, wherever it sits.
+    parseMock.mockImplementation(async (fileMap: Record<string, string>) => {
+      const main = String(fileMap["main.bean"]);
+      return {
+        directives: [TEA_D, CAKE_D],
+        errors: main.includes("Tea")
+          ? []
+          : [
+              {
+                message: "Balance failed for Assets:Cash",
+                file: "main.bean",
+                line: main.split("\n").indexOf(BALANCE) + 1,
+              },
+            ],
+        sourceDetails: {},
+      };
+    });
+  });
+
+  const opens = MAIN.split("\n").slice(0, 3);
+  const at = (content: string) =>
+    `main.bean:${content.split("\n").indexOf(BALANCE) + 1}`;
+  const refusedAt = async (refused: Promise<unknown>) => {
+    const error = await refused.then(
+      () => undefined,
+      (reason: unknown) => reason,
+    );
+    expect(error).toBeInstanceOf(NewLedgerErrorsError);
+    return (error as Error).message.match(/main\.bean:\d+/g);
+  };
+  const reportedAt = (result: Awaited<ReturnType<typeof move>>) =>
+    result.validation.newErrors.map(
+      ({ source }) => source && `${source.filename}:${source.lineno}`,
+    );
+
+  it.each([
+    [
+      "an include line goes in above it",
+      [...opens, "", BALANCE, "", CAKE, "", TEA, ""],
+      [{ entryHash: TEA_ID, sha256sum: sliceSha256(TEA) }],
+    ],
+    [
+      "entries leave above it and an include line goes in",
+      [...opens, "", CAKE, "", TEA, "", BALANCE, ""],
+      [
+        { entryHash: TEA_ID, sha256sum: sliceSha256(TEA) },
+        { entryHash: CAKE_ID, sha256sum: sliceSha256(CAKE) },
+      ],
+    ],
+  ])("names the current line when %s", async (_name, lines, entries) => {
+    files["main.bean"] = lines.join("\n");
+    const before = files["main.bean"];
+    const input = { entries, toPath: "2026/08.bean", includeFrom: "main.bean" };
+
+    expect(await refusedAt(move(input))).toEqual([at(before)]);
+    // backend-v2 sends every preview with allowInvalid (w23/m7/t008).
+    const preview = await move({ ...input, allowInvalid: true, dryRun: true });
+    expect(reportedAt(preview)).toEqual([at(before)]);
+    expect(commitMock).not.toHaveBeenCalled();
+
+    const forced = await move({ ...input, allowInvalid: true });
+    expect(at(files["main.bean"])).not.toBe(at(before));
+    expect(reportedAt(forced)).toEqual([at(files["main.bean"])]);
+  });
+});

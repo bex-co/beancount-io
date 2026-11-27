@@ -1,5 +1,6 @@
 import type { BeancountErrorPublic } from "@/foundation/ledger-api-types";
 import {
+  atLinesBeforeEdits,
   newLedgerErrors,
   projectNewLedgerErrors,
   refuseNewLedgerErrors,
@@ -437,5 +438,96 @@ describe("a balance assertion that was already failing", () => {
         [failed("46.25 USD"), failed("46.25 USD")],
       ),
     ).toHaveLength(1);
+  });
+});
+
+// w31/116: a refusal and a preview name each new error at its line in the
+// file as it stands, undoing the write's cuts, replacements and inserts.
+describe("atLinesBeforeEdits", () => {
+  const FAILED = "Balance failed for Assets:Cash";
+  const lines = (projection: { newErrors: BeancountErrorPublic[] }) =>
+    projection.newErrors.map(({ source }) => source?.lineno);
+  const project = (
+    newErrors: BeancountErrorPublic[],
+    edits: [string, { start: number; end: number; lines: number }[]][],
+  ) =>
+    atLinesBeforeEdits(
+      { errorsBefore: 0, errorsAfter: newErrors.length, newErrors },
+      new Map(edits),
+    );
+
+  it("moves an error below a longer or shorter replacement back by the difference", () => {
+    // Lines 83-86 (0-based [82, 86)) replaced by five lines, then by three.
+    const errors = [at(FAILED, "main.bean", 88), at(FAILED, "main.bean", 80)];
+    expect(
+      lines(
+        project(errors, [["main.bean", [{ start: 82, end: 86, lines: 5 }]]]),
+      ),
+    ).toEqual([87, 80]);
+    expect(
+      lines(
+        project(
+          [at(FAILED, "main.bean", 86)],
+          [["main.bean", [{ start: 82, end: 86, lines: 3 }]]],
+        ),
+      ),
+    ).toEqual([87]);
+  });
+
+  it("keeps the written line of an error inside a replacement or an insert", () => {
+    const errors = [at(FAILED, "main.bean", 83), at(FAILED, "main.bean", 87)];
+    expect(
+      lines(
+        project(errors, [["main.bean", [{ start: 82, end: 86, lines: 5 }]]]),
+      ),
+    ).toEqual([83, 87]);
+    expect(
+      lines(
+        project(
+          [at(FAILED, "main.bean", 4)],
+          [["main.bean", [{ start: 3, end: 3, lines: 1 }]]],
+        ),
+      ),
+    ).toEqual([4]);
+  });
+
+  it("undoes the edits last to first, as a delete's cuts and a move's include run", () => {
+    // Cut bottom-first: lines 9-12, then 3-6; then an include at index 1 of
+    // what was left. Line 9 after the write was 8 before the include, the
+    // line that was 16 before the cuts.
+    const edits: [string, { start: number; end: number; lines: number }[]][] = [
+      [
+        "main.bean",
+        [
+          { start: 8, end: 12, lines: 0 },
+          { start: 2, end: 6, lines: 0 },
+          { start: 1, end: 1, lines: 1 },
+        ],
+      ],
+    ];
+    expect(
+      lines(
+        project(
+          [
+            at(FAILED, "main.bean", 1),
+            at(FAILED, "main.bean", 2),
+            at(FAILED, "main.bean", 3),
+            at(FAILED, "main.bean", 5),
+            at(FAILED, "main.bean", 9),
+          ],
+          edits,
+        ),
+      ),
+    ).toEqual([1, 2, 2, 8, 16]);
+  });
+
+  it("leaves errors in other files, errors with no source, and the counts alone", () => {
+    const errors = [
+      at(FAILED, "books/2026.bean", 88),
+      { message: "Load failed", source: null },
+    ];
+    expect(
+      project(errors, [["main.bean", [{ start: 0, end: 0, lines: 3 }]]]),
+    ).toEqual({ errorsBefore: 0, errorsAfter: 2, newErrors: errors });
   });
 });

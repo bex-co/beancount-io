@@ -437,7 +437,15 @@ A preview also writes nothing.
 
 Each `newErrors` item is `{message, source?, code?}`: the message, the
 `file:line` of the offending directive when bean-check reports one, and the
-engine's stable error `code` (for example `E1001`) when it has one. The
+engine's stable error `code` (for example `E1001`) when it has one. A
+preview and a refusal commit nothing, so the entry and text writes
+(`appendLedgerText`, `addLedgerEntries`, `updateEntrySource`,
+`deleteEntrySource`, `deleteEntrySources`, `moveEntrySources`) and a
+`remove_includes` file delete name each error at its line in the file as it
+stands, not where the entries or include lines they add or remove above it
+would move it. An error inside the written text keeps its line in that text,
+as the preview shows it, and a committed `allowInvalid` write reports the
+line the error has once written. The
 published `outputSchema` declares all three, and a client that validates
 `structuredContent` against it accepts the result; a key the schema omitted
 would make that client reject the whole preview.
