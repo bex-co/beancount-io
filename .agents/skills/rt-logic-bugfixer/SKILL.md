@@ -71,11 +71,27 @@ The minimal root-cause fix, plus the failing test as a permanent regression
 test. No drive-by refactoring; if the unit also deserves simplification, defer
 to `rt-logic-simplifier` in the summary.
 
+Before finalizing the fix, run this **Guard-Ordering & Pipeline Sweep**:
+
+1. **Guard ordering:** auth / capability / scope checks must run before
+   existence lookups or query-param validation; cancellation checks must precede
+   upstream error handling; mutations/claims must serialize every competing
+   decision path (e.g., both approve and deny).
+2. **Upstream & downstream pipeline:** trace every preprocessing/rewriting stage
+   upstream of your guard (e.g., BQL literal rewriters before ordinal guards;
+   span builders like `firstAndLastDate` before `intervalRanges`) and every
+   caller/user-facing note downstream (e.g., CLI notes after format selection).
+3. **Sibling consumers & options:** grep for every sibling option/helper/copy in
+   the package (e.g., `receipt_base_folder` beside `transaction_file`) so one
+   defect class is fixed completely in one PR.
+
 ### 5. Verify
 
-New regression test green, full owning-package gate green, and a quick sweep of
-callers for anyone depending on the old wrong behavior (if someone does, that
-is an intent ambiguity — STOP and report).
+New regression test green (exercising the real end-to-end entry point, never a
+stubbed verb or a generator whose cap/boundary is never reached), full
+owning-package gate green, and a quick sweep of callers for anyone depending on
+the old wrong behavior (if someone does, that is an intent ambiguity — STOP and
+report).
 
 ### 6. Land
 
@@ -83,10 +99,15 @@ Compose `/land` for this one bug. Loop within budget.
 
 ## What NOT to do
 
+- **No bug = no PR:** if modeling finds no provable behavioral bug, exit cleanly
+  with zero commits and zero PRs — never open a `test-only` padding PR or a fix
+  for a synthetic edge case that no user or crash/DoS path can trigger.
 - Never land a "fix" whose only justification is that the new behavior seems
   more reasonable — no documented intent, no bug.
-- Never weaken or delete an existing test to make a fix pass; a conflicting
-  test means conflicting intent — STOP and report.
+- Never weaken or delete an existing test to make a fix pass, AND never bend
+  production code (e.g., magic-number carve-outs or spurious side effects) just
+  to keep a stale/flawed test green; a conflicting test means conflicting
+  intent — STOP and report.
 - Intermittent failures are not logic bugs — defer to
   `rt-flaky-test-fixer`.
 - Don't model units that are trivial or already exhaustively tested; spend the

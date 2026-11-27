@@ -64,10 +64,19 @@ beats a cosmetic one.
   per file). If the entire sweep yields only a single isolated non-bug cleanup
   of `<=15` changed lines, skip it and land nothing.
 - **Whole-invariant & no-bug threshold (`rt-logic-bugfixer`):** when fixing an
-  invariant, check every sibling projection or engine/frontend twin of the
-  same contract in the same run so one invariant is not split across follow-up
-  PRs. If an audit finds no real behavioral bug, do **not** land a PR for a
-  single small test (`<30` lines), a comment-only edit, or a ledger update.
+  invariant, check every sibling projection, caller, upstream/downstream
+  pipeline stage, and engine/frontend twin of the same contract in the same run
+  so one invariant is not split across follow-up PRs. If an audit finds **no
+  real behavioral bug**, leave the working tree clean, make no commit, and open
+  **no PR** — never ship `test-only` padding PRs, comment-only edits, ledger-only
+  updates, or synthetic edge cases that an upstream layer already rejects with no
+  reachable user/crash/DoS path.
+- **Never bend production code to appease an existing test:** if a fix fails an
+  existing test, inspect whether the test is stale/flawed or whether intent
+  genuinely conflicts. Never add magic-number carve-outs (e.g. exempting a
+  single sentinel value like `I64_MAX`) or spurious production side effects
+  solely to avoid updating an old test; either fix the test (when the old
+  expectation is demonstrably wrong) or STOP and report the conflict.
 
 ## Ledger
 
