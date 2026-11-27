@@ -261,7 +261,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     );
 
     const ext = extractExt(receiptObjectKey);
-    const receiptBaseFolder = bcioData.receipt_base_folder ?? "documents";
+    const receiptBaseFolder = bcioData.receipt_base_folder || "documents";
     const receiptPath = buildReceiptPath(
       input.date,
       input.payee,
