@@ -44,6 +44,7 @@ import {
 import { stripUnavailablePlugins } from "./plugins/strip";
 import { reconcileDocumentErrors } from "./document-validation";
 import { averageBookingErrors } from "./average-booking";
+import { zeroUnitsAtCostErrors } from "./zero-units-at-cost";
 import { openAutoAccounts } from "./auto-accounts";
 import { reportPreOpenUses } from "./pre-open-uses";
 import { orderMetaAsWritten } from "./meta-order";
@@ -793,6 +794,9 @@ async function parseLedgerFilesUncached(
   // After the source is indexed: a discovered document has no source of its
   // own, and an identical written one must keep its identity.
   directives = mergeDiscoveredDocuments(directives, discovered.documents);
+  // Stock books before plugins run, and refuses a posting held at cost with
+  // zero units; the engine books it as an empty lot (w31/140).
+  const zeroUnitsAtCost = zeroUnitsAtCostErrors(directives, files, entryPoint);
 
   // Whether the balances were checked on the plugins' transformed stream.
   let validatedTransformed = false;
@@ -852,6 +856,7 @@ async function parseLedgerFilesUncached(
   errors = locateOptionErrors(reconcileOptionErrors(errors), files, entryPoint);
   // Beancount refuses a sale from an AVERAGE position; rustledger books it.
   errors = [...errors, ...averageBookingErrors(directives, files, entryPoint)];
+  errors = [...errors, ...zeroUnitsAtCost];
   // Beancount's unique_prices refuses only same-day prices that disagree.
   errors = reconcileUniquePriceErrors(errors, directives, files, entryPoint);
   // Beancount's onecommodity honours its opt-outs; rustledger's does not.

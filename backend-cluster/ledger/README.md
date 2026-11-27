@@ -204,7 +204,8 @@ the same error list `checkLedger`, the post-write report and the write gates
 read. Two scans in `src/foundation/rustledger/` read the source text for them:
 `stock-syntax-errors.ts` (w23/240, w31/120, w31/121), which reads a posting's
 cost and price with `posting-syntax-errors.ts`, and `balance-tolerance-syntax.ts`
-(w23/197). Each row names the file whose rule finds it:
+(w23/197). One rule reads the booked stream instead: `zero-units-at-cost.ts`
+(w31/140). Each row names the file whose rule finds it:
 
 | Code | Construct | Stock's message | Source |
 | --- | --- | --- | --- |
@@ -218,11 +219,20 @@ cost and price with `posting-syntax-errors.ts`, and `balance-tolerance-syntax.ts
 | `P0012` | a string where a dated line's flag goes (`2026-09-02 "x"`) | `syntax error, unexpected STRING` | `stock-syntax-errors.ts` |
 | `P0012` | a number with no leading digit (`.50 USD`), at each one | `Invalid token: '.50'` | `stock-syntax-errors.ts` |
 | `TOLERANCE` | a currency before a balance tolerance's `~` (`balance Assets:Cash 49.75 USD ~ 0.05 USD`, where the grammar wants `49.75 ~ 0.05 USD`), on the `balance` line | `syntax error, unexpected TILDE, expecting end of file or EOL` | `balance-tolerance-syntax.ts` |
+| `ZERO_UNITS_AT_COST` | a posting of zero units at a cost with a number (`0 VTI {5 USD}`, `0.00 VTI {0 USD}`), on the posting's line; `0 VTI {}`, a date or a label alone, and `0 EUR @ 1.1 USD` stay clean, as in stock | `Amount is zero: "0 VTI"` | `zero-units-at-cost.ts` |
 
-The table lists these two scans only. Other files that `engine.ts` calls
+The table lists these rules only. Other files that `engine.ts` calls
 reconcile what Beancount's booking (a sale from an AVERAGE position), its
 plugins (`noduplicates`, `coherent_cost`, `sellgains` and others) and its pad
 checks refuse where the engine does not, and those are not listed here.
+
+The engine books a zero-unit posting at cost as an empty lot (`0 VTI {5 USD,
+2026-09-01}` in BQL) and raises only the sibling rule, `E4005` "Cost is
+negative". Stock keeps that entry and its posting too, so the rule adds the
+error and changes no figure. It reads the stream as booked before plugins run,
+as stock checks it. Stock 3.2.3 stops with a `DivisionByZero` on a zero-unit
+total cost (`0 VTI {{5 USD}}`); the ledger reports this error there, beside the
+engine's own imbalance.
 
 The engine keeps a negative price's sign, so `10 EUR @ -1.10 USD` weighed
 -11.00 USD; it keeps a cost spec's first date, label and amount, and reads `{*}`

@@ -79,12 +79,17 @@ import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-s
 import { verifyBatchDeleteScale } from "./batch-delete-scale";
 import { verifyPatternLimits } from "./pattern-limits";
 import {
+  committingRepo,
   verifyDocumentEntryMove,
   verifyEntryMove,
   verifyEntryMoveWithKnownError,
   verifyOwnKeyUnderPushmeta,
   verifyScopedEntryMove,
 } from "./entry-move";
+import {
+  projectNewLedgerErrors,
+  refuseProjectedErrors,
+} from "@/features/ledger/utils/new-ledger-errors";
 import { verifyKnownCommodityErrors } from "./known-commodity-errors";
 import { verifyKnownLotErrors } from "./known-lot-errors";
 import { verifyKnownPlacedErrors } from "./known-placed-errors";
@@ -1349,6 +1354,130 @@ async function verifyStockOptionSpellings(): Promise<void> {
   );
   console.log(
     "✓ a scalar option set twice and Beancount's boolean spellings check as bean-check does (w31/139)",
+  );
+}
+
+/**
+ * w31/140: stock bean-check 3.2.3 refuses a posting held at cost whose units
+ * are zero, `Amount is zero: "0 VTI"` on the posting's line; the engine books
+ * it as an empty lot and reports nothing. An empty cost, and a price without
+ * one, stay clean as in stock, and a negative cost is the engine's own E4005.
+ */
+async function verifyZeroUnitsAtCost(): Promise<void> {
+  const MAIN = [
+    'option "operating_currency" "USD"',
+    "2026-01-01 open Assets:Cash USD",
+    "2026-01-01 open Assets:Eur",
+    "2026-01-01 open Assets:Broker",
+    "",
+  ].join("\n");
+  const BUY = [
+    '2026-08-01 * "qa" "buy"',
+    "  Assets:Broker  10 VTI {5 USD}",
+    "  Assets:Cash  -50 USD",
+    "",
+  ].join("\n");
+  const entry = (posting: string, other = "Assets:Cash  0 USD") =>
+    [
+      '2026-09-01 * "qa" "zero units at cost"',
+      `  ${posting}`,
+      `  ${other}`,
+      "",
+    ].join("\n");
+  const fixture = `${MAIN}${entry("Assets:Broker  0 VTI {5 USD}")}`;
+  const raw = await rawValidate({ "main.bean": fixture }, "main.bean");
+  assert(
+    raw.valid,
+    `the raw engine still books zero units at cost clean, so its rule is load-bearing (got ${JSON.stringify(raw.errors.map((e) => e.message))})`,
+  );
+  const rows: Array<[string, string, string, string[]]> = [
+    [
+      "zero units at cost",
+      "",
+      "Assets:Broker  0 VTI {5 USD}",
+      ['6 ZERO_UNITS_AT_COST Amount is zero: "0 VTI"'],
+    ],
+    [
+      "0.00 units at cost",
+      "",
+      "Assets:Broker  0.00 VTI {5 USD}",
+      ['6 ZERO_UNITS_AT_COST Amount is zero: "0.00 VTI"'],
+    ],
+    [
+      "a zero sale at the lot's cost",
+      BUY,
+      "Assets:Broker  0 VTI {5 USD}",
+      ['9 ZERO_UNITS_AT_COST Amount is zero: "0 VTI"'],
+    ],
+    ["a zero sale at an empty cost", BUY, "Assets:Broker  0 VTI {}", []],
+    ["a zero conversion at a price", "", "Assets:Eur  0 EUR @ 1.1 USD", []],
+  ];
+  for (const [label, before, posting, expected] of rows) {
+    const snapshot = await parseLedgerFiles(
+      { "main.bean": `${MAIN}${before}${entry(posting)}` },
+      "main.bean",
+    );
+    const errors = snapshot.errors
+      .filter((e) => e.severity === "error")
+      .map((e) => `${e.line} ${e.code} ${e.message}`);
+    deepStrictEqual(errors, expected, `${label}: ${JSON.stringify(errors)}`);
+    assert(
+      snapshot.valid === (expected.length === 0),
+      `${label} is ${expected.length === 0 ? "accepted" : "refused on its posting's line"}, as stock does`,
+    );
+  }
+  const negative = await parseLedgerFiles(
+    {
+      "main.bean": `${MAIN}${entry("Assets:Broker  2 VTI {-5 USD}", "Assets:Cash  10 USD")}`,
+    },
+    "main.bean",
+  );
+  assert(
+    negative.errors.map((e) => e.code).join() === "E4005",
+    `a negative cost is still the engine's own E4005, alone (got ${JSON.stringify(negative.errors.map((e) => e.message))})`,
+  );
+  const empty = await queryLedgerFiles(
+    { "main.bean": fixture },
+    "main.bean",
+    "SELECT position WHERE account = 'Assets:Broker'",
+  );
+  assert(
+    empty.rows.length === 1,
+    `the posting stays booked, as stock keeps it (got ${JSON.stringify(empty.rows)})`,
+  );
+
+  // Every write preview and gate diffs this error list.
+  const { factory } = committingRepo({ "main.bean": MAIN });
+  const service = new LedgerDataService(factory as never, {} as never);
+  const params = { ledgerId: "synthetic/zero-units", userId: undefined };
+  const projected = await projectNewLedgerErrors(
+    await service.checkProjectedErrors({
+      ...params,
+      overlays: [
+        {
+          path: "main.bean",
+          content: Buffer.from(fixture).toString("base64"),
+        },
+      ],
+    }),
+    () => service.getErrors(params),
+  );
+  assert(
+    projected.errorsBefore === 0 &&
+      projected.newErrors.length === 1 &&
+      projected.newErrors[0]?.message === 'Amount is zero: "0 VTI"' &&
+      projected.newErrors[0]?.source?.lineno === 6,
+    `a write appending it previews one new error on the posting's line (got ${JSON.stringify(projected)})`,
+  );
+  let refusal = "";
+  try {
+    refuseProjectedErrors(projected, "add");
+  } catch (error) {
+    refusal = (error as Error).message;
+  }
+  assert(
+    refusal.includes('Amount is zero: "0 VTI" (main.bean:6)'),
+    `the write is refused without allowInvalid, naming the posting (got ${JSON.stringify(refusal)})`,
   );
 }
 
@@ -5773,6 +5902,7 @@ async function main(): Promise<void> {
   await verifyWrittenReservedFlags();
   await verifyLoneElidedPosting();
   await verifyStockOptionSpellings();
+  await verifyZeroUnitsAtCost();
 
   // w23/011: an undecodable source the entry point does not reach changes
   // nothing; one it includes is reported by path, and the rest still parses.
