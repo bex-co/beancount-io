@@ -134,6 +134,40 @@ describe("collectAttributes", () => {
     expect(attrs.links).toEqual(["ref-1", "ref-2"]);
   });
 
+  it("collects the tags and links the parse restored on a note (w31/144)", () => {
+    const directives = [
+      {
+        type: "transaction",
+        date: "2026-02-01",
+        flag: "*",
+        payee: "qa",
+        narration: "fund",
+        tags: ["qa-trip"],
+        links: ["qa-link"],
+        postings: [],
+      },
+      {
+        type: "note",
+        date: "2026-03-05",
+        account: "Assets:Qa:Wallet",
+        comment: "qa note",
+        tags: ["qa-notetag"],
+        links: ["qa-notelink"],
+      },
+      // A note with no tags or links has neither field.
+      {
+        type: "note",
+        date: "2026-03-06",
+        account: "Assets:Qa:Wallet",
+        comment: "plain",
+      },
+    ] as DirectiveJson[];
+
+    const attributes = collectAttributes(directives);
+    expect(attributes.tags).toEqual(["qa-notetag", "qa-trip"]);
+    expect(attributes.links).toEqual(["qa-link", "qa-notelink"]);
+  });
+
   it("sorts tags and links with Python's case-sensitive ordering", () => {
     const directives: DirectiveJson[] = [
       {

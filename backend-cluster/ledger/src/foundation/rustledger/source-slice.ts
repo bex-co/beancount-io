@@ -308,6 +308,22 @@ export interface EntrySourceDetailsOptions {
  */
 export type SourceSyntax = { tags?: string[]; links?: string[] };
 
+/**
+ * Tags or links carried by a directive (transactions, documents, restored
+ * notes) — the one carrier rule behind the `#tag`, `^link`, `tag:`, and
+ * `link:` filters and the ledger's tag and link vocabularies (w31/144).
+ */
+export function directiveStringList(
+  directive: DirectiveJson,
+  field: "tags" | "links",
+): string[] {
+  if (directive.type === "transaction") return directive[field];
+  if (directive.type === "document" || directive.type === "note") {
+    return (directive as SourceSyntax)[field] ?? [];
+  }
+  return [];
+}
+
 /** Annotated parse input used to recover filename/line metadata in one parse. */
 export interface SourceDetailsProbe {
   files: FileMap;

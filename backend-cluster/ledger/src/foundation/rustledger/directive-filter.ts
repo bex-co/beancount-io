@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import type { DirectiveJson, PostingJson } from "@rustledger/wasm";
 import { MAX_PATTERN_LENGTH, patternRefusal } from "./pattern-complexity";
 import { getRustledgerWorkerPool } from "./rustledger-worker-pool";
-import type { SourceSyntax } from "./source-slice";
+import { directiveStringList } from "./source-slice";
 import { utcDate } from "./utc-date";
 import { bookedCostPerUnit } from "./lot-inventory";
 
@@ -719,22 +719,7 @@ function makeAmountMatcher(op: string, rawValue: string): FilterValueMatcher {
   };
 }
 
-/**
- * Tags or links carried by a directive (transactions, documents, restored
- * notes) — the one carrier rule behind `#tag`, `^link`, `tag:`, and `link:`.
- */
-function directiveStringList(
-  directive: DirectiveJson,
-  field: "tags" | "links",
-): string[] {
-  if (directive.type === "transaction") return directive[field];
-  if (directive.type === "document" || directive.type === "note") {
-    return (directive as SourceSyntax)[field] ?? [];
-  }
-  return [];
-}
-
-/** Match every directive type that carries tags (transactions and documents). */
+/** Match every directive type that carries tags (transactions, documents, notes). */
 function tagPredicate(tag: string): EntryPredicate {
   return (target): boolean => {
     if (target.kind !== "directive") return false;

@@ -3,6 +3,7 @@ import type { DirectiveJson, MetaValueJson } from "@rustledger/wasm";
 import { collectLedgerAccounts } from "./account-list";
 import { divideWithPythonDecimalContext } from "./decimal-context";
 import { documentFilePath } from "./document-validation";
+import { directiveStringList } from "./source-slice";
 
 /**
  * Pure directive-walk reports over a parsed `DirectiveJson[]` — the Tier-2
@@ -109,34 +110,24 @@ export function collectAttributes(
   const narrationRanker = new ExponentialDecayRanker();
 
   directives.forEach((directive) => {
-    switch (directive.type) {
-      case "transaction": {
-        if (directive.payee)
-          payeeRanker.update(directive.payee, directive.date);
-        if (directive.narration) {
-          narrationRanker.update(directive.narration, directive.date);
-        }
-        directive.tags.forEach((tag) => tags.add(tag));
-        directive.links.forEach((link) => links.add(link));
-        directive.postings.forEach((posting) => {
-          accountRanker.update(posting.account, directive.date);
-          if (posting.units) {
-            currencyRanker.update(posting.units.currency, directive.date);
-          }
-          if (posting.cost?.currency) {
-            currencyRanker.update(posting.cost.currency, directive.date);
-          }
-        });
-        break;
-      }
-      case "document": {
-        directive.tags?.forEach((tag) => tags.add(tag));
-        directive.links?.forEach((link) => links.add(link));
-        break;
-      }
-      default:
-        break;
+    // The filters' carrier rule, so a note's restored tags and links are
+    // listed as well as matched (w31/144).
+    directiveStringList(directive, "tags").forEach((tag) => tags.add(tag));
+    directiveStringList(directive, "links").forEach((link) => links.add(link));
+    if (directive.type !== "transaction") return;
+    if (directive.payee) payeeRanker.update(directive.payee, directive.date);
+    if (directive.narration) {
+      narrationRanker.update(directive.narration, directive.date);
     }
+    directive.postings.forEach((posting) => {
+      accountRanker.update(posting.account, directive.date);
+      if (posting.units) {
+        currencyRanker.update(posting.units.currency, directive.date);
+      }
+      if (posting.cost?.currency) {
+        currencyRanker.update(posting.cost.currency, directive.date);
+      }
+    });
   });
 
   // Python's `sorted()` is case-sensitive/code-point ordered; `localeCompare`

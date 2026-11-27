@@ -6691,6 +6691,32 @@ poptag #trip
   deepStrictEqual(tagged("#trip"), ["2024-02-01", "2024-02-02"]);
   console.log("✓ a note's tags and links, and pushed tags, reach the filters");
 
+  // w31/144: and the tag and link vocabularies list them, as Fava 1.31 does,
+  // including a tag only a pushtag puts on a note.
+  const vocabularySnapshot = await parseLedgerFiles(
+    {
+      "main.bean": `2026-01-02 open Assets:Qa:Wallet USD
+2026-01-02 open Assets:Bank:Checking USD
+2026-02-01 * "qa" "fund" #qa-trip ^qa-link
+  Assets:Qa:Wallet       50.00 USD
+  Assets:Bank:Checking  -50.00 USD
+2026-03-05 note Assets:Qa:Wallet "qa note" #qa-notetag ^qa-notelink
+pushtag #qa-pushed
+2026-03-06 note Assets:Qa:Wallet "pushed"
+poptag #qa-pushed
+`,
+    },
+    "main.bean",
+  );
+  assert(
+    vocabularySnapshot.errors.length === 0,
+    "the note vocabulary ledger loads cleanly",
+  );
+  const vocabulary = collectAttributes(vocabularySnapshot.directives);
+  deepStrictEqual(vocabulary.tags, ["qa-notetag", "qa-pushed", "qa-trip"]);
+  deepStrictEqual(vocabulary.links, ["qa-link", "qa-notelink"]);
+  console.log("✓ a note's tags and links, pushed ones too, reach the vocabularies");
+
   // w21/656: the engine still ignores raw mode, so the parse undoes its pad
   // and balance steps, and BQL (over the materialized stream) follows.
   const rawFiles = {
