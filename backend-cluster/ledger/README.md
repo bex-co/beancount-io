@@ -198,16 +198,24 @@ engine fills the column (w23/m19).
 
 ## Validation: stock errors the engine does not raise
 
-Three things stock `bean-check` refuses load without an error in the pinned
+These things stock `bean-check` refuses load without an error in the pinned
 engine (`@rustledger/wasm` 0.24.0), so `src/foundation/rustledger/stock-syntax-errors.ts`
 reports them at their line, in the same error list `checkLedger`, the post-write
-report and the write gates read (w23/240):
+report and the write gates read (w23/240, w31/120):
 
 | Code | Construct | Stock's message |
 | --- | --- | --- |
 | `SYNTAX` | an unquoted booking method on `open` (`open Assets:Stock ABC STRICT`) | `syntax error, unexpected CURRENCY` |
 | `DUPLICATE_COMMODITY` | a second `commodity` directive for a currency, on the later one | `Duplicate commodity directives for 'ZZZ'` |
 | `DUPLICATE_METADATA` | one metadata key twice on a transaction, or on a posting, at the transaction's line | `Duplicate metadata field on entry`, `Duplicate posting metadata field` |
+| `NEGATIVE_PRICE` | a negative per-unit or total price (`10 EUR @ -1.10 USD`), on the posting's line | `Negative prices are not allowed: -1.10 USD (see …)` |
+| `COST_MERGE` | a merge cost (`-5 HOOL {*}`), on the posting's line | `Cost merging is not supported yet`, `Duplicate merge-cost spec` |
+| `DUPLICATE_COST_COMPONENT` | a second amount, date or label in one `{…}`, on the posting's line | `Duplicate cost: …`, `Duplicate date: '2026-01-05'.`, `Duplicate label: 'b'.` |
+
+The engine keeps a negative price's sign, so `10 EUR @ -1.10 USD` weighed
+-11.00 USD; it keeps a cost spec's first date, label and amount, and reads `{*}`
+as an empty cost. Structured `addLedgerEntries` refuses a negative `price` or
+`totalPrice` before it reads a file (`src/api/entries.ts`).
 
 The scan is syntactic and abstains on doubt: it reads one block's own lines (a
 line inside a multi-line string is never a key), and a line that does not have a
@@ -221,11 +229,20 @@ accepted, where a repeated `"ab"`, number, date or currency is the error; a
 string with a backslash is left alone. Checked against stock 3.2.3 on 1,000
 random cases and the repository's 120 ledger fixtures with no difference.
 
+The posting rules (`posting-syntax-errors.ts`) read a posting line with stock's
+lexer (a `1,000.00` number, a `2026/1/5` date, a comma inside a label) and its
+posting grammar, and evaluate a price or cost expression (`@ (1-2.1) USD`) the
+way Python's `Decimal` does, so each message prints the number stock prints. A
+line stock refuses as a syntax error, or a label that spans lines, is left
+alone. Checked against stock 3.2.3 on 1,800 random postings and the 126 tracked
+ledger fixtures with no difference.
+
 `yarn verify:rustledger` pins each construct: it fails when the raw engine
-starts to reject one, which is the cue to delete that rule. The first is
-already a parse error in `@rustledger/wasm` 1.0.0-rc.18; the other two still
-load there. Moving to that release also changes the engine's API
-(`Ledger.fromFiles` becomes `ParsedLedger`), so it is not a drop-in bump.
+starts to reject one, which is the cue to delete that rule. The unquoted
+booking method is already a parse error in `@rustledger/wasm` 1.0.0-rc.18; the
+duplicate commodity and metadata key still load there. Moving to that release
+also changes the engine's API (`Ledger.fromFiles` becomes `ParsedLedger`), so it
+is not a drop-in bump.
 
 The write-side tools differ in the other direction: `appendLedgerText` is a line
 classifier and refuses a `YYYY/MM/DD` date and a quoted string that spans lines,

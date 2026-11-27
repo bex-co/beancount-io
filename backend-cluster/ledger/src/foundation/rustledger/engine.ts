@@ -850,8 +850,9 @@ async function parseLedgerFilesUncached(
   errors = locateDuplicateErrors(errors, files, entryPoint);
   errors = [...errors, ...duplicateEntryErrors(files, entryPoint)];
   errors = [...errors, ...midCurrencyToleranceErrors(files, entryPoint)];
-  // Stock refuses an unquoted booking method, a second commodity directive and
-  // a metadata key repeated on a transaction or posting; rustledger loads them.
+  // Stock refuses an unquoted booking method, a second commodity directive, a
+  // metadata key repeated on a transaction or posting, and a posting's negative
+  // price, merge cost or repeated cost component; rustledger loads them.
   errors = [...errors, ...stockSyntaxErrors(files, entryPoint)];
   errors = [...errors, ...coherentCostErrors(directives, files, entryPoint)];
   errors = [...errors, ...sellGainsErrors(directives, files, entryPoint)];

@@ -1,11 +1,12 @@
 import type { BeancountError, FileMap } from "@rustledger/wasm";
 import { indexBlocks } from "./block-index";
+import { postingSyntaxErrors } from "./posting-syntax-errors";
 import { SOURCE_DATE, sourceDateOf } from "./source-date";
 import { endsInsideString, loadedFiles } from "./source-slice";
 
 /**
- * Three things stock `bean-check` refuses that rustledger 0.24.0 loads without
- * a word (w23/240), reported at their line the way the mid-currency balance
+ * What stock `bean-check` refuses that rustledger 0.24.0 loads without a word
+ * (w23/240), reported at their line the way the mid-currency balance
  * tolerance is (w23/197), so every surface that reads the ledger's errors
  * (`checkLedger`, the post-write report, the entry-write gates) sees what
  * `bea check` or a Fava load would:
@@ -17,7 +18,10 @@ import { endsInsideString, loadedFiles } from "./source-slice";
  *  - the same metadata key twice on one transaction or on one posting
  *    (`Duplicate metadata field on entry`, `Duplicate posting metadata field`,
  *    on the transaction's line). Stock checks transactions only: a duplicate
- *    key on an `open` or `commodity` is accepted there, so it is here.
+ *    key on an `open` or `commodity` is accepted there, so it is here;
+ *  - a posting's negative price, merge cost `{*}`, or second amount, date or
+ *    label in one cost spec (w31/120), on the posting's line: see
+ *    `posting-syntax-errors.ts`.
  *
  * Syntactic and abstaining on doubt, like the tolerance scan: each rule reads
  * a block's own lines (strings are tracked, so a line inside a multi-line
@@ -111,6 +115,27 @@ const error = (
   severity: "error",
 });
 
+/**
+ * A transaction block's own body lines that hold a key or a posting, with
+ * their index: a line inside a multi-line string, a blank line, a comment and
+ * a tags line are neither. `key` is the key line's match, `null` on a posting.
+ */
+function* bodyLines(
+  lines: readonly string[],
+  firstBodyLine: number,
+): Generator<{ index: number; line: string; key: RegExpExecArray | null }> {
+  let inString = false;
+  for (let index = firstBodyLine; index < lines.length; index += 1) {
+    const line = lines[index]!;
+    const startedInString = inString;
+    inString = endsInsideString(line, inString);
+    if (startedInString) continue;
+    const text = line.trim();
+    if (text === "" || text.startsWith(";") || TAGS_LINE.test(line)) continue;
+    yield { index, line, key: META_KEY.exec(line) };
+  }
+}
+
 /** The duplicate keys a transaction block's own lines repeat, with their owner. */
 function duplicateMetadataKeys(
   lines: readonly string[],
@@ -121,15 +146,7 @@ function duplicateMetadataKeys(
   // opens; a key line after a posting belongs to that posting. Stock keeps the
   // first value of a key and compares every repeat with it.
   let owner = { posting: false, keys: new Map<string, Identity>() };
-  let inString = false;
-  for (let index = firstBodyLine; index < lines.length; index += 1) {
-    const line = lines[index]!;
-    const startedInString = inString;
-    inString = endsInsideString(line, inString);
-    if (startedInString) continue;
-    const text = line.trim();
-    if (text === "" || text.startsWith(";") || TAGS_LINE.test(line)) continue;
-    const found = META_KEY.exec(line);
+  for (const { line, key: found } of bodyLines(lines, firstBodyLine)) {
     if (found === null) {
       owner = { posting: true, keys: new Map() };
       continue;
@@ -202,9 +219,10 @@ export function stockSyntaxErrors(
       }
 
       if (TRANSACTION.test(header)) {
+        const firstBodyLine = block.headerEndLine - block.startLine + 1;
         for (const { key, posting } of duplicateMetadataKeys(
           lines,
-          block.headerEndLine - block.startLine + 1,
+          firstBodyLine,
         )) {
           errors.push(
             error(
@@ -215,6 +233,21 @@ export function stockSyntaxErrors(
               line,
             ),
           );
+        }
+        // Stock places a posting's cost and price errors on the posting.
+        for (const body of bodyLines(lines, firstBodyLine)) {
+          if (body.key !== null) continue;
+          for (const { code, message } of postingSyntaxErrors(body.line)) {
+            errors.push(
+              error(
+                message,
+                code,
+                "parse",
+                file,
+                block.startLine + body.index + 1,
+              ),
+            );
+          }
         }
       }
     }

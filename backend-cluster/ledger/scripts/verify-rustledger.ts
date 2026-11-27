@@ -2057,6 +2057,102 @@ async function main(): Promise<void> {
       `a ${first} balance before the open names the open date (got ${JSON.stringify(reported.errors.map((e) => `${e.line} ${e.message}`))})`,
     );
   }
+  // w31/120: stock's parser refuses a negative price, a merge cost and a
+  // repeated cost component, on the posting's line; the engine (0.24.0) loads
+  // each clean, and weighs `10 EUR @ -1.10 USD` as -11.00 USD. The raw-engine
+  // assertion says when it catches up: delete `posting-syntax-errors.ts`.
+  const postingLedger = (postings: string[]): Record<string, string> => ({
+    "main.beancount": [
+      "2026-01-01 open Assets:Cash",
+      "2026-01-01 open Assets:Broker",
+      '2026-09-01 * "buy"',
+      "  Assets:Broker  10 HOOL {5 USD, 2026-01-01}",
+      "  Assets:Cash  -50.00 USD",
+      '2026-09-01 * "buy2"',
+      "  Assets:Broker  10 HOOL {7 USD, 2026-01-02}",
+      "  Assets:Cash  -70.00 USD",
+      '2026-09-02 * "qa"',
+      ...postings.map((posting) => `  ${posting}`),
+      "",
+    ].join("\n"),
+  });
+  const postingRefused: Array<[string, string[], string, string]> = [
+    [
+      "a negative price",
+      ["Assets:Cash  10 EUR @ -1.10 USD", "Assets:Cash  11.00 USD"],
+      "NEGATIVE_PRICE",
+      "Negative prices are not allowed: -1.10 USD (see http://furius.ca/beancount/doc/bug-negative-prices for workaround)",
+    ],
+    [
+      "a negative total price",
+      ["Assets:Cash  10 EUR @@ -11.00 USD", "Assets:Cash  11.00 USD"],
+      "NEGATIVE_PRICE",
+      "Negative prices are not allowed: -11.00 USD (see http://furius.ca/beancount/doc/bug-negative-prices for workaround)",
+    ],
+    [
+      "a merge cost reducing two lots",
+      ["Assets:Broker  -5 HOOL {*}", "Assets:Cash  30.00 USD"],
+      "COST_MERGE",
+      "Cost merging is not supported yet",
+    ],
+    [
+      "a second lot date",
+      [
+        "Assets:Broker  10 HOOL {5 USD, 2026-01-01, 2026-01-05}",
+        "Assets:Cash",
+      ],
+      "DUPLICATE_COST_COMPONENT",
+      "Duplicate date: '2026-01-05'.",
+    ],
+    [
+      "a second lot label",
+      ['Assets:Broker  10 HOOL {5 USD, "a", "b"}', "Assets:Cash"],
+      "DUPLICATE_COST_COMPONENT",
+      "Duplicate label: 'b'.",
+    ],
+    [
+      "a second cost amount",
+      ["Assets:Broker  10 HOOL {5 USD, 6 USD}", "Assets:Cash"],
+      "DUPLICATE_COST_COMPONENT",
+      "Duplicate cost: 'CompoundAmount(number_per=Decimal('6'), number_total=None, currency='USD')'.",
+    ],
+  ];
+  for (const [label, postings, code, message] of postingRefused) {
+    const files = postingLedger(postings);
+    const raw = await rawValidate(files, "main.beancount");
+    assert(
+      raw.valid,
+      `the raw engine still loads ${label}, so the posting rule is load-bearing (got ${JSON.stringify(raw.errors.map((e) => e.message))})`,
+    );
+    const reported = await parseLedgerFiles(files, "main.beancount");
+    assert(
+      !reported.valid &&
+        reported.errors.some(
+          (e) =>
+            e.code === code &&
+            e.line === 10 &&
+            e.message === message &&
+            e.severity === "error",
+        ),
+      `${label} is reported on its posting's line, as stock refuses it (got ${JSON.stringify(reported.errors.map((e) => `${e.line} ${e.message}`))})`,
+    );
+  }
+  const postingAccepted = await parseLedgerFiles(
+    postingLedger([
+      "Assets:Cash  10 EUR @ 1.10 USD",
+      "Assets:Cash  -11.00 USD",
+      "Assets:Cash  10 EUR @ 0 USD",
+      "Assets:Cash  10 EUR @ -0 USD",
+      'Assets:Broker  10 HOOL {5 USD, 2026-01-01, "lot1"}',
+      "Assets:Broker  10 HOOL {5 # 1 USD}",
+      "Assets:Cash  -101.00 USD",
+    ]),
+    "main.beancount",
+  );
+  assert(
+    postingAccepted.valid,
+    `what stock accepts stays clean: a positive, zero or -0 price, a full cost spec, a compound cost (got ${JSON.stringify(postingAccepted.errors.map((e) => `${e.line} ${e.message}`))})`,
+  );
   // w23/199: a run of trailing terminators is empty statements stock
   // tolerates; every `;` has to go or the bare `FROM postings` tail resolves
   // as a column.

@@ -327,6 +327,67 @@ describe("bulk entries refuse amounts that are not decimals (w3/641)", () => {
     expect(committed).toHaveLength(1);
   });
 
+  // w31/120: stock refuses a negative price, and the engine weighed one with
+  // its sign, so a sign typo read as money received on both legs.
+  const exchange = (
+    key: "price" | "totalPrice",
+    number: unknown,
+    counter?: string,
+  ) => ({
+    type: "transaction",
+    item: {
+      date: "2026-09-01",
+      flag: "*",
+      postings: [
+        {
+          account: "Assets:Cash",
+          units: { number: "10", currency: "EUR" },
+          [key]: { number, currency: "USD" },
+        },
+        {
+          account: "Equity:Opening",
+          ...(counter !== undefined && {
+            units: { number: counter, currency: "USD" },
+          }),
+        },
+      ],
+    },
+  });
+
+  it.each([
+    ["price", "-1.10"],
+    ["totalPrice", "-11.00"],
+    ["price", "-1e-7"],
+    ["price", -2],
+  ] as const)(
+    "refuses a negative %s %p before reading a file, naming the posting",
+    async (key, number) => {
+      const response = await post([
+        transaction("1", "-1"),
+        exchange(key, number),
+      ]);
+      const body = (await response.json()) as Record<string, any>;
+      expect(response.status).toBe(400);
+      expect(body.error).toBe(
+        `entry 1: postings[0].${key}.number ${JSON.stringify(number)} is negative; Beancount allows no negative price, so write the rate as a positive number and put any sign on the units`,
+      );
+      expect(reads).toEqual([]);
+      expect(committed).toEqual([]);
+    },
+  );
+
+  it.each([
+    ["price", "1.10", "-11.00"],
+    ["price", "0", "0"],
+    ["price", "-0", "0"],
+    ["totalPrice", "-0.00", "0"],
+  ] as const)("still writes a %s of %s", async (key, number, counter) => {
+    const response = await post([exchange(key, number, counter)]);
+
+    expect(response.status).toBe(200);
+    expect(committed).toHaveLength(1);
+  });
+
   // w21/997: the engine holds 28 digits. At 29 it raises P0012, and a fraction
   // past 28 places is cut off, so neither is written.
   // It is a decimal number, so the refusal names the digits (w2/129).

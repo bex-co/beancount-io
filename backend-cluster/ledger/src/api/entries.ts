@@ -1,4 +1,5 @@
 import Router from "@koa/router";
+import BigNumber from "bignumber.js";
 import {
   authMiddleware,
   giteaClientForRequest,
@@ -215,6 +216,27 @@ function assertDecimalAmounts(rows: BulkEntryWire[]): void {
   });
 }
 
+/**
+ * Refuse a negative price or total price before a file is read, naming the
+ * posting: Beancount's parser refuses one (`Negative prices are not allowed`),
+ * and the engine weighed `10 EUR @ -1.10 USD` as -11.00 USD, so a sign typo
+ * read as money received on both legs (w31/120). Zero, `-0` included, is a
+ * price stock accepts.
+ */
+function assertNonNegativePrices(rows: BulkEntryWire[]): void {
+  rows.forEach((row, idx) => {
+    for (const [field, value] of rowNumbers(row)) {
+      if (!/\.(?:price|totalPrice)\.number$/u.test(field)) continue;
+      if (new BigNumber(String(value)).isLessThan(0)) {
+        throw new BadUserInputError(
+          `entry ${idx}: ${field} ${JSON.stringify(value)} is negative; Beancount allows no negative price, so write the rate as a positive number and put any sign on the units`,
+          field,
+        );
+      }
+    }
+  });
+}
+
 export function setEntriesHandler(router: Router): void {
   // operationId: addBulkEntries — POST /entries/{o}/{r}/bulk →
   // success({entry_hashes})
@@ -241,6 +263,7 @@ export function setEntriesHandler(router: Router): void {
         );
       }
       assertDecimalAmounts(rows);
+      assertNonNegativePrices(rows);
       assertEntryTokens(rows);
       assertNoControlCharacters(rows);
 
