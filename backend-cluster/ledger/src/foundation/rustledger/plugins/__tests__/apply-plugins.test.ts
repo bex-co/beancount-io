@@ -2,7 +2,7 @@ import type { DirectiveJson, LedgerOptions } from "@rustledger/wasm";
 import {
   applyPlugins,
   pluginError,
-  skippedPluginWarning,
+  skippedPluginError,
   type PluginFn,
 } from "../index";
 
@@ -162,9 +162,22 @@ describe("applyPlugins — per-plugin fault isolation", () => {
   });
 });
 
-describe("skippedPluginWarning", () => {
+describe("skippedPluginError", () => {
+  it("is an error on the plugin line, as stock's failed import is", () => {
+    expect(
+      skippedPluginError("fava.plugins.link_document", 2, "main.bean"),
+    ).toMatchObject({
+      code: "TS_PLUGIN_SKIPPED",
+      severity: "error",
+      phase: "plugin",
+      file: "main.bean",
+      line: 2,
+      hint: 'Did you mean "fava.plugins.link_documents"? Correct the declaration or remove the unsupported plugin.',
+    });
+  });
+
   it("suggests a nearby handled plugin name for likely typos", () => {
-    const warning = skippedPluginWarning(
+    const warning = skippedPluginError(
       "fava.plugins.amortize_ovr",
       3,
       "main.bean",
@@ -173,7 +186,7 @@ describe("skippedPluginWarning", () => {
   });
 
   it("keeps the generic remediation for unrelated plugin names", () => {
-    const warning = skippedPluginWarning(
+    const warning = skippedPluginError(
       "fava.plugins.custom_reporting",
       3,
       "main.bean",

@@ -54,13 +54,33 @@ describe("linkDocuments", () => {
     expect(linkedTxn.links).toEqual(["dok-2020-01-10"]);
   });
 
-  it("warns (does not error out) when a referenced document is not found", () => {
+  it("reports a referenced document that is not found as an error at the entry", () => {
+    // Fava raises a DocumentError at the entry; stock bean-check exits 1.
     const t = txn({ document: "missing.pdf" }, ["Assets:Bank"]);
+    const ids = buildEntryIdMap([t]);
+    seedDirectiveSourceIds(
+      [t],
+      new Map([[ids.get(t)!, { filename: "main.bean", lineno: 7 }]]),
+    );
     const { directives, errors } = linkDocuments([t], OPTS, CTX);
     expect(directives).toEqual([t]);
-    expect(errors).toHaveLength(1);
-    expect(errors[0].severity).toBe("warning");
-    expect(errors[0].message).toMatch(/Document not found: 'missing\.pdf'/);
+    expect(errors).toEqual([
+      expect.objectContaining({
+        message: "Document not found: 'missing.pdf'",
+        severity: "error",
+        phase: "plugin",
+        file: "main.bean",
+        line: 7,
+      }),
+    ]);
+  });
+
+  it("still reports a missing document as an error when the entry has no source", () => {
+    const t = txn({ document: "missing.pdf" }, ["Assets:Bank"]);
+    const { errors } = linkDocuments([t], OPTS, CTX);
+    expect(errors).toMatchObject([
+      { severity: "error", file: null, line: null },
+    ]);
   });
 
   it("does not match a document whose account is not one of the entry's accounts", () => {

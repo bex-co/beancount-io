@@ -5231,6 +5231,82 @@ async function main(): Promise<void> {
     `link_documents resolves one source-relative document (got ${linkedDocuments.length})`,
   );
 
+  // A `document:` that matches nothing is fava's DocumentError at the entry:
+  // stock bean-check exits 1 with `main.bean:7: Document not found: …`. It
+  // was an unlocated warning, so every check surface read the ledger as clean
+  // (w31/134).
+  const placed = (errors: readonly BeancountError[]) =>
+    JSON.stringify(
+      errors.map((error) => `${error.file}:${error.line} ${error.severity}`),
+    );
+  const missingDocumentSource = [
+    'option "operating_currency" "USD"',
+    'plugin "fava.plugins.link_documents"',
+    "",
+    "2026-01-01 open Assets:Cash USD",
+    "2026-01-01 open Expenses:Food USD",
+    "",
+    '2026-08-30 * "qa" "with a missing document"',
+    '  document: "qa-missing.pdf"',
+    "  Assets:Cash   -1.00 USD",
+    "  Expenses:Food  1.00 USD",
+  ].join("\n");
+  const missingDocument = await parseLedgerFiles(
+    { "main.bean": missingDocumentSource },
+    "main.bean",
+  );
+  const missingDocumentErrors = missingDocument.errors.filter((error) =>
+    error.message.startsWith("Document not found"),
+  );
+  assert(
+    !missingDocument.valid &&
+      missingDocumentErrors.length === 1 &&
+      missingDocumentErrors[0].message ===
+        "Document not found: 'qa-missing.pdf'" &&
+      missingDocumentErrors[0].severity === "error" &&
+      missingDocumentErrors[0].file === "main.bean" &&
+      missingDocumentErrors[0].line === 7,
+    `a missing linked document is an error at its entry (got ${placed(missingDocumentErrors)})`,
+  );
+
+  // A found document stays clean and linked, by basename and by path.
+  const foundDocument = await parseLedgerFiles(
+    {
+      "main.bean": [
+        'option "operating_currency" "USD"',
+        'option "documents" "documents"',
+        'plugin "fava.plugins.link_documents"',
+        "",
+        "2026-01-01 open Assets:Cash USD",
+        "2026-01-01 open Expenses:Food USD",
+        "",
+        '2026-09-01 * "qa" "by basename"',
+        '  document: "2026-08-31.found.pdf"',
+        "  Assets:Cash   -1.00 USD",
+        "  Expenses:Food  1.00 USD",
+        "",
+        '2026-09-02 * "qa" "by path"',
+        '  document: "documents/Assets/Cash/2026-08-31.found.pdf"',
+        "  Assets:Cash   -1.00 USD",
+        "  Expenses:Food  1.00 USD",
+      ].join("\n"),
+    },
+    "main.bean",
+    {
+      repoPaths: ["main.bean", "documents/Assets/Cash/2026-08-31.found.pdf"],
+    },
+  );
+  const foundLinks = foundDocument.directives.find(
+    (directive) => directive.type === "document",
+  )?.links;
+  assert(
+    foundDocument.valid &&
+      foundDocument.errors.length === 0 &&
+      JSON.stringify(foundLinks) ===
+        JSON.stringify(["dok-2026-09-01", "dok-2026-09-02"]),
+    `a found linked document stays clean and linked (got ${placed(foundDocument.errors)}; links ${JSON.stringify(foundLinks)})`,
+  );
+
   // Invalid BQL does NOT throw — rustledger reports it in QueryResult.errors
   // (the shell service maps these to BadUserInputError instead of returning an
   // empty successful table).
@@ -5320,13 +5396,42 @@ async function main(): Promise<void> {
     },
     "main.beancount",
   );
-  assert(
-    unsupportedSnap.valid,
-    "ledger with an unsupported fava plugin is still valid (not E8005)",
+  // Stock cannot import an unknown fava module and bean-check exits 1, as it
+  // does for an unknown `beancount.plugins.*` name (w31/134).
+  const unsupported = unsupportedSnap.errors.filter(
+    (e) => e.code === "TS_PLUGIN_SKIPPED",
   );
   assert(
-    unsupportedSnap.errors.some((e) => e.code === "TS_PLUGIN_SKIPPED"),
-    "unsupported fava plugin surfaces a friendly TS_PLUGIN_SKIPPED warning",
+    !unsupportedSnap.valid &&
+      unsupported.length === 1 &&
+      unsupported[0].severity === "error" &&
+      unsupported[0].file === "main.beancount" &&
+      unsupported[0].line === 1 &&
+      !unsupportedSnap.errors.some((e) => e.code === "E8005"),
+    `an unsupported fava plugin is a TS_PLUGIN_SKIPPED error on its line, not the raw E8005 (got ${placed(unsupportedSnap.errors)})`,
+  );
+  const misspelledPlugin = await parseLedgerFiles(
+    {
+      "main.bean": missingDocumentSource.replace(
+        "link_documents",
+        "link_document",
+      ),
+    },
+    "main.bean",
+  );
+  const misspelled = misspelledPlugin.errors.filter(
+    (e) => e.code === "TS_PLUGIN_SKIPPED",
+  );
+  assert(
+    !misspelledPlugin.valid &&
+      misspelled.length === 1 &&
+      misspelled[0].severity === "error" &&
+      misspelled[0].file === "main.bean" &&
+      misspelled[0].line === 2 &&
+      (misspelled[0].hint ?? "").includes(
+        'Did you mean "fava.plugins.link_documents"?',
+      ),
+    `a misspelled fava plugin is an error on its line with the nearest name (got ${placed(misspelled)})`,
   );
 
   // Document existence: the WASM has no filesystem, so its E8001/E7006 checks

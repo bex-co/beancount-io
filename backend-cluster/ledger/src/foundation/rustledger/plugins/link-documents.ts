@@ -15,7 +15,8 @@ import {
  * directives: each matched document gains a `dok-<entry-date>` link and a
  * `#linked` tag, and the entry (when it supports links — i.e. a transaction)
  * gains the same `dok-<entry-date>` link. A referenced document that matches
- * nothing yields a warning.
+ * nothing is an error at the referencing entry, as fava's `DocumentError` is:
+ * stock `bean-check` refuses the ledger.
  *
  * Matching mirrors the Python plugin: a bare basename uses basename + account
  * overlap, while every metadata path is also resolved relative to the source
@@ -80,9 +81,11 @@ export function linkDocuments(
       const exact = byFullname.get(resolveDirectivePath(entry, docName));
       if (exact !== undefined && !matches.includes(exact)) matches.push(exact);
       if (matches.length === 0) {
+        const source = getDirectiveSourceLocation(entry);
         errors.push(
           pluginError(`Document not found: '${docName}'`, {
-            severity: "warning",
+            file: source?.filename,
+            line: source?.lineno,
           }),
         );
         return;

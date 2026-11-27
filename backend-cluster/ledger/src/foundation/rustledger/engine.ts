@@ -37,7 +37,7 @@ import {
   restoreUnbookedDirectives,
   localTodayStr,
   neutralizeIncludedOptionsAndPlugins,
-  skippedPluginWarning,
+  skippedPluginError,
   stripFavaPlugins,
   type DirectiveSourceLocation,
 } from "./plugins";
@@ -532,7 +532,7 @@ function sourceHasTaggedDocument(files: FileMap): boolean {
  * the TS post-parse layer (`./plugins`): the returned `directives` are already
  * transformed, `valid` reflects post-strip validity, `directiveCount` is
  * recomputed from the transformed stream, and unsupported fava plugins surface a
- * friendly `TS_PLUGIN_SKIPPED` warning instead of the raw `E8005`. Native
+ * friendly `TS_PLUGIN_SKIPPED` error instead of the raw `E8005`. Native
  * beancount plugins (e.g. `auto_accounts`) are left for the WASM to run.
  *
  * **Snapshots are cached and SHARED across requests** (see the cache below):
@@ -786,12 +786,12 @@ async function parseLedgerFilesUncached(
       today: options.today ?? localTodayStr(),
     });
     directives = applied.directives;
-    const warnings = stripResult.stripped
+    const skipped = stripResult.stripped
       .filter((plugin) => !HANDLED_PLUGIN_NAMES.has(plugin.name))
       .map((plugin) =>
-        skippedPluginWarning(plugin.name, plugin.line, entryPoint),
+        skippedPluginError(plugin.name, plugin.line, entryPoint),
       );
-    const pluginErrors = [...applied.errors, ...warnings];
+    const pluginErrors = [...applied.errors, ...skipped];
     const revalidated = hasHandledPlugin
       ? await transformedValidationErrors(directives, files[entryPoint])
       : null;

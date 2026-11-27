@@ -99,7 +99,7 @@ export function localTodayStr(): string {
  * the plugins were declared (beancount runs plugins ordered, threading each
  * output into the next). Declared names not in the registry are skipped here
  * (native plugins already ran in the WASM; unsupported fava plugins are surfaced
- * as warnings by the caller via {@link skippedPluginWarning}).
+ * as errors by the caller via {@link skippedPluginError}).
  *
  * Each plugin invocation is fault-isolated: plugins transform user-authored
  * ledger data, so a thrown exception must degrade to a `phase: "plugin"` ledger
@@ -182,11 +182,12 @@ function sortPluginOutput(
 }
 
 /**
- * A friendly `severity: "warning"` error (code `TS_PLUGIN_SKIPPED`) for a
- * stripped fava plugin that has no TS reimplementation — shown to the user
- * instead of the raw engine `E8005`.
+ * The error (code `TS_PLUGIN_SKIPPED`) for a stripped fava plugin that has no
+ * TS reimplementation, on its `plugin` line, shown instead of the raw engine
+ * `E8005`. Stock cannot import the module, so `bean-check` refuses the ledger,
+ * as it does an unknown `beancount.plugins.*` name.
  */
-export function skippedPluginWarning(
+export function skippedPluginError(
   name: string,
   line: number,
   entryPoint: string,
@@ -196,7 +197,6 @@ export function skippedPluginWarning(
     `Plugin "${name}" is not supported by the in-process engine and was skipped; its effects were not applied.`,
     {
       code: "TS_PLUGIN_SKIPPED",
-      severity: "warning",
       file: entryPoint,
       line,
       hint:

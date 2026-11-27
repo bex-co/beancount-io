@@ -12,7 +12,7 @@ import type {
  * whose `getDirectives()` returns canned "parsed" directives, and assert the
  * orchestration: the `fava.plugins.*` line is stripped before parse, the TS
  * plugin transform runs on the parsed stream, unsupported plugins produce a
- * `TS_PLUGIN_SKIPPED` warning, and `directiveCount` reflects the transformed
+ * `TS_PLUGIN_SKIPPED` error, and `directiveCount` reflects the transformed
  * stream.
  */
 
@@ -349,7 +349,7 @@ describe("parseLedgerFiles — plugin orchestration (stubbed WASM)", () => {
     ).toBeUndefined();
   });
 
-  it("emits a TS_PLUGIN_SKIPPED warning for a stripped-but-unhandled fava plugin", async () => {
+  it("refuses a stripped-but-unhandled fava plugin with a TS_PLUGIN_SKIPPED error", async () => {
     parsedDirectives = [openCash];
     const source = [
       'plugin "fava.plugins.some_unsupported"',
@@ -362,9 +362,12 @@ describe("parseLedgerFiles — plugin orchestration (stubbed WASM)", () => {
     );
 
     expect(rawFilesSeenByWasm["main.bean"]).not.toMatch(/fava\.plugins/);
-    const warning = snapshot.errors.find((e) => e.code === "TS_PLUGIN_SKIPPED");
-    expect(warning?.severity).toBe("warning");
-    expect(warning?.line).toBe(1);
+    const skipped = snapshot.errors.find((e) => e.code === "TS_PLUGIN_SKIPPED");
+    expect(skipped?.severity).toBe("error");
+    expect(skipped?.file).toBe("main.bean");
+    expect(skipped?.line).toBe(1);
+    // Stock bean-check cannot import the module and exits 1.
+    expect(snapshot.valid).toBe(false);
   });
 
   it("takes the fast path (no strip) when only native plugins are declared", async () => {
