@@ -740,16 +740,20 @@ include that already covers it needs nothing (w23/062). The same applies to
 them appended, and says so in `appendedUnsorted`.
 
 Before committing, it bean-checks the projected ledger. The ledger's check is
-stock beancount's, plus the three refusals stock makes that the engine does not
-(w23/240): an unquoted booking method (`open Assets:Stock ABC STRICT`, where the
-grammar wants `"STRICT"`), a second `commodity` directive for one currency, and
-a metadata key repeated on one transaction or one posting. Each is reported at
-its line like any bean-check error. Stock tests a repeat by object identity, so
-it accepts a repeated `TRUE`, a repeated one-character string or a repeated
-account name, and so does the ledger; a repeated key on an `open` or
-`commodity` is accepted by both. New errors are a
-refusal — `UNBALANCED` when a transaction does not balance — unless
-`allowInvalid` records them deliberately. `dry_run` returns the unified diff
+stock beancount's: where the pinned engine loads text stock `bean-check`
+refuses, the ledger reports stock's error itself, at its line, like any
+bean-check error. Among those constructs are an unquoted booking method
+(`open Assets:Stock ABC STRICT`, where the grammar wants `"STRICT"`), a second
+`commodity` directive for one currency, a metadata key repeated on one
+transaction or one posting, a negative price (`10 EUR @ -1.10 USD`) and an
+account with a colon after it (`Assets:Cash:`). The ledger lists them, with
+stock's message for each, under
+[stock errors the engine does not raise](../../ledger/README.md#validation-stock-errors-the-engine-does-not-raise).
+Stock tests a repeated key by object identity, so it accepts a repeated
+`TRUE`, a repeated one-character string or a repeated account name, and so does
+the ledger; a repeated key on an `open` or `commodity` is accepted by both.
+New errors are a refusal — `UNBALANCED` when a transaction does not balance —
+unless `allowInvalid` records them deliberately. `dry_run` returns the unified diff
 and the projected errors without committing, with `valid: false` when there are
 new errors: every write preview (`appendLedgerText`, `addLedgerEntries`, the
 `…LedgerFiles` tools) reports errors instead of refusing and carries `valid`,
