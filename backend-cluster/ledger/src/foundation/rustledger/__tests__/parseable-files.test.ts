@@ -2,6 +2,7 @@ import {
   commentSkippedLines,
   parseableFiles,
   withLeadingZeros,
+  withStockToleranceFromCost,
 } from "../parseable-files";
 
 /**
@@ -103,6 +104,68 @@ describe("withLeadingZeros", () => {
       "  A  0.5 USD",
     );
     const plain = { "main.bean": "  A  0.5 USD" };
+    expect(parseableFiles(plain, "main.bean")).toBe(plain);
+  });
+});
+
+// w31/139: Beancount reads `on` as true and any other value it does not know
+// as false; rustledger refused both and left the flag off.
+describe("withStockToleranceFromCost", () => {
+  const option = (value: string) =>
+    `option "infer_tolerance_from_cost" "${value}"`;
+
+  it("writes a value the engine refuses as the TRUE or FALSE Beancount reads", () => {
+    for (const value of ["on", "ON", "On"]) {
+      expect(withStockToleranceFromCost(option(value))).toBe(option("TRUE"));
+    }
+    for (const value of ["yes", "YES", "maybe", "off", "", " 1", "01"]) {
+      expect(withStockToleranceFromCost(option(value))).toBe(option("FALSE"));
+    }
+    expect(
+      withStockToleranceFromCost(
+        '  option   "infer_tolerance_from_cost" "on" ; x',
+      ),
+    ).toBe('  option   "infer_tolerance_from_cost" "TRUE" ; x');
+  });
+
+  it("leaves a value both engines read alike, and every other option, alone", () => {
+    const source = [
+      option("TRUE"),
+      option("true"),
+      option("False"),
+      option("1"),
+      option("0"),
+      'option "render_commas" "on"',
+      'option "title" "infer_tolerance_from_cost"',
+      "",
+    ].join("\n");
+    expect(withStockToleranceFromCost(source)).toBe(source);
+  });
+
+  it("leaves a comment, a multi-line string and an escaped value alone", () => {
+    const source = [
+      `; ${option("on")}`,
+      '2024-01-01 note Assets:Cash "first line',
+      option("on"),
+      'last line"',
+      'option "infer_tolerance_from_cost" "o\\n"',
+      'option "infer_tolerance_from_cost" "two',
+      'lines"',
+      "",
+    ].join("\n");
+    expect(withStockToleranceFromCost(source)).toBe(source);
+  });
+
+  it("is applied to the files the engine parses, includes too", () => {
+    const files = {
+      "main.bean": `${option("on")}\ninclude "b.bean"\n`,
+      "b.bean": `${option("maybe")}\n`,
+    };
+    expect(parseableFiles(files, "main.bean")).toEqual({
+      "main.bean": `${option("TRUE")}\ninclude "b.bean"\n`,
+      "b.bean": `${option("FALSE")}\n`,
+    });
+    const plain = { "main.bean": `${option("TRUE")}\n` };
     expect(parseableFiles(plain, "main.bean")).toBe(plain);
   });
 });

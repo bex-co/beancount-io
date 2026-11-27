@@ -72,12 +72,42 @@ export function leadingDotOffsets(source: string): number[] {
   return offsets;
 }
 
+const TOLERANCE_FROM_COST_RE =
+  /^[ \t]*option[ \t]*"infer_tolerance_from_cost"/mu;
+const TOLERANCE_FROM_COST_OR_TOKEN_RE =
+  /^([ \t]*option[ \t]*"infer_tolerance_from_cost"[ \t]*)"([^"\\\n]*)"|"(?:[^"\\]|\\.)*"|;[^\n]*/gmu;
+
+/**
+ * `source` with each `option "infer_tolerance_from_cost"` value the engine
+ * refuses written as the `TRUE` or `FALSE` Beancount reads it as. Beancount
+ * has no converter for this option: its `option()` reads `true` or `on` in
+ * any case, or `1`, as true and every other value as false, with no error.
+ * rustledger 0.24 takes `true` or `false` in any case, `1` or `0`, and
+ * leaves the flag off for anything else, so `on` lost the cost tolerance a
+ * buy needs to balance (w31/139). Strings and `;` comments are matched whole,
+ * so an option line inside a multi-line string is left as it is; a value with
+ * an escape or a line break is not rewritten, so no line moves.
+ */
+export function withStockToleranceFromCost(source: string): string {
+  if (!TOLERANCE_FROM_COST_RE.test(source)) return source;
+  return source.replace(
+    TOLERANCE_FROM_COST_OR_TOKEN_RE,
+    (token, head: string | undefined, value: string | undefined) => {
+      if (head === undefined || value === undefined) return token;
+      const lower = value.toLowerCase();
+      if (["true", "false", "1", "0"].includes(lower)) return token;
+      return `${head}"${lower === "on" ? "TRUE" : "FALSE"}"`;
+    },
+  );
+}
+
 /**
  * The files the engine parses: undecodable sources read as empty files, lines
  * Beancount skips read as comments, a number without its leading zero given
- * one, and a hidden file no include reaches is
- * left out, since the engine's glob matches `y/.draft.bean` for
- * `include "y/*.bean"` where Beancount's skips it (w21/657).
+ * one, `infer_tolerance_from_cost` spelled as Beancount reads it, and a hidden
+ * file no include reaches is left out, since the engine's glob matches
+ * `y/.draft.bean` for `include "y/*.bean"` where Beancount's skips it
+ * (w21/657).
  */
 export function parseableFiles(files: FileMap, entryPoint: string): FileMap {
   const hidden = Object.keys(files).some(isHiddenRepoPath);
@@ -94,7 +124,9 @@ export function parseableFiles(files: FileMap, entryPoint: string): FileMap {
     const text =
       content === UNDECODABLE_SOURCE
         ? ""
-        : withLeadingZeros(commentSkippedLines(content));
+        : withStockToleranceFromCost(
+            withLeadingZeros(commentSkippedLines(content)),
+          );
     if (text !== content) changed = true;
     parseable[path] = text;
   }

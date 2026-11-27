@@ -17,13 +17,31 @@ import type { BeancountError } from "@rustledger/wasm";
  * - `[E7007] Option 'account_rounding' is accepted for compatibility but has no
  *   effect`: a compatibility notice, not an error. It is kept, as a warning.
  *
- * Neither error carries a source line (their `code` is null; the code is a tag
- * in the message), so they are told apart by that tag, as the document checks
- * are.
+ * Two more spellings `bean-check` loads without a word read red (w31/139):
+ *
+ * - `[E7003] Option "title" is set more than once; the last value wins`.
+ *   Beancount's `option()` overwrites a scalar option and reports nothing, and
+ *   the engine applies the last value too. It is kept, as a warning.
+ * - `[E7002] Invalid value "yes" for option "render_commas": expected TRUE,
+ *   FALSE, 1 or 0`, and the same for `infer_tolerance_from_cost`. Beancount
+ *   reads any value of these two without an error (`render_commas` is true
+ *   for `1`, `true` or `yes`, `infer_tolerance_from_cost` for `1`, `true` or
+ *   `on`), so the error is dropped. `parseableFiles` hands the engine the
+ *   second as Beancount reads it, since `on` changes the books; this rule
+ *   catches a value it leaves. Every other E7002 (a bad booking method, a bad
+ *   decimal) stays.
+ *
+ * None of these errors carries a source line (their `code` is null; the code
+ * is a tag in the message), so they are told apart by that tag, as the
+ * document checks are.
  */
 
 const INVALID_LEAF = /^\[E7002\] Invalid leaf account name: '([^']*)'/u;
 const NO_EFFECT = "[E7007] Option '";
+const SET_TWICE =
+  /^\[E7003\] Option "[^"]*" is set more than once; the last value wins$/u;
+const STOCK_BOOLEAN =
+  /^\[E7002\] Invalid value "[\s\S]*" for option "(?:render_commas|infer_tolerance_from_cost)": expected TRUE, FALSE, 1 or 0$/u;
 
 /** A valid Beancount account component, as the grammar allows it. */
 const ACCOUNT_COMPONENT = /^[\p{Lu}\p{Lt}\p{Lo}\p{Nd}][\p{L}\p{M}\p{Nd}-]*$/u;
@@ -34,7 +52,8 @@ export function reconcileOptionErrors(
   return errors.flatMap((error): BeancountError[] => {
     const leaf = INVALID_LEAF.exec(error.message)?.[1];
     if (leaf !== undefined && ACCOUNT_COMPONENT.test(leaf)) return [];
-    if (error.message.startsWith(NO_EFFECT)) {
+    if (STOCK_BOOLEAN.test(error.message)) return [];
+    if (error.message.startsWith(NO_EFFECT) || SET_TWICE.test(error.message)) {
       return [{ ...error, severity: "warning" }];
     }
     return [error];

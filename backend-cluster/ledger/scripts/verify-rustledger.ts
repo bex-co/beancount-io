@@ -61,6 +61,7 @@ import {
 } from "@/features/ledger/service/ledger-shell-service";
 import { UNDECODABLE_SOURCE } from "@/foundation/rustledger/file-map-loader";
 import { filterDirectives } from "@/foundation/rustledger/directive-filter";
+import { loadRustledger } from "@/foundation/rustledger/loader";
 import { singleFileRepoFactory } from "./single-file-repo";
 import { verifyBqlOracle } from "./bql-oracle/replay-bql-oracle";
 import { verifyReportOracle } from "./bql-oracle/replay-report-oracle";
@@ -1226,6 +1227,129 @@ async function verifyLoneElidedPosting(): Promise<void> {
       `${label} is ${valid ? "accepted" : "refused"}, as stock does (got ${JSON.stringify(checked.errors.map((e) => e.message))})`,
     );
   }
+}
+
+/**
+ * w31/139: stock bean-check 3.2.3 keeps the last value of a scalar option set
+ * twice, and reads any value of `render_commas` and
+ * `infer_tolerance_from_cost` (`on` turns the second one on), all without a
+ * word. The engine refuses each; the rows here check clean or refuse as stock
+ * does.
+ */
+async function verifyStockOptionSpellings(): Promise<void> {
+  const ledger = (...options: string[]) => ({
+    "main.bean": [
+      'option "title" "QA"',
+      'option "operating_currency" "USD"',
+      ...options,
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Assets:Brokerage VTI,USD",
+      '2026-01-02 * "Buy"',
+      "  Assets:Brokerage  10.0 VTI {1.0001 USD}",
+      "  Assets:Cash  -10.03 USD",
+      "",
+    ].join("\n"),
+  });
+  // The cost widens the tolerance to about 0.05 USD only with the flag on.
+  const on = ['option "infer_tolerance_from_cost" "TRUE"'];
+  const mod = await loadRustledger();
+  const raw = mod.Ledger.fromFiles(
+    ledger(
+      'option "title" "qa second title"',
+      'option "render_commas" "yes"',
+      'option "infer_tolerance_from_cost" "on"',
+    ),
+    "main.bean",
+  );
+  const rawErrors = raw.getErrors().map((error) => error.message);
+  raw.free();
+  for (const expected of [
+    '[E7003] Option "title" is set more than once; the last value wins',
+    '[E7002] Invalid value "yes" for option "render_commas": expected TRUE, FALSE, 1 or 0',
+    '[E7002] Invalid value "on" for option "infer_tolerance_from_cost": expected TRUE, FALSE, 1 or 0',
+  ]) {
+    assert(
+      rawErrors.includes(expected),
+      `the raw engine still reports ${expected}, so its rule is load-bearing (got ${JSON.stringify(rawErrors)})`,
+    );
+  }
+  assert(
+    rawErrors.some((message) => message.includes("does not balance")),
+    `the raw engine still leaves infer_tolerance_from_cost "on" off (got ${JSON.stringify(rawErrors)})`,
+  );
+  for (const [label, options, valid] of [
+    [
+      "booking_method set twice",
+      [
+        'option "booking_method" "FIFO"',
+        'option "booking_method" "LIFO"',
+        ...on,
+      ],
+      true,
+    ],
+    [
+      "name_income set twice",
+      ['option "name_income" "Income"', 'option "name_income" "Income"', ...on],
+      true,
+    ],
+    [
+      "render_commas yes, no and maybe",
+      [
+        'option "render_commas" "yes"',
+        'option "render_commas" "no"',
+        'option "render_commas" "maybe"',
+        ...on,
+      ],
+      true,
+    ],
+    ["the title set twice", ['option "title" "qa second title"', ...on], true],
+    [
+      "infer_tolerance_from_cost on",
+      ['option "infer_tolerance_from_cost" "on"'],
+      true,
+    ],
+    ["infer_tolerance_from_cost TRUE", on, true],
+    // Stock reads `yes` as false here, so the buy does not balance.
+    [
+      "infer_tolerance_from_cost yes",
+      ['option "infer_tolerance_from_cost" "yes"'],
+      false,
+    ],
+    ["booking_method BOGUS", ['option "booking_method" "BOGUS"', ...on], false],
+    [
+      "inferred_tolerance_multiplier abc",
+      ['option "inferred_tolerance_multiplier" "abc"', ...on],
+      false,
+    ],
+  ] as const) {
+    const checked = await parseLedgerFiles(ledger(...options), "main.bean");
+    const errors = checked.errors.filter((e) => e.severity === "error");
+    assert(
+      checked.valid === valid && (errors.length === 0) === valid,
+      `${label} is ${valid ? "accepted" : "refused"}, as stock does (got ${JSON.stringify(checked.errors.map((e) => `${e.severity} ${e.code} ${e.message}`))})`,
+    );
+  }
+  const yes = await parseLedgerFiles(
+    ledger('option "infer_tolerance_from_cost" "yes"'),
+    "main.bean",
+  );
+  assert(
+    yes.errors.every((e) => e.code === "E3001"),
+    `infer_tolerance_from_cost "yes" reports only the unbalanced buy, as stock does (got ${JSON.stringify(yes.errors.map((e) => e.message))})`,
+  );
+  const repeated = await parseLedgerFiles(
+    ledger('option "title" "qa second title"', ...on),
+    "main.bean",
+  );
+  assert(
+    repeated.errors.some(
+      (e) => e.severity === "warning" && e.code === "E7003" && e.line === 3,
+    ),
+    `a repeated option stays listed as a warning on its later line (got ${JSON.stringify(repeated.errors)})`,
+  );
+  console.log(
+    "✓ a scalar option set twice and Beancount's boolean spellings check as bean-check does (w31/139)",
+  );
 }
 
 async function verifyMultilineSources(): Promise<void> {
@@ -5648,6 +5772,7 @@ async function main(): Promise<void> {
   await verifyDocumentDiscovery();
   await verifyWrittenReservedFlags();
   await verifyLoneElidedPosting();
+  await verifyStockOptionSpellings();
 
   // w23/011: an undecodable source the entry point does not reach changes
   // nothing; one it includes is reported by path, and the rest still parses.

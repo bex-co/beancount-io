@@ -57,6 +57,54 @@ describe("reconcileOptionErrors", () => {
     ]);
   });
 
+  // w31/139: bean-check overwrites a scalar option set twice and reports
+  // nothing; the engine applies the last value too.
+  it("downgrades a repeated scalar option to a warning", () => {
+    for (const name of ["title", "booking_method", "name_income"]) {
+      const repeated = error(
+        `[E7003] Option "${name}" is set more than once; the last value wins`,
+      );
+      expect(reconcileOptionErrors([repeated])).toEqual([
+        { ...repeated, severity: "warning" },
+      ]);
+    }
+  });
+
+  // w31/139: bean-check reads any value of these two booleans without error.
+  it("drops E7002 for a boolean spelling Beancount reads", () => {
+    for (const [name, value] of [
+      ["render_commas", "yes"],
+      ["render_commas", "no"],
+      ["render_commas", "on"],
+      ["infer_tolerance_from_cost", "maybe"],
+      ["infer_tolerance_from_cost", "yes"],
+      ["infer_tolerance_from_cost", ""],
+    ]) {
+      expect(
+        reconcileOptionErrors([
+          error(
+            `[E7002] Invalid value "${value}" for option "${name}": expected TRUE, FALSE, 1 or 0`,
+          ),
+        ]),
+      ).toEqual([]);
+    }
+  });
+
+  it("keeps every other invalid option value", () => {
+    const kept = [
+      error(
+        '[E7002] Invalid value "BOGUS" for option "booking_method": expected one of STRICT, STRICT_WITH_SIZE, FIFO, LIFO, HIFO, AVERAGE, NONE',
+      ),
+      error(
+        '[E7002] Invalid value "abc" for option "inferred_tolerance_multiplier": expected decimal number',
+      ),
+      error(
+        '[E7002] Invalid value "yes" for option "some_other_flag": expected TRUE, FALSE, 1 or 0',
+      ),
+    ];
+    expect(reconcileOptionErrors(kept)).toEqual(kept);
+  });
+
   it("leaves every other error alone, in order", () => {
     const others = [
       error("[E7006] Document root 'x' does not exist"),
