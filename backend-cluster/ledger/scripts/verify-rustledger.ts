@@ -12,7 +12,12 @@
 import { deepStrictEqual, rejects } from "node:assert";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { BeancountError, CellValue, FileMap } from "@rustledger/wasm";
+import type {
+  BeancountError,
+  CellValue,
+  DirectiveJson,
+  FileMap,
+} from "@rustledger/wasm";
 import {
   buildEntryIdMap,
   collectAttributes,
@@ -1121,6 +1126,106 @@ async function verifyWrittenReservedFlags(): Promise<void> {
   console.log(
     "✓ entries written with reserved flags are listed and exported (w21/745)",
   );
+}
+
+/**
+ * w31/138: stock bean-check 3.2.3 drops a transaction's only posting when it
+ * has no amount and reports nothing; the engine reports `BOOK` "cannot infer
+ * currency". Each control here is refused or accepted as stock does it.
+ */
+async function verifyLoneElidedPosting(): Promise<void> {
+  const ledger = (...entry: string[]) => ({
+    "main.bean": [
+      'option "operating_currency" "USD"',
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Assets:Bank:Checking USD",
+      "2026-01-01 open Expenses:Food:Coffee USD",
+      "",
+      ...entry,
+      "",
+    ].join("\n"),
+  });
+  const lone = '2026-09-07 * "qa" "single elided posting"\n  Assets:Cash';
+  const files = ledger(lone);
+  const raw = await rawValidate(files, "main.bean");
+  assert(
+    raw.errors.some(
+      (e) =>
+        e.code === "BOOK" &&
+        e.message.startsWith("interpolation failed: cannot infer currency"),
+    ),
+    `the raw engine still refuses a lone elided posting, so its rule is load-bearing (got ${JSON.stringify(raw.errors.map((e) => e.message))})`,
+  );
+  const snapshot = await parseLedgerFiles(files, "main.bean");
+  const entry = snapshot.directives.find(
+    (d) => d.type === "transaction",
+  ) as Extract<DirectiveJson, { type: "transaction" }>;
+  assert(
+    snapshot.valid &&
+      !snapshot.errors.some((e) => e.severity === "error") &&
+      entry.postings.length === 0,
+    `a lone elided posting is dropped and checks clean, as stock does (got ${JSON.stringify(snapshot.errors.map((e) => e.message))}, ${entry.postings.length} postings)`,
+  );
+  const journal = new LedgerJournalService(
+    singleFileRepoFactory(files["main.bean"]) as never,
+    {} as never,
+  );
+  const params = { ledgerId: "synthetic/lone-elided", userId: undefined };
+  const row = (await journal.getJournal(params)).data.find(
+    (item) => item.narration === "single elided posting",
+  ) as unknown as { entry_hash: string } | undefined;
+  const context =
+    row === undefined
+      ? undefined
+      : await journal.getContext({ ...params, entryHash: row.entry_hash });
+  assert(
+    context?.slice === lone,
+    `the entry booked without its posting still opens its own text (got ${JSON.stringify(context?.slice)})`,
+  );
+  const rows = await queryLedgerFiles(
+    files,
+    "main.bean",
+    "SELECT date, account, position WHERE payee = 'qa'",
+  );
+  assert(
+    rows.rows.length === 0,
+    `BQL returns no posting for it, as bean-query does (got ${JSON.stringify(rows.rows)})`,
+  );
+  for (const [label, entryLines, valid] of [
+    [
+      "an elided posting beside a zero one",
+      [
+        '2026-09-07 * "qa" "zero"',
+        "  Assets:Cash",
+        "  Expenses:Food:Coffee 0 USD",
+      ],
+      true,
+    ],
+    [
+      "a pair of elided postings",
+      ['2026-09-07 * "qa" "two"', "  Assets:Cash", "  Assets:Bank:Checking"],
+      false,
+    ],
+    [
+      "a lone elided posting with a price",
+      ['2026-09-07 * "qa" "priced"', "  Assets:Cash @ 1 EUR"],
+      false,
+    ],
+    [
+      "a lone elided posting at cost",
+      ['2026-09-07 * "qa" "costed"', "  Assets:Cash {1 EUR}"],
+      false,
+    ],
+  ] as const) {
+    const checked = await parseLedgerFiles(
+      ledger(...entryLines),
+      "main.bean",
+    );
+    assert(
+      checked.valid === valid,
+      `${label} is ${valid ? "accepted" : "refused"}, as stock does (got ${JSON.stringify(checked.errors.map((e) => e.message))})`,
+    );
+  }
 }
 
 async function verifyMultilineSources(): Promise<void> {
@@ -5542,6 +5647,7 @@ async function main(): Promise<void> {
   await verifyDocumentSourcePaths();
   await verifyDocumentDiscovery();
   await verifyWrittenReservedFlags();
+  await verifyLoneElidedPosting();
 
   // w23/011: an undecodable source the entry point does not reach changes
   // nothing; one it includes is reported by path, and the rest still parses.

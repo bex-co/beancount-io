@@ -140,6 +140,74 @@ export function unbookedTransactions(
   });
 }
 
+/** The engine's message for an elided posting it found no currency for. */
+const NO_CURRENCY =
+  /^interpolation failed: cannot infer currency for posting to account (\S+) \((\d{4}-\d{2}-\d{2}), "((?:[^"\\]|\\.)*)"\)$/u;
+
+/** The account of a transaction's only posting when it has no amount, cost or price. */
+function loneElidedAccount(directive: DirectiveJson): string | undefined {
+  if (directive.type !== "transaction" || directive.postings.length !== 1) {
+    return undefined;
+  }
+  const [posting] = directive.postings;
+  return posting.units == null && posting.cost == null && posting.price == null
+    ? posting.account
+    : undefined;
+}
+
+/**
+ * The transactions whose only posting has no amount, and the `BOOK` errors the
+ * engine reports for them. Stock interpolation fills an elided posting from
+ * the transaction's residual. With no other posting there is no residual, so
+ * stock drops the posting and reports nothing: the entry loads with no
+ * postings. The engine reports "cannot infer currency" instead (w31/138).
+ *
+ * An error is paired with its transaction by date, narration and account.
+ * A key is taken only when its transactions and errors are as many, as in
+ * {@link unbookedTransactions}. A posting with a cost or a price is left
+ * alone: stock cannot resolve its units either and refuses it.
+ */
+export function loneElidedTransactions(
+  errors: readonly BeancountError[],
+  directives: readonly DirectiveJson[],
+): { transactions: Set<DirectiveJson>; errors: Set<BeancountError> } {
+  const byKey = new Map<
+    string,
+    { errors: BeancountError[]; transactions: DirectiveJson[] }
+  >();
+  const slot = (key: string) => {
+    const found = byKey.get(key) ?? { errors: [], transactions: [] };
+    byKey.set(key, found);
+    return found;
+  };
+  for (const error of errors) {
+    if (error.code !== "BOOK") continue;
+    const match = NO_CURRENCY.exec(error.message.trim());
+    if (!match) continue;
+    slot(
+      `${entryKey(match[2], unescape(match[3]))}\u0000${match[1]}`,
+    ).errors.push(error);
+  }
+  const found = {
+    transactions: new Set<DirectiveJson>(),
+    errors: new Set<BeancountError>(),
+  };
+  if (byKey.size === 0) return found;
+  for (const directive of directives) {
+    const account = loneElidedAccount(directive);
+    if (account === undefined) continue;
+    const narration = (directive as { narration?: string | null }).narration;
+    const key = `${entryKey(directive.date, narration ?? "")}\u0000${account}`;
+    byKey.get(key)?.transactions.push(directive);
+  }
+  for (const pair of byKey.values()) {
+    if (pair.errors.length !== pair.transactions.length) continue;
+    pair.errors.forEach((error) => found.errors.add(error));
+    pair.transactions.forEach((directive) => found.transactions.add(directive));
+  }
+  return found;
+}
+
 /**
  * `files` with the transactions the `BOOK` errors name blanked out, line for
  * line, so BQL (which books the source itself) sees what Beancount sees: an

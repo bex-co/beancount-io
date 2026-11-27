@@ -75,6 +75,7 @@ import { reconcileOneCommodityErrors } from "./one-commodity";
 import { reconcileUniquePriceErrors } from "./unique-prices";
 import {
   locateBookErrors,
+  loneElidedTransactions,
   unbookedTransactions,
   withoutUnbookedTransactions,
 } from "./book-errors";
@@ -763,14 +764,28 @@ async function parseLedgerFilesUncached(
       syntaxOnly: !needsCompleteSourceIndex,
     });
   }
+  // Stock drops a transaction's only posting when it has no amount, and
+  // reports nothing; the engine fails to book it (w31/138).
+  const loneElided = loneElidedTransactions(errors, directives);
   // A padding entry takes the ID of the pad it came from, so its detail opens
-  // on a ledger with no plugins too (w21/875).
+  // on a ledger with no plugins too (w21/875). An entry booked without its
+  // elided posting keeps the ID its source text hashes to.
   const tracksSourceIds =
     applyTs ||
     sourceDetails !== undefined ||
-    raw.paddingTransactions.length > 0;
+    raw.paddingTransactions.length > 0 ||
+    loneElided.transactions.size > 0;
   if (tracksSourceIds) {
     seedDirectiveSourceIds(directives, sourceDetails);
+  }
+  if (loneElided.transactions.size > 0) {
+    errors = errors.filter((error) => !loneElided.errors.has(error));
+    directives = directives.map((directive) => {
+      if (!loneElided.transactions.has(directive)) return directive;
+      const booked = { ...directive, postings: [] } as DirectiveJson;
+      inheritDirectiveSourceId(directive, booked);
+      return booked;
+    });
   }
   if (sourceDetails !== undefined) {
     directives = mergeSourceSyntax(directives, sourceDetails);

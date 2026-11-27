@@ -1,6 +1,7 @@
 import type { BeancountError, DirectiveJson } from "@rustledger/wasm";
 import {
   locateBookErrors,
+  loneElidedTransactions,
   unbookedTransactions,
   withoutUnbookedTransactions,
 } from "../book-errors";
@@ -174,6 +175,77 @@ describe("unbookedTransactions", () => {
 
   it("finds nothing when no error names a transaction", () => {
     expect(unbookedTransactions([], [buy, sell])).toEqual([]);
+  });
+});
+
+// w31/138: stock drops a transaction's only posting when it has no amount and
+// reports nothing; the engine reports it as "cannot infer currency".
+describe("loneElidedTransactions", () => {
+  const tx = (
+    narration: string | undefined,
+    ...postings: object[]
+  ): DirectiveJson =>
+    ({
+      type: "transaction",
+      date: "2026-09-07",
+      ...(narration === undefined ? {} : { narration }),
+      postings,
+    }) as never;
+  const noCurrency = (account: string, narration: string) =>
+    book(
+      `interpolation failed: cannot infer currency for posting to account ${account} (2026-09-07, "${narration}")`,
+    );
+  const cash = { account: "Assets:Cash" };
+
+  it("pairs a lone elided posting with its error", () => {
+    const lone = tx("single elided posting", cash);
+    const error = noCurrency("Assets:Cash", "single elided posting");
+    const other = noCurrency("Assets:Cash", "something else");
+    const found = loneElidedTransactions([error, other], [lone]);
+    expect([...found.transactions]).toEqual([lone]);
+    expect([...found.errors]).toEqual([error]);
+  });
+
+  it("pairs a narrationless one and an escaped quote", () => {
+    const bare = tx(undefined, cash);
+    const quoted = tx('Say "hi"', cash);
+    const found = loneElidedTransactions(
+      [
+        noCurrency("Assets:Cash", ""),
+        noCurrency("Assets:Cash", 'Say \\"hi\\"'),
+      ],
+      [bare, quoted],
+    );
+    expect([...found.transactions]).toEqual([bare, quoted]);
+    expect(found.errors.size).toBe(2);
+  });
+
+  it("leaves two elided postings, a price, a cost and another account", () => {
+    const found = loneElidedTransactions(
+      [
+        noCurrency("Assets:Cash", "two"),
+        noCurrency("Assets:Cash", "priced"),
+        noCurrency("Assets:Cash", "costed"),
+        noCurrency("Assets:Bank", "other account"),
+      ],
+      [
+        tx("two", cash, { account: "Assets:Bank" }),
+        tx("priced", { ...cash, price: { number: "1", currency: "EUR" } }),
+        tx("costed", { ...cash, cost: { currency: "EUR" } }),
+        tx("other account", cash),
+      ],
+    );
+    expect(found.transactions.size).toBe(0);
+    expect(found.errors.size).toBe(0);
+  });
+
+  it("leaves a key alone when its errors and transactions are not as many", () => {
+    const found = loneElidedTransactions(
+      [noCurrency("Assets:Cash", "twin"), noCurrency("Assets:Cash", "twin")],
+      [tx("twin", cash), tx("twin", cash, { account: "Assets:Bank" })],
+    );
+    expect(found.transactions.size).toBe(0);
+    expect(found.errors.size).toBe(0);
   });
 });
 

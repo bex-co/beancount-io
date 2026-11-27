@@ -284,6 +284,23 @@ classifier and refuses a `YYYY/MM/DD` date and a quoted string that spans lines,
 which stock and `updateLedgerFiles` accept. It says so in the refusal's hint
 (`backend-v2/docs/mcp.md`).
 
+## Validation: a lone elided posting is not an error
+
+Stock interpolation fills an elided posting from the transaction's residual.
+When the elided posting is the transaction's only posting, there is no
+residual, so stock drops the posting and reports nothing: the entry loads with
+no postings, and `bean-query` returns no row for it. The engine reports `BOOK`
+"interpolation failed: cannot infer currency for posting to account …" for it.
+`loneElidedTransactions` (`book-errors.ts`) pairs that error with its
+transaction by date, narration and account, and `engine.ts` drops the error and
+books the entry with no postings, as stock does (w31/138). The entry keeps the
+ID its source text hashes to, so it still opens in the journal. The engine's
+`E3004` "Transaction has only one posting" warning stays. A lone posting with a
+cost or a price, or two elided postings, is still an error, as it is in stock.
+`yarn verify:rustledger` fails its "raw engine still refuses a lone elided
+posting" check once the engine stops reporting it, which is the cue to delete
+the rule.
+
 ## BQL `meta` dialects
 
 The `meta` column reports dtype `object` on both tables at every
