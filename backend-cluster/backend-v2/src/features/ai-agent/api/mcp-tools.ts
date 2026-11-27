@@ -538,9 +538,11 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
         includedFiles.length > 0
           ? `; ${LEDGER_ENTRY_POINT} ${dryRun ? "would include" : "now includes"} ${includedFiles.join(", ")}`
           : "";
-      const touched = [
-        ...new Set([...files, ...(included ? [LEDGER_ENTRY_POINT] : [])]),
-      ];
+      // A preview lands in nothing: `files` is already empty on a dry run, and
+      // the entry point gains its include only when the call commits (w31/104).
+      const touched = dryRun
+        ? []
+        : [...new Set([...files, ...(included ? [LEDGER_ENTRY_POINT] : [])])];
       const verb = dryRun ? "Would add" : "Added";
       return {
         ok: true,

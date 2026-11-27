@@ -222,7 +222,8 @@ async function fixture(
       });
       return envelope({
         entry_hashes: [],
-        included_files: [],
+        // A preview names the include it would add, as a commit does.
+        included_files: state.includedFiles,
         preview: [...byFile].map(([path, lines]) => ({
           path,
           text: lines.join("\n"),
@@ -2343,6 +2344,45 @@ describe.each(["rest", "gql", "mcp"])(
             { path: "accounts/2028.bean" },
             { path: "main.bean" },
           ]);
+        }
+      } finally {
+        await f.close();
+      }
+    });
+
+    // w31/104: a preview names the include it would add, but writes nothing,
+    // so MCP's `wrote` stays empty — the entry point included.
+    it("names the include a preview would add, and writes nothing", async () => {
+      const f = await fixture();
+      f.state.accountFile = "accounts/{year}.bean";
+      f.state.includedFiles = ["accounts/2028.bean"];
+      try {
+        const result = await f.call(
+          surface,
+          [
+            {
+              type: "open" as const,
+              entry: {
+                date: "2028-01-04",
+                account: "Assets:Qa-20261022:Routed",
+                currencies: ["USD"],
+              },
+            },
+          ],
+          surface === "mcp" ? { dry_run: true } : { dryRun: true },
+        );
+        expect(result.success).toBe(true);
+        expect(f.committed).toEqual([]);
+        const note = "main.bean would include accounts/2028.bean";
+        const data = result.result as {
+          message?: string;
+          summary?: string;
+          wrote?: { path: string }[];
+        };
+        expect(data.message).toBe(`Would add 1 entry successfully; ${note}`);
+        if (surface === "mcp") {
+          expect(data.summary).toContain(`Would add 1 entry; ${note}`);
+          expect(data.wrote).toEqual([]);
         }
       } finally {
         await f.close();
