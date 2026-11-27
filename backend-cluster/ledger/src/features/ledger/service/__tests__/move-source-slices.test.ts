@@ -619,3 +619,143 @@ describe("where a move's new errors are reported (w31/116)", () => {
     expect(reportedAt(forced)).toEqual([at(files["main.bean"])]);
   });
 });
+
+// w31/126: an entry that already has an error carries it to toPath. Matched
+// on message and file, the same error read as new there, so the preview said
+// `valid: false` with the error count unchanged and the commit was refused.
+describe("an error the moved entry already has (w31/126)", () => {
+  const UNOPENED = "Account Expenses:Qa:Unopened was never opened";
+  const BALANCE = "2026-09-01 balance Assets:Cash -8.00 USD";
+  /** Cake, too, carries the error once it sits in the target. */
+  let cakeBreaksInTarget: boolean;
+
+  beforeEach(() => {
+    cakeBreaksInTarget = false;
+    findMock.mockImplementation(
+      async (fileMap: Record<string, string>, _e: unknown, hash: string) => {
+        const text = hash === TEA_ID ? TEA : hash === CAKE_ID ? CAKE : null;
+        if (text === null) return null;
+        const startLine = fileMap["main.bean"]
+          .split("\n")
+          .indexOf(text.split("\n")[0]);
+        return {
+          file: "main.bean",
+          slice: text,
+          sha256: sliceSha256(text),
+          startLine,
+          endLine: startLine + 3,
+          localOccurrence: 0,
+        };
+      },
+    );
+    // Tea posts to an account the ledger never opens: the error sits at its
+    // first line, in whichever file holds it. With a balance assertion in
+    // main.bean, moving Tea out of it breaks the assertion as well.
+    parseMock.mockImplementation(async (fileMap: Record<string, string>) => {
+      const errors: { message: string; file: string; line: number }[] = [];
+      for (const [file, text] of Object.entries(fileMap)) {
+        const lines = String(text).split("\n");
+        lines.forEach((line, index) => {
+          if (
+            line === TEA.split("\n")[0] ||
+            (cakeBreaksInTarget &&
+              file !== "main.bean" &&
+              line === CAKE.split("\n")[0])
+          )
+            errors.push({ message: UNOPENED, file, line: index + 1 });
+        });
+      }
+      const main = String(fileMap["main.bean"]);
+      if (main.includes(BALANCE) && !main.includes("Tea"))
+        errors.push({
+          message: "Balance failed for Assets:Cash",
+          file: "main.bean",
+          line: main.split("\n").indexOf(BALANCE) + 1,
+        });
+      return { directives: [TEA_D, CAKE_D], errors, sourceDetails: {} };
+    });
+  });
+
+  const MOVE_TEA = {
+    entries: [{ entryHash: TEA_ID, sha256sum: sliceSha256(TEA) }],
+    toPath: "qa-move.bean",
+    includeFrom: "main.bean",
+  };
+  const BOTH = {
+    ...MOVE_TEA,
+    entries: [
+      { entryHash: TEA_ID, sha256sum: sliceSha256(TEA) },
+      { entryHash: CAKE_ID, sha256sum: sliceSha256(CAKE) },
+    ],
+  };
+
+  it("previews the move as adding no error, and commits it without allowInvalid", async () => {
+    // backend-v2 sends every preview with allowInvalid (w23/m7/t008).
+    const preview = await move({
+      ...MOVE_TEA,
+      dryRun: true,
+      allowInvalid: true,
+    });
+    expect(preview.validation).toEqual({
+      errorsBefore: 1,
+      errorsAfter: 1,
+      newErrors: [],
+    });
+    expect(commitMock).not.toHaveBeenCalled();
+
+    const committed = await move(MOVE_TEA);
+    expect(commitMock).toHaveBeenCalledTimes(1);
+    expect(committed.validation.newErrors).toEqual([]);
+    expect(files["qa-move.bean"]).toBe(`${TEA}\n`);
+    expect(files["main.bean"]).not.toContain("Tea");
+  });
+
+  it("keeps the error known when it moves with other entries, wherever it lands in the target", async () => {
+    // Cake comes first in main.bean, so Tea's error is at qa-move.bean:5.
+    const preview = await move({ ...BOTH, dryRun: true, allowInvalid: true });
+    expect(preview.validation.newErrors).toEqual([]);
+    await expect(move(BOTH)).resolves.toMatchObject({
+      validation: { errorsBefore: 1, errorsAfter: 1, newErrors: [] },
+    });
+  });
+
+  it("still refuses a second broken entry with the same message", async () => {
+    cakeBreaksInTarget = true;
+    await expect(move(BOTH)).rejects.toBeInstanceOf(NewLedgerErrorsError);
+    const preview = await move({ ...BOTH, dryRun: true, allowInvalid: true });
+    expect(preview.validation.errorsAfter).toBe(2);
+    expect(preview.validation.newErrors).toHaveLength(1);
+    expect(preview.validation.newErrors[0]).toMatchObject({
+      message: UNOPENED,
+      source: { filename: "qa-move.bean" },
+    });
+    expect(commitMock).not.toHaveBeenCalled();
+  });
+
+  it("still refuses a balance assertion the move breaks elsewhere", async () => {
+    files["main.bean"] = `${MAIN}${BALANCE}\n`;
+    await expect(move(MOVE_TEA)).rejects.toThrow(/Balance failed/);
+    const preview = await move({
+      ...MOVE_TEA,
+      dryRun: true,
+      allowInvalid: true,
+    });
+    expect(preview.validation.newErrors.map(({ message }) => message)).toEqual([
+      "Balance failed for Assets:Cash",
+    ]);
+    expect(commitMock).not.toHaveBeenCalled();
+  });
+
+  it("does not excuse an error in the target by a known one outside the moved entries", async () => {
+    // Tea's error stays in main.bean; moving Cake makes the same error appear
+    // in the target. The known one never left, so this one is new.
+    cakeBreaksInTarget = true;
+    await expect(
+      move({
+        ...MOVE_TEA,
+        entries: [{ entryHash: CAKE_ID, sha256sum: sliceSha256(CAKE) }],
+      }),
+    ).rejects.toBeInstanceOf(NewLedgerErrorsError);
+    expect(commitMock).not.toHaveBeenCalled();
+  });
+});

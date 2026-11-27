@@ -240,6 +240,46 @@ describe("newLedgerErrors after an edit or delete", () => {
   });
 });
 
+describe("newLedgerErrors after a move (w31/126)", () => {
+  const UNOPENED = "Account Expenses:Qa:Unopened was never opened";
+  // main.bean lines 90-92 (0-based [89, 92)) move to qa-move.bean.
+  const moved = [{ file: "main.bean", start: 89, end: 92, to: "qa-move.bean" }];
+
+  it("matches an error inside the moved lines in the file they move to", () => {
+    const before = [at(UNOPENED, "main.bean", 90)];
+    const after = [at(UNOPENED, "qa-move.bean", 1)];
+    expect(newLedgerErrors(before, after)).toEqual(after);
+    expect(newLedgerErrors(before, after, moved)).toEqual([]);
+    // The last moved line moves too; the one below it stays.
+    expect(
+      newLedgerErrors([at(UNOPENED, "main.bean", 92)], after, moved),
+    ).toEqual([]);
+    expect(
+      newLedgerErrors([at(UNOPENED, "main.bean", 93)], after, moved),
+    ).toEqual(after);
+  });
+
+  it("keeps an error outside the moved lines in its own file", () => {
+    const stays = at(UNOPENED, "main.bean", 40);
+    expect(newLedgerErrors([stays], [stays], moved)).toEqual([]);
+    const elsewhere = at(UNOPENED, "other.bean", 90);
+    expect(
+      newLedgerErrors([elsewhere], [at(UNOPENED, "qa-move.bean", 1)], moved),
+    ).toHaveLength(1);
+  });
+
+  it("still counts a second copy of the moved error as new", () => {
+    const second = at(UNOPENED, "qa-move.bean", 5);
+    expect(
+      newLedgerErrors(
+        [at(UNOPENED, "main.bean", 90)],
+        [at(UNOPENED, "qa-move.bean", 1), second],
+        moved,
+      ),
+    ).toEqual([second]);
+  });
+});
+
 describe("projectNewLedgerErrors", () => {
   it("reports counts and the diff without refusing", async () => {
     const known = at("Balance failed for Assets:Cash", "main.bean", 4);

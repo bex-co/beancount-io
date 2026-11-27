@@ -134,7 +134,9 @@ export const SOURCE_SLICE_OPERATION_OUTPUTS = {
  * a summary, the result, the touched entry hashes, and bean-check's verdict.
  * A preview commits nothing, so no post-write read can see what the write
  * would break: its verdict is the ledger's projection, not a diff of a
- * no-op write (w23/161). A commit is re-checked after it lands, as before.
+ * no-op write (w23/161). A commit is re-checked after it lands, as before,
+ * unless `projected` says the ledger's projection is the verdict for the
+ * commit too.
  */
 function validated<
   T extends {
@@ -145,13 +147,13 @@ function validated<
 >(
   context: McpRequestContext,
   ledgerId: string,
-  dryRun: boolean,
+  projected: boolean,
   write: () => Promise<T>,
   summarize: (written: T) => string,
   hashes: (written: T) => string[],
 ) {
   const run = async (): Promise<{ written: T; validation: WriteValidation }> =>
-    dryRun
+    projected
       ? write().then((written) => ({
           written,
           validation: written.validation,
@@ -299,10 +301,15 @@ export const SOURCE_SLICE_EXECUTORS = {
       SOURCE_SLICE_OPERATION_SCHEMAS.move.parse(input);
     const ledgerId = resolveMcpLedger(context, ledger);
     const params = moveEntriesParams(args);
+    // A move's verdict is the ledger's, committed or not: only the ledger
+    // knows which lines moved, so only it can tell an error that went with
+    // its entry to toPath from a new one. Re-read by message and file after
+    // the commit, that error read as new, while REST and GraphQL relayed the
+    // ledger's verdict (w31/126).
     return validated(
       context,
       ledgerId,
-      params.dryRun,
+      true,
       () =>
         context.services.ledgerJournal.moveSourceSlices({
           identity: context.identity,

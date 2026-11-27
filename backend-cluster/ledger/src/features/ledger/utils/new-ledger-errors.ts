@@ -53,21 +53,48 @@ function withoutEntryTag(message: string): string {
 }
 
 /**
+ * Lines a write moves to another file: the 0-based lines `[start, end)` of
+ * `file` as it stands, which land in `to`. An entry move writes one per
+ * moved entry (w31/126).
+ */
+export interface MovedLines {
+  file: string;
+  start: number;
+  end: number;
+  to: string;
+}
+
+/**
  * Errors in `after` that `before` did not have, matched by message and file
  * but not line: editing or deleting a block shifts every later line, so an
  * existing error below the edit moves without being new (w21/m1). Each
  * `before` error excuses one `after` error, in order, so a second copy of a
  * known message still counts as introduced.
+ *
+ * An error inside lines the write `moved` is matched in the file they move
+ * to: an entry that already had an error carries it to its new file, where
+ * keyed on the old one it read as new and the move was refused (w31/126).
  */
 export function newLedgerErrors(
   before: readonly BeancountErrorPublic[],
   after: readonly BeancountErrorPublic[],
+  moved: readonly MovedLines[] = [],
 ): BeancountErrorPublic[] {
-  const key = (error: BeancountErrorPublic) =>
-    `${withoutEntryTag(error.message)}\u0000${error.source?.filename ?? ""}`;
+  const key = (error: BeancountErrorPublic, file = error.source?.filename) =>
+    `${withoutEntryTag(error.message)}\u0000${file ?? ""}`;
+  const fileBefore = ({ source }: BeancountErrorPublic) => {
+    if (!source) return undefined;
+    const index = source.lineno - 1;
+    const block = moved.find(
+      ({ file, start, end }) =>
+        file === source.filename && start <= index && index < end,
+    );
+    return block?.to ?? source.filename;
+  };
   const left = new Map<string, number>();
   for (const error of before) {
-    left.set(key(error), (left.get(key(error)) ?? 0) + 1);
+    const k = key(error, fileBefore(error));
+    left.set(k, (left.get(k) ?? 0) + 1);
   }
   return after.filter((error) => {
     // A warning is not an error `bean-check` would refuse (w21/188).
@@ -107,12 +134,13 @@ const countLedgerErrors = (
 export async function projectNewLedgerErrors(
   after: readonly BeancountErrorPublic[],
   before: () => Promise<readonly BeancountErrorPublic[]>,
+  moved?: readonly MovedLines[],
 ): Promise<ProjectedLedgerErrors> {
   const beforeErrors = await before();
   return {
     errorsBefore: countLedgerErrors(beforeErrors),
     errorsAfter: countLedgerErrors(after),
-    newErrors: newLedgerErrors(beforeErrors, after),
+    newErrors: newLedgerErrors(beforeErrors, after, moved),
   };
 }
 

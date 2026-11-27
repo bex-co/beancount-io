@@ -74,6 +74,7 @@ import { verifyBatchDeleteScale } from "./batch-delete-scale";
 import { verifyPatternLimits } from "./pattern-limits";
 import {
   verifyEntryMove,
+  verifyEntryMoveWithKnownError,
   verifyOwnKeyUnderPushmeta,
   verifyScopedEntryMove,
 } from "./entry-move";
@@ -6167,6 +6168,7 @@ poptag #trip
   // w1/237: a 1,000-entry batch delete fits the write deadline.
   await verifyBatchDeleteScale();
   await verifyEntryMove();
+  await verifyEntryMoveWithKnownError();
   await verifyScopedEntryMove();
   await verifyOwnKeyUnderPushmeta();
   await verifySlashDatedEntries();

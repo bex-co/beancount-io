@@ -458,7 +458,13 @@ a message that a write can change without causing the error: the entry's
 `(date, "narration")` tag, the figure a failing balance assertion reached
 (`got …`), and a lot error's available units (`available …`) or number of
 matching lots (`… lots match`). A changed account, expected amount or
-requested amount still makes the error new.
+requested amount still makes the error new. `moveEntrySources` matches an
+error inside a moved entry in `toPath`, where the entry goes, so moving an
+entry that already has an error reports none as new; a second copy of its
+message, or an error the move causes elsewhere such as a balance assertion
+it breaks, still counts. Only the ledger knows which lines moved, so MCP
+reports the ledger's verdict for a committed move as well as its preview, as
+REST and GraphQL do (w31/126).
 
 `renameLedgerFile` and `revertCommit` project bean-check the same way but
 never refuse the commit for new errors: each reports the verdict, in the
@@ -466,7 +472,9 @@ preview and in the commit alike, and takes no `allowInvalid`. A file rename
 projects over the files the move would leave, and the moved file's own errors
 go with it to its new path, so renaming a file that carries errors reports
 none as new. A revert projects over the files the undo would leave; it is
-refused for a conflict with a later commit, never for new errors. The bank
+refused for a conflict with a later commit, never for new errors. It carries
+no entry map, so undoing a move reports an error a moved entry already had as
+new, in the file it returns to; `errorsBefore` and `errorsAfter` stay equal. The bank
 tools and the lifecycle and collaborator tools preview a summary (a sync
 count, a destroy summary, a would-be grant), not a bean-check projection, so
 `valid` does not apply to them. The registry in
@@ -569,7 +577,8 @@ It refuses, writing nothing:
 - an entry in a managed price include (`OPERATION_NOT_ALLOWED`);
 - a credential that cannot write the ledger's files (`FORBIDDEN`);
 - a move that adds a bean-check error the ledger did not have
-  (`VALIDATION_FAILED`, naming each new error), unless `allowInvalid`.
+  (`VALIDATION_FAILED`, naming each new error), unless `allowInvalid`. An
+  error a moved entry already had goes with it to `toPath` and is not new.
 
 `dry_run` returns `preview` (each moved entry's file and the text `toPath`
 receives), `movedHashes`, `includeAdded` and `validation`. A commit returns the

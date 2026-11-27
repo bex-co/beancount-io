@@ -59,6 +59,7 @@ const CAKE = '2026-08-09 * "Cake"\n  Expenses:Food  4.00 USD\n  Assets:Cash';
 const BTC_PRICE = "2026-08-01 price BTC 60000 USD";
 const BALANCE_FAILED =
   "Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD";
+const UNOPENED = "Account Expenses:Qa:Unopened was never opened";
 const H_TEA = "aa".repeat(16);
 const H_CAKE = "bb".repeat(16);
 const H_BTC = "cc".repeat(16);
@@ -76,7 +77,9 @@ type MoveBody = {
   dryRun?: boolean;
 };
 
-async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
+async function fixture(
+  options: { readOnly?: boolean; breaks?: boolean; carries?: boolean } = {},
+) {
   const slices = new Map([
     [H_TEA, TEA],
     [H_CAKE, CAKE],
@@ -148,7 +151,10 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
                 },
               ],
             }
-          : { errors_before: 0, errors_after: 0, new_errors: [] };
+          : options.carries === true
+            ? // The moved entry's own error went with it (w31/126).
+              { errors_before: 1, errors_after: 1, new_errors: [] }
+            : { errors_before: 0, errors_after: 0, new_errors: [] };
       if (options.breaks === true && body.allowInvalid !== true) {
         const error = `moving these entries would introduce 1 new bean-check error: ${BALANCE_FAILED}`;
         throw new FavaApiError(error, 400, {
@@ -218,10 +224,27 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
     config,
   );
   rest.setIdentity(identity);
+  // The ledger's errors as its errors resource reads them: the moved entry's
+  // error sits in main.bean until a move commits, then in the target.
+  const ledgerData = {
+    getErrors: jest.fn(async () =>
+      options.carries === true
+        ? [
+            {
+              message: UNOPENED,
+              source:
+                commits.length === 0
+                  ? { filename: "main.bean", lineno: 90 }
+                  : { filename: "2026/08.bean", lineno: 5 },
+            },
+          ]
+        : [],
+    ),
+  };
   const server = assembleMcpRegistry(
     {
       identity,
-      services: { ledgerJournal: service },
+      services: { ledgerJournal: service, ledgerData },
     } as unknown as McpRequestContext,
     config,
   );
@@ -442,9 +465,36 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
       const forced = await env.call(surface, { ...MOVE, allowInvalid: true });
       expect(forced.success).toBe(true);
       expect(env.commits).toHaveLength(1);
-      // REST and GraphQL report the ledger's projection; MCP re-reads the
-      // committed ledger instead (w23/161), which this fixture does not stub.
-      if (surface !== "mcp") expect(verdict(forced.result)).toBe(false);
+      // Every surface reports the ledger's projection for the commit too.
+      expect(verdict(forced.result)).toBe(false);
+    } finally {
+      await env.close();
+    }
+  });
+
+  it("moves an entry that already has an error without allowInvalid, reporting none as new (w31/126)", async () => {
+    const env = await fixture({ carries: true });
+    try {
+      const preview = await env.call(surface, { ...MOVE, dryRun: true });
+      expect(verdict(preview.result)).toBe(true);
+      const committed = await env.call(surface, MOVE);
+      expect(committed.success).toBe(true);
+      expect(env.commits).toHaveLength(1);
+      expect(env.commits[0]).not.toHaveProperty("allowInvalid");
+      // The error moved from main.bean to the target: the same one, not new.
+      expect(verdict(committed.result)).toBe(true);
+      const counts = (result: Record<string, unknown> | undefined) =>
+        (result?.validation as Record<string, unknown> | undefined) ?? result;
+      expect(counts(committed.result)).toMatchObject({
+        errorsBefore: 1,
+        errorsAfter: 1,
+        newErrors: [],
+      });
+      if (surface === "mcp") {
+        expect(committed.result?.summary).toBe(
+          "Moved 2 entries to 2026/08.bean. No new bean-check errors.",
+        );
+      }
     } finally {
       await env.close();
     }

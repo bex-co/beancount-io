@@ -99,6 +99,7 @@ import {
   projectNewLedgerErrors,
   refuseProjectedErrors,
   type LineEdit,
+  type MovedLines,
   type ProjectedLedgerErrors,
 } from "@/features/ledger/utils/new-ledger-errors";
 import type { CacheHelper } from "@/shared/cache";
@@ -737,6 +738,9 @@ export class LedgerJournalService implements ILedgerJournalService {
    * new error at its line in the file as it stands, since neither commits
    * (w5/1202, w31/101, w31/116). A committed write reports the line after
    * the edit, where the error now lives.
+   *
+   * Given the lines a move carries to another file (`moved`), an error the
+   * ledger had inside them is the same error in that file (w31/126).
    */
   private async projectWriteErrors(
     loaded: LoadedLedgerWithManagedPrices,
@@ -744,6 +748,7 @@ export class LedgerJournalService implements ILedgerJournalService {
     action: LedgerWriteAction,
     { allowInvalid, dryRun }: { allowInvalid?: boolean; dryRun?: boolean },
     edits?: LineEdits,
+    moved?: readonly MovedLines[],
   ): Promise<ProjectedLedgerErrors> {
     const { files, entryPoint, repoPaths } = loaded;
     const projected: FileMap = { ...files };
@@ -757,6 +762,7 @@ export class LedgerJournalService implements ILedgerJournalService {
     const projection = await projectNewLedgerErrors(
       await errorsOf(projected),
       () => errorsOf(files),
+      moved,
     );
     const current = edits ? atLinesBeforeEdits(projection, edits) : projection;
     if (!allowInvalid) refuseProjectedErrors(current, action);
@@ -1528,12 +1534,19 @@ export class LedgerJournalService implements ILedgerJournalService {
       });
     }
 
+    // An error the ledger had inside a moved entry moves with it (w31/126).
     const validation = await this.projectWriteErrors(
       loaded,
       transforms,
       "move",
       { allowInvalid, dryRun },
       edits,
+      moved.map(({ slice }) => ({
+        file: slice.file,
+        start: slice.startLine,
+        end: slice.endLine,
+        to: toPath,
+      })),
     );
     let commit: CommitSha = {};
     if (!dryRun) {

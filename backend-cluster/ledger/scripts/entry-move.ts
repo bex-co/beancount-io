@@ -213,6 +213,93 @@ export async function verifyEntryMove(): Promise<void> {
   );
 }
 
+/**
+ * Moving an entry that already has an error (w31/126): the error goes with
+ * the entry to `toPath`. Matched on message and file it read as new there, so
+ * the preview said `valid: false` with the error count unchanged and the
+ * commit was refused. Two entries post to an account the ledger never opens;
+ * one moves. On the live engine the preview adds no error, the move commits
+ * without `allowInvalid`, and afterwards the same two errors stand, one at
+ * the moved entry in the target and one where the other entry stayed.
+ */
+export async function verifyEntryMoveWithKnownError(): Promise<void> {
+  const unopened = (day: string, narration: string) =>
+    `2026-08-${day} * "qa-move" "${narration}"\n  Expenses:Qa:Unopened   5.00 USD\n  Assets:Cash  -5.00 USD`;
+  const files: Record<string, string> = {
+    "main.bean": [
+      'option "operating_currency" "USD"',
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Expenses:Food USD",
+      "",
+      CAKE,
+      "",
+      unopened("28", "stays"),
+      "",
+      unopened("30", "moves"),
+      "",
+    ].join("\n"),
+  };
+  const { factory, commits } = committingRepo(files);
+  // Read through a function: the checks below must see each new commit.
+  const commitCount = () => commits.length;
+  const journal = new LedgerJournalService(factory as never, {} as never);
+  const params = { ledgerId: "synthetic/known-error-move", userId: "usr_1" };
+  const located = async () =>
+    (await parseLedgerFiles({ ...files }, "main.bean")).errors
+      .map((error) => `${error.message} @ ${error.file}`)
+      .sort();
+
+  const before = await located();
+  if (
+    before.length !== 2 ||
+    !before.every((line) => /never opened @ main\.bean$/.test(line))
+  )
+    fail(`the known-error fixture reads ${JSON.stringify(before)}`);
+  const { data } = await journal.getJournal({
+    ...params,
+    userId: undefined,
+    query: { includeSource: true },
+  });
+  const row = (data as unknown as SourcedRow[]).find(
+    (item) => item.narration === "moves",
+  );
+  if (!row?.source) fail("no source for the broken entry");
+  const move = {
+    ...params,
+    entries: [{ entryHash: row.entry_hash, sha256sum: row.source.sha256sum }],
+    toPath: "qa-move.bean",
+    includeFrom: "main.bean",
+  };
+
+  // backend-v2 sends every preview with allowInvalid (w23/m7/t008).
+  const preview = await journal.moveSourceSlices({
+    ...move,
+    dryRun: true,
+    allowInvalid: true,
+  });
+  const { errorsBefore, errorsAfter, newErrors } = preview.validation;
+  if (errorsBefore !== 2 || errorsAfter !== 2 || newErrors.length !== 0)
+    fail(`the preview reads ${JSON.stringify(preview.validation)}`);
+  if (commitCount() !== 0) fail("the preview committed");
+
+  const result = await journal.moveSourceSlices(move);
+  if (commitCount() !== 1 || result.validation.newErrors.length !== 0)
+    fail(`the move did not commit cleanly: ${JSON.stringify(result.validation)}`);
+  if (!files["qa-move.bean"]?.includes('"moves"') || files["main.bean"].includes('"moves"'))
+    fail(`the entry did not move:\n${files["main.bean"]}`);
+  const after = await located();
+  if (
+    JSON.stringify(after.map((line) => line.replace(/ @ .*/, ""))) !==
+      JSON.stringify(before.map((line) => line.replace(/ @ .*/, ""))) ||
+    after.filter((line) => line.endsWith("@ qa-move.bean")).length !== 1
+  )
+    fail(`the ledger's errors changed: ${JSON.stringify({ before, after })}`);
+
+  console.log(
+    "✓ an entry that already has an error moves without allowInvalid, and its error goes with it (w31/126)",
+  );
+}
+
 /** A journal row's identity and what its scope gave it. */
 type ScopedRow = SourcedRow & {
   type: string;

@@ -165,10 +165,14 @@ const WRITE_PREVIEW_RULES: Record<string, Entry> = {
         file: `${REST_V1}/move-entry-sources-parity.test.ts`,
         test: "previews a breaking move as invalid, and refuses its commit unless allowInvalid",
       },
+      {
+        file: `${REST_V1}/move-entry-sources-parity.test.ts`,
+        test: "moves an entry that already has an error without allowInvalid, reporting none as new (w31/126)",
+      },
     ],
     differential: {
       reason:
-        "preview and commit are one ledger call through the same projectWriteErrors gate, the preview differing only by dryRun; the parity suite above proves both on all three surfaces",
+        "preview and commit are one ledger call through the same projectWriteErrors gate, the preview differing only by dryRun, and every surface reports that gate's verdict for both (w31/126); the parity suite above proves both on all three surfaces",
     },
   },
   // A rename projects bean-check over every file it would rewrite (w1/m43).
