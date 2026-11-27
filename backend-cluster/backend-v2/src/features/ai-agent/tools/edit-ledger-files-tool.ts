@@ -527,9 +527,13 @@ export async function executeEditLedgerFiles(
 
         return { fileCache, ...foldOperations(fileCache, normalizedFiles) };
       };
-      const { fileCache, operations, projected, edits } = await prepare();
-      const overlays = () =>
+      type Attempt = Awaited<ReturnType<typeof prepare>>;
+      const overlaysOf = ({ projected }: Attempt) =>
         [...projected].map(([path, content]) => ({ path, content }));
+      const opsOf = ({ operations }: Attempt) =>
+        operations.map((op) => ({ operation: op.operation, path: op.path }));
+      const first = await prepare();
+      const { fileCache, operations, projected, edits } = first;
       // Only exact-text edits and creations are re-applied after a lost race:
       // a whole-file `replace` or a `delete` would silently overwrite or drop
       // the change that won, so those surface the conflict instead.
@@ -537,14 +541,9 @@ export async function executeEditLedgerFiles(
         (f) => f.operation === "update" || f.operation === "create",
       );
 
-      const ops = operations.map((op) => ({
-        operation: op.operation,
-        path: op.path,
-      }));
-
-      if (operations.length === 0) {
-        // Every change left its file as it was (w23/052). The write is still
-        // authorized, so a caller the commit would refuse is refused here.
+      // Every change leaves its file as it is (w23/052). The write is still
+      // authorized, so a caller the commit would refuse is refused here.
+      const unchanged = async (): Promise<EditLedgerFilesResult> => {
         await services.ledgerRepo.changeFiles({
           ledgerId,
           identity,
@@ -563,9 +562,11 @@ export async function executeEditLedgerFiles(
           entryHashes: [],
           validation: toWriteValidation(errors, errors),
         };
-      }
+      };
+      if (operations.length === 0) return unchanged();
 
       if (preview) {
+        const ops = opsOf(first);
         // The preview must refuse exactly what the commit would: the service
         // runs the same write authorization and path validation, then stops
         // before the repository call. Without this, a create-only preview
@@ -589,7 +590,7 @@ export async function executeEditLedgerFiles(
           services,
           identity,
           ledgerId,
-          overlays(),
+          overlaysOf(first),
           true,
           { droppedLines, edits, dryRun: true },
         );
@@ -597,7 +598,7 @@ export async function executeEditLedgerFiles(
           services,
           identity,
           ledgerId,
-          overlays(),
+          overlaysOf(first),
         );
         // `diff` leads the payload so the serialized text content is the
         // diff followed by the one-line summary.
@@ -622,81 +623,92 @@ export async function executeEditLedgerFiles(
 
       // The gate: the commit refuses what its own preview would (w23/m15).
       // The service dry run first, so path, size and include refusals keep
-      // their own errors; then bean-check over the projected contents.
-      await services.ledgerRepo.changeFiles({
-        ledgerId,
-        identity,
-        operations,
-        message: description,
-        dryRun: true,
-      });
-      await gateFileWrite(
-        services,
-        identity,
-        ledgerId,
-        overlays(),
-        allowInvalid,
-        { droppedLines, edits },
-      );
-      const notLoaded = await unloadedLedgerFiles(
-        services,
-        identity,
-        ledgerId,
-        overlays(),
-      );
-
-      const { validation, written } = await withPostWriteValidation(
-        services,
-        identity,
-        ledgerId,
-        async () => {
-          let attempt = operations;
-          for (let tries = 1; ; tries += 1) {
-            try {
-              return await services.ledgerRepo.changeFiles({
-                ledgerId,
-                identity,
-                operations: attempt,
-                message: description,
-              });
-            } catch (error) {
-              if (
-                !retryable ||
-                tries >= MAX_COMMIT_ATTEMPTS ||
-                !(error instanceof ConflictError)
-              )
-                throw error;
-              attempt = (await prepare()).operations;
-              // The winner made the same change: nothing is left to commit.
-              if (attempt.length === 0) return;
-            }
-          }
-        },
-      );
-
-      toolLogger.info("File operations committed", {
-        userId: identity.userId,
-        fileCount: files.length,
-      });
-      const wrote = ops.map((op) => ({ path: op.path }));
-      return {
-        summary: withUnloaded(
-          summarizeWrite(
-            `Committed ${operations.length} change(s) to ${ops.map((op) => op.path).join(", ")}`,
-            validation,
-          ),
-          notLoaded,
-        ),
-        dry_run: false,
-        count: operations.length,
-        operations: ops,
-        diff: [],
-        ...(notLoaded.length > 0 && { notLoaded }),
-        ...written,
-        wrote,
-        entryHashes: [],
-        validation,
+      // their own errors; then bean-check over the projected contents. An
+      // attempt re-applied after a lost race is checked the same way, against
+      // the content it lands on: checking only the first let an edit that
+      // breaks the winner's text commit without `allow_invalid` (w31/132).
+      const check = async (attempt: Attempt): Promise<string[]> => {
+        await services.ledgerRepo.changeFiles({
+          ledgerId,
+          identity,
+          operations: attempt.operations,
+          message: description,
+          dryRun: true,
+        });
+        await gateFileWrite(
+          services,
+          identity,
+          ledgerId,
+          overlaysOf(attempt),
+          allowInvalid,
+          { droppedLines, edits: attempt.edits },
+        );
+        return unloadedLedgerFiles(
+          services,
+          identity,
+          ledgerId,
+          overlaysOf(attempt),
+        );
       };
+      // The verdict and the summary describe the attempt that committed.
+      const commit = async (
+        attempt: Attempt,
+        notLoaded: string[],
+      ): Promise<EditLedgerFilesResult> => {
+        const { validation, written } = await withPostWriteValidation(
+          services,
+          identity,
+          ledgerId,
+          () =>
+            services.ledgerRepo.changeFiles({
+              ledgerId,
+              identity,
+              operations: attempt.operations,
+              message: description,
+            }),
+        );
+        toolLogger.info("File operations committed", {
+          userId: identity.userId,
+          fileCount: files.length,
+        });
+        const ops = opsOf(attempt);
+        return {
+          summary: withUnloaded(
+            summarizeWrite(
+              `Committed ${ops.length} change(s) to ${ops.map((op) => op.path).join(", ")}`,
+              validation,
+            ),
+            notLoaded,
+          ),
+          dry_run: false,
+          count: ops.length,
+          operations: ops,
+          diff: [],
+          ...(notLoaded.length > 0 && { notLoaded }),
+          ...written,
+          wrote: ops.map((op) => ({ path: op.path })),
+          entryHashes: [],
+          validation,
+        };
+      };
+
+      let attempt = first;
+      for (let tries = 1; ; tries += 1) {
+        const notLoaded = await check(attempt);
+        try {
+          return await commit(attempt, notLoaded);
+        } catch (error) {
+          if (
+            !retryable ||
+            tries >= MAX_COMMIT_ATTEMPTS ||
+            !(error instanceof ConflictError)
+          )
+            throw error;
+        }
+        attempt = await prepare();
+        // The winner made the same change: nothing is left to commit.
+        if (attempt.operations.length === 0) return unchanged();
+      }
     },
   });
 }

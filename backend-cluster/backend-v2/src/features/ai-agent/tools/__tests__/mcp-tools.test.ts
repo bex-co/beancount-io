@@ -500,32 +500,64 @@ describe("executeEditLedgerFiles", () => {
   // w23/017: two agents editing one file at once. The loser used to report
   // SERVICE_UNAVAILABLE; its exact-text edit now lands on the winner's text.
   describe("after losing a concurrent commit", () => {
-    function racingRepo(winner: (text: string) => string) {
-      let remote = "; a\n; b\n";
+    const BROKEN = {
+      message: "Account Assets:Probe was never opened",
+      source: { filename: "race.bean", lineno: 2 },
+    };
+    /**
+     * The ledger as files. The first commit loses to `winner`, which lands
+     * just before it. `broken` is bean-check's verdict over every file the
+     * projection would leave, so an edit can break only the winner's text.
+     */
+    function racingRepo(
+      winner: (text: string) => string,
+      broken: (ledger: string) => boolean = () => false,
+    ) {
+      const files = new Map([["race.bean", "; a\n; b\n"]]);
       let commits = 0;
       const ledgerRepo = {
-        checkProjectedFiles: jest.fn().mockResolvedValue([]),
-        getFilesContent: jest.fn(async () => [
-          { path: "race.bean", content: remote, sha: `sha-${remote}` },
-        ]),
+        checkProjectedFiles: jest.fn(
+          async ({
+            overlays,
+          }: {
+            overlays: { path: string; content: string | null }[];
+          }) => {
+            const projected = new Map(files);
+            for (const { path, content } of overlays) {
+              if (content === null) projected.delete(path);
+              else projected.set(path, content);
+            }
+            return broken([...projected.values()].join("")) ? [BROKEN] : [];
+          },
+        ),
+        getFilesContent: jest.fn(async ({ paths }: { paths: string[] }) =>
+          paths
+            .filter((path) => files.has(path))
+            .map((path) => ({
+              path,
+              content: files.get(path)!,
+              sha: `sha-${files.get(path)}`,
+            })),
+        ),
         changeFiles: jest.fn(
           async ({
             operations,
             dryRun,
           }: {
-            operations: Array<{ content?: string }>;
+            operations: Array<{ path: string; content?: string }>;
             dryRun?: boolean;
           }) => {
             if (dryRun) return;
             commits += 1;
             if (commits === 1) {
-              remote = winner(remote);
+              files.set("race.bean", winner(files.get("race.bean")!));
               throw new ConflictError(
                 "Ledger resource",
                 "the ledger changed under a concurrent write; re-read it and retry",
               );
             }
-            remote = operations[0]!.content!;
+            for (const { path, content } of operations)
+              files.set(path, content!);
           },
         ),
       };
@@ -533,16 +565,33 @@ describe("executeEditLedgerFiles", () => {
         ledgerRepo,
         ledgerData: { getErrors: jest.fn().mockResolvedValue([]) },
       };
-      return { services, ledgerRepo, remote: () => remote };
+      const committed = () =>
+        ledgerRepo.changeFiles.mock.calls.filter(([call]) => !call.dryRun)
+          .length;
+      return {
+        services,
+        ledgerRepo,
+        files,
+        committed,
+        remote: () => files.get("race.bean"),
+      };
     }
-    const edit = (services: unknown, file: Record<string, unknown>) =>
+    const edit = (
+      services: unknown,
+      file: Record<string, unknown>,
+      flags: Record<string, unknown> = {},
+    ) =>
       executeEditLedgerFiles(
         { services: services as any, identity: IDENTITY, ledgerId: LEDGER_ID },
-        { description: "edit", files: [file as any], dry_run: false },
+        { description: "edit", files: [file as any], dry_run: false, ...flags },
       );
+    // The winner rewrote `; a`; with it, the edit's `; 1` is an error.
+    const winner = (text: string) => text.replace("; a\n", "; 0\n");
+    const brokenTogether = (ledger: string) =>
+      ledger.includes("; 0\n") && ledger.includes("; 1\n");
 
     it("re-reads and re-applies an exact-text edit", async () => {
-      const repo = racingRepo((text) => text.replace("; a\n", "; 0\n"));
+      const repo = racingRepo(winner);
       const result = await edit(repo.services, {
         operation: "update",
         path: "race.bean",
@@ -550,8 +599,69 @@ describe("executeEditLedgerFiles", () => {
         new_string: "; 1\n",
       });
       expect(result.ok).toBe(true);
-      // Gate dry run + the lost commit + the retried one.
-      expect(repo.ledgerRepo.changeFiles).toHaveBeenCalledTimes(4);
+      // Authorization, then a gate dry run before each of the two commits.
+      expect(repo.ledgerRepo.changeFiles).toHaveBeenCalledTimes(5);
+      expect(repo.remote()).toBe("; 0\n; 1\n");
+    });
+
+    // w31/132: the re-applied edit skipped the gate, so a change bean-check
+    // would refuse on the winner's text committed without allow_invalid.
+    it("checks a re-applied edit again against the winner's text", async () => {
+      const repo = racingRepo(winner, brokenTogether);
+      const result = await edit(repo.services, {
+        operation: "update",
+        path: "race.bean",
+        old_string: "; b\n",
+        new_string: "; 1\n",
+      });
+      expect(result).toMatchObject({
+        ok: false,
+        errorCode: "VALIDATION_FAILED",
+        error: expect.stringContaining("Assets:Probe was never opened"),
+      });
+      // Only the lost commit; the winner's text stays.
+      expect(repo.committed()).toBe(1);
+      expect(repo.remote()).toBe("; 0\n; b\n");
+      expect(repo.ledgerRepo.checkProjectedFiles).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          overlays: [{ path: "race.bean", content: "; 0\n; 1\n" }],
+        }),
+      );
+    });
+
+    it("checks a re-applied create again against what landed", async () => {
+      const repo = racingRepo(winner, brokenTogether);
+      const result = await edit(repo.services, {
+        operation: "create",
+        path: "new.bean",
+        content: "; 1\n",
+      });
+      expect(result).toMatchObject({
+        ok: false,
+        errorCode: "VALIDATION_FAILED",
+      });
+      expect(repo.committed()).toBe(1);
+      expect(repo.files.has("new.bean")).toBe(false);
+      expect(repo.remote()).toBe("; 0\n; b\n");
+    });
+
+    it("commits a re-applied edit that adds errors with allow_invalid", async () => {
+      const repo = racingRepo(winner, brokenTogether);
+      const result = await edit(
+        repo.services,
+        {
+          operation: "update",
+          path: "race.bean",
+          old_string: "; b\n",
+          new_string: "; 1\n",
+        },
+        { allow_invalid: true },
+      );
+      expect(result).toMatchObject({
+        ok: true,
+        result: { count: 1, operations: [{ path: "race.bean" }] },
+      });
+      expect(repo.committed()).toBe(2);
       expect(repo.remote()).toBe("; 0\n; 1\n");
     });
 
@@ -568,14 +678,14 @@ describe("executeEditLedgerFiles", () => {
     });
 
     it("does not re-apply a whole-file replace over the winner's change", async () => {
-      const repo = racingRepo((text) => text.replace("; a\n", "; 0\n"));
+      const repo = racingRepo(winner);
       const result = await edit(repo.services, {
         operation: "replace",
         path: "race.bean",
         content: "; z\n",
       });
       expect(result).toMatchObject({ ok: false, errorCode: "CONFLICT" });
-      // Gate dry run + the one lost commit, no retry.
+      // Authorization, the gate dry run and the one lost commit, no retry.
       expect(repo.ledgerRepo.changeFiles).toHaveBeenCalledTimes(3);
       expect(repo.remote()).toBe("; 0\n; b\n");
     });
@@ -633,8 +743,8 @@ describe("executeEditLedgerFiles", () => {
         },
       );
       expect(result).toMatchObject({ ok: false, errorCode: "CONFLICT" });
-      // One service dry run for the gate, then the three commit attempts.
-      expect(ledgerRepo.changeFiles).toHaveBeenCalledTimes(5);
+      // Authorization, then a gate dry run before each of the three commits.
+      expect(ledgerRepo.changeFiles).toHaveBeenCalledTimes(7);
     });
   });
 
