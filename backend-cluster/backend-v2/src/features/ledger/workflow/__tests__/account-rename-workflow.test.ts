@@ -210,6 +210,72 @@ describe("AccountRenameWorkflow (w1/m43)", () => {
     expect(ledgerRepo.changeGeneratedFiles).toHaveBeenCalledTimes(1);
   });
 
+  describe("errors the ledger already had (w31/114)", () => {
+    const failing = (account: string) => ({
+      message: `Balance failed for ${account}: expected -5.00 USD, got -3.00 USD`,
+      source: { filename: "2026.bean", lineno: 4 },
+    });
+    const neverOpened = (account: string) => ({
+      message: `Account ${account} was never opened`,
+      source: { filename: "budget.bean", lineno: 1 },
+    });
+
+    it("previews and commits a rename that only renames them, with no allowInvalid", async () => {
+      const { ledgerRepo, rename } = fixture({
+        baselineErrors: [
+          failing("Assets:Bank:Checking"),
+          neverOpened("Assets:Bank:Checking:Joint"),
+        ],
+        projectedErrors: [
+          failing("Assets:Bank:Main"),
+          neverOpened("Assets:Bank:Main:Joint"),
+        ],
+      });
+      const preview = await rename({
+        from: "Assets:Bank:Checking",
+        to: "Assets:Bank:Main",
+        dryRun: true,
+      });
+      expect(preview.validation).toEqual({
+        errorsBefore: 2,
+        errorsAfter: 2,
+        newErrors: [],
+        valid: true,
+      });
+      const result = await rename({
+        from: "Assets:Bank:Checking",
+        to: "Assets:Bank:Main",
+      });
+      expect(result.commit).toBe("c0ffee");
+      expect(result.validation.valid).toBe(true);
+      expect(ledgerRepo.changeGeneratedFiles).toHaveBeenCalledTimes(1);
+    });
+
+    it("still refuses an error the rename adds beside them", async () => {
+      const added = {
+        message:
+          "Invalid reference to unknown account 'Assets:Bank:Main:Joint'",
+        source: { filename: "budget.bean", lineno: 1 },
+      };
+      const { ledgerRepo, rename } = fixture({
+        baselineErrors: [failing("Assets:Bank:Checking")],
+        projectedErrors: [failing("Assets:Bank:Main"), added],
+      });
+      const preview = await rename({
+        from: "Assets:Bank:Checking",
+        to: "Assets:Bank:Main",
+        dryRun: true,
+      });
+      expect(preview.validation.newErrors).toEqual([
+        { message: added.message, source: "budget.bean:1" },
+      ]);
+      await expect(
+        rename({ from: "Assets:Bank:Checking", to: "Assets:Bank:Main" }),
+      ).rejects.toMatchObject({ category: "VALIDATION_FAILED" });
+      expect(ledgerRepo.changeGeneratedFiles).not.toHaveBeenCalled();
+    });
+  });
+
   it.each([
     [
       "an invalid target",

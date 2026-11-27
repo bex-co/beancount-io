@@ -135,6 +135,8 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
       });
     // Independent reads: the mappings need only the ledger, not the verdict.
     // A preview reports new errors; only a commit is refused for them (w23/219).
+    // An error the ledger had that names the account is the same error under
+    // its new name, not a new one (w31/114).
     const [validation, allMappings] = await Promise.all([
       gateFileWrite(
         { ledgerRepo: this.ledgerRepo, ledgerData: this.ledgerData },
@@ -145,6 +147,7 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
           content: file.renamed.text,
         })),
         dryRun || allowInvalid,
+        { account: { from, to } },
       ),
       this.bankMappings.list({ ledgerId, identity }),
     ]);

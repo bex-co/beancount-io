@@ -1,4 +1,5 @@
 import { DomainError } from "@/shared/errors";
+import { renameAccountInMessage } from "./account-rename";
 /**
  * bean-check's errors, reduced to what a caller can act on.
  *
@@ -151,6 +152,15 @@ export type FileRenames = ReadonlyMap<string, string>;
 const NO_RENAMES: FileRenames = new Map();
 
 /**
+ * An account a write renames, children included: the errors that named
+ * `from` name `to` after the write (w31/114).
+ */
+export interface AccountRenaming {
+  readonly from: string;
+  readonly to: string;
+}
+
+/**
  * Lines a write drops from files it otherwise keeps, by path: 1-based in the
  * file as it stands, ascending. A delete's `removeIncludes` drops include
  * lines this way (w31/102).
@@ -190,11 +200,19 @@ export function diffBeanCheckErrors(
   before: readonly BeanCheckError[],
   after: readonly BeanCheckError[],
   renames: FileRenames = NO_RENAMES,
+  account?: AccountRenaming,
 ): BeanCheckError[] {
   const fileOf = (error: BeanCheckError) =>
     error.source?.replace(/:\d+$/, "") ?? "";
+  // A renamed account's errors name its new name after the write: keyed on
+  // the old one, every one of them read as new (w31/114). Both sides read the
+  // new name, so a quoted narration that keeps the old one still matches.
+  const named = account
+    ? (message: string) =>
+        renameAccountInMessage(message, account.from, account.to)
+    : (message: string) => message;
   const key = (error: BeanCheckError, file: string) =>
-    `${withoutEntryTag(error.message)}\u0000${file}`;
+    `${withoutEntryTag(named(error.message))}\u0000${file}`;
   const left = new Map<string, number>();
   for (const error of before) {
     // A moved file's errors did not appear with the move: keyed on the old
@@ -215,11 +233,12 @@ export function toWriteValidation(
   before: readonly BeanCheckError[],
   after: readonly BeanCheckError[],
   renames: FileRenames = NO_RENAMES,
+  account?: AccountRenaming,
 ): WriteValidation {
   return {
     errorsBefore: before.length,
     errorsAfter: after.length,
-    ...withValidity(diffBeanCheckErrors(before, after, renames)),
+    ...withValidity(diffBeanCheckErrors(before, after, renames, account)),
   };
 }
 

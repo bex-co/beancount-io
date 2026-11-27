@@ -7,6 +7,7 @@ import {
   hasParseError,
   toBeanCheckErrors,
   toWriteValidation,
+  type AccountRenaming,
   type BeanCheckError,
   type DroppedLines,
   type FileRenames,
@@ -78,6 +79,10 @@ export interface FileWriteGateServices {
  * already had, so the verdict says it was not checked and why, as the
  * post-write verdict does (w23/031), and nothing is refused on it (w23/233).
  *
+ * Given the account the write renames (`account`), an error the ledger had
+ * that names it matches its copy under the new name, in the preview and the
+ * commit alike (w31/114).
+ *
  * Given the lines the write drops (`droppedLines`), a refusal or a `dryRun`
  * names each new error at its line in the file as it stands, since neither
  * commits (w31/102). A commit's verdict keeps the line after the write, where
@@ -91,10 +96,12 @@ export async function gateFileWrite(
   allowInvalid: boolean,
   {
     renames,
+    account,
     droppedLines,
     dryRun = false,
   }: {
     renames?: FileRenames;
+    account?: AccountRenaming;
     droppedLines?: DroppedLines;
     dryRun?: boolean;
   } = {},
@@ -135,6 +142,7 @@ export async function gateFileWrite(
     before.errors,
     toBeanCheckErrors(projectedErrors),
     renames,
+    account,
   );
   const current = droppedLines
     ? {

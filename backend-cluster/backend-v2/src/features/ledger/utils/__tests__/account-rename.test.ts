@@ -1,5 +1,6 @@
 import {
   accountTokenOffsets,
+  renameAccountInMessage,
   renameAccountInText,
   renamedAccounts,
 } from "../account-rename";
@@ -260,5 +261,43 @@ describe("renamedAccounts (w1/m43)", () => {
       { from: "Assets:Bank:Checking", to: "Assets:Bank:Main" },
       { from: "Assets:Bank:Checking:Joint", to: "Assets:Bank:Main:Joint" },
     ]);
+  });
+});
+
+// w31/114: an error the ledger already had names the account in engine prose;
+// after the rename the same error names the new account.
+describe("renameAccountInMessage", () => {
+  it.each([
+    [
+      "an account the name's own colon closes",
+      "Balance failed for Assets:Bank:Checking: expected 40.00 USD, got 49.75 USD",
+      "Balance failed for Assets:Bank:Main: expected 40.00 USD, got 49.75 USD",
+    ],
+    [
+      "a child account",
+      "Account Assets:Bank:Checking:Joint was never opened",
+      "Account Assets:Bank:Main:Joint was never opened",
+    ],
+    [
+      "a quoted name, and every name in the message",
+      "Invalid reference to 'Assets:Bank:Checking' from \"Assets:Bank:Checking\"",
+      "Invalid reference to 'Assets:Bank:Main' from \"Assets:Bank:Main\"",
+    ],
+    [
+      "a name that ends the message",
+      "Duplicate open directive for Assets:Bank:Checking",
+      "Duplicate open directive for Assets:Bank:Main",
+    ],
+  ])("renames %s", (_case, message, renamed) => {
+    expect(renameAccountInMessage(message, FROM, TO)).toBe(renamed);
+  });
+
+  it.each([
+    ["a longer name", "Account Assets:Bank:CheckingOld was never opened"],
+    ["a name it ends", "Account Assets:Old:Assets:Bank:Checking is odd"],
+    ["a name it is a suffix of", "Account XAssets:Bank:Checking is odd"],
+    ["a parent", "Balance failed for Assets:Bank: expected 1 USD, got 2 USD"],
+  ])("leaves %s alone", (_case, message) => {
+    expect(renameAccountInMessage(message, FROM, TO)).toBe(message);
   });
 });

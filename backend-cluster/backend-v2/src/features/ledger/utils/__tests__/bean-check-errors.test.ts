@@ -168,6 +168,109 @@ describe("diffBeanCheckErrors with renamed files", () => {
   });
 });
 
+// w31/114: a renamed account's errors name the new account; keyed on the old
+// name every one of them read as new.
+describe("diffBeanCheckErrors with a renamed account", () => {
+  const account = { from: "Assets:Cash", to: "Assets:Wallet" };
+  const failing =
+    "Balance failed for Assets:Cash: expected 40.00 USD, got 49.75 USD";
+
+  it("does not count an error that names the account, or one under it", () => {
+    expect(
+      diffBeanCheckErrors(
+        [
+          error(failing, "main.bean:89"),
+          error("Account Assets:Cash:Petty was never opened", "main.bean:90"),
+        ],
+        [
+          error(
+            "Balance failed for Assets:Wallet: expected 40.00 USD, got 49.75 USD",
+            "main.bean:89",
+          ),
+          error("Account Assets:Wallet:Petty was never opened", "main.bean:90"),
+        ],
+        undefined,
+        account,
+      ),
+    ).toEqual([]);
+  });
+
+  it("still counts an error the rename adds", () => {
+    const added = error(
+      "Duplicate open directive for Assets:Wallet",
+      "a.bean:3",
+    );
+    expect(
+      diffBeanCheckErrors(
+        [error(failing, "main.bean:89")],
+        [
+          error(
+            "Balance failed for Assets:Wallet: expected 40.00 USD, got 49.75 USD",
+            "main.bean:89",
+          ),
+          added,
+        ],
+        undefined,
+        account,
+      ),
+    ).toEqual([added]);
+  });
+
+  it("still counts a second copy of a known error under the new name", () => {
+    const renamed = error(
+      "Balance failed for Assets:Wallet: expected 40.00 USD, got 49.75 USD",
+      "main.bean:89",
+    );
+    expect(
+      diffBeanCheckErrors(
+        [error(failing, "main.bean:89")],
+        [renamed, renamed],
+        undefined,
+        account,
+      ),
+    ).toEqual([renamed]);
+  });
+
+  it("matches an error whose quoted narration keeps the old name", () => {
+    // The rename leaves strings alone, so the engine still quotes it.
+    const quoted = error(
+      'Transaction "Paid from Assets:Cash" posts to Assets:Cash without a price',
+      "main.bean:12",
+    );
+    expect(
+      diffBeanCheckErrors(
+        [quoted],
+        [
+          error(
+            'Transaction "Paid from Assets:Cash" posts to Assets:Wallet without a price',
+            "main.bean:12",
+          ),
+        ],
+        undefined,
+        account,
+      ),
+    ).toEqual([]);
+  });
+
+  it("leaves an account the name is only a prefix of alone", () => {
+    const longer = error(
+      "Account Assets:CashBox was never opened",
+      "main.bean:4",
+    );
+    expect(
+      diffBeanCheckErrors(
+        [longer],
+        [error("Account Assets:WalletBox was never opened", "main.bean:4")],
+        undefined,
+        account,
+      ),
+    ).toHaveLength(1);
+    expect(diffBeanCheckErrors([longer], [longer], undefined, account)).toEqual(
+      [],
+    );
+  });
+});
+
 // w31/102: a delete's removeIncludes drops include lines, and bean-check
 // reports the rewritten file, one line higher below each dropped line.
 describe("atCurrentLines", () => {

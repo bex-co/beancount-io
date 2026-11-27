@@ -65,8 +65,19 @@ beforeAll(async () => {
   });
 });
 
+/** An assertion that fails before the rename and after it, naming `account` (w31/114). */
+const failingAssertion = (account: string) => ({
+  message: `Balance failed for ${account}: expected 40.00 USD, got 49.75 USD`,
+  source: { filename: "2026.bean", lineno: 4 },
+});
+
 async function fixture(
-  options: { newErrors?: boolean; readOnly?: boolean } = {},
+  options: {
+    newErrors?: boolean;
+    readOnly?: boolean;
+    /** The ledger already fails an assertion on the account it renames. */
+    failing?: boolean;
+  } = {},
 ) {
   const files = new Map([
     ["main.bean", { content: MAIN, sha: "sha-main" }],
@@ -83,15 +94,23 @@ async function fixture(
     projectedSourceFiles: async () => [...files.keys()],
     getFilesContent: async ({ paths }: { paths: string[] }) =>
       paths.map((path) => ({ path, ...files.get(path)! })),
-    checkProjectedFiles: async ({ overlays }: { overlays: unknown[] }) =>
-      overlays.length > 0 && options.newErrors
+    checkProjectedFiles: async ({ overlays }: { overlays: unknown[] }) => [
+      ...(options.failing
+        ? [
+            failingAssertion(
+              overlays.length > 0 ? "Assets:Bank:Main" : "Assets:Bank:Checking",
+            ),
+          ]
+        : []),
+      ...(overlays.length > 0 && options.newErrors
         ? [
             {
               message:
                 "Invalid reference to unknown account 'Assets:Bank:Main'",
             },
           ]
-        : [],
+        : []),
+    ],
     changeGeneratedFiles: async ({
       operations,
     }: {
@@ -101,7 +120,10 @@ async function fixture(
       return { commit: `c${commits.length}` };
     },
   };
-  const ledgerData = { getErrors: async () => [] };
+  const ledgerData = {
+    getErrors: async () =>
+      options.failing ? [failingAssertion("Assets:Bank:Checking")] : [],
+  };
   const authorization = {
     authorizeOrThrow: async () => {
       if (options.readOnly)
@@ -284,6 +306,49 @@ describe.each(SURFACES)("renameAccount on %s (w1/m43)", (surface) => {
       const forced = await env.call(surface, { ...RENAME, allowInvalid: true });
       expect(forced.success).toBe(true);
       expect(env.commits).toHaveLength(1);
+    } finally {
+      await env.close();
+    }
+  });
+
+  it("previews and commits a rename whose account already fails an assertion, with no allowInvalid (w31/114)", async () => {
+    const env = await fixture({ failing: true });
+    try {
+      const preview = await env.call(surface, { ...RENAME, dryRun: true });
+      expect(preview.success).toBe(true);
+      // MCP nests the verdict under validation; REST and GraphQL flatten it.
+      const verdict = preview.result as {
+        valid?: boolean;
+        newErrors?: unknown[];
+        validation?: { valid: boolean; newErrors: unknown[] };
+      };
+      expect(verdict.valid ?? verdict.validation?.valid).toBe(true);
+      expect(verdict.newErrors ?? verdict.validation?.newErrors).toEqual([]);
+      expect(env.commits).toHaveLength(0);
+      const renamed = await env.call(surface, RENAME);
+      expect(renamed.success).toBe(true);
+      expect(renamed.result).toMatchObject({ commit: "c1" });
+      if (surface === "mcp") {
+        expect(renamed.result?.summary).toMatch(/No new bean-check errors\.$/);
+      }
+      expect(env.commits).toHaveLength(1);
+    } finally {
+      await env.close();
+    }
+  });
+
+  it("still refuses an error the rename adds beside one the account already had (w31/114)", async () => {
+    const env = await fixture({ failing: true, newErrors: true });
+    try {
+      const refused = await env.call(surface, RENAME);
+      expect(refused).toMatchObject({
+        success: false,
+        code: "VALIDATION_FAILED",
+      });
+      expect(refused.message).toContain("1 new bean-check error");
+      expect(refused.message).toContain("unknown account 'Assets:Bank:Main'");
+      expect(refused.message).not.toContain("Balance failed");
+      expect(env.commits).toHaveLength(0);
     } finally {
       await env.close();
     }

@@ -150,6 +150,40 @@ export function renameAccountAt(
   return { text: renamed, changes };
 }
 
+/**
+ * `message` with each whole account name at or under `from` renamed to `to`,
+ * so an error the ledger already had reads as it will once the rename lands
+ * (w31/114). Engine prose, not source: there are no strings or comments to
+ * skip, and a name ends at the first character that cannot continue it, so
+ * the `:` in `Balance failed for Assets:Cash: expected …` closes the name and
+ * `Assets:Cash:Petty` is a child.
+ */
+export function renameAccountInMessage(
+  message: string,
+  from: string,
+  to: string,
+): string {
+  let renamed = "";
+  let last = 0;
+  for (
+    let i = message.indexOf(from);
+    i !== -1;
+    i = message.indexOf(from, i + 1)
+  ) {
+    const end = i + from.length;
+    if (
+      isNameChar(message[i - 1]) ||
+      message[i - 1] === ":" ||
+      isNameChar(message[end])
+    ) {
+      continue;
+    }
+    renamed += message.slice(last, i) + to;
+    last = end;
+  }
+  return renamed + message.slice(last);
+}
+
 /** `renameAccountAt` over every account token in `text` naming `from` or one under it. */
 export function renameAccountInText(
   text: string,

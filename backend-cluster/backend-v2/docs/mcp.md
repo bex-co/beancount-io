@@ -612,7 +612,9 @@ It refuses, writing nothing:
   accounts first);
 - a credential that cannot write the ledger's files (`FORBIDDEN`);
 - a rename that adds a bean-check error the ledger did not have
-  (`VALIDATION_FAILED`), unless `allowInvalid`.
+  (`VALIDATION_FAILED`), unless `allowInvalid`. An error the ledger already
+  had that names the account, or one under it, goes with it to the new name,
+  so renaming an account whose balance assertion is off reports none as new.
 
 `dry_run` returns what the commit would do: `accounts` (each `from`/`to` pair,
 descendants included), `files` (each changed line, `before` and `after`),
