@@ -74,6 +74,45 @@ describe("intervalRanges", () => {
       shape(intervalRanges("9999-12-28", "9999-12-30", "week", false)),
     ).toEqual([["9999-12-28", "9999-12-30"]]);
   });
+
+  it("preserves chart series when a ledger includes a 9999-12-31 transaction", () => {
+    const directives: DirectiveJson[] = [
+      {
+        type: "transaction",
+        date: "2024-01-15",
+        flag: "*",
+        narration: "jan",
+        tags: [],
+        links: [],
+        postings: [
+          { account: "Expenses:Food", units: { number: "10", currency: "USD" } },
+          { account: "Assets:Cash", units: { number: "-10", currency: "USD" } },
+        ],
+      },
+      {
+        type: "transaction",
+        date: "9999-12-31",
+        flag: "*",
+        narration: "far-future",
+        tags: [],
+        links: [],
+        postings: [
+          { account: "Expenses:Food", units: { number: "5", currency: "USD" } },
+          { account: "Assets:Cash", units: { number: "-5", currency: "USD" } },
+        ],
+      },
+    ];
+    const rows = intervalTotals(
+      directives,
+      "year",
+      ["Expenses:Food"],
+      "units",
+      buildPriceMap([]),
+    );
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows[0].date).toBe("2024-12-31");
+    expect(rows[0].balance).toEqual({ USD: "10" });
+  });
 });
 
 describe("interval key normalization — every IntervalKey member", () => {

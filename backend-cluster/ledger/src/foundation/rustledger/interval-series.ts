@@ -230,7 +230,9 @@ function firstAndLastDate(
       if (last === null || d.date > last) last = d.date;
     }
   });
-  return first !== null && last !== null ? [first, addDays(last, 1)] : null;
+  return first !== null && last !== null
+    ? [first, saturate(addDays(last, 1))]
+    : null;
 }
 
 /**

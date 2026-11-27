@@ -59,8 +59,10 @@ const INT_WORD = /\bint\b/iy;
 const INT_GAP = /\s*/y;
 const GROUP_BY = /\bgroup\s+by\b/gi;
 const ORDER_BY = /\border\s+by\b/gi;
-const GROUP_END = /\b(?:having|order\s+by|limit)\b|\)|;/gi;
-const ORDER_END = /\blimit\b|\)|;/gi;
+const PIVOT_BY = /\bpivot\s+by\b/gi;
+const GROUP_END = /\b(?:having|order\s+by|pivot\s+by|limit)\b|\)|;/gi;
+const ORDER_END = /\b(?:pivot\s+by|limit)\b|\)|;/gi;
+const PIVOT_END = /\b(?:order\s+by|limit)\b|\)|;/gi;
 
 export function routeIntegerLiterals(query: string): string {
   let out = "";
@@ -112,12 +114,13 @@ export function routeIntegerLiterals(query: string): string {
   return quote === null ? out : query;
 }
 
-/** Spans of bare-ordinal keys inside GROUP/ORDER lists (exempt). */
+/** Spans of bare-ordinal keys inside GROUP/ORDER/PIVOT lists (exempt). */
 function exemptOrdinalSpans(query: string): Array<[number, number]> {
   const spans: Array<[number, number]> = [];
   for (const [pattern, end] of [
     [GROUP_BY, GROUP_END],
     [ORDER_BY, ORDER_END],
+    [PIVOT_BY, PIVOT_END],
   ] as const) {
     for (const m of query.matchAll(pattern)) {
       if (inLiteral(query, m.index as number)) continue;

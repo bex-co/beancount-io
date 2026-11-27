@@ -111,6 +111,10 @@ describe("routeIntegerLiterals", () => {
     "SELECT * FROM postings ORDER BY 9007199254740992 DESC",
     "SELECT * FROM postings ORDER BY 9007199254740992 ASC",
     "SELECT * FROM postings ORDER BY payee, 9007199254740992 desc",
+    // PIVOT BY ordinals — and GROUP BY ordinals followed by PIVOT BY — must
+    // stay bare so ordinalRangeError refuses them instead of decimal() hiding them.
+    "SELECT flag, month(date), COUNT(*) GROUP BY 1, 2 PIVOT BY 9007199254740992, 2",
+    "SELECT flag, month(date), COUNT(*) GROUP BY 9007199254740992 PIVOT BY 1, 2",
   ])("leaves %p alone", (query) => {
     expect(routeIntegerLiterals(query)).toBe(query);
   });
