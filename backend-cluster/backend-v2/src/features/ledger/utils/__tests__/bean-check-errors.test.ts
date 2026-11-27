@@ -191,6 +191,100 @@ describe("diffBeanCheckErrors with a lot error already in the ledger", () => {
   });
 });
 
+// w31/127: `check_commodity` names the first account that uses a currency,
+// and `onecommodity` lists an account's currencies in the order first used,
+// on its last entry. A write that changes either relabels the error the
+// ledger already had (the ledger service's wording, as stock Beancount's).
+describe("diffBeanCheckErrors with a commodity-plugin error already in the ledger", () => {
+  const missing = (currency: string, context: string) =>
+    error(`Missing Commodity directive for '${currency}' in '${context}'`);
+  const mixed = (
+    currencies: string,
+    source = "main.bean:17",
+    account = "Expenses:Travel",
+    label = "currency",
+  ) =>
+    error(
+      `More than one ${label} in account '${account}': ${currencies}`,
+      source,
+    );
+
+  it("is not new when another account is the first to use the currency", () => {
+    expect(
+      diffBeanCheckErrors(
+        [missing("USD", "Assets:US:BofA:Checking")],
+        [missing("USD", "Assets:US:Ally:Savings")],
+      ),
+    ).toEqual([]);
+    expect(
+      diffBeanCheckErrors(
+        [missing("BND", "Price Directive Context")],
+        [missing("BND", "Assets:Broker")],
+      ),
+    ).toEqual([]);
+  });
+
+  it("is not new when a rename makes another account the first", () => {
+    expect(
+      diffBeanCheckErrors(
+        [missing("USD", "Assets:US:BofA:Checking")],
+        [missing("USD", "Assets:US:ETrade:Cash")],
+        undefined,
+        { from: "Assets:US:BofA:Checking", to: "Assets:US:Wells:Checking" },
+      ),
+    ).toEqual([]);
+  });
+
+  it("counts a second undeclared currency, or a second copy, as new", () => {
+    const gbp = missing("GBP", "Assets:UK:Cash");
+    expect(
+      diffBeanCheckErrors(
+        [missing("USD", "Assets:Bank")],
+        [missing("USD", "Assets:Bank"), gbp],
+      ),
+    ).toEqual([gbp]);
+    const copy = missing("USD", "Assets:Ally");
+    expect(
+      diffBeanCheckErrors(
+        [missing("USD", "Assets:Bank")],
+        [missing("USD", "Assets:Bank"), copy],
+      ),
+    ).toEqual([copy]);
+  });
+
+  it("is not new when its currencies reorder or it moves to another file", () => {
+    expect(diffBeanCheckErrors([mixed("USD,EUR")], [mixed("EUR,USD")])).toEqual(
+      [],
+    );
+    expect(
+      diffBeanCheckErrors(
+        [mixed("USD,EUR")],
+        [mixed("USD,EUR", "2027.bean:1")],
+      ),
+    ).toEqual([]);
+    expect(
+      diffBeanCheckErrors(
+        [mixed("USD,EUR", "main.bean:17", "Assets:Broker", "cost currency")],
+        [mixed("EUR,USD", "2027.bean:4", "Assets:Broker", "cost currency")],
+      ),
+    ).toEqual([]);
+  });
+
+  it("counts a third currency, another account or the cost wording as new", () => {
+    const third = mixed("USD,EUR,GBP");
+    expect(diffBeanCheckErrors([mixed("USD,EUR")], [third])).toEqual([third]);
+    const other = mixed("USD,EUR", "main.bean:17", "Expenses:Food");
+    expect(diffBeanCheckErrors([mixed("USD,EUR")], [other])).toEqual([other]);
+    const cost = mixed(
+      "USD,EUR",
+      "main.bean:17",
+      "Expenses:Travel",
+      "cost currency",
+    );
+    expect(diffBeanCheckErrors([mixed("USD,EUR")], [cost])).toEqual([cost]);
+  });
+});
+
 // w1/236: a renamed file's errors went with it; keyed on the old path every
 // one of them read as new.
 describe("diffBeanCheckErrors with renamed files", () => {

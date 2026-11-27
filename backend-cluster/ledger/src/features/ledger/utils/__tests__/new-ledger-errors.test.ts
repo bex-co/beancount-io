@@ -219,6 +219,87 @@ describe("a lot-booking error already in the ledger", () => {
   });
 });
 
+// w31/127: `check_commodity` names the first account that uses a currency,
+// and `onecommodity` lists an account's currencies in the order first used,
+// on its last entry. A write that changes either relabels the error the
+// ledger already had (the plugins' own wording, `check-commodity.ts`,
+// `one-commodity.ts`).
+describe("a commodity-plugin error already in the ledger", () => {
+  const missing = (currency: string, context: string) => ({
+    message: `Missing Commodity directive for '${currency}' in '${context}'`,
+  });
+  const mixed = (
+    currencies: string,
+    filename = "main.bean",
+    account = "Expenses:Travel",
+    label = "currency",
+  ) =>
+    at(
+      `More than one ${label} in account '${account}': ${currencies}`,
+      filename,
+      17,
+    );
+
+  it("is not new when another account is the first to use the currency", () => {
+    expect(
+      newLedgerErrors(
+        [missing("USD", "Assets:US:BofA:Checking")],
+        [missing("USD", "Assets:US:Ally:Savings")],
+      ),
+    ).toEqual([]);
+    expect(
+      newLedgerErrors(
+        [missing("BND", "Price Directive Context")],
+        [missing("BND", "Assets:Broker")],
+      ),
+    ).toEqual([]);
+  });
+
+  it("counts a second undeclared currency, or a second copy, as new", () => {
+    const gbp = missing("GBP", "Assets:UK:Cash");
+    expect(
+      newLedgerErrors(
+        [missing("USD", "Assets:Bank")],
+        [missing("USD", "Assets:Bank"), gbp],
+      ),
+    ).toEqual([gbp]);
+    const copy = missing("USD", "Assets:Ally");
+    expect(
+      newLedgerErrors(
+        [missing("USD", "Assets:Bank")],
+        [missing("USD", "Assets:Bank"), copy],
+      ),
+    ).toEqual([copy]);
+  });
+
+  it("is not new when its currencies reorder or it moves to another file", () => {
+    expect(newLedgerErrors([mixed("USD,EUR")], [mixed("EUR,USD")])).toEqual([]);
+    expect(
+      newLedgerErrors([mixed("USD,EUR")], [mixed("USD,EUR", "2027.bean")]),
+    ).toEqual([]);
+    expect(
+      newLedgerErrors(
+        [mixed("USD,EUR", "main.bean", "Assets:Broker", "cost currency")],
+        [mixed("EUR,USD", "2027.bean", "Assets:Broker", "cost currency")],
+      ),
+    ).toEqual([]);
+  });
+
+  it("counts a third currency, another account or the cost wording as new", () => {
+    const third = mixed("USD,EUR,GBP");
+    expect(newLedgerErrors([mixed("USD,EUR")], [third])).toEqual([third]);
+    const other = mixed("USD,EUR", "main.bean", "Expenses:Food");
+    expect(newLedgerErrors([mixed("USD,EUR")], [other])).toEqual([other]);
+    const cost = mixed(
+      "USD,EUR",
+      "main.bean",
+      "Expenses:Travel",
+      "cost currency",
+    );
+    expect(newLedgerErrors([mixed("USD,EUR")], [cost])).toEqual([cost]);
+  });
+});
+
 describe("newLedgerErrors after an edit or delete", () => {
   it("does not count an existing error the write moved to another line", () => {
     // Deleting a block above it shifts the duplicate open up (w21/m1).

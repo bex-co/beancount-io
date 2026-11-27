@@ -9,9 +9,15 @@ const error = (message: string) => ({
   source: { filename: "a.bean", lineno: 1 },
 });
 
+/** An error as the ledger service reports it, with or without a location. */
+type Reported = {
+  message: string;
+  source?: { filename: string; lineno: number };
+};
+
 function services(
-  baseline: () => Promise<ReturnType<typeof error>[]>,
-  projected: ReturnType<typeof error>[],
+  baseline: () => Promise<Reported[]>,
+  projected: Reported[],
 ): FileWriteGateServices {
   return {
     ledgerRepo: { checkProjectedFiles: jest.fn(async () => projected) },
@@ -91,6 +97,56 @@ describe("gateFileWrite", () => {
       newErrors: [],
       valid: true,
     });
+  });
+
+  // w31/127: opening an account that sorts before the first one using a
+  // currency relabels check_commodity's error, and posting to a mixed account
+  // later in another file moves onecommodity's; updateLedgerFiles refused both.
+  it("passes an edit that only relabels or moves a commodity-plugin error", async () => {
+    const missing = (account: string) => ({
+      message: `Missing Commodity directive for 'USD' in '${account}'`,
+    });
+    const mixed = (currencies: string, filename: string) => ({
+      message: `More than one currency in account 'Expenses:Travel': ${currencies}`,
+      source: { filename, lineno: 1 },
+    });
+    const result = await gateFileWrite(
+      services(
+        async () => [
+          missing("Assets:US:BofA:Checking"),
+          mixed("USD,EUR", "main.bean"),
+        ],
+        [missing("Assets:US:Ally:Savings"), mixed("EUR,USD", "2027.bean")],
+      ),
+      identity,
+      "alice/main",
+      overlays,
+      false,
+    );
+    expect(result).toMatchObject({
+      errorsBefore: 2,
+      errorsAfter: 2,
+      newErrors: [],
+      valid: true,
+    });
+  });
+
+  it("still refuses a new undeclared currency beside a known one (w31/127)", async () => {
+    const missing = (currency: string, account: string) => ({
+      message: `Missing Commodity directive for '${currency}' in '${account}'`,
+    });
+    await expect(
+      gateFileWrite(
+        services(
+          async () => [missing("USD", "Assets:Bank")],
+          [missing("USD", "Assets:Ally"), missing("GBP", "Assets:UK:Cash")],
+        ),
+        identity,
+        "alice/main",
+        overlays,
+        false,
+      ),
+    ).rejects.toBeInstanceOf(NewLedgerErrorsError);
   });
 
   // w23/233: an unreadable baseline read as "no errors", so each error the

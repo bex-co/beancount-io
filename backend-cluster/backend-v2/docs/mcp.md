@@ -458,7 +458,14 @@ a message that a write can change without causing the error: the entry's
 `(date, "narration")` tag, the figure a failing balance assertion reached
 (`got …`), and a lot error's available units (`available …`) or number of
 matching lots (`… lots match`). A changed account, expected amount or
-requested amount still makes the error new. `moveEntrySources` matches an
+requested amount still makes the error new. The commodity plugins' errors
+match on what they are about. `check_commodity`'s missing-commodity error
+matches on its currency alone, because it names whichever account uses the
+currency first, so opening an account that sorts before that one, or
+renaming that one, reports none as new. `onecommodity`'s error matches on
+its account and its set of currencies, in any order and in any file, because
+it sits on the account's last entry. A new undeclared currency, or a third
+currency in a mixed account, still counts. `moveEntrySources` matches an
 error inside a moved entry in `toPath`, where the entry goes, so moving an
 entry that already has an error reports none as new; a second copy of its
 message, or an error the move causes elsewhere such as a balance assertion

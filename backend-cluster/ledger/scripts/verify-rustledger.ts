@@ -78,6 +78,7 @@ import {
   verifyOwnKeyUnderPushmeta,
   verifyScopedEntryMove,
 } from "./entry-move";
+import { verifyKnownCommodityErrors } from "./known-commodity-errors";
 import { verifyKnownLotErrors } from "./known-lot-errors";
 import {
   verifyEditErrorLines,
@@ -6175,6 +6176,7 @@ poptag #trip
   await verifyProjectedIncludes();
   await verifyProjectedDocuments();
   await verifyKnownLotErrors();
+  await verifyKnownCommodityErrors();
   await verifyEditErrorLines();
   await verifyProjectedEditLines();
 

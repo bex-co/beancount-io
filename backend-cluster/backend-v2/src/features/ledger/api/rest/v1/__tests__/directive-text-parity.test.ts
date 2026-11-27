@@ -1342,6 +1342,79 @@ describe.each(["rest", "gql", "mcp"] as const)(
   },
 );
 
+// w31/127: with check_commodity declared, the ledger reports each undeclared
+// currency once, naming the first account that uses it. Opening an account
+// that sorts before it names the new account instead, so the projection
+// quotes 'Assets:US:Ally:Savings' where the ledger had
+// 'Assets:US:BofA:Checking'. That is the error the ledger already had (the
+// engine's wording, from the note's fixture).
+describe.each(["rest", "gql", "mcp"] as const)(
+  "appendLedgerText over a missing-commodity error the ledger already has via %s",
+  (surface) => {
+    const missing = (currency: string, account: string) => ({
+      message: `Missing Commodity directive for '${currency}' in '${account}'`,
+    });
+    const OPEN = "2025-10-13 open Assets:US:Ally:Savings USD";
+    // Its own caller, so these calls spend no other test's write budget.
+    const ledger = () =>
+      fixture({ ...identity, userId: `usr_text_commodity_${surface}` });
+    const verdict = (res: { ok: boolean; data?: unknown }) => {
+      const data = res.ok ? (res.data as Record<string, unknown>) : {};
+      return (data.validation ?? data) as {
+        valid: boolean;
+        errorsBefore: number;
+        errorsAfter: number;
+        newErrors: { message: string }[];
+      };
+    };
+
+    it("previews valid: true and commits without allowInvalid", async () => {
+      const f = await ledger();
+      f.state.baselineErrors = [missing("USD", "Assets:US:BofA:Checking")];
+      f.state.projectedErrors = [missing("USD", "Assets:US:Ally:Savings")];
+      try {
+        const preview = await f.call(surface, { text: OPEN, dryRun: true });
+        expect(preview.ok).toBe(true);
+        expect(verdict(preview)).toMatchObject({
+          valid: true,
+          errorsBefore: 1,
+          errorsAfter: 1,
+          newErrors: [],
+        });
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+        const commit = await f.call(surface, { text: OPEN });
+        expect(commit.ok).toBe(true);
+        expect(verdict(commit)).toMatchObject({ valid: true, newErrors: [] });
+        expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("still refuses a new undeclared currency", async () => {
+      const f = await ledger();
+      f.state.baselineErrors = [missing("USD", "Assets:US:BofA:Checking")];
+      f.state.projectedErrors = [
+        missing("GBP", "Assets:UK:Cash"),
+        missing("USD", "Assets:US:BofA:Checking"),
+      ];
+      const text = "2025-10-13 open Assets:UK:Cash GBP";
+      try {
+        const preview = await f.call(surface, { text, dryRun: true });
+        expect(verdict(preview)).toMatchObject({
+          valid: false,
+          newErrors: [missing("GBP", "Assets:UK:Cash")],
+        });
+        const commit = await f.call(surface, { text });
+        expect(commit.ok).toBe(false);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
 // w31/116: an append threads its text in by date, so everything below the
 // insertion sits that many lines lower in the text bean-check reads. A preview
 // and a refusal commit nothing, so both name a new error at its line in the

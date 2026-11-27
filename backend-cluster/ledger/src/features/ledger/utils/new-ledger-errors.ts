@@ -14,6 +14,15 @@ const IMBALANCE_PREFIX = "Transaction does not balance";
 const RESIDUAL_SUFFIX = /residual (.+)$/;
 
 /**
+ * `onecommodity`'s error, once per account (`one-commodity.ts`): it sits on
+ * the account's last entry, so a later entry in another file moves it there.
+ * It is matched on the account and its currencies, in whichever file it sits
+ * (w31/127).
+ */
+const MIXED_ACCOUNT =
+  /^(More than one (?:cost )?currency in account '[^']*': )(.*)$/s;
+
+/**
  * The engine ends an interpolation or lot-match error with the entry's date
  * and narration, `(2026-08-30, "Groceries")`. Editing either one rewrote the
  * message, so the error the ledger already had read as a new one and the
@@ -36,6 +45,16 @@ const RESIDUAL_SUFFIX = /residual (.+)$/;
  * sale's missing buys one batch at a time was refused on every partial batch
  * (w31/115). The reduction is the same one: matching keeps the account and
  * the requested amount and ignores what is available and how many lots match.
+ *
+ * `check_commodity` reports each undeclared currency once, naming the first
+ * account that uses it (`check-commodity.ts`): "Missing Commodity directive
+ * for 'USD' in 'Assets:Bank'". Opening an account that sorts first names
+ * that account instead, so the error the ledger already had read as new and
+ * the write was refused (w31/127). The currency is the error's identity:
+ * matching drops the account. `onecommodity`'s "More than one currency in
+ * account 'A': USD,EUR" lists the currencies in the order they were first
+ * used, so an earlier entry in the other one reversed the list. Matching
+ * sorts them.
  */
 function withoutEntryTag(message: string): string {
   return message
@@ -49,7 +68,13 @@ function withoutEntryTag(message: string): string {
       "$1",
     )
     .replace(/^(Ambiguous lot match for [^:]+: )\d+ (lots match in )/, "$1$2")
-    .replace(/^(Ambiguous match: )\d+ (lots match for )/, "$1$2");
+    .replace(/^(Ambiguous match: )\d+ (lots match for )/, "$1$2")
+    .replace(/^(Missing Commodity directive for '[^']*') in '.*'$/s, "$1")
+    .replace(
+      MIXED_ACCOUNT,
+      (_, head: string, currencies: string) =>
+        `${head}${currencies.split(",").sort().join(",")}`,
+    );
 }
 
 /**
@@ -69,7 +94,8 @@ export interface MovedLines {
  * but not line: editing or deleting a block shifts every later line, so an
  * existing error below the edit moves without being new (w21/m1). Each
  * `before` error excuses one `after` error, in order, so a second copy of a
- * known message still counts as introduced.
+ * known message still counts as introduced. An account's mixed-currency
+ * error matches in any file (w31/127).
  *
  * An error inside lines the write `moved` is matched in the file they move
  * to: an entry that already had an error carries it to its new file, where
@@ -80,8 +106,10 @@ export function newLedgerErrors(
   after: readonly BeancountErrorPublic[],
   moved: readonly MovedLines[] = [],
 ): BeancountErrorPublic[] {
-  const key = (error: BeancountErrorPublic, file = error.source?.filename) =>
-    `${withoutEntryTag(error.message)}\u0000${file ?? ""}`;
+  const key = (error: BeancountErrorPublic, file = error.source?.filename) => {
+    const message = withoutEntryTag(error.message);
+    return `${message}\u0000${MIXED_ACCOUNT.test(message) ? "" : (file ?? "")}`;
+  };
   const fileBefore = ({ source }: BeancountErrorPublic) => {
     if (!source) return undefined;
     const index = source.lineno - 1;

@@ -260,4 +260,45 @@ describe("addLedgerEntries", () => {
       });
     });
   });
+
+  // w31/127: opening an account that sorts before the first one using USD
+  // names it in check_commodity's error, so the commit's re-read named the
+  // old error as new.
+  describe("over a missing-commodity error the ledger already has", () => {
+    const missing = (currency: string, account: string) => ({
+      message: `Missing Commodity directive for '${currency}' in '${account}'`,
+      source: null,
+      code: "PLUGIN",
+    });
+
+    it("reports no new error when another account is the first to use the currency", async () => {
+      const result = await commit(
+        [missing("USD", "Assets:US:BofA:Checking")],
+        [missing("USD", "Assets:US:Ally:Savings")],
+      );
+      expect(result.validation).toEqual({
+        errorsBefore: 1,
+        errorsAfter: 1,
+        newErrors: [],
+        valid: true,
+      });
+      expect(String(result.summary)).toBe(
+        "Added 1 entry to main.bean. No new bean-check errors.",
+      );
+    });
+
+    it("still reports a new undeclared currency", async () => {
+      const result = await commit(
+        [missing("USD", "Assets:US:BofA:Checking")],
+        [
+          missing("GBP", "Assets:UK:Cash"),
+          missing("USD", "Assets:US:Ally:Savings"),
+        ],
+      );
+      expect(result.validation).toMatchObject({
+        newErrors: [{ message: missing("GBP", "Assets:UK:Cash").message }],
+        valid: false,
+      });
+    });
+  });
 });

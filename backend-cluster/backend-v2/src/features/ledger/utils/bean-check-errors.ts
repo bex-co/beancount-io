@@ -125,6 +125,14 @@ export function toBeanCheckErrors(
 }
 
 /**
+ * `onecommodity`'s error, once per account: it sits on the account's last
+ * entry, so a later entry in another file moves it there. It is matched on
+ * the account and its currencies, in whichever file it sits (w31/127).
+ */
+const MIXED_ACCOUNT =
+  /^(More than one (?:cost )?currency in account '[^']*': )(.*)$/s;
+
+/**
  * The engine ends an interpolation or lot-match error with the entry's date
  * and narration, `(2026-08-30, "Groceries")`, so editing either one rewrote
  * an existing error's message.
@@ -143,6 +151,15 @@ export function toBeanCheckErrors(
  * partial import of a sale's missing buys was refused (w31/115). Matching
  * keeps the account and the requested amount and ignores what is available
  * and how many lots match, as the ledger service does.
+ *
+ * `check_commodity` reports each undeclared currency once, naming the first
+ * account that uses it: "Missing Commodity directive for 'USD' in
+ * 'Assets:Bank'". Opening an account that sorts first, or renaming the first
+ * one, names another account, so the error the ledger already had read as
+ * new (w31/127). The currency is the error's identity: matching drops the
+ * account. `onecommodity`'s "More than one currency in account 'A': USD,EUR"
+ * lists the currencies in the order they were first used, so an earlier
+ * entry in the other one reversed the list. Matching sorts them.
  */
 function withoutEntryTag(message: string): string {
   return message
@@ -156,7 +173,13 @@ function withoutEntryTag(message: string): string {
       "$1",
     )
     .replace(/^(Ambiguous lot match for [^:]+: )\d+ (lots match in )/, "$1$2")
-    .replace(/^(Ambiguous match: )\d+ (lots match for )/, "$1$2");
+    .replace(/^(Ambiguous match: )\d+ (lots match for )/, "$1$2")
+    .replace(/^(Missing Commodity directive for '[^']*') in '.*'$/s, "$1")
+    .replace(
+      MIXED_ACCOUNT,
+      (_, head: string, currencies: string) =>
+        `${head}${currencies.split(",").sort().join(",")}`,
+    );
 }
 
 /** Files a write moves, `oldPath` to `newPath`: their errors move with them. */
@@ -248,7 +271,8 @@ export function atLinesBeforeEdits(
  * but not line: a write that inserts or removes lines moves every error below
  * it without introducing one, and keying on `file:line` refused a valid append
  * over the moved error (w23/034). Each `before` error excuses one `after`
- * error, so a second copy of a known message still counts as new. This is the
+ * error, so a second copy of a known message still counts as new. An
+ * account's mixed-currency error matches in any file (w31/127). This is the
  * ledger service's `newLedgerErrors` rule (w21/m1), restated because packages
  * share no code.
  */
@@ -267,8 +291,10 @@ export function diffBeanCheckErrors(
     ? (message: string) =>
         renameAccountInMessage(message, account.from, account.to)
     : (message: string) => message;
-  const key = (error: BeanCheckError, file: string) =>
-    `${withoutEntryTag(named(error.message))}\u0000${file}`;
+  const key = (error: BeanCheckError, file: string) => {
+    const message = withoutEntryTag(named(error.message));
+    return `${message}\u0000${MIXED_ACCOUNT.test(message) ? "" : file}`;
+  };
   const left = new Map<string, number>();
   for (const error of before) {
     // A moved file's errors did not appear with the move: keyed on the old

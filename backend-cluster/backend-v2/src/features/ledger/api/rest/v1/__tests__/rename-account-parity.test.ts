@@ -71,12 +71,24 @@ const failingAssertion = (account: string) => ({
   source: { filename: "2026.bean", lineno: 4 },
 });
 
+/**
+ * check_commodity's error for USD, which names the first account using it
+ * (w31/127): `Assets:Bank:Checking` before a rename to `Assets:Bank:Wells`,
+ * and `Assets:Bank:Savings` after it.
+ */
+const missingUsd = (account: string) => ({
+  message: `Missing Commodity directive for 'USD' in '${account}'`,
+});
+const SAVINGS = "2026-01-01 open Assets:Bank:Savings USD\n";
+
 async function fixture(
   options: {
     newErrors?: boolean;
     readOnly?: boolean;
     /** The ledger already fails an assertion on the account it renames. */
     failing?: boolean;
+    /** The ledger declares no USD, and opens Assets:Bank:Savings in it. */
+    undeclaredUsd?: boolean;
   } = {},
 ) {
   const files = new Map([
@@ -84,6 +96,9 @@ async function fixture(
     ["2026.bean", { content: YEAR, sha: "sha-year" }],
     ["food.bean", { content: FOOD, sha: "sha-food" }],
     ["skipped.bean", { content: SKIPPED, sha: "sha-skipped" }],
+    ...(options.undeclaredUsd
+      ? [["savings.bean", { content: SAVINGS, sha: "sha-savings" }] as const]
+      : []),
   ]);
   const commits: {
     path: string;
@@ -95,6 +110,15 @@ async function fixture(
     getFilesContent: async ({ paths }: { paths: string[] }) =>
       paths.map((path) => ({ path, ...files.get(path)! })),
     checkProjectedFiles: async ({ overlays }: { overlays: unknown[] }) => [
+      ...(options.undeclaredUsd
+        ? [
+            missingUsd(
+              overlays.length > 0
+                ? "Assets:Bank:Savings"
+                : "Assets:Bank:Checking",
+            ),
+          ]
+        : []),
       ...(options.failing
         ? [
             failingAssertion(
@@ -121,8 +145,10 @@ async function fixture(
     },
   };
   const ledgerData = {
-    getErrors: async () =>
-      options.failing ? [failingAssertion("Assets:Bank:Checking")] : [],
+    getErrors: async () => [
+      ...(options.undeclaredUsd ? [missingUsd("Assets:Bank:Checking")] : []),
+      ...(options.failing ? [failingAssertion("Assets:Bank:Checking")] : []),
+    ],
   };
   const authorization = {
     authorizeOrThrow: async () => {
@@ -331,6 +357,28 @@ describe.each(SURFACES)("renameAccount on %s (w1/m43)", (surface) => {
       if (surface === "mcp") {
         expect(renamed.result?.summary).toMatch(/No new bean-check errors\.$/);
       }
+      expect(env.commits).toHaveLength(1);
+    } finally {
+      await env.close();
+    }
+  });
+
+  it("previews and commits a rename that makes another account the first to use an undeclared currency (w31/127)", async () => {
+    const env = await fixture({ undeclaredUsd: true });
+    const rename = { from: "Assets:Bank:Checking", to: "Assets:Bank:Wells" };
+    try {
+      const preview = await env.call(surface, { ...rename, dryRun: true });
+      expect(preview.success).toBe(true);
+      const verdict = preview.result as {
+        valid?: boolean;
+        newErrors?: unknown[];
+        validation?: { valid: boolean; newErrors: unknown[] };
+      };
+      expect(verdict.valid ?? verdict.validation?.valid).toBe(true);
+      expect(verdict.newErrors ?? verdict.validation?.newErrors).toEqual([]);
+      expect(env.commits).toHaveLength(0);
+      const renamed = await env.call(surface, rename);
+      expect(renamed.success).toBe(true);
       expect(env.commits).toHaveLength(1);
     } finally {
       await env.close();
