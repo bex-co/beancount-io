@@ -2153,6 +2153,100 @@ async function main(): Promise<void> {
     postingAccepted.valid,
     `what stock accepts stays clean: a positive, zero or -0 price, a full cost spec, a compound cost (got ${JSON.stringify(postingAccepted.errors.map((e) => `${e.line} ${e.message}`))})`,
   );
+  // w31/121: stock refuses an account with a colon after it, a string where a
+  // dated line's flag goes, and a number with no leading digit. The engine
+  // (0.24.0) books `Assets:Cash:` to `Assets:Cash`, reads the flagless header
+  // as a `*` transaction, and reads `.50`, once `withLeadingZeros` gives it
+  // its zero, as 0.50, all clean. The raw-engine assertion says when it
+  // catches up: delete that rule from `stock-syntax-errors.ts`.
+  const spellingLedger = (...lines: string[]): Record<string, string> => ({
+    "main.beancount": [
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Expenses:Food:Coffee USD",
+      "",
+      ...lines,
+      "",
+    ].join("\n"),
+  });
+  const spellingRefused: Array<[string, string[], number, string]> = [
+    [
+      "a posting's account with a colon after it",
+      [
+        '2026-09-01 * "x"',
+        "  Assets:Cash:  -1.00 USD",
+        "  Expenses:Food:Coffee  1.00 USD",
+      ],
+      5,
+      'syntax error, unexpected COLON, expecting end of file or EOL or ATAT or AT: the account "Assets:Cash:" ends with a colon',
+    ],
+    [
+      "an open's account with a colon after it",
+      ["2026-09-01 open Assets:Cash2: USD"],
+      4,
+      'syntax error, unexpected COLON, expecting end of file or EOL: the account "Assets:Cash2:" ends with a colon',
+    ],
+    [
+      "a dated header with no flag",
+      [
+        '2026-09-02 "noflag"',
+        "  Assets:Cash  -1.00 USD",
+        "  Expenses:Food:Coffee  1.00 USD",
+      ],
+      4,
+      "syntax error, unexpected STRING: a transaction has a flag (* or !) or txn after its date",
+    ],
+    [
+      "an amount with no leading digit",
+      [
+        '2026-09-01 * "x"',
+        "  Assets:Cash  -.50 USD",
+        "  Expenses:Food:Coffee  0.50 USD",
+      ],
+      5,
+      "Invalid token: '.50'",
+    ],
+  ];
+  for (const [label, lines, line, message] of spellingRefused) {
+    const files = spellingLedger(...lines);
+    const raw = await rawValidate(files, "main.beancount");
+    assert(
+      raw.valid,
+      `the raw engine still loads ${label}, so its rule is load-bearing (got ${JSON.stringify(raw.errors.map((e) => e.message))})`,
+    );
+    const reported = await parseLedgerFiles(files, "main.beancount");
+    assert(
+      !reported.valid &&
+        reported.errors.some(
+          (e) =>
+            e.code === "P0012" &&
+            e.line === line &&
+            e.message === message &&
+            e.severity === "error",
+        ),
+      `${label} is reported at line ${line}, as stock refuses it (got ${JSON.stringify(reported.errors.map((e) => `${e.line} ${e.message}`))})`,
+    );
+  }
+  const spellingAccepted = await parseLedgerFiles(
+    spellingLedger(
+      "2026-01-01 open Assets:Cash- USD",
+      "2026-01-01 open Assets:9Cash USD",
+      '2026-09-01 txn "x"',
+      '  key: "a:b"',
+      "  Assets:Cash  0.50 USD ; Assets:Cash:",
+      "  Assets:Cash-  1,000.00 USD",
+      "  Assets:9Cash  1. USD",
+      "  Expenses:Food:Coffee",
+      '2026-09-02 P "pay: me"',
+      "  Assets:Cash  1 USD",
+      "  Expenses:Food:Coffee",
+      ":Assets:Cash: an org-mode line Beancount skips",
+    ),
+    "main.beancount",
+  );
+  assert(
+    spellingAccepted.valid,
+    `what stock accepts stays clean: Assets:Cash- and Assets:9Cash, 0.50, 1. and 1,000.00, txn and a P flag, a key line, a colon in a string, a comment or an org-mode line (got ${JSON.stringify(spellingAccepted.errors.map((e) => `${e.line} ${e.message}`))})`,
+  );
   // w23/199: a run of trailing terminators is empty statements stock
   // tolerates; every `;` has to go or the bare `FROM postings` tail resolves
   // as a column.

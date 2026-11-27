@@ -201,7 +201,7 @@ engine fills the column (w23/m19).
 These things stock `bean-check` refuses load without an error in the pinned
 engine (`@rustledger/wasm` 0.24.0), so `src/foundation/rustledger/stock-syntax-errors.ts`
 reports them at their line, in the same error list `checkLedger`, the post-write
-report and the write gates read (w23/240, w31/120):
+report and the write gates read (w23/240, w31/120, w31/121):
 
 | Code | Construct | Stock's message |
 | --- | --- | --- |
@@ -211,11 +211,29 @@ report and the write gates read (w23/240, w31/120):
 | `NEGATIVE_PRICE` | a negative per-unit or total price (`10 EUR @ -1.10 USD`), on the posting's line | `Negative prices are not allowed: -1.10 USD (see …)` |
 | `COST_MERGE` | a merge cost (`-5 HOOL {*}`), on the posting's line | `Cost merging is not supported yet`, `Duplicate merge-cost spec` |
 | `DUPLICATE_COST_COMPONENT` | a second amount, date or label in one `{…}`, on the posting's line | `Duplicate cost: …`, `Duplicate date: '2026-01-05'.`, `Duplicate label: 'b'.` |
+| `P0012` | an account with a colon after it (`Assets:Cash:`), on a posting, an `open`, `close`, `pad`, `balance`, `note`, `document` or `custom` line, or a metadata value | `syntax error, unexpected COLON, expecting …` (the tokens stock expected there) |
+| `P0012` | a string where a dated line's flag goes (`2026-09-02 "x"`) | `syntax error, unexpected STRING` |
+| `P0012` | a number with no leading digit (`.50 USD`), at each one | `Invalid token: '.50'` |
 
 The engine keeps a negative price's sign, so `10 EUR @ -1.10 USD` weighed
 -11.00 USD; it keeps a cost spec's first date, label and amount, and reads `{*}`
 as an empty cost. Structured `addLedgerEntries` refuses a negative `price` or
 `totalPrice` before it reads a file (`src/api/entries.ts`).
+
+The engine books `Assets:Cash:` to `Assets:Cash`, so a balance assertion that
+holds only with that posting counted passed, and reads the flagless header as a
+`*` transaction. It would read `.50` as 50; `withLeadingZeros`
+(`parseable-files.ts`) gives it its zero so the figure is right, and the error
+is reported at exactly the dots it rewrites. The two syntax errors carry
+stock's message and then what is wrong (`: the account "Assets:Cash:" ends with
+a colon`); all three carry the engine's own parse-error code, so a write
+refused for them says the text is not valid Beancount. Stock drops a directive
+at its first syntax error, so the scan reports that one and none of the
+directive's later errors (a repeated key, a posting error below the bad line, a
+second commodity it would have been), and, like stock's parser, stays quiet
+about a flagless header on the line straight after a failed directive. Checked
+against stock 3.2.3 on 14,500 random ledgers and the 126 tracked ledger fixtures
+with no difference.
 
 The scan is syntactic and abstains on doubt: it reads one block's own lines (a
 line inside a multi-line string is never a key), and a line that does not have a

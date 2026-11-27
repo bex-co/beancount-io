@@ -45,17 +45,31 @@ const LEADING_DOT_OR_TOKEN_RE =
 
 /**
  * `source` with a number written without its leading zero (`.5`, `-.5`,
- * `+.5`) given one. Beancount's lexer reads `.5` as 0.5; rustledger 0.24
- * rejects the dot, then keeps the posting with the number 5 and drops the sign,
- * so Home, Accounts and Reports totalled ten times the amount written
- * (w21/969). Strings and `;` comments are matched first and left as they are,
- * and a dot after a letter, digit, `:`, `#` or `^` is part of something else.
+ * `+.5`) given one. Beancount's lexer refuses `.5`: its number rule needs a
+ * leading digit, so it answers `Invalid token: '.5'` and drops the directive,
+ * and `stockSyntaxErrors` reports that error at each dot found here (w31/121).
+ * rustledger 0.24 rejects the dot too, then keeps the posting with the number
+ * 5 and drops the sign, so Home, Accounts and Reports totalled ten times the
+ * amount written (w21/969); with the zero, the figure is the one the writer
+ * meant while the error says the text is wrong. Strings and `;` comments are
+ * matched first and left as they are, and a dot after a letter, digit, `:`,
+ * `#` or `^` is part of something else.
  */
 export function withLeadingZeros(source: string): string {
   if (!LEADING_DOT_NUMBER_RE.test(source)) return source;
   return source.replace(LEADING_DOT_OR_TOKEN_RE, (token) =>
     token === "." ? "0." : token,
   );
+}
+
+/** The offset of each dot {@link withLeadingZeros} gives a zero, in order. */
+export function leadingDotOffsets(source: string): number[] {
+  if (!LEADING_DOT_NUMBER_RE.test(source)) return [];
+  const offsets: number[] = [];
+  for (const match of source.matchAll(LEADING_DOT_OR_TOKEN_RE)) {
+    if (match[0] === ".") offsets.push(match.index);
+  }
+  return offsets;
 }
 
 /**

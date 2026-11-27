@@ -421,11 +421,14 @@ function costSpecErrors(tokens: readonly Token[]): PostingSyntaxError[] | null {
   return errors;
 }
 
+/** An account as stock's lexer reads one: `{ACCOUNTTYPE}(:{ACCOUNTNAME})+`. */
+export const STOCK_ACCOUNT =
+  String.raw`(?:[A-Z]|[^\x00-\x7f])(?:[A-Za-z0-9-]|[^\x00-\x7f])*` +
+  String.raw`(?::(?:[A-Z0-9]|[^\x00-\x7f])(?:[A-Za-z0-9-]|[^\x00-\x7f])*)+`;
+
 /** A posting line: its indent, an optional flag, and the account. */
 const POSTING = new RegExp(
-  String.raw`^[ \t]+(?:[*!&#?%][ \t]*|[A-Z][ \t]+)?` +
-    String.raw`(?:[A-Z]|[^\x00-\x7f])(?:[A-Za-z0-9-]|[^\x00-\x7f])*` +
-    String.raw`(?::(?:[A-Z0-9]|[^\x00-\x7f])(?:[A-Za-z0-9-]|[^\x00-\x7f])*)+`,
+  String.raw`^[ \t]+(?:[*!&#?%][ \t]*|[A-Z][ \t]+)?${STOCK_ACCOUNT}`,
   "u",
 );
 
