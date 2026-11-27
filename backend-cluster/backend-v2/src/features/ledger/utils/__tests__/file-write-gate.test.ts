@@ -44,6 +44,26 @@ describe("gateFileWrite", () => {
     ).rejects.toBeInstanceOf(NewLedgerErrorsError);
   });
 
+  // w31/113: a file write above an assertion that already fails changes the
+  // figure it quotes; updateLedgerFiles refused the edit for that old error.
+  it("passes an edit that only moves a failing assertion's reached figure", async () => {
+    const failed = (got: string) =>
+      error(`Balance failed for Assets:Cash: expected 40.00 USD, got ${got}`);
+    const result = await gateFileWrite(
+      services(async () => [failed("49.75 USD")], [failed("44.75 USD")]),
+      identity,
+      "alice/main",
+      overlays,
+      false,
+    );
+    expect(result).toMatchObject({
+      errorsBefore: 1,
+      errorsAfter: 1,
+      newErrors: [],
+      valid: true,
+    });
+  });
+
   // w23/233: an unreadable baseline read as "no errors", so each error the
   // ledger already had counted as new.
   it("says it was not checked, and refuses nothing, when the baseline cannot be read", async () => {

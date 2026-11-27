@@ -147,4 +147,68 @@ describe("addLedgerEntries", () => {
     );
     expect(String(result.result.summary)).toContain("1 new bean-check error");
   });
+
+  // w31/113: the ledger service accepts an entry above an assertion that
+  // already fails, but the commit's re-read quoted a new "got" figure and the
+  // result reported the old failure as a new error the preview never named.
+  describe("over a balance assertion that already fails", () => {
+    const failed = (got: string, lineno: number) => ({
+      message: `Balance failed for Assets:Cash: expected 40.00 USD, got ${got}`,
+      source: { filename: "main.bean", lineno },
+      code: "E2001",
+    });
+    const commit = async (before: unknown[], after: unknown[]) => {
+      const addBulkEntries = jest.fn().mockResolvedValue({
+        success: true,
+        message: "Added 1 entry successfully",
+        files: ["main.bean"],
+      });
+      const getErrors = jest
+        .fn()
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce(after);
+      const result = await addLedgerEntries()(
+        {
+          services: { ledgerData: { getErrors } },
+          identity: IDENTITY,
+          ledgerEntryService: { addBulkEntries },
+        },
+        { ledger: LEDGER_ID, entries },
+      );
+      if (!result.ok) throw new Error("expected ok");
+      return result.result;
+    };
+
+    it("reports no new error when only the reached figure moved", async () => {
+      const result = await commit(
+        [failed("49.75 USD", 89)],
+        [failed("44.75 USD", 93)],
+      );
+      expect(result.validation).toEqual({
+        errorsBefore: 1,
+        errorsAfter: 1,
+        newErrors: [],
+        valid: true,
+      });
+      expect(String(result.summary)).toBe(
+        "Added 1 entry to main.bean. No new bean-check errors.",
+      );
+    });
+
+    it("still reports an assertion the write made fail", async () => {
+      const result = await commit([], [failed("44.75 USD", 93)]);
+      expect(result.validation).toMatchObject({
+        errorsBefore: 0,
+        errorsAfter: 1,
+        newErrors: [
+          {
+            message:
+              "Balance failed for Assets:Cash: expected 40.00 USD, got 44.75 USD",
+            source: "main.bean:93",
+          },
+        ],
+        valid: false,
+      });
+    });
+  });
 });

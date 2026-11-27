@@ -127,9 +127,22 @@ export function toBeanCheckErrors(
  * The engine ends an interpolation or lot-match error with the entry's date
  * and narration, `(2026-08-30, "Groceries")`, so editing either one rewrote
  * an existing error's message.
+ *
+ * A failed balance assertion quotes the figure the account reached ("expected
+ * 40.00 USD, got 49.75 USD"), and the explicit-tolerance wording quotes it with
+ * its difference. Any write above the assertion changes that figure, so while
+ * an assertion was off a valid append was refused for the error the ledger
+ * already had (w31/113). The assertion is the same one: matching keeps its
+ * account and expected amount and ignores "got", as the ledger service's
+ * `newLedgerErrors` does (w21/618, w21/681).
  */
 function withoutEntryTag(message: string): string {
-  return message.replace(/ \(\d{4}-\d{2}-\d{2}, ".*"\)$/s, "");
+  return message
+    .replace(/ \(\d{4}-\d{2}-\d{2}, ".*"\)$/s, "")
+    .replace(
+      /^(Balance (?:failed|exceeds explicit tolerance) for [^:]+:.*?expected [^,]*), got .*$/s,
+      "$1",
+    );
 }
 
 /** Files a write moves, `oldPath` to `newPath`: their errors move with them. */

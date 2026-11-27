@@ -97,6 +97,8 @@ async function fixture(caller = identity) {
     files: new Map<string, string>([["main.bean", EXISTING]]),
     /** Errors the projected check reports for the overlaid ledger. */
     projectedErrors: [] as { message: string; source?: null }[],
+    /** Errors the ledger already has: the check with no overlay. */
+    baselineErrors: [] as { message: string; source?: null }[],
     routeTransactionsTo: null as string | null,
     /** The ledger's include closure; every fixture file unless narrowed. */
     sourceFiles: undefined as string[] | undefined,
@@ -125,7 +127,9 @@ async function fixture(caller = identity) {
   const checkProjectedErrors = jest.fn(
     async (_o, _n, body: { files: unknown[] }) =>
       // No overlay is the baseline read; an overlay is the projection.
-      envelope(body.files.length === 0 ? [] : state.projectedErrors),
+      envelope(
+        body.files.length === 0 ? state.baselineErrors : state.projectedErrors,
+      ),
   );
 
   // The projected include closure: the narrowed closure when a test sets one
@@ -1163,6 +1167,78 @@ describe("appending Beancount text through the real adapters", () => {
     }
   });
 });
+
+// w31/113: while an assertion is off, any entry above it changes the figure
+// the account reached, so the projection quotes a new "got". That is the
+// error the ledger already had, and the structured add already says so.
+describe.each(["rest", "gql", "mcp"] as const)(
+  "appendLedgerText over a balance assertion that already fails via %s",
+  (surface) => {
+    const failed = (got: string) => ({
+      message: `Balance failed for Assets:Cash: expected 40.00 USD, got ${got}`,
+    });
+    const verdict = (res: { ok: boolean; data?: unknown }) => {
+      const data = res.ok ? (res.data as Record<string, unknown>) : {};
+      return (data.validation ?? data) as {
+        valid: boolean;
+        errorsBefore: number;
+        errorsAfter: number;
+        newErrors: { message: string }[];
+      };
+    };
+
+    it("previews valid: true with no new errors", async () => {
+      const f = await fixture();
+      f.state.baselineErrors = [failed("49.75 USD")];
+      f.state.projectedErrors = [failed("44.75 USD")];
+      try {
+        const res = await f.call(surface, { text: TXN, dryRun: true });
+        expect(res.ok).toBe(true);
+        expect(verdict(res)).toMatchObject({
+          valid: true,
+          errorsBefore: 1,
+          errorsAfter: 1,
+          newErrors: [],
+        });
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("commits without allowInvalid", async () => {
+      const f = await fixture();
+      f.state.baselineErrors = [failed("49.75 USD")];
+      f.state.projectedErrors = [failed("44.75 USD")];
+      try {
+        const res = await f.call(surface, { text: TXN });
+        expect(res.ok).toBe(true);
+        expect(verdict(res)).toMatchObject({ valid: true, newErrors: [] });
+        expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("still names a second failing assertion as new", async () => {
+      const f = await fixture();
+      f.state.baselineErrors = [failed("49.75 USD")];
+      f.state.projectedErrors = [failed("44.75 USD"), failed("44.75 USD")];
+      try {
+        const preview = await f.call(surface, { text: TXN, dryRun: true });
+        expect(verdict(preview)).toMatchObject({
+          valid: false,
+          newErrors: [failed("44.75 USD")],
+        });
+        const commit = await f.call(surface, { text: TXN });
+        expect(commit.ok).toBe(false);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
 
 describe("requestId on appended text", () => {
   beforeEach(() => fakeRedisIdempotencyState.reset());

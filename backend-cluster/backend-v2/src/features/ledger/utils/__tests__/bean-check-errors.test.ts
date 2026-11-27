@@ -49,6 +49,71 @@ describe("diffBeanCheckErrors", () => {
   });
 });
 
+// w31/113: an assertion that already fails quotes the figure the account
+// reached, and any write above it changes that figure. The ledger service's
+// `newLedgerErrors` ignores it (w21/618, w21/681); these pin the same cases.
+describe("diffBeanCheckErrors with a balance assertion already failing", () => {
+  const failed = (
+    got: string,
+    expected = "40.00 USD",
+    account = "Assets:Cash",
+  ) =>
+    error(
+      `Balance failed for ${account}: expected ${expected}, got ${got}`,
+      "main.bean:89",
+    );
+  const exceeds = (got: string, difference: string, expected = "100 USD") =>
+    error(
+      `Balance exceeds explicit tolerance for Assets:Tol: expected ${expected} ~ 0.01, got ${got} USD (difference: ${difference})`,
+      "main.bean:9",
+    );
+
+  it("is not new when only the reached figure changed", () => {
+    expect(
+      diffBeanCheckErrors(
+        [failed("49.75 USD")],
+        [{ ...failed("44.75 USD"), source: "main.bean:93" }],
+      ),
+    ).toEqual([]);
+  });
+
+  it("is not new for the explicit-tolerance wording either", () => {
+    expect(
+      diffBeanCheckErrors([exceeds("0", "100")], [exceeds("-5.00", "105.00")]),
+    ).toEqual([]);
+  });
+
+  it("counts a second failing assertion on the same account as new", () => {
+    const second = failed("44.75 USD");
+    expect(
+      diffBeanCheckErrors([failed("49.75 USD")], [failed("44.75 USD"), second]),
+    ).toEqual([second]);
+  });
+
+  it("counts an assertion whose expected amount changed as new", () => {
+    const moved = failed("44.75 USD", "41.00 USD");
+    expect(diffBeanCheckErrors([failed("49.75 USD")], [moved])).toEqual([
+      moved,
+    ]);
+    const tolerance = exceeds("0", "200", "200 USD");
+    expect(diffBeanCheckErrors([exceeds("0", "100")], [tolerance])).toEqual([
+      tolerance,
+    ]);
+  });
+
+  it("counts a failure on another account as new", () => {
+    const other = failed("44.75 USD", "40.00 USD", "Assets:Bank");
+    expect(diffBeanCheckErrors([failed("49.75 USD")], [other])).toEqual([
+      other,
+    ]);
+  });
+
+  it("counts an assertion that was passing and now fails", () => {
+    const now = failed("44.75 USD");
+    expect(diffBeanCheckErrors([], [now])).toEqual([now]);
+  });
+});
+
 // w1/236: a renamed file's errors went with it; keyed on the old path every
 // one of them read as new.
 describe("diffBeanCheckErrors with renamed files", () => {
