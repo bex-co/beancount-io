@@ -52,6 +52,32 @@ function addLedgerEntries(): Execute {
   return tool.execute as Execute;
 }
 
+/**
+ * Commit `entries` through MCP's `addLedgerEntries`, with the ledger's errors
+ * read `before` and `after` the write: the commit result re-diffs them.
+ */
+async function commit(before: unknown[], after: unknown[]) {
+  const addBulkEntries = jest.fn().mockResolvedValue({
+    success: true,
+    message: "Added 1 entry successfully",
+    files: ["main.bean"],
+  });
+  const getErrors = jest
+    .fn()
+    .mockResolvedValueOnce(before)
+    .mockResolvedValueOnce(after);
+  const result = await addLedgerEntries()(
+    {
+      services: { ledgerData: { getErrors } },
+      identity: IDENTITY,
+      ledgerEntryService: { addBulkEntries },
+    },
+    { ledger: LEDGER_ID, entries },
+  );
+  if (!result.ok) throw new Error("expected ok");
+  return result.result;
+}
+
 describe("addLedgerEntries", () => {
   /**
    * Through the real registry rather than the bare `execute`, because the
@@ -157,27 +183,6 @@ describe("addLedgerEntries", () => {
       source: { filename: "main.bean", lineno },
       code: "E2001",
     });
-    const commit = async (before: unknown[], after: unknown[]) => {
-      const addBulkEntries = jest.fn().mockResolvedValue({
-        success: true,
-        message: "Added 1 entry successfully",
-        files: ["main.bean"],
-      });
-      const getErrors = jest
-        .fn()
-        .mockResolvedValueOnce(before)
-        .mockResolvedValueOnce(after);
-      const result = await addLedgerEntries()(
-        {
-          services: { ledgerData: { getErrors } },
-          identity: IDENTITY,
-          ledgerEntryService: { addBulkEntries },
-        },
-        { ledger: LEDGER_ID, entries },
-      );
-      if (!result.ok) throw new Error("expected ok");
-      return result.result;
-    };
 
     it("reports no new error when only the reached figure moved", async () => {
       const result = await commit(
@@ -205,6 +210,50 @@ describe("addLedgerEntries", () => {
             message:
               "Balance failed for Assets:Cash: expected 40.00 USD, got 44.75 USD",
             source: "main.bean:93",
+          },
+        ],
+        valid: false,
+      });
+    });
+  });
+
+  // w31/115: a buy dated before a sale that fails to book changes the lots
+  // the error quotes, so the commit's re-read named the old failure as new.
+  describe("over a lot error the ledger already has", () => {
+    const short = (available: string, lineno: number, requested = "10") => ({
+      message: `Not enough units in Assets:Broker: requested ${requested}, available ${available}; not enough to reduce (2026-03-01, "sell-a")`,
+      source: { filename: "main.bean", lineno },
+      code: "BOOK",
+    });
+    const ambiguous = (lots: number, lineno: number) => ({
+      message: `Ambiguous lot match for HOOL: ${lots} lots match in Assets:Strict (2026-03-01, "sell-s")`,
+      source: { filename: "main.bean", lineno },
+      code: "BOOK",
+    });
+
+    it("reports no new error when only the available figure or lot count moved", async () => {
+      const result = await commit(
+        [short("5", 20), ambiguous(2, 24)],
+        [short("7", 24), ambiguous(3, 28)],
+      );
+      expect(result.validation).toEqual({
+        errorsBefore: 2,
+        errorsAfter: 2,
+        newErrors: [],
+        valid: true,
+      });
+      expect(String(result.summary)).toBe(
+        "Added 1 entry to main.bean. No new bean-check errors.",
+      );
+    });
+
+    it("still reports a reduction whose requested amount changed", async () => {
+      const result = await commit([short("5", 20)], [short("7", 24, "12")]);
+      expect(result.validation).toMatchObject({
+        newErrors: [
+          {
+            message: short("7", 24, "12").message,
+            source: "main.bean:24",
           },
         ],
         valid: false,

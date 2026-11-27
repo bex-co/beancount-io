@@ -1240,6 +1240,78 @@ describe.each(["rest", "gql", "mcp"] as const)(
   },
 );
 
+// w31/115: a sale whose buys are missing fails to book, and the error quotes
+// the lots the account holds. Importing one of the missing buys changes that
+// figure, so the projection quotes "available 7" and "3 lots match" where the
+// ledger had "available 5" and "2 lots match". Those are the errors the
+// ledger already had (the engine's wording, from the note's fixture).
+describe.each(["rest", "gql", "mcp"] as const)(
+  "appendLedgerText over a lot error the ledger already has via %s",
+  (surface) => {
+    const short = (available: string, requested = "10") => ({
+      message: `Not enough units in Assets:Broker: requested ${requested}, available ${available}; not enough to reduce (2026-03-01, "sell-a")`,
+    });
+    const ambiguous = (lots: number) => ({
+      message: `Ambiguous lot match for HOOL: ${lots} lots match in Assets:Strict (2026-03-01, "sell-s")`,
+    });
+    const BUY = [
+      '2026-02-15 * "buy-b"',
+      "  Assets:Broker  2 HOOL {10.00 USD}",
+      "  Assets:Cash  -20.00 USD",
+    ].join("\n");
+    const verdict = (res: { ok: boolean; data?: unknown }) => {
+      const data = res.ok ? (res.data as Record<string, unknown>) : {};
+      return (data.validation ?? data) as {
+        valid: boolean;
+        errorsBefore: number;
+        errorsAfter: number;
+        newErrors: { message: string }[];
+      };
+    };
+
+    it("previews valid: true and commits without allowInvalid", async () => {
+      const f = await fixture();
+      f.state.baselineErrors = [short("5"), ambiguous(2)];
+      f.state.projectedErrors = [short("7"), ambiguous(3)];
+      try {
+        const preview = await f.call(surface, { text: BUY, dryRun: true });
+        expect(preview.ok).toBe(true);
+        expect(verdict(preview)).toMatchObject({
+          valid: true,
+          errorsBefore: 2,
+          errorsAfter: 2,
+          newErrors: [],
+        });
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+        const commit = await f.call(surface, { text: BUY });
+        expect(commit.ok).toBe(true);
+        expect(verdict(commit)).toMatchObject({ valid: true, newErrors: [] });
+        expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("still refuses a reduction whose requested amount changed", async () => {
+      const f = await fixture();
+      f.state.baselineErrors = [short("5")];
+      f.state.projectedErrors = [short("7", "12")];
+      try {
+        const preview = await f.call(surface, { text: BUY, dryRun: true });
+        expect(verdict(preview)).toMatchObject({
+          valid: false,
+          newErrors: [short("7", "12")],
+        });
+        const commit = await f.call(surface, { text: BUY });
+        expect(commit.ok).toBe(false);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
 describe("requestId on appended text", () => {
   beforeEach(() => fakeRedisIdempotencyState.reset());
 

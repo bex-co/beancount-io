@@ -64,6 +64,35 @@ describe("gateFileWrite", () => {
     });
   });
 
+  // w31/115: inserting a missing buy above a sale that fails to book changes
+  // the lots its error quotes; updateLedgerFiles refused the edit for it.
+  it("passes an edit that only moves a lot error's available figure or lot count", async () => {
+    const short = (available: string) =>
+      error(
+        `Not enough units in Assets:Broker: requested 10, available ${available}; not enough to reduce (2026-03-01, "sell-a")`,
+      );
+    const ambiguous = (lots: number) =>
+      error(
+        `Ambiguous lot match for HOOL: ${lots} lots match in Assets:Strict (2026-03-01, "sell-s")`,
+      );
+    const result = await gateFileWrite(
+      services(
+        async () => [short("5"), ambiguous(2)],
+        [short("7"), ambiguous(3)],
+      ),
+      identity,
+      "alice/main",
+      overlays,
+      false,
+    );
+    expect(result).toMatchObject({
+      errorsBefore: 2,
+      errorsAfter: 2,
+      newErrors: [],
+      valid: true,
+    });
+  });
+
   // w23/233: an unreadable baseline read as "no errors", so each error the
   // ledger already had counted as new.
   it("says it was not checked, and refuses nothing, when the baseline cannot be read", async () => {

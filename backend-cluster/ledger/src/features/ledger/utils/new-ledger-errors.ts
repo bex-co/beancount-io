@@ -29,6 +29,13 @@ const RESIDUAL_SUFFIX = /residual (.+)$/;
  * The explicit-tolerance wording ("Balance exceeds explicit tolerance for A:
  * expected 100 USD ~ 0.01, got 0 USD (difference: 100)") also quotes the
  * reached figure and its difference, so it is trimmed the same way (w21/681).
+ *
+ * A lot-booking error quotes the account's lots: "Not enough units in A:
+ * requested 10, available 5" and "Ambiguous lot match for HOOL: 2 lots match
+ * in A". A buy dated before the reduction changes that figure, so importing a
+ * sale's missing buys one batch at a time was refused on every partial batch
+ * (w31/115). The reduction is the same one: matching keeps the account and
+ * the requested amount and ignores what is available and how many lots match.
  */
 function withoutEntryTag(message: string): string {
   return message
@@ -36,7 +43,13 @@ function withoutEntryTag(message: string): string {
     .replace(
       /^(Balance (?:failed|exceeds explicit tolerance) for [^:]+:.*?expected [^,]*), got .*$/s,
       "$1",
-    );
+    )
+    .replace(
+      /^((?:Not enough units in|Insufficient units of) .*?: requested [^,]*), available [^;]*/s,
+      "$1",
+    )
+    .replace(/^(Ambiguous lot match for [^:]+: )\d+ (lots match in )/, "$1$2")
+    .replace(/^(Ambiguous match: )\d+ (lots match for )/, "$1$2");
 }
 
 /**

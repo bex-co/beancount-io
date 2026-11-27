@@ -442,6 +442,15 @@ published `outputSchema` declares all three, and a client that validates
 `structuredContent` against it accepts the result; a key the schema omitted
 would make that client reject the whole preview.
 
+An error is new only when the ledger did not already have it. Errors match on
+message and file, not line, so an error the write merely moves is not new,
+while a second copy of a known message is. The match leaves out the parts of
+a message that a write can change without causing the error: the entry's
+`(date, "narration")` tag, the figure a failing balance assertion reached
+(`got …`), and a lot error's available units (`available …`) or number of
+matching lots (`… lots match`). A changed account, expected amount or
+requested amount still makes the error new.
+
 `renameLedgerFile` and `revertCommit` project bean-check the same way but
 never refuse the commit for new errors: each reports the verdict, in the
 preview and in the commit alike, and takes no `allowInvalid`. A file rename

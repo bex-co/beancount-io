@@ -77,6 +77,7 @@ import {
   verifyOwnKeyUnderPushmeta,
   verifyScopedEntryMove,
 } from "./entry-move";
+import { verifyKnownLotErrors } from "./known-lot-errors";
 import { verifyProjectedDocuments } from "./projected-documents";
 import { verifyProjectedIncludes } from "./projected-includes";
 import { verifySlashDatedEntries } from "./slash-dated-entries";
@@ -5941,6 +5942,7 @@ poptag #trip
   await verifySlashDatedEntries();
   await verifyProjectedIncludes();
   await verifyProjectedDocuments();
+  await verifyKnownLotErrors();
 
   console.log("\nAll rustledger engine checks passed.");
 }

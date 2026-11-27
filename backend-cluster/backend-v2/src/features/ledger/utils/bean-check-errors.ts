@@ -136,6 +136,13 @@ export function toBeanCheckErrors(
  * already had (w31/113). The assertion is the same one: matching keeps its
  * account and expected amount and ignores "got", as the ledger service's
  * `newLedgerErrors` does (w21/618, w21/681).
+ *
+ * A lot-booking error quotes the account's lots the same way: "Not enough
+ * units in A: requested 10, available 5" and "Ambiguous lot match for HOOL: 2
+ * lots match in A". A buy before the reduction changes that figure, so every
+ * partial import of a sale's missing buys was refused (w31/115). Matching
+ * keeps the account and the requested amount and ignores what is available
+ * and how many lots match, as the ledger service does.
  */
 function withoutEntryTag(message: string): string {
   return message
@@ -143,7 +150,13 @@ function withoutEntryTag(message: string): string {
     .replace(
       /^(Balance (?:failed|exceeds explicit tolerance) for [^:]+:.*?expected [^,]*), got .*$/s,
       "$1",
-    );
+    )
+    .replace(
+      /^((?:Not enough units in|Insufficient units of) .*?: requested [^,]*), available [^;]*/s,
+      "$1",
+    )
+    .replace(/^(Ambiguous lot match for [^:]+: )\d+ (lots match in )/, "$1$2")
+    .replace(/^(Ambiguous match: )\d+ (lots match for )/, "$1$2");
 }
 
 /** Files a write moves, `oldPath` to `newPath`: their errors move with them. */

@@ -141,6 +141,83 @@ describe("an explicit-tolerance balance failure", () => {
   });
 });
 
+// w31/115: a lot-booking error quotes the lots the account holds, so a buy
+// dated before the reduction changed it and the error the ledger already had
+// read as a new one. The engine's own wording, entry tag included.
+describe("a lot-booking error already in the ledger", () => {
+  const short = (
+    available: string,
+    requested = "10",
+    account = "Assets:Broker",
+    tag = '(2026-03-01, "Sell")',
+  ): BeancountErrorPublic =>
+    at(
+      `Not enough units in ${account}: requested ${requested}, available ${available}; not enough to reduce ${tag}`,
+      "main.bean",
+      20,
+    );
+  const ambiguous = (
+    lots: number,
+    account = "Assets:Strict",
+  ): BeancountErrorPublic =>
+    at(
+      `Ambiguous lot match for HOOL: ${lots} lots match in ${account} (2026-03-01, "Sell")`,
+      "main.bean",
+      24,
+    );
+  const insufficient = (available: string, requested = "10") =>
+    at(
+      `Insufficient units of HOOL: requested ${requested}, available ${available}`,
+      "main.bean",
+      20,
+    );
+  const inventory = (lots: number) =>
+    at(`Ambiguous match: ${lots} lots match for HOOL`, "main.bean", 24);
+
+  it("is not new when only the available figure changed", () => {
+    expect(
+      newLedgerErrors(
+        [short("5")],
+        [{ ...short("7"), source: { filename: "main.bean", lineno: 24 } }],
+      ),
+    ).toEqual([]);
+    expect(newLedgerErrors([insufficient("5")], [insufficient("7")])).toEqual(
+      [],
+    );
+  });
+
+  it("is not new when only the number of matching lots changed", () => {
+    expect(newLedgerErrors([ambiguous(2)], [ambiguous(3)])).toEqual([]);
+    expect(newLedgerErrors([inventory(2)], [inventory(3)])).toEqual([]);
+  });
+
+  it("counts a changed requested amount as new", () => {
+    const more = short("7", "12");
+    expect(newLedgerErrors([short("5")], [more])).toEqual([more]);
+    const larger = insufficient("7", "12");
+    expect(newLedgerErrors([insufficient("5")], [larger])).toEqual([larger]);
+  });
+
+  it("counts a second failing reduction as new", () => {
+    const second = short("7", "10", "Assets:Broker", '(2026-03-02, "Sell 2")');
+    expect(newLedgerErrors([short("5")], [short("7"), second])).toEqual([
+      second,
+    ]);
+    const copy = ambiguous(3);
+    expect(newLedgerErrors([ambiguous(2)], [ambiguous(3), copy])).toEqual([
+      copy,
+    ]);
+  });
+
+  it("counts a reduction on another account, or one that newly fails, as new", () => {
+    const other = short("5", "10", "Assets:Other");
+    expect(newLedgerErrors([short("5")], [other])).toEqual([other]);
+    const elsewhere = ambiguous(2, "Assets:Other");
+    expect(newLedgerErrors([ambiguous(2)], [elsewhere])).toEqual([elsewhere]);
+    expect(newLedgerErrors([], [short("7")])).toHaveLength(1);
+  });
+});
+
 describe("newLedgerErrors after an edit or delete", () => {
   it("does not count an existing error the write moved to another line", () => {
     // Deleting a block above it shifts the duplicate open up (w21/m1).

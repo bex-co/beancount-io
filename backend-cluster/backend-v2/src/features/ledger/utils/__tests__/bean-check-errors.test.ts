@@ -114,6 +114,82 @@ describe("diffBeanCheckErrors with a balance assertion already failing", () => {
   });
 });
 
+// w31/115: a lot-booking error quotes the lots the account holds, and a buy
+// dated before the reduction changes that figure. The engine's own wording
+// (`@rustledger/wasm` 0.24.0), entry tag included.
+describe("diffBeanCheckErrors with a lot error already in the ledger", () => {
+  const short = (
+    available: string,
+    requested = "10",
+    account = "Assets:Broker",
+    tag = '(2026-03-01, "Sell")',
+  ) =>
+    error(
+      `Not enough units in ${account}: requested ${requested}, available ${available}; not enough to reduce ${tag}`,
+      "main.bean:20",
+    );
+  const ambiguous = (lots: number, account = "Assets:Strict") =>
+    error(
+      `Ambiguous lot match for HOOL: ${lots} lots match in ${account} (2026-03-01, "Sell")`,
+      "main.bean:24",
+    );
+  const insufficient = (available: string, requested = "10") =>
+    error(
+      `Insufficient units of HOOL: requested ${requested}, available ${available}`,
+      "main.bean:20",
+    );
+  const inventory = (lots: number) =>
+    error(`Ambiguous match: ${lots} lots match for HOOL`, "main.bean:24");
+
+  it("is not new when only the available figure changed", () => {
+    expect(
+      diffBeanCheckErrors(
+        [short("5")],
+        [{ ...short("7"), source: "main.bean:24" }],
+      ),
+    ).toEqual([]);
+    expect(
+      diffBeanCheckErrors([insufficient("5")], [insufficient("7")]),
+    ).toEqual([]);
+  });
+
+  it("is not new when only the number of matching lots changed", () => {
+    expect(diffBeanCheckErrors([ambiguous(2)], [ambiguous(3)])).toEqual([]);
+    expect(diffBeanCheckErrors([inventory(2)], [inventory(3)])).toEqual([]);
+  });
+
+  it("counts a changed requested amount as new", () => {
+    const more = short("7", "12");
+    expect(diffBeanCheckErrors([short("5")], [more])).toEqual([more]);
+    const larger = insufficient("7", "12");
+    expect(diffBeanCheckErrors([insufficient("5")], [larger])).toEqual([
+      larger,
+    ]);
+  });
+
+  it("counts a second failing reduction as new", () => {
+    const second = short("7", "10", "Assets:Broker", '(2026-03-02, "Sell 2")');
+    expect(diffBeanCheckErrors([short("5")], [short("7"), second])).toEqual([
+      second,
+    ]);
+    const copy = ambiguous(3);
+    expect(diffBeanCheckErrors([ambiguous(2)], [ambiguous(3), copy])).toEqual([
+      copy,
+    ]);
+  });
+
+  it("counts a reduction on another account, or one that newly fails, as new", () => {
+    const other = short("5", "10", "Assets:Other");
+    expect(diffBeanCheckErrors([short("5")], [other])).toEqual([other]);
+    const elsewhere = ambiguous(2, "Assets:Other");
+    expect(diffBeanCheckErrors([ambiguous(2)], [elsewhere])).toEqual([
+      elsewhere,
+    ]);
+    const now = short("7");
+    expect(diffBeanCheckErrors([], [now])).toEqual([now]);
+  });
+});
+
 // w1/236: a renamed file's errors went with it; keyed on the old path every
 // one of them read as new.
 describe("diffBeanCheckErrors with renamed files", () => {
