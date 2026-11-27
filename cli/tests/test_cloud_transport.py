@@ -214,7 +214,10 @@ def test_non_json_http_error_keeps_status_category(monkeypatch: pytest.MonkeyPat
         server.server_close()
 
 
-def test_clone_retains_git_diagnostic(tmp_path: Path, git_remote: GitRemote) -> None:
+def test_clone_retains_git_diagnostic(tmp_path: Path, git_remote: GitRemote, monkeypatch: pytest.MonkeyPatch) -> None:
+    # git translates its messages; the English wording asserted below needs
+    # the C locale, or a zh_CN host reads "已经存在，并且不是一个空目录".
+    monkeypatch.setenv("LC_ALL", "C")
     occupied = tmp_path / "occupied"
     occupied.mkdir()
     (occupied / "keep.txt").write_text("pristine\n")
