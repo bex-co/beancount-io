@@ -1,4 +1,5 @@
 import type { BeancountError, DirectiveJson } from "@rustledger/wasm";
+import { SOURCE_DATE, sourceDateOf } from "./source-date";
 
 /**
  * Put booking and interpolation errors on the transaction they are about.
@@ -15,7 +16,11 @@ import type { BeancountError, DirectiveJson } from "@rustledger/wasm";
  */
 
 const BOOK_ENTRY = /\((\d{4}-\d{2}-\d{2}), "((?:[^"\\]|\\.)*)"\)$/u;
-const TRANSACTION_LINE = /^(\d{4}-\d{2}-\d{2})\s+(?:[*!]|txn)(\s|$)/u;
+/** A transaction's first line, its date spelled any way the lexer reads (w31/107). */
+const TRANSACTION_LINE = new RegExp(
+  String.raw`^${SOURCE_DATE}\s+(?:[*!]|txn)(\s|$)`,
+  "u",
+);
 const QUOTED = /"((?:[^"\\]|\\.)*)"/gu;
 
 type Block = { file: string; line: number };
@@ -42,12 +47,11 @@ function transactionLines(
     const content = files[file];
     if (content === undefined) continue;
     content.split(/\r\n|\n|\r/u).forEach((text, index) => {
-      const head = TRANSACTION_LINE.exec(text);
-      if (!head) return;
+      if (!TRANSACTION_LINE.test(text)) return;
       const strings = [...text.matchAll(QUOTED)];
       const last = strings[strings.length - 1];
       if (!last) return;
-      const key = entryKey(head[1], unescape(last[1]));
+      const key = entryKey(sourceDateOf(text)!, unescape(last[1]));
       const list = found.get(key) ?? [];
       list.push({ file, line: index + 1 });
       found.set(key, list);

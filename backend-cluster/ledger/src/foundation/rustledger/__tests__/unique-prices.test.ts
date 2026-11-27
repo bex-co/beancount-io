@@ -134,6 +134,32 @@ describe("reconcileUniquePriceErrors", () => {
     ).toEqual([["other.bean", 1]]);
   });
 
+  // w31/107: stock's lexer reads `2024/01/09` and `2024-1-9` as dates; the
+  // engine names the day `2024-01-09`.
+  it.each(["2024/01/09", "2024-1-9"])(
+    "places a disagreement whose prices are dated %s",
+    (date) => {
+      const prices = [`${date} price VTI 100 USD`, `${date} price VTI 101 USD`];
+      const stream = [price("2024-01-09", "100"), price("2024-01-09", "101")];
+      expect(
+        check(
+          [duplicate("2024-01-09")],
+          stream,
+          [UNIQUE, ...prices].join("\n"),
+        ),
+      ).toEqual([["main.bean", 3, "Disagreeing price entries"]]);
+      // Judged as the source writes them when implicit_prices runs after.
+      const source = [
+        'plugin "beancount.plugins.unique_prices"',
+        'plugin "beancount.plugins.implicit_prices"',
+        ...prices,
+      ].join("\n");
+      expect(check([duplicate("2024-01-09")], stream, source)).toEqual([
+        ["main.bean", 3, "Disagreeing price entries"],
+      ]);
+    },
+  );
+
   it("names the pair and day when the source does not show the prices", () => {
     expect(
       check(

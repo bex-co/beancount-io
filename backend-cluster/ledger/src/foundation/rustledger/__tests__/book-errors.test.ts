@@ -68,6 +68,20 @@ describe("locateBookErrors", () => {
     expect(located.map((error) => error.line)).toEqual([8, 11]);
   });
 
+  // w31/107: the engine names the entry `2026-02-01` however its line spells
+  // the date; stock's lexer reads `2026/02/01` and `2026-2-1` too.
+  it.each(["2026-02-01", "2026/02/01", "2026-2-1"])(
+    "finds a transaction dated %s",
+    (date) => {
+      const [located] = locateBookErrors(
+        [book('interpolation failed: x (2026-02-01, "Rent")')],
+        { "main.bean": `\n${date} * "Rent"\n  A 1 USD` },
+        "main.bean",
+      );
+      expect(located).toMatchObject({ file: "main.bean", line: 2 });
+    },
+  );
+
   it("finds a transaction in an included file", () => {
     const [located] = locateBookErrors(
       [book('interpolation failed: x (2026-02-01, "Rent")')],

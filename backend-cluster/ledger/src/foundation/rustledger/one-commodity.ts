@@ -2,14 +2,18 @@ import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
 import { indexBlocks } from "./block-index";
 import { patternRefusal } from "./pattern-complexity";
 import { beancountPluginRuns } from "./plugins/collect-plugins";
+import { SOURCE_DATE, sourceDateOf } from "./source-date";
 import { includeTraversalOrder } from "./source-slice";
 
 /** rustledger's own check: once per transaction, with none of the opt-outs. */
 const RUSTLEDGER = /^Account '.*' uses multiple currencies: /u;
 /** A posting line's account, after its flag if it has one. */
 const POSTING = /^\s+(?:[*!&#?%]\s*|[PSTCURM]\s+)?(\S+)/u;
-const HEADER =
-  /^(\d{4}-\d{2}-\d{2})\s+(?:balance\s+(\S+)|txn\b|[*!&#?%PSTCURM](?:\s|$))/u;
+/** An entry's header; its date any spelling the lexer reads (w31/107). */
+const HEADER = new RegExp(
+  String.raw`^(${SOURCE_DATE})\s+(?:balance\s+(\S+)|txn\b|[*!&#?%PSTCURM](?:\s|$))`,
+  "u",
+);
 
 type Kind = "units" | "cost";
 /** Beancount's sort key for an entry, and where it is written. */
@@ -113,7 +117,8 @@ function lastPlaces(
       const [header = "", ...lines] = block.text.split("\n");
       const match = HEADER.exec(header);
       if (match === null) continue;
-      const [, date = "", balanced] = match;
+      const [, written = "", balanced] = match;
+      const date = sourceDateOf(written)!;
       const place = (order: number) => ({
         date,
         order,

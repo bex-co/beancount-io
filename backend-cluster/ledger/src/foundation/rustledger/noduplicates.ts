@@ -1,6 +1,7 @@
 import type { BeancountError, FileMap } from "@rustledger/wasm";
 import { indexBlocks } from "./block-index";
 import { beancountPluginRuns } from "./plugins/collect-plugins";
+import { SOURCE_DATE, sourceDateOf } from "./source-date";
 import { includeTraversalOrder, loadedFiles } from "./source-slice";
 
 /** rustledger's `noduplicates` error, raised for each later copy. */
@@ -8,9 +9,16 @@ const DUPLICATE = /^Duplicate transaction: (\d{4}-\d{2}-\d{2}) "(.*)"$/u;
 /** A metadata line, which Beancount leaves out when it compares entries. */
 const METADATA = /^\s+[a-z][\w-]*:(?:\s|$)/u;
 
-/** A block's text as entries compare: no metadata, comments or spacing. */
+/** A date at the start of a block, any spelling the lexer reads (w31/107). */
+const LEADING_DATE = new RegExp(String.raw`^${SOURCE_DATE}(?!\d)`, "u");
+
+/**
+ * A block's text as entries compare: no metadata, comments or spacing, and its
+ * date as the engine reports it, so `2026/09/01` repeats `2026-09-01`.
+ */
 const identity = (text: string) =>
   text
+    .replace(LEADING_DATE, (date) => sourceDateOf(date)!)
     .split("\n")
     .filter((line) => !METADATA.test(line))
     .map((line) => line.replace(/\s;.*$/u, "").trim())
@@ -45,7 +53,10 @@ export function locateDuplicateErrors(
     for (const file of order) {
       for (const block of index.blocks(file)) {
         const header = block.text.split("\n", 1)[0]!;
-        if (!header.startsWith(date) || !header.includes(`"${narration}"`)) {
+        if (
+          sourceDateOf(header) !== date ||
+          !header.includes(`"${narration}"`)
+        ) {
           continue;
         }
         const text = identity(block.text);
@@ -65,7 +76,10 @@ export function locateDuplicateErrors(
 }
 
 /** The directives besides transactions the engine does not compare. */
-const OTHER_DUPLICATES = /^\d{4}-\d{2}-\d{2}\s+(balance|note|event)\s/u;
+const OTHER_DUPLICATES = new RegExp(
+  String.raw`^${SOURCE_DATE}\s+(balance|note|event)\s`,
+  "u",
+);
 const TYPE_NAMES: Record<string, string> = {
   balance: "Balance",
   note: "Note",
@@ -105,7 +119,7 @@ export function duplicateEntryErrors(
       found.push({
         file,
         line: block.startLine + 1,
-        date: block.text.slice(0, 10),
+        date: sourceDateOf(block.text)!,
         rank: match[1] === "balance" ? -1 : 0,
         seq: found.length,
         kind: match[1]!,

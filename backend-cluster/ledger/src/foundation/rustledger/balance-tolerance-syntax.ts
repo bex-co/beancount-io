@@ -1,5 +1,6 @@
 import type { BeancountError, FileMap } from "@rustledger/wasm";
 import { isSkippedLine } from "./parseable-files";
+import { SOURCE_DATE } from "./source-date";
 import { endsInsideString, loadedFiles } from "./source-slice";
 
 /**
@@ -15,7 +16,8 @@ import { endsInsideString, loadedFiles } from "./source-slice";
  * rejects the spelling; the live check in `scripts/verify-rustledger.ts`
  * shows when.
  *
- * Syntactic and abstaining on doubt: only a line that starts with a date and
+ * Syntactic and abstaining on doubt: only a line that starts with a date (any
+ * spelling stock's lexer reads, `2026/08/30` and `2026-8-30` too: w31/107) and
  * `balance`, then an account, a plain number expression, a currency, and
  * `~`. The valid spelling has `~` straight after the number, so it never
  * matches; an unrelated line or a comment cannot start with a date at
@@ -23,8 +25,9 @@ import { endsInsideString, loadedFiles } from "./source-slice";
  * — a narration holds any text — so string state is tracked across lines
  * (like `routed-includes`) and in-string lines are never read as directives.
  */
-const MID_CURRENCY_TOLERANCE =
-  /^\d{4}-\d{2}-\d{2}[ \t]+balance[ \t]+\S+[ \t]+[-+]?[\d.,]+(?:[ \t]*[-+*/][ \t]*[\d.,]+)*[ \t]+([A-Z][A-Z0-9'._-]*)[ \t]*~/;
+const MID_CURRENCY_TOLERANCE = new RegExp(
+  String.raw`^${SOURCE_DATE}[ \t]+balance[ \t]+\S+[ \t]+[-+]?[\d.,]+(?:[ \t]*[-+*/][ \t]*[\d.,]+)*[ \t]+([A-Z][A-Z0-9'._-]*)[ \t]*~`,
+);
 
 export function midCurrencyToleranceErrors(
   files: FileMap,

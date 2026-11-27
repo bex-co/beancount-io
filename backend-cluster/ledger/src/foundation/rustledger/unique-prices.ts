@@ -4,14 +4,16 @@ import {
   beancountPluginRuns,
   collectLedgerPlugins,
 } from "./plugins/collect-plugins";
+import { SOURCE_DATE, sourceDateOf } from "./source-date";
 import { includeTraversalOrder } from "./source-slice";
 
 /** rustledger's `unique_prices` error, raised for every same-day repeat. */
 const DUPLICATE = /^Duplicate price for (\S+?)\/(\S+) on (\d{4}-\d{2}-\d{2})$/u;
 const MESSAGE = "Disagreeing price entries";
 const NUMBER = String.raw`-?\d[\d,]*(?:\.\d+)?`;
+/** A `price` line; its date any spelling the lexer reads (w31/107). */
 const PRICE_LINE = new RegExp(
-  String.raw`^(\d{4}-\d{2}-\d{2})\s+price\s+(\S+)\s+(${NUMBER})\s+(\S+)`,
+  String.raw`^(${SOURCE_DATE})\s+price\s+(\S+)\s+(${NUMBER})\s+(\S+)`,
   "u",
 );
 /** A posting's units and the rest of its line, after its flag if it has one. */
@@ -111,7 +113,7 @@ function disagreementLocator(
     const candidates: Candidate[] = [];
     for (const file of order) {
       for (const block of index.blocks(file)) {
-        if (!block.text.startsWith(date)) continue;
+        if (sourceDateOf(block.text) !== date) continue;
         const line = block.startLine + 1;
         const [header = "", ...postings] = block.text.split("\n");
         const price = PRICE_LINE.exec(header);
@@ -167,8 +169,8 @@ function writtenPrices(
     for (const block of index.blocks(file)) {
       const price = PRICE_LINE.exec(block.text);
       if (price === null) continue;
-      const [, date = "", base = "", number = "", quote = ""] = price;
-      prices.push({ date, base, quote, number });
+      const [, written = "", base = "", number = "", quote = ""] = price;
+      prices.push({ date: sourceDateOf(written)!, base, quote, number });
     }
   }
   return prices;

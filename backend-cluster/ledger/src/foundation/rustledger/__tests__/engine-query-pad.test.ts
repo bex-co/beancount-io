@@ -75,6 +75,30 @@ describe("queryLedgerFilesResultInProcess and pads", () => {
     expect(queriedEntryPoints).toEqual(["main.bean"]);
   });
 
+  // w31/107: stock's lexer reads `2020/01/04` and `2020-1-4` as dates.
+  it.each(["2020/01/04", "2020-1-4"])("sees a pad dated %s", async (date) => {
+    await queryLedgerFilesResultInProcess(
+      { "main.bean": WITH_PAD.replace("2020-01-04", date) },
+      "main.bean",
+      "SELECT 1",
+    );
+    expect(queriedEntryPoints).toEqual(["__plugin_transformed__.bean"]);
+  });
+
+  it.each(["2020-01-06", "2020/01/06", "2020-1-6"])(
+    "queries the materialized stream for a tagged document dated %s",
+    async (date) => {
+      await queryLedgerFilesResultInProcess(
+        {
+          "main.bean": `${WITHOUT_PAD}${date} document Assets:Cash "a.pdf" #tax\n`,
+        },
+        "main.bean",
+        "SELECT 1",
+      );
+      expect(queriedEntryPoints).toEqual(["__plugin_transformed__.bean"]);
+    },
+  );
+
   it("sees a pad in an included file too", async () => {
     await queryLedgerFilesResultInProcess(
       { "main.bean": 'include "sub.bean"\n', "sub.bean": WITH_PAD },

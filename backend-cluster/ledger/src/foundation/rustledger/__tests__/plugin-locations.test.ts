@@ -139,6 +139,25 @@ describe("locateDuplicateErrors", () => {
       ),
     ).toEqual([[8, engine.message]]);
   });
+
+  // w31/107: the engine dates the copies `2024-01-03` however they are written.
+  it("finds copies dated 2024/01/03 and 2024-1-3", () => {
+    const source = [
+      'plugin "beancount.plugins.noduplicates"',
+      '2024/01/03 * "Shop" "Dup"',
+      "  Assets:Cash  1 USD",
+      "  Equity:Opening",
+      '2024-1-3 * "Shop" "Dup"',
+      "  Assets:Cash  1 USD",
+      "  Equity:Opening",
+    ].join("\n");
+    const engine = pluginError('Duplicate transaction: 2024-01-03 "Dup"');
+    expect(
+      placed(
+        locateDuplicateErrors([engine], { "main.bean": source }, "main.bean"),
+      ),
+    ).toEqual([[5, engine.message]]);
+  });
 });
 
 describe("coherentCostErrors", () => {

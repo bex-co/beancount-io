@@ -69,6 +69,7 @@ import { reconcileLeafOnlyErrors } from "./leafonly";
 import { duplicateEntryErrors, locateDuplicateErrors } from "./noduplicates";
 import { midCurrencyToleranceErrors } from "./balance-tolerance-syntax";
 import { stockSyntaxErrors } from "./stock-syntax-errors";
+import { SOURCE_DATE } from "./source-date";
 import { reconcileNounusedErrors } from "./nounused";
 import { reconcileOneCommodityErrors } from "./one-commodity";
 import { reconcileUniquePriceErrors } from "./unique-prices";
@@ -480,6 +481,11 @@ function mergeSourceSyntax(
   });
 }
 
+// A dated directive's keyword, its date any spelling the lexer reads (w31/107).
+const PAD_LINE = new RegExp(String.raw`^${SOURCE_DATE}\s+pad\s`, "mu");
+const NOTE_LINES = new RegExp(String.raw`^${SOURCE_DATE}\s+note\s.*$`, "gmu");
+const DOCUMENT_LINE = new RegExp(String.raw`^${SOURCE_DATE}\s+document\s`, "u");
+
 /**
  * Whether any file declares a `pad`. The engine pads every non-zero difference,
  * and the parse path drops the padding a balance's tolerance would not (w21/135),
@@ -487,9 +493,7 @@ function mergeSourceSyntax(
  * journal and trial balance do not show (w21/323).
  */
 function sourceHasPad(files: FileMap): boolean {
-  return Object.values(files).some((source) =>
-    /^\d{4}-\d{2}-\d{2}\s+pad\s/mu.test(source),
-  );
+  return Object.values(files).some((source) => PAD_LINE.test(source));
 }
 
 /**
@@ -499,7 +503,7 @@ function sourceHasPad(files: FileMap): boolean {
  */
 function sourceHasNoteSyntax(files: FileMap): boolean {
   return Object.values(files).some((source) => {
-    const notes = source.match(/^\d{4}-\d{2}-\d{2}\s+note\s.*$/gmu);
+    const notes = source.match(NOTE_LINES);
     if (notes === null) return false;
     return (
       /^pushtag\s/mu.test(source) ||
@@ -514,8 +518,7 @@ function sourceHasTaggedDocument(files: FileMap): boolean {
       .split(/\r\n|\r|\n/u)
       .some(
         (line) =>
-          /^\d{4}-\d{2}-\d{2}\s+document\s/u.test(line) &&
-          /\s[#^][A-Za-z0-9\-_/.]+/u.test(line),
+          DOCUMENT_LINE.test(line) && /\s[#^][A-Za-z0-9\-_/.]+/u.test(line),
       ),
   );
 }

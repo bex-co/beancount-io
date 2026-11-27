@@ -6,6 +6,7 @@ import {
   openLocations,
 } from "./block-index";
 import { collectLedgerPlugins } from "./plugins/collect-plugins";
+import { SOURCE_DATE, sourceDateOf } from "./source-date";
 import { includeTraversalOrder } from "./source-slice";
 
 /** A posting line's account, after its flag if it has one. */
@@ -136,7 +137,11 @@ export function inactiveAfterGeneratedCloses(
   return errors;
 }
 
-const PAD = /^(\d{4}-\d{2}-\d{2})\s+pad\s+(\S+)\s+(\S+)/u;
+/** A pad's header; its date any spelling the lexer reads (w31/107). */
+const PAD = new RegExp(
+  String.raw`^(${SOURCE_DATE})\s+pad\s+(\S+)\s+(\S+)`,
+  "u",
+);
 
 /**
  * A pad naming an account after its close. Beancount allows only balances,
@@ -189,7 +194,7 @@ export function inactivePads(
         if (
           claimed.has(key) ||
           match === null ||
-          match[1] !== pad.date ||
+          sourceDateOf(match[1]!) !== pad.date ||
           match[2] !== pad.account ||
           match[3] !== pad.source_account
         ) {

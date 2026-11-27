@@ -274,3 +274,74 @@ describe("a metadata key repeated on a transaction or a posting", () => {
     }
   });
 });
+
+// w31/107: stock's lexer reads `2026/09/01` and `2026-9-1` as dates too (a
+// ledger converted from ledger-cli writes every date with slashes), and
+// bean-check 3.2.3 gives the same three errors, at the same lines, for each.
+describe("a header dated in any spelling the lexer reads", () => {
+  const SPELLINGS = [
+    ["2026-09-01", "2026-09-03"],
+    ["2026/09/01", "2026/09/03"],
+    ["2026-9-1", "2026-9-3"],
+  ];
+
+  it.each(SPELLINGS)("reports all three for %s", (first, later) => {
+    expect(
+      check(
+        [
+          `${first} open Assets:QaStock ABC STRICT`,
+          `${first} commodity QAZZ`,
+          `${later} commodity QAZZ`,
+          `${first} * "qa" "dupmeta"`,
+          '  kk: "ab"',
+          '  kk: "ab"',
+          "  Assets:Cash  -1.00 USD",
+          "  Expenses:Food:Coffee 1.00 USD",
+          `${first} txn "qa"`,
+          '  kk: "ab"',
+          '  kk: "ab"',
+          "",
+        ].join("\n"),
+      ),
+    ).toEqual([
+      `main.bean:1 ${BOOKING_ERROR}STRICT"`,
+      "main.bean:4 DUPLICATE_METADATA Duplicate metadata field on entry: kk",
+      "main.bean:9 DUPLICATE_METADATA Duplicate metadata field on entry: kk",
+      "main.bean:3 DUPLICATE_COMMODITY Duplicate commodity directives for 'QAZZ'",
+    ]);
+  });
+
+  it("flags the later date when the spellings differ, whichever sorts first as text", () => {
+    // As written, `2026/09/01` sorts after `2026-09-03`; stock flags line 1.
+    expect(
+      check("2026-09-03 commodity QAZZ\n2026/09/01 commodity QAZZ\n"),
+    ).toEqual([
+      "main.bean:1 DUPLICATE_COMMODITY Duplicate commodity directives for 'QAZZ'",
+    ]);
+    expect(
+      check("2026-9-10 commodity QAZZ\n2026-09-02 commodity QAZZ\n"),
+    ).toEqual([
+      "main.bean:1 DUPLICATE_COMMODITY Duplicate commodity directives for 'QAZZ'",
+    ]);
+  });
+
+  // Each is a syntax error in stock, not a dated directive.
+  it.each(["20260901", "2026.09.01", "26/09/01", "x2026/09/01", "2026_09_01"])(
+    "reads nothing at column 0 that is not a date: %s",
+    (start) => {
+      expect(
+        check(
+          [
+            `${start} open Assets:QaStock ABC STRICT`,
+            `${start} commodity QAZZ`,
+            `${start} commodity QAZZ`,
+            `${start} * "qa"`,
+            '  kk: "ab"',
+            '  kk: "ab"',
+            "",
+          ].join("\n"),
+        ),
+      ).toEqual([]);
+    },
+  );
+});

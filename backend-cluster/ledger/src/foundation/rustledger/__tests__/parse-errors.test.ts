@@ -144,4 +144,18 @@ describe("dropUnparsedTransactions", () => {
       elsewhere,
     ]);
   });
+
+  // w31/107: stock's lexer reads `2026/01/05` and `2026-1-5` as dates, and
+  // the engine dates both `2026-01-05`.
+  it.each(["2026-01-05", "2026/01/05", "2026-1-5"])(
+    "drops the half of a header dated %s",
+    (date) => {
+      const half = txn("2026-01-05", "Qa Joe");
+      expect(
+        dropUnparsedTransactions([half], [bad], {
+          "main.bean": `2026-01-04 * "Quiet"\n${date} * "Qa Joe"s"\n`,
+        }),
+      ).toEqual([]);
+    },
+  );
 });

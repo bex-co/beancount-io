@@ -1958,6 +1958,66 @@ async function main(): Promise<void> {
     ),
     "what stock accepts stays clean: a quoted or lone STRICT, distinct commodities, a repeated TRUE or one-character value, a repeated key on an open",
   );
+  // w31/107: stock's lexer reads `2026/09/01` and `2026-9-1` as dates, and so
+  // does the engine, which loads all four constructs clean in either spelling.
+  // Each is reported at its line, and a slash-dated use before the open keeps
+  // the engine's dated wording, as its dash twin does (w23/067).
+  for (const [first, later] of [
+    ["2026/09/01", "2026/09/03"],
+    ["2026-9-1", "2026-9-3"],
+  ]) {
+    const refused = [
+      `${first} open Assets:QaStock ABC STRICT`,
+      `${first} balance Assets:Cash 0 USD ~ 0.05 USD`,
+      `${first} commodity QAZZ`,
+      `${later} commodity QAZZ`,
+      `${first} * "x"`,
+      ...cashTxn('  kk: "ab"', '  kk: "ab"').slice(1),
+    ];
+    const raw = await rawValidate(
+      stockLedger(refused.join("\n")),
+      "main.beancount",
+    );
+    assert(
+      raw.valid,
+      `the raw engine loads the four ${first} constructs clean, so the rules are load-bearing (got ${JSON.stringify(raw.errors.map((e) => e.message))})`,
+    );
+    const files = stockLedger(
+      [
+        ...refused,
+        `${first} balance Assets:QaLate 0 USD`,
+        "2026-09-05 open Assets:QaLate USD",
+      ].join("\n"),
+    );
+    const reported = await parseLedgerFiles(files, "main.beancount");
+    const found = reported.errors
+      .filter((e) => e.severity === "error")
+      .map((e) => `${e.code}@${e.line}`);
+    for (const expected of [
+      "SYNTAX@3",
+      "TOLERANCE@4",
+      "DUPLICATE_COMMODITY@6",
+      "DUPLICATE_METADATA@7",
+    ]) {
+      assert(
+        found.includes(expected),
+        `a ${first} directive is refused as stock refuses it: ${expected} (got ${JSON.stringify(found)})`,
+      );
+    }
+    assert(
+      !reported.valid,
+      `a ${first} ledger stock refuses reads invalid`,
+    );
+    assert(
+      reported.errors.some(
+        (e) =>
+          e.line === 12 &&
+          e.message ===
+            "Account Assets:QaLate used on 2026-09-01 but not opened until 2026-09-05",
+      ),
+      `a ${first} balance before the open names the open date (got ${JSON.stringify(reported.errors.map((e) => `${e.line} ${e.message}`))})`,
+    );
+  }
   // w23/199: a run of trailing terminators is empty statements stock
   // tolerates; every `;` has to go or the bare `FROM postings` tail resolves
   // as a column.

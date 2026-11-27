@@ -1,4 +1,5 @@
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
+import { SOURCE_DATE, sourceDateOf } from "./source-date";
 
 /** The engine's one-per-file summary of a syntax error: no file, no line. */
 const LOAD_PARSE_SUMMARY = /^parse errors in /;
@@ -64,7 +65,7 @@ export function locateParseErrors(
   return [...distinct, ...rest];
 }
 
-const TRANSACTION_HEADER = /^(\d{4}-\d{2}-\d{2})\s+[*!]/;
+const TRANSACTION_HEADER = new RegExp(String.raw`^${SOURCE_DATE}\s+[*!]`, "u");
 
 /**
  * Drop the half-parsed transactions of a header that failed to parse. The
@@ -88,7 +89,11 @@ export function dropUnparsedTransactions(
       continue;
     }
     const text = files[error.file]?.split(/\r\n|\r|\n/)[error.line - 1];
-    const date = text === undefined ? null : TRANSACTION_HEADER.exec(text)?.[1];
+    // The engine's date, however the header spells it (w31/107).
+    const date =
+      text === undefined || !TRANSACTION_HEADER.test(text)
+        ? null
+        : sourceDateOf(text);
     if (text === undefined || !date) continue;
     const half = directives.find(
       (directive) =>

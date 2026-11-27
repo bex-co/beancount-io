@@ -64,6 +64,22 @@ describe("dropPaddingWithinTolerance", () => {
     ]);
   });
 
+  // w31/107: the engine dates `2026/01/31` and `2026-1-31` as `2026-01-31`.
+  it.each(["2026/01/31", "2026-1-31"])(
+    "puts the unused pad on its line when it is dated %s",
+    (date) => {
+      const written = { "main.bean": SOURCE.replace("2026-01-31", date) };
+      const result = dropPaddingWithinTolerance(
+        [pad, balance("100.00", "5.00")],
+        [padding("2.00")],
+        written,
+      );
+      expect(result.errors.map((e) => [e.file, e.line])).toEqual([
+        ["main.bean", 2],
+      ]);
+    },
+  );
+
   it("keeps padding beyond the tolerance", () => {
     const kept = padding("10.00");
     expect(

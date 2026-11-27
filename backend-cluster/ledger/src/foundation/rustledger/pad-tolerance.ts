@@ -1,6 +1,7 @@
 import BigNumber from "bignumber.js";
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
 import { indexBlocks, type BlockIndex } from "./block-index";
+import { SOURCE_DATE, sourceDateOf } from "./source-date";
 
 type Balance = Extract<DirectiveJson, { type: "balance" }>;
 type Pad = Extract<DirectiveJson, { type: "pad" }>;
@@ -58,7 +59,11 @@ export function unusedPadError(
   };
 }
 
-const PAD_HEADER = /^(\d{4}-\d{2}-\d{2})\s+pad\s+(\S+)\s+(\S+)(\s|$)/;
+/** A pad's header; its date any spelling the lexer reads (w31/107). */
+const PAD_HEADER = new RegExp(
+  String.raw`^(${SOURCE_DATE})\s+pad\s+(\S+)\s+(\S+)(\s|$)`,
+  "u",
+);
 
 const padKey = (date: string, account: string, source: string) =>
   `${date}\0${account}\0${source}`;
@@ -80,7 +85,7 @@ export function padLocator(
         for (const block of index.blocks(file)) {
           const header = PAD_HEADER.exec(block.text);
           if (!header) continue;
-          const key = padKey(header[1], header[2], header[3]);
+          const key = padKey(sourceDateOf(header[1]!)!, header[2]!, header[3]!);
           const lines = written.get(key) ?? [];
           lines.push([file, block.startLine + 1]);
           written.set(key, lines);

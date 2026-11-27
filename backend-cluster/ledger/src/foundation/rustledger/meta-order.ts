@@ -1,5 +1,6 @@
 import type { DirectiveJson, FileMap } from "@rustledger/wasm";
 import { indexBlocks } from "./block-index";
+import { sourceDateOf } from "./source-date";
 import { includeTraversalOrder } from "./source-slice";
 
 /**
@@ -8,7 +9,6 @@ import { includeTraversalOrder } from "./source-slice";
  */
 const LINE =
   /^[ \t]+(?:([a-z][A-Za-z0-9_-]*):(?=\s|$)|(?:[*!&#?%][ \t]*|[PSTCURM][ \t]+)?([^\s;a-z]\S*:\S*))/gmu;
-const HEADER = /^(\d{4}-\d{2}-\d{2})\s/u;
 
 type Written = {
   /** The entry's own keys, as written. */
@@ -93,7 +93,8 @@ export function orderMetaAsWritten(
   const index = indexBlocks(files);
   for (const file of includeTraversalOrder(files, entryPoint)) {
     for (const block of index.blocks(file)) {
-      const date = HEADER.exec(block.text)?.[1];
+      // The engine's date, however the source spells it (w31/107).
+      const date = sourceDateOf(block.text);
       if (date === undefined || !dates.has(date)) continue;
       const day = byDate.get(date) ?? [];
       day.push({ written: writtenKeys(block.text), claimed: false });

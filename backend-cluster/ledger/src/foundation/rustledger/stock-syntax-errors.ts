@@ -1,5 +1,6 @@
 import type { BeancountError, FileMap } from "@rustledger/wasm";
 import { indexBlocks } from "./block-index";
+import { SOURCE_DATE, sourceDateOf } from "./source-date";
 import { endsInsideString, loadedFiles } from "./source-slice";
 
 /**
@@ -21,22 +22,30 @@ import { endsInsideString, loadedFiles } from "./source-slice";
  * Syntactic and abstaining on doubt, like the tolerance scan: each rule reads
  * a block's own lines (strings are tracked, so a line inside a multi-line
  * narration is never a key), and a line that does not match a rule's exact
- * shape is left alone. The engine's rc.18 reports the first (its parse error);
- * it still loads the other two. Remove a rule when the engine rejects its
- * construct; the live checks in `scripts/verify-rustledger.ts` show when.
+ * shape is left alone. A header's date is any spelling stock's lexer reads
+ * (`2026-09-01`, `2026/09/01`, `2026-9-1`), so a ledger converted from
+ * ledger-cli is checked too (w31/107). The engine's rc.18 reports the first
+ * (its parse error); it still loads the other two. Remove a rule when the
+ * engine rejects its construct; the live checks in
+ * `scripts/verify-rustledger.ts` show when.
  */
 
 const CURRENCY = String.raw`/?[A-Z][A-Z0-9'._-]*`;
 const BOOKING_METHODS = "STRICT_WITH_SIZE|STRICT|FIFO|LIFO|HIFO|AVERAGE|NONE";
 /** `open <account> <currencies> <BOOKING>`: a bare word after a currency list. */
 const OPEN_WITH_BARE_BOOKING = new RegExp(
-  String.raw`^\d{4}-\d{2}-\d{2}[ \t]+open[ \t]+\S+[ \t]+${CURRENCY}(?:[ \t]*,[ \t]*${CURRENCY})*[ \t]+(${BOOKING_METHODS})[ \t]*(?:;.*)?$`,
+  String.raw`^${SOURCE_DATE}[ \t]+open[ \t]+\S+[ \t]+${CURRENCY}(?:[ \t]*,[ \t]*${CURRENCY})*[ \t]+(${BOOKING_METHODS})[ \t]*(?:;.*)?$`,
   "u",
 );
-const COMMODITY = /^(\d{4}-\d{2}-\d{2})[ \t]+commodity[ \t]+([^\s;]+)/u;
+const COMMODITY = new RegExp(
+  String.raw`^${SOURCE_DATE}[ \t]+commodity[ \t]+([^\s;]+)`,
+  "u",
+);
 /** A transaction header: a date, then `txn` or a flag, never a directive keyword. */
-const TRANSACTION =
-  /^\d{4}-\d{2}-\d{2}[ \t]+(?:txn\b|[*!&#?%]|[A-Z])(?=[ \t]|$)/u;
+const TRANSACTION = new RegExp(
+  String.raw`^${SOURCE_DATE}[ \t]+(?:txn\b|[*!&#?%]|[A-Z])(?=[ \t]|$)`,
+  "u",
+);
 /** A key line: `key:` then a space, a quote or the end of the line (`k:"v"` is a key). */
 const META_KEY = /^[ \t]+([a-z][A-Za-z0-9_-]*):(?=[ \t"]|$)/u;
 const TAGS_LINE = /^[ \t]+[#^]/u;
@@ -183,8 +192,10 @@ export function stockSyntaxErrors(
         commodities.push({
           file,
           line,
-          date: commodity[1]!,
-          currency: commodity[2]!,
+          // As the engine dates it: as written, `2026/09/01` sorts after
+          // `2026-09-03`, and the error would land on the earlier date.
+          date: sourceDateOf(header)!,
+          currency: commodity[1]!,
           seq: commodities.length,
         });
         continue;

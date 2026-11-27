@@ -100,6 +100,30 @@ describe("reconcileOneCommodityErrors", () => {
     ]);
   });
 
+  // w31/107: the last entry is the last by date, however each is written. As
+  // text, `2024/01/04` sorts after `2024-01-05`.
+  it.each([
+    ["2024-01-04", "2024/01/05"],
+    ["2024/01/04", "2024-01-05"],
+    ["2024-1-4", "2024-1-5"],
+  ])("places the error on the later entry: %s then %s", (first, later) => {
+    const written = [
+      PLUGIN,
+      travel[0]!.replace("2024-01-04", first),
+      ...travel.slice(1, 3),
+      travel[3]!.replace("2024-01-05", later),
+      ...travel.slice(4),
+    ];
+    expect(
+      check([open("Expenses:Travel"), ...trips], written.join("\n"), [
+        rustledgerError("Expenses:Travel"),
+      ]),
+    ).toEqual([
+      [5, "More than one currency in account 'Expenses:Travel': USD,EUR"],
+      [5, "More than one currency in account 'Equity:Opening': USD,EUR"],
+    ]);
+  });
+
   it("skips an account opened onecommodity: FALSE", () => {
     expect(
       check(

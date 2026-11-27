@@ -52,6 +52,26 @@ describe("duplicateEntryErrors", () => {
     ]);
   });
 
+  // w31/107: stock's lexer reads `2024/01/02` and `2024-1-2` as dates, and
+  // bean-check 3.2.3 holds a slash-dated balance a copy of its dash twin.
+  it.each(["2024/01/02", "2024-1-2"])(
+    "compares a balance dated %s by its date, not its spelling",
+    (date) => {
+      const source = [
+        'plugin "beancount.plugins.noduplicates"',
+        "2024-01-01 open Assets:Cash",
+        "2024-01-02 balance Assets:Cash 0 USD",
+        `${date} balance Assets:Cash 0 USD`,
+        `${date} note Assets:Cash "hi"`,
+        "",
+      ].join("\n");
+      const errors = duplicateEntryErrors({ "main.bean": source }, "main.bean");
+      expect(errors.map((error) => [error.line, error.message])).toEqual([
+        [4, "Duplicate entry: Balance: 2024-01-02 balance Assets:Cash 0 USD"],
+      ]);
+    },
+  );
+
   it("does nothing unless the plugin is declared", () => {
     const source = SOURCE.replace(/^plugin.*\n/u, "");
     expect(duplicateEntryErrors({ "main.bean": source }, "main.bean")).toEqual(

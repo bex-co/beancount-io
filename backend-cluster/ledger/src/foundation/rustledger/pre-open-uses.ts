@@ -1,5 +1,6 @@
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
 import { indexBlocks } from "./block-index";
+import { sourceDateOf } from "./source-date";
 
 /** The engine's ways of saying a directive names an account never opened. */
 const UNOPENED = [
@@ -7,8 +8,6 @@ const UNOPENED = [
   /^Invalid reference to unknown account '(.+)'$/u,
   /^Pad target account (\S+) was never opened$/u,
 ];
-
-const DATE = /^(\d{4}-\d{2}-\d{2})\s/u;
 
 /**
  * The engine says a posting dated before its account's `open` used an account
@@ -43,7 +42,8 @@ export function reportPreOpenUses(
       (pattern) => pattern.exec(error.message)?.[1],
     ).find((match) => match !== undefined);
     const opened = account === undefined ? undefined : openedOn.get(account);
-    const used = DATE.exec(index.at(error.file, error.line)?.text ?? "")?.[1];
+    // The engine's `YYYY-MM-DD`, however the line spells it (w31/107).
+    const used = sourceDateOf(index.at(error.file, error.line)?.text ?? "");
     if (opened === undefined || used === undefined || used >= opened) {
       return error;
     }

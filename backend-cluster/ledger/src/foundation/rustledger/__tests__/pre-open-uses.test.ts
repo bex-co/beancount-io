@@ -135,6 +135,44 @@ describe("reportPreOpenUses", () => {
     ]);
   });
 
+  // w31/107: stock's lexer reads `2026/09/01` and `2026-9-1` as dates, and
+  // the engine dates them `2026-09-01`.
+  it.each(["2026-09-01", "2026/09/01", "2026-9-1"])(
+    "names the open date for a use dated %s",
+    (date) => {
+      const late = {
+        "main.bean": [
+          `${date} balance Assets:QaLate 0 USD`,
+          "2026-09-05 open Assets:QaLate USD",
+          "",
+        ].join("\n"),
+      };
+      expect(
+        messages(
+          reportPreOpenUses(
+            [engineError("Account Assets:QaLate was never opened", 1)],
+            [open("Assets:QaLate", "2026-09-05")],
+            late,
+          ),
+        ),
+      ).toEqual([
+        [
+          1,
+          "Account Assets:QaLate used on 2026-09-01 but not opened until 2026-09-05",
+        ],
+      ]);
+    },
+  );
+
+  it("keeps never opened for a slash-dated use on or after the open", () => {
+    const after = engineError("Account Assets:QaLate was never opened", 1);
+    expect(
+      reportPreOpenUses([after], [open("Assets:QaLate", "2026-09-05")], {
+        "main.bean": "2026/09/10 balance Assets:QaLate 0 USD\n",
+      }),
+    ).toEqual([after]);
+  });
+
   it("leaves other errors alone", () => {
     const closed: BeancountError = {
       ...engineError(

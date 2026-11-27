@@ -273,6 +273,29 @@ describe("inactivePads", () => {
     expect(check([pad("2024-05-01")])).toEqual([]);
     expect(check([close("Assets:Broker:VTI"), pad("2024-03-01")])).toEqual([]);
   });
+
+  // w31/107: the engine dates `2024/05/01` and `2024-5-1` as `2024-05-01`.
+  it.each(["2024/05/01", "2024-5-1"])(
+    "puts the error on a pad dated %s",
+    (date) => {
+      const written = source.replace("2024-05-01", date);
+      expect(
+        located(
+          inactivePads(
+            [close("Assets:Broker:VTI"), pad("2024-03-01"), pad("2024-05-01")],
+            { "main.bean": written },
+            "main.bean",
+          ),
+        ),
+      ).toEqual([
+        [
+          "E1003",
+          3,
+          "Invalid reference to inactive account 'Assets:Broker:VTI'",
+        ],
+      ]);
+    },
+  );
 });
 
 // w21/775: close_tree runs at its place among the plugins. Declared before

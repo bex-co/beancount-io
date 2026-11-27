@@ -86,6 +86,33 @@ describe("orderMetaAsWritten", () => {
     ]);
   });
 
+  // w31/107: stock's lexer reads `2026/10/01` and `2026-10-1` as dates, and
+  // the engine dates both `2026-10-01`.
+  it.each(["2026/10/01", "2026-10-1"])(
+    "finds an entry whose source writes its date %s",
+    (date) => {
+      const entry = invoice(
+        "Paper",
+        { po: "", paid: "", note: "", invoice: "", due: "" },
+        { step2: "", step1: "", step3: "" },
+      );
+      const written = [
+        paper[0]!.replace("2026-10-01", date),
+        ...paper.slice(1),
+      ];
+      orderMetaAsWritten(
+        [entry],
+        { "main.bean": written.join("\n") },
+        "main.bean",
+      );
+      expect(keysOf(entry)).toEqual([
+        ["invoice", "po", "due", "paid", "note"],
+        ["step1", "step2", "step3"],
+        [],
+      ]);
+    },
+  );
+
   it("tells same-day entries with the same keys apart", () => {
     const files = {
       "main.bean": [

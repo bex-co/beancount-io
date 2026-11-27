@@ -41,6 +41,20 @@ describe("withBalanceErrorDates", () => {
     expect(withBalanceErrorDates([unlocated], FILES)[0]).toBe(unlocated);
   });
 
+  // w31/107: stock's lexer reads `2026/03/01` and `2026-3-1` as dates; the
+  // date added is the engine's spelling.
+  it.each(["2026-03-01", "2026/03/01", "2026-3-1"])(
+    "dates a failing balance written %s as 2026-03-01",
+    (date) => {
+      const files = {
+        "main.bean": `2026-01-01 open Liabilities:Card\n${date} balance Liabilities:Card  0.00 USD\n`,
+      };
+      expect(withBalanceErrorDates([error(2)], files)[0]).toMatchObject({
+        date: "2026-03-01",
+      });
+    },
+  );
+
   // w21/706: the source was split again for every failing balance, so 4000 of
   // them took seconds.
   it("dates 4000 failing balances in one pass over the file", () => {

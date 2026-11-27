@@ -87,3 +87,31 @@ describe("midCurrencyToleranceErrors over lines Beancount skips (w31/099)", () =
     expect(errors.map((e) => e.line)).toEqual([2]);
   });
 });
+
+// w31/107: stock's lexer reads `2026/08/30` and `2026-8-30` as dates too, and
+// bean-check 3.2.3 rejects the mid-currency tolerance on either.
+describe("midCurrencyToleranceErrors over every date spelling (w31/107)", () => {
+  it.each(["2026-08-30", "2026/08/30", "2026-8-30", "2026/8/3"])(
+    "flags the line dated %s",
+    (date) => {
+      const errors = run(
+        [
+          "2026-01-01 open Assets:Cash",
+          `${date} balance Assets:Cash 49.75 USD ~ 0.05 USD`,
+          `${date} balance Assets:Cash 49.75 ~ 0.05 USD`,
+          "",
+        ].join("\n"),
+      );
+      expect(errors.map((e) => [e.line, e.code])).toEqual([[2, "TOLERANCE"]]);
+    },
+  );
+
+  it.each(["20260830", "2026.08.30", "26/08/30", "2026_08_30"])(
+    "reads nothing at column 0 that is not a date: %s",
+    (start) => {
+      expect(
+        run(`${start} balance Assets:Cash 49.75 USD ~ 0.05 USD\n`),
+      ).toEqual([]);
+    },
+  );
+});
