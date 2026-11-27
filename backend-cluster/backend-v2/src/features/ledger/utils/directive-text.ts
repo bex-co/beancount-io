@@ -286,20 +286,39 @@ export interface ParsedDirective {
   readonly text: string;
 }
 
-const DATE_LINE = /^(\d{4}-\d{2}-\d{2})[ \t]+(\S+)/;
+/**
+ * A date at the start of a line as Beancount's lexer reads one: four digits,
+ * `-` or `/`, the month, `-` or `/`, the day. `2026/08/25` and `2026-8-26` are
+ * dates to the engine, and a ledger converted from ledger-cli is full of them.
+ * Reading only `YYYY-MM-DD` left such an entry out of the file's date order, so
+ * a new one landed above it (w31/109). The ledger service reads source dates
+ * the same way (`SOURCE_DATE`, w31/106); the packages share no code, so it is
+ * restated here.
+ */
+const DATE_LINE = /^((\d{4})[-/](\d{1,2})[-/](\d{1,2}))[ \t]+(\S+)/;
+
+interface DirectiveHead {
+  /** `YYYY-MM-DD` however the line spells it, or null for an undated directive. */
+  readonly date: string | null;
+  /** The date as the line spells it, or null for an undated directive. */
+  readonly written: string | null;
+  readonly kind: DirectiveKind;
+}
 
 /** Does this line start a directive at column 0? */
-function directiveHead(
-  line: string,
-): { date: string | null; kind: DirectiveKind } | null {
+function directiveHead(line: string): DirectiveHead | null {
   const dated = DATE_LINE.exec(line);
   if (dated) {
-    const [, date, keyword] = dated;
-    return { date, kind: DATED_KEYWORDS[keyword] ?? "Transaction" };
+    const [, written, year, month, day, keyword] = dated;
+    return {
+      date: `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`,
+      written,
+      kind: DATED_KEYWORDS[keyword] ?? "Transaction",
+    };
   }
   const keyword = /^([a-z]+)\b/.exec(line)?.[1];
   if (keyword && UNDATED_KEYWORDS.has(keyword)) {
-    return { date: null, kind: "Custom" };
+    return { date: null, written: null, kind: "Custom" };
   }
   return null;
 }
@@ -310,16 +329,17 @@ const endsInsideString = (lines: readonly string[]): boolean =>
 
 /**
  * Two things stock Beancount reads that this tool's line classifier does not
- * (w23/240): a `YYYY/MM/DD` date, and a quoted string that spans lines, whose
- * second line starts at column 0. `updateLedgerFiles` takes both; naming the way
- * out is the difference between a dead end and a retry.
+ * (w23/240): a date not spelled `YYYY-MM-DD` (`2026/09/01`, `2026-9-1`,
+ * w31/109), and a quoted string that spans lines, whose second line starts at
+ * column 0. `updateLedgerFiles` takes both; naming the way out is the
+ * difference between a dead end and a retry.
  */
 function notADirectiveHint(
-  line: string,
+  head: DirectiveHead | null,
   open: readonly string[] | undefined,
 ): string | undefined {
-  if (/^\d{4}\/\d{2}\/\d{2}[ \t]/.test(line)) {
-    return "Beancount accepts a YYYY/MM/DD date, but this tool reads only YYYY-MM-DD: write the date with dashes, or edit the file with `updateLedgerFiles`.";
+  if (head?.written && head.written !== head.date) {
+    return `Beancount reads ${head.written} as a date, but this tool reads only YYYY-MM-DD: write ${head.written} as ${head.date}, or edit the file with \`updateLedgerFiles\`.`;
   }
   if (open && endsInsideString(open)) {
     return "A quoted string cannot span lines in appended text. Put it on one line, or add the entry with `addLedgerEntries` or edit the file with `updateLedgerFiles`, which accept a multi-line string.";
@@ -390,11 +410,13 @@ export function parseDirectiveText(text: string): ParsedDirective[] {
       return;
     }
     const head = directiveHead(line);
-    if (!head) {
+    // New text is spelled `YYYY-MM-DD` (w23/240), though the file it goes
+    // into may spell its own dates otherwise.
+    if (!head || head.written !== head.date) {
       throw new BadUserInputError(
         `line ${index + 1}: not a Beancount directive: ${line.trim()}`,
         "text",
-        notADirectiveHint(line, current?.lines),
+        notADirectiveHint(head, current?.lines),
       );
     }
     const keyword = /^([a-z]+)\b/.exec(line)?.[1];

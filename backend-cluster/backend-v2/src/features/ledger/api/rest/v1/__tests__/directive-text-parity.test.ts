@@ -1063,6 +1063,78 @@ describe("appending Beancount text through the real adapters", () => {
     }
   });
 
+  // w31/109: the lexer reads `2026/08/25` and `2026-8-26` as dates. Read as
+  // `YYYY-MM-DD` only, they were no entries to the append, so a 2026-08-27
+  // entry landed above both, and the refusal of one in new text said nothing
+  // of the dashed form that would work.
+  it.each(["rest", "gql", "mcp"] as const)(
+    "threads an entry past slash-dated and unpadded neighbours, previewed and committed, via %s",
+    async (surface) => {
+      const entry = (date: string, payee: string) =>
+        [
+          `${date} * "${payee}" "n"`,
+          "  Assets:Cash     -1.00 USD",
+          "  Expenses:Food    1.00 USD",
+        ].join("\n");
+      const mixed = [
+        entry("2026-08-22", "Bus"),
+        "",
+        entry("2026/08/25", "Slash"),
+        "",
+        entry("2026-8-26", "Unpadded"),
+        "",
+        entry("2026-08-28", "Market"),
+        "",
+      ].join("\n");
+      const f = await fixture();
+      f.state.files.set("main.bean", mixed);
+      try {
+        const text = entry("2026-08-27", "New");
+        const preview = await f.call(surface, { text, dryRun: true });
+        expect(preview.ok).toBe(true);
+        const data = preview.ok ? (preview.data as Record<string, never>) : {};
+        expect(data.appendedUnsorted).toEqual([]);
+        const [{ diff }] = data.diff as { path: string; diff: string }[];
+        const at = [
+          ' 2026-8-26 * "Unpadded"',
+          '+2026-08-27 * "New"',
+          ' 2026-08-28 * "Market"',
+        ].map((line) => diff.indexOf(line));
+        expect(at.every((index) => index !== -1)).toBe(true);
+        expect([...at].sort((a, b) => a - b)).toEqual(at);
+        expect(f.state.files.get("main.bean")).toBe(mixed);
+
+        const commit = await f.call(surface, { text });
+        expect(commit.ok).toBe(true);
+        expect(
+          [
+            ...f.state.files.get("main.bean")!.matchAll(/^\S+ \* "([^"]+)"/gm),
+          ].map((match) => match[1]),
+        ).toEqual(["Bus", "Slash", "Unpadded", "New", "Market"]);
+
+        const refused = await f.call(surface, {
+          text: entry("2026-9-1", "Unpadded"),
+          dryRun: true,
+        });
+        expect(refused.ok).toBe(false);
+        // The hint rides as MCP's `hint`, REST's `metadata.hint`, and the
+        // GraphQL error's original `metadata.hint`.
+        const error = (refused.ok ? {} : refused.error) as {
+          hint?: string;
+          metadata?: { hint?: string };
+          originalError?: { metadata?: { hint?: string } };
+        };
+        expect(
+          error.hint ??
+            error.metadata?.hint ??
+            error.originalError?.metadata?.hint,
+        ).toContain("write 2026-9-1 as 2026-09-01");
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
   it("appends at the end of a file whose directives are out of order, and says so", async () => {
     const f = await fixture();
     f.state.files.set(

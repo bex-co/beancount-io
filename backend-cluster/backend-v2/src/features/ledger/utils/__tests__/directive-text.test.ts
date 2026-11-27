@@ -361,6 +361,27 @@ describe("parseDirectiveText", () => {
     },
   );
 
+  // w31/109: the w23/240 hint matched only `YYYY/MM/DD`; the lexer also reads
+  // an unpadded month or day, which got no hint at all.
+  it.each(["2026/09/01", "2026-9-1", "2026/9/1", "2026-09-1", "2026-9/01"])(
+    "refuses a %s date in new text with a hint naming its dashed, padded form",
+    (date) => {
+      const text = `${date} * "Cafe" "note"\n  Expenses:Food 1 USD\n  Assets:Cash`;
+      expect.hasAssertions();
+      expect(() => parseDirectiveText(text)).toThrow(
+        `line 1: not a Beancount directive: ${date} *`,
+      );
+      try {
+        parseDirectiveText(text);
+      } catch (error) {
+        expect((error as BadUserInputError).metadata).toMatchObject({
+          field: "text",
+          hint: expect.stringContaining(`write ${date} as 2026-09-01`),
+        });
+      }
+    },
+  );
+
   it("gives no hint for text that is not directives at all", () => {
     expect.hasAssertions();
     try {
@@ -1236,4 +1257,119 @@ describe("insertDirectives into a file that starts with a byte-order mark (w31/1
       `${BOM}${txn("2026-09-08", "Eight")}\n`,
     );
   });
+});
+
+// w31/109: the lexer reads `2026/08/25` and `2026-8-26` as dates, and a ledger
+// converted from ledger-cli is full of them. Read as `YYYY-MM-DD` only, such
+// an entry was no entry at all, so a new one dated after it landed above it.
+describe("insertDirectives among dates the file spells otherwise (w31/109)", () => {
+  const file = [
+    txn("2026-08-22", "Bus"),
+    "",
+    txn("2026/08/25", "Slash"),
+    "",
+    txn("2026-8-26", "Unpadded"),
+    "",
+    txn("2026-08-28", "Market"),
+    "",
+  ].join("\n");
+  const payees = (content: string) =>
+    [...content.matchAll(/^\S+ \* "([^"]+)"/gm)].map((match) => match[1]);
+
+  it.each([
+    ["2026-08-27", ["Bus", "Slash", "Unpadded", "New", "Market"]],
+    // On or before a neighbour's date goes after it.
+    ["2026-08-25", ["Bus", "Slash", "New", "Unpadded", "Market"]],
+    ["2026-08-26", ["Bus", "Slash", "Unpadded", "New", "Market"]],
+    ["2026-08-23", ["Bus", "New", "Slash", "Unpadded", "Market"]],
+  ])(
+    "puts a %s entry between the neighbours it falls between",
+    (date, order) => {
+      const result = insertDirectives(
+        file,
+        parseDirectiveText(txn(date, "New")),
+      );
+      expect(result.appended).toBe(false);
+      expect(payees(result.content)).toEqual(order);
+      // Existing lines stay as written.
+      expect(result.content).toContain(txn("2026/08/25", "Slash"));
+      expect(result.content).toContain(txn("2026-8-26", "Unpadded"));
+      expect(result.content.split("\n")[result.inserted[0]!.line - 1]).toBe(
+        `${date} * "New" "note"`,
+      );
+    },
+  );
+
+  it("does not split an unpadded neighbour from its postings", () => {
+    const result = insertDirectives(
+      file,
+      parseDirectiveText(txn("2026-08-26", "New")),
+    );
+    expect(result.content).toContain(
+      `${txn("2026-8-26", "Unpadded")}\n\n${txn("2026-08-26", "New")}\n\n`,
+    );
+  });
+
+  it("reads a file as out of order by its normalized dates", () => {
+    const unsorted = [
+      txn("2026-08-28", "Market"),
+      "",
+      txn("2026/8/25", "Earlier"),
+      "",
+    ].join("\n");
+    const result = insertDirectives(
+      unsorted,
+      parseDirectiveText(txn("2026-08-27", "New")),
+    );
+    expect(result.appended).toBe(true);
+    expect(payees(result.content)).toEqual(["Market", "Earlier", "New"]);
+  });
+
+  it("reads mixed spellings in date order as sorted, comparing the dates they spell", () => {
+    // As raw text `2026-8-9` sorts after `2026-08-10`.
+    const sorted = [
+      txn("2026-8-9", "Ninth"),
+      "",
+      txn("2026-08-10", "Tenth"),
+      "",
+      txn("2026/08/11", "Eleventh"),
+      "",
+      txn("2026-8-30", "Thirtieth"),
+      "",
+    ].join("\n");
+    const result = insertDirectives(
+      sorted,
+      parseDirectiveText(txn("2026-08-12", "New")),
+    );
+    expect(result.appended).toBe(false);
+    expect(payees(result.content)).toEqual([
+      "Ninth",
+      "Tenth",
+      "Eleventh",
+      "New",
+      "Thirtieth",
+    ]);
+  });
+
+  it.each(["20260825", "2026.08.25", "2026-08-255", "26-08-25"])(
+    "reads a %s line as no date, so it opens no entry",
+    (spelled) => {
+      const junk = [
+        txn("2026-08-28", "Market"),
+        "",
+        `${spelled} * "Junk" "note"`,
+        "",
+      ].join("\n");
+      const result = insertDirectives(
+        junk,
+        parseDirectiveText(txn("2026-08-30", "New")),
+      );
+      // Read as a date before 2026-08-28, the file would be out of order and
+      // the entry appended at the end, below the junk line.
+      expect(result.appended).toBe(false);
+      expect(result.content.indexOf('"New"')).toBeLessThan(
+        result.content.indexOf('"Junk"'),
+      );
+    },
+  );
 });
