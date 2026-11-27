@@ -1452,7 +1452,7 @@ Analysis resources accept their supported optional `account`, `filter`, `time`,
 resource template advertises each read's accepted names. For example:
 
 ```text
-beancount://alice/books/trial-balance?time=2026&interval=month&conversion=USD
+beancount://alice/books/interval-totals?time=2026&interval=month&conversion=USD
 ```
 
 Encode path values and query values using standard URL encoding. Some required

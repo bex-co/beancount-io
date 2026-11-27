@@ -41,19 +41,34 @@ function canonical(uri: string): string {
   );
 }
 
+/** Whether a template reads the URI; a refusal (an unknown query name, a bad encoding) is a no. */
+function reads(
+  template: ReturnType<typeof queryTemplateFor>,
+  uri: string,
+): boolean {
+  try {
+    return template.match(uri) !== null;
+  } catch {
+    return false;
+  }
+}
+
 describe("docs/mcp.md describes the surface this server serves", () => {
   it("cites no resource URI that is not a registered template", () => {
     const templates = MCP_RESOURCES.map((descriptor) =>
       queryTemplateFor(descriptor),
     );
     const advertised = new Set(templates.map((t) => canonical(t.toString())));
-    const unregistered = cited(/`(beancount:\/\/[^`\s]+)`/g).filter((uri) => {
+    // Every URI, not only the backticked ones: the one analysis example sat
+    // in a fenced block and kept `interval` on the trial balance for a month
+    // after w23/159 removed it, so the read it showed was refused (w31/105).
+    const unregistered = cited(/(beancount:\/\/[^`\s"]+)/g).filter((uri) => {
       // `beancount://` and `beancount://{owner}/{name}/` name the scheme and
       // the ledger-scoped prefix, not a resource.
       if (uri.endsWith("/")) return false;
       if (advertised.has(canonical(uri))) return false;
       // A worked example is a concrete URI rather than a template spelling.
-      return !templates.some((template) => template.match(uri));
+      return !templates.some((template) => reads(template, uri));
     });
     expect(unregistered).toEqual([]);
   });
