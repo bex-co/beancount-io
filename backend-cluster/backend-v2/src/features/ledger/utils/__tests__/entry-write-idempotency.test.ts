@@ -3,7 +3,10 @@ import type {
   IdempotencyStore,
 } from "@/foundation/redis/redis-idempotency";
 import { ConflictError, ValidationError } from "@/shared/errors";
-import { runIdempotentEntryWrite } from "../entry-write-idempotency";
+import {
+  replayedPreviewMessage,
+  runIdempotentEntryWrite,
+} from "../entry-write-idempotency";
 
 jest.mock("@/foundation/redis/redis-idempotency", () => ({
   redisIdempotencyStore: {
@@ -35,6 +38,11 @@ function memoryStore() {
       state.calls++;
       if (state.down) return;
       records.delete(key);
+    },
+    async peek(key) {
+      state.calls++;
+      if (state.down) return undefined;
+      return records.get(key);
     },
   };
   return { store, records, state };
@@ -323,6 +331,177 @@ describe("runIdempotentEntryWrite", () => {
       runIdempotentEntryWrite({ ...base, requestId: "crash", write, store }),
     ).rejects.toBeInstanceOf(ConflictError);
     expect(write).not.toHaveBeenCalled();
+  });
+
+  // w31/136: a preview answers as its commit would, without claiming the id.
+  describe("on a preview", () => {
+    const replay = jest.fn((first: unknown) => ({ replayOf: first }));
+    const preview = { replay };
+    beforeEach(() => replay.mockClear());
+
+    it("refuses an id already used with a different request, without previewing", async () => {
+      const { store } = memoryStore();
+      await runIdempotentEntryWrite({
+        ...base,
+        requestId: "id-1",
+        write: async () => ({ success: true }),
+        store,
+      });
+      const write = jest.fn();
+
+      await expect(
+        runIdempotentEntryWrite({
+          ...base,
+          request: { inputs: [{ narration: "Rent", amount: "2100.00" }] },
+          requestId: "id-1",
+          write,
+          preview,
+          store,
+        }),
+      ).rejects.toMatchObject({
+        constructor: ValidationError,
+        message: expect.stringContaining(
+          "requestId was already used with a different write request",
+        ),
+      });
+      await expect(
+        runIdempotentEntryWrite({
+          ...base,
+          operation: "appendText",
+          requestId: "id-1",
+          write,
+          preview,
+          store,
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(write).not.toHaveBeenCalled();
+    });
+
+    it("refuses a different request while the first attempt is still running", async () => {
+      const { store } = memoryStore();
+      let finish!: (value: unknown) => void;
+      const first = runIdempotentEntryWrite({
+        ...base,
+        requestId: "slow",
+        write: () => new Promise((resolve) => (finish = resolve)),
+        store,
+      });
+      await Promise.resolve();
+      const write = jest.fn();
+
+      await expect(
+        runIdempotentEntryWrite({
+          ...base,
+          request: { inputs: [{ narration: "Rent", amount: "2100.00" }] },
+          requestId: "slow",
+          write,
+          preview,
+          store,
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(write).not.toHaveBeenCalled();
+      finish({ success: true });
+      await first;
+    });
+
+    it("answers with replay(first) when the id committed this request, without previewing", async () => {
+      const { store } = memoryStore();
+      const first = { success: true, commit: "c0ffee1" };
+      await runIdempotentEntryWrite({
+        ...base,
+        requestId: "id-1",
+        write: async () => first,
+        store,
+      });
+      const write = jest.fn();
+
+      await expect(
+        runIdempotentEntryWrite({
+          ...base,
+          requestId: "id-1",
+          write,
+          preview,
+          store,
+        }),
+      ).resolves.toEqual({ replayOf: first });
+      expect(replay).toHaveBeenCalledWith(first);
+      expect(write).not.toHaveBeenCalled();
+    });
+
+    it("previews as usual while the same request is still in progress", async () => {
+      const { store } = memoryStore();
+      let finish!: (value: unknown) => void;
+      const first = runIdempotentEntryWrite({
+        ...base,
+        requestId: "slow",
+        write: () => new Promise((resolve) => (finish = resolve)),
+        store,
+      });
+      await Promise.resolve();
+      const write = jest
+        .fn()
+        .mockResolvedValue({ success: true, dryRun: true });
+
+      await expect(
+        runIdempotentEntryWrite({
+          ...base,
+          requestId: "slow",
+          write,
+          preview,
+          store,
+        }),
+      ).resolves.toEqual({ success: true, dryRun: true });
+      expect(replay).not.toHaveBeenCalled();
+      finish({ success: true });
+      await first;
+    });
+
+    it("previews as usual, unprotected, when the store is unavailable", async () => {
+      const { store, state } = memoryStore();
+      state.down = true;
+      const write = jest
+        .fn()
+        .mockResolvedValue({ success: true, dryRun: true });
+
+      await expect(
+        runIdempotentEntryWrite({
+          ...base,
+          requestId: "id-1",
+          write,
+          preview,
+          store,
+        }),
+      ).resolves.toEqual({ success: true, dryRun: true });
+      expect(write).toHaveBeenCalledTimes(1);
+    });
+
+    it("records nothing, so the commit it previews runs and is not replayed", async () => {
+      const { store, records } = memoryStore();
+      const write = jest
+        .fn()
+        .mockResolvedValueOnce({ success: true, dryRun: true })
+        .mockResolvedValueOnce({ success: true, dryRun: false });
+
+      await runIdempotentEntryWrite({
+        ...base,
+        requestId: "fresh",
+        write,
+        preview,
+        store,
+      });
+      expect(records.size).toBe(0);
+      await expect(
+        runIdempotentEntryWrite({ ...base, requestId: "fresh", write, store }),
+      ).resolves.toEqual({ success: true, dryRun: false });
+      expect(write).toHaveBeenCalledTimes(2);
+    });
+
+    it("names the first write's commit when it knows it", () => {
+      expect(replayedPreviewMessage("c0ffee1")).toMatch(
+        /^Would add nothing: .* in commit c0ffee1, so the commit returns that result/,
+      );
+      expect(replayedPreviewMessage(undefined)).not.toContain("in commit");
+    });
   });
 
   it.each(["", "x".repeat(201)])(

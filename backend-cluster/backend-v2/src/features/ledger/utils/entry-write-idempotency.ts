@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import {
+  type IdempotencyRecord,
   type IdempotencyStore,
   redisIdempotencyStore,
 } from "@/foundation/redis/redis-idempotency";
@@ -59,6 +60,27 @@ function canonical(value: unknown): unknown {
   );
 }
 
+/** The refusal for an id already used with another request, preview or commit. */
+function assertSameRequest(
+  record: IdempotencyRecord,
+  requestHash: string,
+): void {
+  if (record.requestHash !== requestHash) {
+    throw new ValidationError(
+      "requestId",
+      "requestId was already used with a different write request",
+    );
+  }
+}
+
+/**
+ * What a preview says when its id already committed the same request: its
+ * commit returns that first result and writes nothing (w31/136).
+ */
+export function replayedPreviewMessage(commit: string | undefined): string {
+  return `Would add nothing: this requestId already made this write${commit ? ` in commit ${commit}` : ""}, so the commit returns that result and writes nothing again`;
+}
+
 /**
  * Run an entry write at most once per `requestId` (w3/m61, owner decision
  * 2026-11-02, after ledger creation's ADR026 contract).
@@ -75,6 +97,15 @@ function canonical(value: unknown): unknown {
  *
  * A crash after the commit but before the record is marked done leaves it in
  * progress: retries get the conflict, never a duplicate.
+ *
+ * A dry run (`preview`) writes nothing, so it records nothing, but it answers
+ * as its commit would, or a `valid: true` preview resent without `dry_run`
+ * fails on an argument the preview accepted (w1/195, w31/136): it refuses a
+ * malformed id, and an id already used with a different request; and when the
+ * id already committed this same request it returns `preview.replay(first)`
+ * instead of projecting a second copy, because the commit would return `first`
+ * and write nothing. An id still in progress, or an unavailable store, previews
+ * as usual.
  */
 export async function runIdempotentEntryWrite<T>(params: {
   userId: string;
@@ -88,17 +119,15 @@ export async function runIdempotentEntryWrite<T>(params: {
   /** Whether a result that did not throw committed; a refusal is not stored. */
   committed: (result: T) => boolean;
   /**
-   * A dry run writes nothing, so it records nothing — but it refuses the id
-   * the commit would refuse, or a `valid: true` preview resent with
-   * `dry_run: false` fails on an argument the preview accepted (w1/195).
+   * Set on a dry run. `replay` turns the result the commit would replay into
+   * what the preview answers.
    */
-  preview?: boolean;
+  preview?: { replay: (first: T) => T };
   store?: IdempotencyStore;
 }): Promise<T> {
   const { requestId, write } = params;
   if (requestId === undefined || requestId === null) return write();
   assertRequestId(requestId);
-  if (params.preview) return write();
 
   const store = params.store ?? redisIdempotencyStore;
   const key = CACHE_KEYS.ledger.entryWriteRequest(
@@ -110,6 +139,15 @@ export async function runIdempotentEntryWrite<T>(params: {
     .update(JSON.stringify(canonical([params.operation, params.request])))
     .digest("hex");
 
+  if (params.preview) {
+    const record = await store.peek(key);
+    if (record) assertSameRequest(record, requestHash);
+    if (record?.status === "done") {
+      return params.preview.replay(record.result as T);
+    }
+    return write();
+  }
+
   const claim = await store.claim(key, requestHash, TTL.HOUR_24);
   if (claim === undefined) {
     idempotencyLogger.warn("Entry write proceeding without idempotency", {
@@ -118,12 +156,7 @@ export async function runIdempotentEntryWrite<T>(params: {
     return write();
   }
   if (!claim.claimed) {
-    if (claim.record.requestHash !== requestHash) {
-      throw new ValidationError(
-        "requestId",
-        "requestId was already used with a different write request",
-      );
-    }
+    assertSameRequest(claim.record, requestHash);
     if (claim.record.status === "done") return claim.record.result as T;
     throw new ConflictError(
       "Entry write",

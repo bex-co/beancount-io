@@ -2720,6 +2720,73 @@ describe.each(["rest", "gql", "mcp"])("requestId via %s", (surface) => {
     }
   });
 
+  // w31/136: a preview answers as the commit it previews would.
+  const preview = surface === "mcp" ? { dry_run: true } : { dryRun: true };
+
+  it("refuses a preview of different entries under a committed id, as their commit is refused (w31/136)", async () => {
+    const f = await fixture(writer());
+    try {
+      await f.call(surface, entries, { requestId: "rent-4" });
+      const previewed = await f.call(surface, entries.slice(1), {
+        ...preview,
+        requestId: "rent-4",
+      });
+      const committed = await f.call(surface, entries.slice(1), {
+        requestId: "rent-4",
+      });
+
+      for (const outcome of [previewed, committed]) {
+        expect(outcome.success).toBe(false);
+        if (surface === "gql") {
+          expect(refusalCode(outcome)).toContain(
+            "requestId was already used with a different write request",
+          );
+        } else {
+          expect(refusalCode(outcome)).toBe("VALIDATION_FAILED");
+        }
+      }
+      expect(f.write).toHaveBeenCalledTimes(1);
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("says a preview of the committed entries would replay them, not add them again (w31/136)", async () => {
+    const f = await fixture(writer());
+    f.state.commit = "c0ffee1";
+    try {
+      await f.call(surface, entries, { requestId: "rent-5" });
+      const previewed = await f.call(surface, entries, {
+        ...preview,
+        requestId: "rent-5",
+      });
+
+      expect(previewed.success).toBe(true);
+      const result = previewed.result as Record<string, unknown>;
+      expect(surface === "mcp" ? result.summary : result.message).toMatch(
+        /^Would add nothing: this requestId already made this write in commit c0ffee1, so the commit returns that result/,
+      );
+      expect(result).toMatchObject({
+        ...(surface === "mcp"
+          ? { dry_run: true, wrote: [] }
+          : { dryRun: true, valid: true }),
+        preview: [],
+        entryHashes: [],
+      });
+      expect(result).not.toHaveProperty("replayed");
+      expect(result).not.toHaveProperty("commit");
+      // No projection ran: the ledger saw only the first commit.
+      expect(f.write).toHaveBeenCalledTimes(1);
+
+      const retried = await f.call(surface, entries, { requestId: "rent-5" });
+      expect(retried.success).toBe(true);
+      expect(f.write).toHaveBeenCalledTimes(1);
+      expect(f.committed).toHaveLength(entries.length);
+    } finally {
+      await f.close();
+    }
+  });
+
   it("answers a repeat during the first attempt with a retryable CONFLICT", async () => {
     const f = await fixture(writer());
     let release!: () => void;

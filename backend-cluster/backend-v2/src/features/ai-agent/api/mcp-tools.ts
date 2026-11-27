@@ -529,6 +529,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
         includedFiles = [],
         dryRun,
         validation: _projection,
+        replayed,
         ...written
       } = committed;
       const files = written.files ?? [];
@@ -544,13 +545,16 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
         ? []
         : [...new Set([...files, ...(included ? [LEDGER_ENTRY_POINT] : [])])];
       const verb = dryRun ? "Would add" : "Added";
+      // A preview whose requestId already committed this batch says the
+      // commit replays it, not that it would add the entries again (w31/136).
+      const headline =
+        replayed && written.message
+          ? written.message
+          : `${verb} ${entries.length} ${noun}${files.length > 0 ? ` to ${files.join(", ")}` : ""}${included}`;
       return {
         ok: true,
         result: {
-          summary: summarizeWrite(
-            `${verb} ${entries.length} ${noun}${files.length > 0 ? ` to ${files.join(", ")}` : ""}${included}`,
-            validation,
-          ),
+          summary: summarizeWrite(headline, validation),
           ...written,
           dry_run: dryRun,
           preview: written.preview ?? [],

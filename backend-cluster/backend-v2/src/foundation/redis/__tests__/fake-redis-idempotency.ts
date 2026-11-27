@@ -43,6 +43,11 @@ const store: IdempotencyStore = {
     if (fakeRedisIdempotencyState.down) return;
     fakeRedisIdempotencyState.records.delete(key);
   },
+  async peek(key) {
+    const state = fakeRedisIdempotencyState;
+    if (state.down) return undefined;
+    return state.records.get(key);
+  },
 };
 
 export const fakeRedisIdempotency = { redisIdempotencyStore: store };

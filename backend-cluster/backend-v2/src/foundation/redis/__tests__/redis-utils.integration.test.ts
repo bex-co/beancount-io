@@ -179,6 +179,9 @@ it("increments atomically under concurrency, preserves an existing expiry, and r
 });
 
 it("lets exactly one concurrent claim win an idempotency key and replays the finished record", async () => {
+  // A preview's read claims nothing (w31/136).
+  await expect(redisIdempotencyStore.peek("idem")).resolves.toBeUndefined();
+  await expect(control.exists("idem")).resolves.toBe(0);
   const claims = await Promise.all(
     Array.from({ length: 20 }, () =>
       redisIdempotencyStore.claim("idem", "hash-a", 60_000),
@@ -201,8 +204,14 @@ it("lets exactly one concurrent claim win an idempotency key and replays the fin
     claimed: false,
     record: { requestHash: "hash-a", status: "done", result: { ok: 1 } },
   });
+  await expect(redisIdempotencyStore.peek("idem")).resolves.toEqual({
+    requestHash: "hash-a",
+    status: "done",
+    result: { ok: 1 },
+  });
 
   await redisIdempotencyStore.release("idem");
+  await expect(redisIdempotencyStore.peek("idem")).resolves.toBeUndefined();
   await expect(
     redisIdempotencyStore.claim("idem", "hash-b", 60_000),
   ).resolves.toEqual({ claimed: true });

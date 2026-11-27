@@ -2545,12 +2545,17 @@ after a timeout or a dropped reply (a ledger timeout answers `SERVICE_UNAVAILABL
 - A write that is refused or fails releases its id, so the retry runs again.
 - Without an id, nothing changes: the write is not deduplicated.
 
-Ids are scoped to the caller and the ledger. A dry run is never deduplicated,
-but it refuses an id outside 1–200 characters exactly as the commit does, so a
-`valid: true` preview never carries an id its commit would reject (w1/195).
-If the server's idempotency store is unreachable, the write still goes ahead,
-unprotected, rather than failing. The dashboard and the mobile app send an id
-with every entry save.
+Ids are scoped to the caller and the ledger. A dry run is never deduplicated
+and records nothing, but it answers as its commit would, so a `valid: true`
+preview never carries an id its commit would reject. It refuses an id outside
+1–200 characters (w1/195), and an id already used for a different write,
+including the other kind of entry write, with the same `VALIDATION_FAILED`. A
+preview of the write its id already made does not project a second copy: it
+says the commit returns the first result and writes nothing, with an empty
+diff or preview (w31/136). If the server's idempotency store is unreachable,
+the write still goes ahead, unprotected, rather than failing, and a preview
+runs as if the id were new. The dashboard and the mobile app send an id with
+every entry save.
 
 ### Legacy transaction insertion
 

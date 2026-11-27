@@ -1794,6 +1794,85 @@ describe("requestId on appended text", () => {
     },
   );
 
+  /** A refusal's code as each surface reports it. */
+  function codeOf(surface: "rest" | "gql" | "mcp", error: unknown) {
+    if (surface !== "gql") return (error as { code?: string }).code;
+    const gqlError = error as { toJSON: () => { message: string } };
+    return formatError(gqlError.toJSON(), gqlError as never).extensions?.code;
+  }
+
+  // w31/136: a preview answers as the commit it previews would.
+  it.each(["rest", "gql", "mcp"] as const)(
+    "refuses a preview of different text under a committed id via %s, as its commit is refused (w31/136)",
+    async (surface) => {
+      const f = await fixture({
+        ...identity,
+        userId: `usr_text_reused_request_id_${surface}`,
+      });
+      try {
+        await f.call(surface, { text: TXN, requestId: "t-2" });
+        const projections = f.checkProjectedErrors.mock.calls.length;
+        const other = TXN.replace('"Coffee"', '"Tea"');
+
+        for (const dryRun of [true, false]) {
+          const res = await f.call(surface, {
+            text: other,
+            dryRun,
+            requestId: "t-2",
+          });
+          expect(res.ok).toBe(false);
+          if (!res.ok) {
+            expect(codeOf(surface, res.error)).toBe("VALIDATION_FAILED");
+          }
+        }
+        expect(f.commits).toHaveLength(1);
+        expect(f.checkProjectedErrors).toHaveBeenCalledTimes(projections);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each(["rest", "gql", "mcp"] as const)(
+    "says a preview of the committed text via %s would replay it, not add it again (w31/136)",
+    async (surface) => {
+      const f = await fixture({
+        ...identity,
+        userId: `usr_text_replayed_preview_${surface}`,
+      });
+      try {
+        await f.call(surface, { text: TXN, requestId: "t-3" });
+        const projections = f.checkProjectedErrors.mock.calls.length;
+
+        const res = await f.call(surface, {
+          text: TXN,
+          dryRun: true,
+          requestId: "t-3",
+        });
+
+        expect(res.ok).toBe(true);
+        const data = (res.ok ? res.data : {}) as Record<string, unknown>;
+        expect(surface === "mcp" ? data.summary : data.message).toMatch(
+          /^Would add nothing: this requestId already made this write, so the commit returns that result/,
+        );
+        expect(data).toMatchObject({
+          ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+          count: 1,
+          wrote: [],
+          entryHashes: [],
+          diff: [],
+        });
+        expect(f.checkProjectedErrors).toHaveBeenCalledTimes(projections);
+
+        const retried = await f.call(surface, { text: TXN, requestId: "t-3" });
+        expect(retried.ok).toBe(true);
+        expect(f.commits).toHaveLength(1);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
   it.each(["rest", "gql", "mcp"] as const)(
     "refuses a whitespace-only requestId on preview and commit via %s without touching Redis (w31/044)",
     async (surface) => {

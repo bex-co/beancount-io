@@ -41,6 +41,12 @@ export interface IdempotencyStore {
   ): Promise<void>;
   /** Forget a claim whose attempt failed, so a retry runs again. */
   release(key: string): Promise<void>;
+  /**
+   * Read the record at `key` without claiming it, for a dry run that must
+   * answer as its commit would. `undefined` when there is none or the store
+   * is unavailable.
+   */
+  peek(key: string): Promise<IdempotencyRecord | undefined>;
 }
 
 /**
@@ -49,7 +55,7 @@ export interface IdempotencyStore {
  * logged, never a key or argument.
  */
 async function run<T>(
-  operation: "claim" | "complete" | "release",
+  operation: "claim" | "complete" | "release" | "peek",
   script: string,
   keys: string[],
   args: string[],
@@ -99,5 +105,14 @@ export const redisIdempotencyStore: IdempotencyStore = {
   },
   async release(key) {
     await run("release", `redis.call('DEL', KEYS[1])`, [key], []);
+  },
+  async peek(key) {
+    const existing = await run<string | null>(
+      "peek",
+      `return redis.call('GET', KEYS[1])`,
+      [key],
+      [],
+    );
+    return existing ? (JSON.parse(existing) as IdempotencyRecord) : undefined;
   },
 };

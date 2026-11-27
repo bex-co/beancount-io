@@ -1,4 +1,7 @@
-import { runIdempotentEntryWrite } from "@/features/ledger/utils/entry-write-idempotency";
+import {
+  replayedPreviewMessage,
+  runIdempotentEntryWrite,
+} from "@/features/ledger/utils/entry-write-idempotency";
 import { retryLostEntryWriteRace } from "@/features/ledger/utils/entry-write-race";
 import {
   EntryAddBulkEntriesRequest,
@@ -378,6 +381,12 @@ export type AddBulkEntriesResult = {
    */
   preview?: Array<{ path: string; text: string }>;
   /**
+   * On a preview only: the requestId already committed this batch, so the
+   * commit returns that result and writes nothing; `message` says so
+   * (w31/136).
+   */
+  replayed?: true;
+  /**
    * The ledger's projection check for the batch, always reported — even
    * under `allowInvalid`, which suppresses only the refusal (w23/161).
    */
@@ -527,7 +536,21 @@ export class LedgerEntryService implements ILedgerEntryService {
       operation: "bulkEntries",
       committed: (result) => result.success,
       requestId,
-      preview: dryRun,
+      preview: dryRun
+        ? {
+            // Nothing lands, so the preview carries no files, hashes or text.
+            replay: (first) => ({
+              success: true,
+              dryRun: true,
+              replayed: true,
+              message: replayedPreviewMessage(first.commit),
+              files: [],
+              entryHashes: [],
+              preview: [],
+              validation: first.validation,
+            }),
+          }
+        : undefined,
       request: { inputs, allowInvalid },
       write: dryRun ? write : () => retryLostEntryWriteRace(write),
     });
@@ -562,7 +585,24 @@ export class LedgerEntryService implements ILedgerEntryService {
       operation: "appendText",
       committed: (result) => result.success,
       requestId,
-      preview: input.dryRun,
+      preview: input.dryRun
+        ? {
+            replay: (first) => ({
+              success: true,
+              message: replayedPreviewMessage(first.commit),
+              dryRun: true,
+              count: first.count,
+              wrote: [],
+              entryHashes: [],
+              diff: [],
+              errorsBefore: first.errorsBefore,
+              errorsAfter: first.errorsAfter,
+              newErrors: first.newErrors,
+              valid: first.valid,
+              appendedUnsorted: [],
+            }),
+          }
+        : undefined,
       request: {
         text: input.text,
         path: input.path,

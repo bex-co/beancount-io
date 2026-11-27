@@ -405,6 +405,196 @@ describe("a requestId the commit refuses", () => {
   );
 });
 
+/**
+ * w31/136. A preview read nothing from the store, so it answered `valid: true`
+ * for an id that had already committed a different write, and its commit was
+ * refused; for an id that had committed the same write it projected a second
+ * copy that its commit would never write.
+ */
+describe("a preview under an id that already committed", () => {
+  const otherRent = [
+    { ...rent[0], entry: { ...rent[0].entry, narration: "Rent (Nov)" } },
+  ] as LedgerEntryInput[];
+  const add = (service: LedgerEntryService, dryRun: boolean, entries = rent) =>
+    service.addBulkEntries(
+      identity,
+      "alice",
+      "books",
+      entries,
+      "web",
+      false,
+      dryRun,
+      "id-1",
+    );
+  const append = (
+    service: LedgerEntryService,
+    dryRun: boolean,
+    text = '2026-11-01 note Assets:Bank "hi"\n',
+  ) =>
+    service.appendDirectiveText(
+      identity,
+      "alice",
+      "books",
+      { text, dryRun },
+      "id-1",
+    );
+
+  it("refuses a different structured write exactly as its commit does, without projecting it", async () => {
+    const { service, writer } = entryService();
+    await add(service, false);
+
+    for (const dryRun of [true, false]) {
+      const refusal = await add(service, dryRun, otherRent).catch(
+        (error: unknown) => error,
+      );
+      expect(refusal).toBeInstanceOf(ValidationError);
+      expect(refusal).toMatchObject({
+        message: expect.stringContaining(
+          "requestId was already used with a different write request",
+        ),
+        metadata: { field: "requestId" },
+      });
+    }
+    expect(writer.writeBulkEntries).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses different text exactly as its commit does, without projecting it", async () => {
+    const { service, directiveAppend } = entryService();
+    await append(service, false);
+
+    for (const dryRun of [true, false]) {
+      await expect(
+        append(service, dryRun, '2026-11-02 note Assets:Bank "other"\n'),
+      ).rejects.toBeInstanceOf(ValidationError);
+    }
+    expect(directiveAppend.appendDirectiveText).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses a preview of the other kind of write under the same id", async () => {
+    const { service, writer } = entryService();
+    await append(service, false);
+
+    await expect(add(service, true)).rejects.toBeInstanceOf(ValidationError);
+    expect(writer.writeBulkEntries).not.toHaveBeenCalled();
+  });
+
+  it("says a structured commit would replay the first result instead of projecting a second copy", async () => {
+    const { service, writer } = entryService();
+    writer.writeBulkEntries.mockResolvedValueOnce({
+      success: true,
+      dryRun: false,
+      message: "Added 1 entry successfully",
+      files: ["main.bean"],
+      entryHashes: ["h1"],
+      commit: "c0ffee1",
+      validation: {
+        errorsBefore: 0,
+        errorsAfter: 0,
+        newErrors: [],
+        valid: true,
+      },
+    });
+    await add(service, false);
+
+    const preview = await add(service, true);
+
+    expect(writer.writeBulkEntries).toHaveBeenCalledTimes(1);
+    expect(preview).toEqual({
+      success: true,
+      dryRun: true,
+      replayed: true,
+      message: expect.stringMatching(/^Would add nothing: .*c0ffee1/),
+      files: [],
+      entryHashes: [],
+      preview: [],
+      validation: {
+        errorsBefore: 0,
+        errorsAfter: 0,
+        newErrors: [],
+        valid: true,
+      },
+    });
+    // The commit it previews replays the first result and writes nothing.
+    await expect(add(service, false)).resolves.toMatchObject({
+      commit: "c0ffee1",
+      entryHashes: ["h1"],
+    });
+    expect(writer.writeBulkEntries).toHaveBeenCalledTimes(1);
+  });
+
+  it("says a text commit would replay the first result instead of projecting a second copy", async () => {
+    const { service, directiveAppend } = entryService();
+    directiveAppend.appendDirectiveText.mockResolvedValueOnce({
+      success: true,
+      message: "Added 1 directive to main.bean",
+      dryRun: false,
+      count: 1,
+      wrote: [{ path: "main.bean", line: 9 }],
+      entryHashes: ["h1"],
+      diff: [],
+      errorsBefore: 2,
+      errorsAfter: 2,
+      newErrors: [],
+      valid: true,
+      appendedUnsorted: [],
+      commit: "c0ffee1",
+    });
+    await append(service, false);
+
+    const preview = await append(service, true);
+
+    expect(directiveAppend.appendDirectiveText).toHaveBeenCalledTimes(1);
+    expect(preview).toEqual({
+      success: true,
+      message: expect.stringMatching(/^Would add nothing: .*c0ffee1/),
+      dryRun: true,
+      count: 1,
+      wrote: [],
+      entryHashes: [],
+      diff: [],
+      errorsBefore: 2,
+      errorsAfter: 2,
+      newErrors: [],
+      valid: true,
+      appendedUnsorted: [],
+    });
+  });
+
+  it("previews as before, recording nothing, while the store is down", async () => {
+    const { service, writer, directiveAppend } = entryService();
+    await add(service, false);
+    const stored = new Map(fakeRedisIdempotencyState.records);
+    fakeRedisIdempotencyState.down = true;
+
+    // Both would be refused with the store up: a different request, and the
+    // other kind of write, under the committed id.
+    await expect(add(service, true, otherRent)).resolves.toMatchObject({
+      success: true,
+    });
+    await expect(append(service, true)).resolves.toMatchObject({
+      success: true,
+    });
+    expect(writer.writeBulkEntries).toHaveBeenCalledTimes(2);
+    expect(directiveAppend.appendDirectiveText).toHaveBeenCalledTimes(1);
+    expect(fakeRedisIdempotencyState.records).toEqual(stored);
+  });
+
+  it("previews a fresh id without claiming it, so its commit writes once and is not replayed", async () => {
+    const { service, writer } = entryService();
+    writer.writeBulkEntries
+      .mockResolvedValueOnce({ success: true, dryRun: true, preview: [] })
+      .mockResolvedValueOnce({ success: true, dryRun: false, commit: "c1" });
+
+    await add(service, true);
+    expect(fakeRedisIdempotencyState.records.size).toBe(0);
+    await expect(add(service, false)).resolves.toMatchObject({
+      dryRun: false,
+      commit: "c1",
+    });
+    expect(writer.writeBulkEntries).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe("insertReceiptTransaction with a requestId", () => {
   it("does not store the receipt or post the entry a second time on retry", async () => {
     const getAdminClient = jest.fn(() => ({
