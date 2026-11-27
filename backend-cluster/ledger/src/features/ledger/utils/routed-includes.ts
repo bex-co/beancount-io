@@ -1,4 +1,5 @@
 import { isGlob } from "@/foundation/rustledger/file-map-loader";
+import { isSkippedLine } from "@/foundation/rustledger/parseable-files";
 import { endsInsideString } from "@/foundation/rustledger/source-slice";
 import { BadUserInputError } from "@/shared/errors";
 import { lineEndingOf } from "./line-ending";
@@ -53,7 +54,8 @@ export function addIncludes(
   let inString = false;
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
-    if (!inString && line.startsWith("*")) continue;
+    // A line Beancount skips whole opens no string (w31/099).
+    if (!inString && isSkippedLine(line)) continue;
     if (!inString && INCLUDE_LINE_RE.test(line)) {
       last = i;
     }

@@ -31,6 +31,22 @@ describe("stripFavaPlugins", () => {
     expect(out[5]).toBe("2020-01-01 open Assets:Cash");
   });
 
+  // w31/099: Beancount skips a whole line starting with any of `*#:!&?%`,
+  // and a `"` on it opens no string, so the plugin after it is still read.
+  it.each(
+    ["*", "#", ":", "!", "&", "?", "%"].flatMap((start) => [
+      [start, "without a quote", ""],
+      [start, "with an unmatched quote", ' 5"'],
+    ]),
+  )("strips the plugin after a %s line %s", (start, _case, quote) => {
+    const files: FileMap = {
+      "main.bean": `${start} a note${quote}\nplugin "fava.plugins.amortize_over"\n`,
+    };
+    const { strippedFiles, stripped } = stripFavaPlugins(files, "main.bean");
+    expect(stripped).toEqual([{ name: "fava.plugins.amortize_over", line: 2 }]);
+    expect(strippedFiles["main.bean"]).toBe(`${start} a note${quote}\n\n`);
+  });
+
   it("returns the same FileMap reference when there is nothing to strip", () => {
     const files: FileMap = {
       "main.bean":

@@ -1,5 +1,6 @@
 import type { BeancountError, FileMap } from "@rustledger/wasm";
 import { OPTION_LINE_RE } from "../beancount-options";
+import { isSkippedLine } from "../parseable-files";
 import { endsInsideString } from "../source-slice";
 import { PLUGIN_LINE_RE, decodeStringLiteral } from "./collect-plugins";
 import { pluginError } from "./types";
@@ -77,6 +78,8 @@ function stripPluginLines(
   const lines = source.split(/\r\n|\r|\n/u);
   let inString = false;
   lines.forEach((line, index) => {
+    // A line Beancount skips whole opens no string (w31/099).
+    if (!inString && isSkippedLine(line)) return;
     const startsInsideString = inString;
     inString = endsInsideString(line, inString);
     const match = startsInsideString ? null : PLUGIN_LINE_RE.exec(line);

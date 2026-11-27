@@ -1,4 +1,5 @@
 import type { BeancountError, FileMap } from "@rustledger/wasm";
+import { isSkippedLine } from "./parseable-files";
 import { endsInsideString, loadedFiles } from "./source-slice";
 
 /**
@@ -34,9 +35,10 @@ export function midCurrencyToleranceErrors(
     const lines = (files[file] ?? "").split("\n");
     let inString = false;
     lines.forEach((line, index) => {
-      // A column-0 `*` line is an org-mode heading Beancount skips whole: a
-      // `"` on it opens nothing. Inside a string the `*` is content instead.
-      if (!inString && line.startsWith("*")) return;
+      // Beancount skips a line starting with `*`, `#`, `:`, `!`, `&`, `?` or
+      // `%` whole: a `"` on it opens nothing (w31/099). Inside a string the
+      // character is content instead.
+      if (!inString && isSkippedLine(line)) return;
       if (!inString) {
         const currency = MID_CURRENCY_TOLERANCE.exec(line)?.[1];
         if (currency !== undefined) {

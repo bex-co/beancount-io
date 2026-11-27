@@ -17,6 +17,17 @@ import {
 export const SKIPPED_LINE_OR_TOKEN_RE =
   /^[*#:!&?%][^\n]*|"(?:[^"\\]|\\.)*"|;[^\n]*/gmu;
 const SKIPPED_LINE_START_RE = /^[*#:!&?%]/mu;
+const SKIPPED_LINE_RE = /^[*#:!&?%]/u;
+
+/**
+ * Whether Beancount skips `line` whole, so a `"` on it opens no string. The
+ * one rule every line scanner here applies (w31/099). Only meaningful for a
+ * line that starts outside a string: inside one, the first character is the
+ * string's content.
+ */
+export function isSkippedLine(line: string): boolean {
+  return SKIPPED_LINE_RE.test(line);
+}
 
 /** `source` with every line Beancount skips turned into a `;` comment. */
 export function commentSkippedLines(source: string): string {

@@ -42,20 +42,38 @@ describe("addIncludes", () => {
   });
 
   // w31/093: glob metacharacters in an include target cannot be loaded literally.
-  it.each(["books/q[1].bean", "books/q[1.bean", "books/*.bean", "books/?.bean"])(
-    "refuses glob metacharacter path %p",
-    (badPath) => {
-      expect(() => assertLiteralIncludePath(badPath, "toPath")).toThrow(
-        BadUserInputError,
-      );
-      expect(() => addIncludes("", [badPath], "toPath")).toThrow(
-        /toPath.*glob metacharacter/,
-      );
-    },
-  );
+  it.each([
+    "books/q[1].bean",
+    "books/q[1.bean",
+    "books/*.bean",
+    "books/?.bean",
+  ])("refuses glob metacharacter path %p", (badPath) => {
+    expect(() => assertLiteralIncludePath(badPath, "toPath")).toThrow(
+      BadUserInputError,
+    );
+    expect(() => addIncludes("", [badPath], "toPath")).toThrow(
+      /toPath.*glob metacharacter/,
+    );
+  });
 });
 
 // w21/695: a CRLF entry point gained a bare-LF include line.
+// w31/099: Beancount skips a whole line starting with any of `*#:!&?%`, and a
+// `"` on it opens no string, so the include after it is still the anchor.
+describe("addIncludes over lines Beancount skips (w31/099)", () => {
+  it.each(
+    ["*", "#", ":", "!", "&", "?", "%"].flatMap((start) => [
+      [start, "without a quote", ""],
+      [start, "with an unmatched quote", ' 5"'],
+    ]),
+  )("anchors after the include below a %s line %s", (start, _case, quote) => {
+    const main = `${start} see the note${quote}\ninclude "a.bean"\n\n2020-01-01 open Assets:Cash USD\n`;
+    expect(addIncludes(main, ["b.bean"])).toBe(
+      `${start} see the note${quote}\ninclude "a.bean"\ninclude "b.bean"\n\n2020-01-01 open Assets:Cash USD\n`,
+    );
+  });
+});
+
 describe("addIncludes in a CRLF file", () => {
   const crlf = (lines: string[]) => lines.join("\r\n");
 

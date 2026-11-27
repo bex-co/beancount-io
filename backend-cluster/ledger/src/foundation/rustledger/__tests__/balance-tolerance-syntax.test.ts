@@ -67,3 +67,23 @@ describe("midCurrencyToleranceErrors (w23/197)", () => {
     expect(errors).toEqual([]);
   });
 });
+
+// w31/099: Beancount skips a whole line starting with any of `*#:!&?%`, and a
+// `"` on it opens no string, so the lines after it are still read.
+describe("midCurrencyToleranceErrors over lines Beancount skips (w31/099)", () => {
+  it.each(
+    ["*", "#", ":", "!", "&", "?", "%"].flatMap((start) => [
+      [start, "without a quote", ""],
+      [start, "with an unmatched quote", ' 5"'],
+    ]),
+  )("still flags the line after a %s line %s", (start, _case, quote) => {
+    const errors = run(
+      [
+        `${start} a ruler${quote}`,
+        "2026-08-30 balance Assets:Cash 49.75 USD ~ 0.05 USD",
+        "",
+      ].join("\n"),
+    );
+    expect(errors.map((e) => e.line)).toEqual([2]);
+  });
+});
