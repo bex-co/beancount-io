@@ -420,5 +420,25 @@
       "backend-cluster/ledger/src/foundation/rustledger/price-map.ts"
     ],
     "note": "value() prices a lot from the `@` annotation of the sale that reduced it (90.00 USD for 6 QAX); stock beancount without the implicit_prices plugin has no price and leaves 6 QAX. The engine derives implicit prices upstream; the reports and holdings use price directives only (w1/229)."
+  },
+  {
+    "id": "decimal-context-chained",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      ".pm/w31/done/117.md"
+    ],
+    "note": "Stock rounds every intermediate result to 28 digits, so 1000.00 / 3 * 3 is 333.3333333333333333333333333 * 3 = 999.9999999999999999999999999. The engine carries 29 digits into the product, so the shell's rounded output reads 1000.000000000000000000000000. Rounding the final value matches stock for one operation only; a chain needs the engine to compute in Python's 28-digit context (upstream)."
+  },
+  {
+    "id": "decimal-context-double-rounding",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      ".pm/w31/done/117.md"
+    ],
+    "note": "The engine rounds the exact product 37.66666666666666666666666666516 to its own 29 digits (…665) before the shell rounds to 28, so a false tie rounds half-even to …666 where stock, rounding the exact value once, reads …667. Only the engine can round once (upstream)."
   }
 ]

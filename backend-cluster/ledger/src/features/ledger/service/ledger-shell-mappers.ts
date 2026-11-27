@@ -1,6 +1,7 @@
 import type { AmountValue, CellValue, QueryResult } from "@rustledger/wasm";
 import BigNumber from "bignumber.js";
 import { formatCellValue } from "@/foundation/rustledger";
+import { decimalTextWithPythonContext } from "@/foundation/rustledger/decimal-context";
 import type { ShellQueryResult } from "./ledger-shell-types";
 import { STRING_LITERAL_ROOT } from "./bql-select-aliases";
 import {
@@ -67,10 +68,13 @@ function unitsToCurrencyMap(units: AmountValue[]): CurrencyMap {
     // a repeated currency is summed at the widest scale written, as the tree and
     // series serializers do: `toString()` sent `5e-7` and dropped trailing zeros
     // (`1250.50` → `1250.5`) (w21/125, w21/329).
+    // The sum is one more operation, so it rounds like stock's (w31/117).
     out[currency] =
       numbers.length === 1
         ? numbers[0]
-        : total.toFixed(Math.max(...numbers.map(writtenScale)));
+        : decimalTextWithPythonContext(
+            total.toFixed(Math.max(...numbers.map(writtenScale))),
+          );
   });
   return out;
 }
@@ -258,6 +262,54 @@ function dtypeFromColumnName(name: string): string {
   return "str";
 }
 
+function amountWithPythonContext(amount: AmountValue): AmountValue {
+  return { ...amount, number: decimalTextWithPythonContext(amount.number) };
+}
+
+function positionWithPythonContext<
+  P extends { units: AmountValue; cost?: { number: string } },
+>(position: P): P {
+  return {
+    ...position,
+    units: amountWithPythonContext(position.units),
+    ...(position.cost && {
+      cost: {
+        ...position.cost,
+        number: decimalTextWithPythonContext(position.cost.number),
+      },
+    }),
+  };
+}
+
+/**
+ * A cell's numbers as stock beanquery prints them (w31/117). Beanquery runs
+ * BQL arithmetic in Python's default `Decimal` context, 28 significant digits;
+ * the engine keeps up to 29, so `number / 3` on `10000.00` read
+ * `3333.3333333333333333333333333` instead of `3333.333333333333333333333333`.
+ * A Decimal column's text and the numbers inside an Amount, Position or
+ * Inventory are rounded; a value that already fits is unchanged, so only
+ * engine arithmetic moves. Rounding the result matches stock for a single
+ * operation, not for a chain (`number / 3 * 3`), which stock rounds at every
+ * step. Text in a `str` column, such as a long numeric payee, is left alone.
+ */
+function withPythonDecimalContext(
+  cell: CellValue,
+  dtype: string | undefined,
+): CellValue {
+  if (typeof cell === "string") {
+    return dtype === "Decimal" ? decimalTextWithPythonContext(cell) : cell;
+  }
+  if (isInventoryCell(cell)) {
+    return {
+      ...cell,
+      positions: cell.positions.map(positionWithPythonContext),
+    };
+  }
+  if (isPositionCell(cell)) return positionWithPythonContext(cell);
+  if (isAmountCell(cell)) return amountWithPythonContext(cell);
+  return cell;
+}
+
 /**
  * Coerce a rustledger `CellValue` into the shell DTO's cell union, mirroring
  * fava's per-column-datatype serialisation (`fava/core/query.py`) — the shapes
@@ -312,14 +364,19 @@ export function queryResultToShellResult(
   aliases: ReadonlyMap<string, string> = EMPTY_ALIASES,
   heads: ReadonlyMap<string, string> = EMPTY_ALIASES,
 ): ShellQueryResult {
+  const types = result.columns.map((name, index) => ({
+    name,
+    dtype: classifyColumnDtype(result.rows, index, name, aliases, heads),
+  }));
   return {
     resultType: "table",
     table: {
-      types: result.columns.map((name, index) => ({
-        name,
-        dtype: classifyColumnDtype(result.rows, index, name, aliases, heads),
-      })),
-      rows: result.rows.map((row) => row.map((cell) => toShellCell(cell))),
+      types,
+      rows: result.rows.map((row) =>
+        row.map((cell, index) =>
+          toShellCell(withPythonDecimalContext(cell, types[index]?.dtype)),
+        ),
+      ),
       t: "table",
     },
   };
@@ -423,7 +480,9 @@ export function queryResultToText(
   );
   const columns = result.columns.map((name, index) => {
     const dtype = classifyColumnDtype(result.rows, index, name, aliases, heads);
-    const rawValues = result.rows.map((row) => formatTextCell(row[index]));
+    const rawValues = result.rows.map((row) =>
+      formatTextCell(withPythonDecimalContext(row[index], dtype)),
+    );
     const values =
       dtype === "Decimal" ? alignDecimalColumn(rawValues) : rawValues;
     return {

@@ -152,6 +152,40 @@ async function verifyFilteredPrint(): Promise<void> {
   );
 }
 
+/**
+ * BQL arithmetic prints Python `Decimal`'s 28 significant digits in the text
+ * table as well, the digits the oracle replay checks in the structured
+ * result: the engine's own quotient carries 29 (w31/117).
+ */
+async function verifyDecimalContextText(): Promise<void> {
+  const source = readFileSync(
+    join(__dirname, "bql-oracle/fixtures/main.bean"),
+    "utf8",
+  );
+  const query =
+    "SELECT number / 3 AS third WHERE account = 'Assets:Bank:Checking' LIMIT 2";
+  const raw = await withLedger({ "main.bean": source }, "main.bean", (ledger) =>
+    ledger.query(query),
+  );
+  deepStrictEqual(raw.rows[0], ["333.33333333333333333333333333"]);
+  const shell = new LedgerShellService(
+    singleFileRepoFactory(source) as never,
+    {} as never,
+  );
+  const { text } = await shell.queryShellText({
+    ledgerId: "synthetic/bql-oracle",
+    userId: undefined,
+    query,
+  });
+  deepStrictEqual(
+    text.split("\n").slice(2, 4).map((line) => line.trim()),
+    ["333.3333333333333333333333333", "-266.6666666666666666666666667"],
+  );
+  console.log(
+    "✓ a BQL quotient prints 28 significant digits in the text table, not the engine's 29",
+  );
+}
+
 async function verifyPostingCostFilters(): Promise<void> {
   const source = `2026-01-01 open Assets:Broker ITOT
 2026-01-01 open Assets:Cash USD
@@ -5928,6 +5962,8 @@ poptag #trip
   // w23/m20: replay the stock beanquery oracle through the shell service.
   await verifyFilteredPrint();
   await verifyBqlOracle();
+  // w31/117: and the text table rounds BQL arithmetic like stock.
+  await verifyDecimalContextText();
 
   // w23/m41: replay the reports against the same stock answers.
   await verifyReportOracle();

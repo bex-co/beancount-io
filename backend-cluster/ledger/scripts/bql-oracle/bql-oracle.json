@@ -224,6 +224,199 @@
       ],
       "source": "w23/165"
     },
+    "decimal-context-chained": {
+      "columns": [
+        {
+          "dtype": "Decimal",
+          "name": "s"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT number / 3 * 3 AS s WHERE account = 'Assets:Bank:Checking'",
+      "rows": [
+        [
+          "999.9999999999999999999999999"
+        ],
+        [
+          "-800.0000000000000000000000001"
+        ],
+        [
+          "3000.00"
+        ],
+        [
+          "-500.0000000000000000000000001"
+        ],
+        [
+          "-115.0000000000000000000000000"
+        ],
+        [
+          "3000.00"
+        ],
+        [
+          "-800.0000000000000000000000001"
+        ]
+      ],
+      "source": "w31/117"
+    },
+    "decimal-context-converted-amount": {
+      "columns": [
+        {
+          "dtype": "date",
+          "name": "date"
+        },
+        {
+          "dtype": "Amount",
+          "name": "eur"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT date, convert(position, 'EUR', date) AS eur WHERE account = 'Assets:Cash' AND year = 2025",
+      "rows": [
+        [
+          "2025-03-05",
+          [
+            "-11.27272727272727272727272727",
+            "EUR"
+          ]
+        ]
+      ],
+      "source": "w31/117"
+    },
+    "decimal-context-double-rounding": {
+      "columns": [
+        {
+          "dtype": "date",
+          "name": "date"
+        },
+        {
+          "dtype": "Amount",
+          "name": "eur"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT date, convert(position, 'EUR', date) AS eur WHERE account = 'Assets:Cash' AND year = 2026 AND month = 1",
+      "rows": [
+        [
+          "2026-01-15",
+          [
+            "-37.66666666666666666666666667",
+            "EUR"
+          ]
+        ]
+      ],
+      "source": "w31/117"
+    },
+    "decimal-context-grouped-quotient": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "s"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT account, sum(number) / 7 AS s GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          "683.5714285714285714285714286"
+        ],
+        [
+          "Assets:Cash",
+          "-9.80"
+        ],
+        [
+          "Assets:Invest",
+          "15.71428571428571428571428571"
+        ],
+        [
+          "Equity:Opening",
+          "-142.8571428571428571428571429"
+        ],
+        [
+          "Expenses:Food",
+          "9.80"
+        ],
+        [
+          "Expenses:Rent",
+          "228.5714285714285714285714286"
+        ],
+        [
+          "Income:Salary",
+          "-857.1428571428571428571428571"
+        ]
+      ],
+      "source": "w31/117"
+    },
+    "decimal-context-integer-quotient": {
+      "columns": [
+        {
+          "dtype": "Decimal",
+          "name": "x"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "y"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT 5/3 AS x, 1/3 AS y LIMIT 1",
+      "rows": [
+        [
+          "1.666666666666666666666666667",
+          "0.3333333333333333333333333333"
+        ]
+      ],
+      "source": "w31/117"
+    },
+    "decimal-context-quotient": {
+      "columns": [
+        {
+          "dtype": "date",
+          "name": "date"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "third"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT date, number / 3 AS third WHERE account = 'Assets:Bank:Checking'",
+      "rows": [
+        [
+          "2025-01-02",
+          "333.3333333333333333333333333"
+        ],
+        [
+          "2025-07-01",
+          "-266.6666666666666666666666667"
+        ],
+        [
+          "2025-12-31",
+          "1000.00"
+        ],
+        [
+          "2026-02-01",
+          "-166.6666666666666666666666667"
+        ],
+        [
+          "2026-03-01",
+          "-38.33333333333333333333333333"
+        ],
+        [
+          "2026-04-10",
+          "1000.00"
+        ],
+        [
+          "2026-06-15",
+          "-266.6666666666666666666666667"
+        ]
+      ],
+      "source": "w31/117"
+    },
     "decimal-max": {
       "columns": [
         {
@@ -3187,5 +3380,5 @@
       "source": "w23/169"
     }
   },
-  "sourceHash": "8540ed02b84507c4f72a36b5ff28e8f02067beb2059890c5bc8b8ebdfd52e763"
+  "sourceHash": "a66d8cfd57946ee147bd0457a0d9c38ecf206ea9d603275979abe2d2ef090013"
 }

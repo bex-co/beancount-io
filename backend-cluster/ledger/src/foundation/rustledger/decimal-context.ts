@@ -42,3 +42,23 @@ export function roundWithPythonDecimalContext(value: BigNumber): BigNumber {
   if (value.isZero()) return value;
   return value.precision(PYTHON_DECIMAL_PRECISION, BigNumber.ROUND_HALF_EVEN);
 }
+
+/**
+ * Decimal text spelled the way Python's `Decimal` leaves an operation's
+ * result: past 28 significant digits (trailing zeros count, leading zeros do
+ * not), rounded half-even to exactly 28, so `str` shows no more and no fewer.
+ * Text that already fits, zero, and anything that is not plain decimal text
+ * pass through unchanged. The engine keeps up to 29 digits where its 96-bit
+ * mantissa allows, which is one more than beanquery prints (w31/117).
+ */
+export function decimalTextWithPythonContext(text: string): string {
+  const match = /^[+-]?(\d*)\.?(\d*)$/u.exec(text);
+  if (!match) return text;
+  const digits = `${match[1]}${match[2]}`.replace(/^0+/u, "");
+  if (digits.length <= PYTHON_DECIMAL_PRECISION) return text;
+  const rounded = roundWithPythonDecimalContext(new BigNumber(text));
+  // `Decimal` keeps 28 digits from the leading one, so the scale follows the
+  // rounded magnitude, including a carry across a power of ten (999.9… → 1000.0…).
+  const scale = PYTHON_DECIMAL_PRECISION - 1 - (rounded.e ?? 0);
+  return rounded.toFixed(Math.max(scale, 0));
+}
