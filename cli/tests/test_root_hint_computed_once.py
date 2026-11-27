@@ -1,6 +1,6 @@
 """A refused write looks for an including root once, not once per error (w5/112).
 
-Every unknown-account error in the candidate asked `including_root` again, and
+Every unknown-account error in the candidate asked for the leaf's includers again, and
 each ask lexes the include closure of every ledger beside the invoked file. A
 ledger with thousands of transactions on one unopened account therefore
 stalled every `bea add` for minutes before refusing it.
@@ -24,15 +24,15 @@ def _unopened(count: int) -> str:
 
 @pytest.fixture
 def lookups(monkeypatch: pytest.MonkeyPatch) -> list[Path]:
-    """Every file `including_root` is asked about, in order."""
+    """Every file whose includers are looked up, in order."""
     seen: list[Path] = []
-    including_root = ledger_write.including_root
+    nearest_includers = ledger_write._nearest_includers
 
-    def counted(file: Path) -> Path | None:
+    def counted(file: Path) -> list[Path]:
         seen.append(file)
-        return including_root(file)
+        return nearest_includers(file)
 
-    monkeypatch.setattr(ledger_write, "including_root", counted)
+    monkeypatch.setattr(ledger_write, "_nearest_includers", counted)
     return seen
 
 

@@ -295,7 +295,6 @@ def test_incomplete_closure_cannot_be_swallowed_by_root_classification(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, resolver: str
 ) -> None:
     root, leaf = _books(tmp_path, 0)
-    monkeypatch.setattr(write, "including_root", lambda _file: root)
     monkeypatch.setattr(write, "including_roots", lambda _file: iter((root, tmp_path / "other.bean")))
 
     def incomplete(*_args: Any, **_kwargs: Any) -> Any:
@@ -304,7 +303,7 @@ def test_incomplete_closure_cannot_be_swallowed_by_root_classification(
     monkeypatch.setattr(write.LedgerSnapshot, "capture", incomplete)
     with pytest.raises(write.UsageError, match="incomplete"):
         if resolver == "defining":
-            write.defining_root(leaf)
+            write.defining_roots(leaf)
         elif resolver == "hints":
             write.root_ledger_hints(leaf)
         else:

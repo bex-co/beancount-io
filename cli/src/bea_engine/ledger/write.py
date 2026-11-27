@@ -2075,7 +2075,7 @@ def _in_line_order(errors: list[Any]) -> list[Any]:
     return ordered
 
 
-#: How far `including_root` looks: the leaf's directory and this many above it.
+#: How far `including_roots` looks: the leaf's directory and this many above it.
 _INCLUDER_LEVELS = 4
 #: Distinct qualifying closures inspected during one root-resolution request.
 _INCLUDER_CANDIDATES = 64
@@ -2196,19 +2196,14 @@ def _includer_search(file: Path) -> Iterator[_IncluderBudget]:
         _INCLUDER_SEARCH.reset(token)
 
 
-def including_root(file: Path) -> Path | None:
-    """A nearby ledger that includes `file`, when `file` is not itself a root.
+def including_roots(file: Path) -> Iterator[Path]:
+    """Every nearby ledger that includes `file`, nearest directory first.
 
     The leaf's directory and a few above it are searched, with their immediate
     subdirectories for a `../shared/x.bean` include. Candidate closures and all
     preparatory filesystem work share bounded discovery budgets; exhaustion
     cannot establish that the file has no including root.
     """
-    return next(_scan_includers(file), None)
-
-
-def including_roots(file: Path) -> Iterator[Path]:
-    """Every nearby ledger that includes `file`, nearest directory first."""
     return _scan_includers(file)
 
 
@@ -2275,11 +2270,8 @@ def _same_file(left: Path, right: Path) -> bool:
         return False
 
 
-def defining_root(file: Path, first: Path | None = None) -> Path | None:
-    """The highest includer that defines what `file` reads, or None for a root.
-
-    `first` forces the climb's first step, so each direct includer can be
-    climbed on its own when a leaf has more than one (w5/775).
+def defining_roots(file: Path) -> list[Path]:
+    """The highest includers that define what `file` reads, one per distinct root; empty for a root.
 
     Each step up must define what the file below it reads, and the first
     overlay ends the climb: climbing past the nearest includer to the topmost
@@ -2289,37 +2281,49 @@ def defining_root(file: Path, first: Path | None = None) -> Path | None:
     the root above it (w5/346), unless it is an overlay (`_overlays`). A year
     index adds its other month files, which is not what an overlay adds; judged
     one, a write on a month was checked against that month alone (w1/375,
-    w1/377). A climb that comes
-    back to `file` (an include cycle through it) has no other root to name:
-    the hint told the user to run the command they had just run (w5/566).
+    w1/377). A climb that comes back to a file it already passed (an include
+    cycle) has no other root to name: the hint told the user to run the
+    command they had just run (w5/566).
+
+    Every step branches over all of its nearest includers, not the leaf's
+    alone (w5/775, w5/933). Following only the first includer of a year index
+    that two roots, or a root and a forecast view over it, both include, the
+    file that sorted first judged a write on a month file: a true balance was
+    refused and a false one written with exit 0 (w1/384). A branch that climbs
+    to no defining step adds nothing, so a root stays the answer unless a
+    branch above it reaches a higher one.
     """
     with _includer_search(file) as budget:
-        root: Path | None = None
-        current = file
-        seen = {file.resolve()}
-        above = first
-        while True:
-            if above is None:
-                above = including_root(current)
-            if above is None or above.resolve() in seen:
-                break
-            seen.add(above.resolve())
-            try:
-                around = budget.capture(above).contents
-                own = budget.capture(current).contents
-            except IncompleteRootSearch:
-                raise
-            except Exception:  # noqa: BLE001 - unreadable here is reported by the load itself
-                break
-            if not _defines_in(around, own):
-                if _overlays(around, own):
-                    break
-                current = above
-                above = None
-                continue
-            root, current = above, above
-            above = None
-        return root
+        includers: dict[Path, list[Path]] = {}
+
+        def above(current: Path, seen: frozenset[Path]) -> list[Path]:
+            key = current.resolve()
+            if key not in includers:
+                includers[key] = _nearest_includers(current)
+            tops: list[Path] = []
+            for includer in includers[key]:
+                step = includer.resolve()
+                if step in seen:
+                    continue
+                try:
+                    around = budget.capture(includer).contents
+                    own = budget.capture(current).contents
+                except IncompleteRootSearch:
+                    raise
+                except Exception:  # noqa: BLE001 - unreadable here is reported by the load itself
+                    continue
+                if _defines_in(around, own):
+                    found = above(includer, seen | {step}) or [includer]
+                elif _overlays(around, own):
+                    continue
+                else:
+                    found = above(includer, seen | {step})
+                for top in found:
+                    if not any(_same_file(top, known) for known in tops):
+                        tops.append(top)
+            return tops
+
+        return above(file, frozenset({file.resolve()}))
 
 
 #: What the loader reads at the start of a line: a file's UTF-8 BOM, and a date
@@ -2433,14 +2437,22 @@ def root_read_hint(file: Path) -> str | None:
     `check` and the reads refused a per-year file with `Pass --allow-errors`,
     which answers for part of the ledger, never naming the root that loads
     the accounts it uses (w5/348). A file that reads nothing from its
-    includer is no leaf (w5/578).
+    includer is no leaf (w5/578). Under more than one root it names them
+    all, never one picked by file-name order (w1/384).
     """
-    root = defining_root(file)
-    if root is None:
+    roots = defining_roots(file)
+    if not roots:
         return None
+    if len(roots) > 1:
+        listed = ", ".join(str(root) for root in roots)
+        return (
+            f"{file.name} is included by more than one root ledger: {listed}; on its own it lacks the accounts "
+            f"and options a root provides. Run with --file and the root you mean, such as "
+            f"--file {shlex.quote(str(roots[0]))}, to read the whole ledger."
+        )
     return (
-        f"{file.name} is included by {root}; on its own it lacks the accounts and options that root provides. "
-        f"Run with --file {shlex.quote(str(root))} to read the whole ledger."
+        f"{file.name} is included by {roots[0]}; on its own it lacks the accounts and options that root provides. "
+        f"Run with --file {shlex.quote(str(roots[0]))} to read the whole ledger."
     )
 
 
@@ -2498,22 +2510,18 @@ def write_through_root(file: Path, into: Path | None) -> tuple[Path, Path | None
         # what a balance or a close contradicts, what import dedupes against —
         # stayed out of the check (w5/346). Climb past pass-through intermediates
         # to the highest defining root, stopping below an overlay (w5/774).
-        tops: list[Path] = []
-        for first in _nearest_includers(file):
-            top = defining_root(file, first=first)
-            if top is None or any(_same_file(top, known) for known in tops):
-                continue
-            tops.append(top)
-            if len(tops) > 1:
-                # Judged against whichever sorts first, a true balance was refused
-                # and a false one written; the refusal never said which root
-                # judged it. Ask instead (w5/775).
-                listed = ", ".join(str(top) for top in tops)
-                into_example = Path(os.path.relpath(file.resolve(), tops[0].parent))
-                raise UsageError(
-                    f"{file.name} is included by more than one root ledger: {listed}. Say which ledger "
-                    f"to check the write against: bea --file {tops[0]} <command> --into {into_example}."
-                )
+        tops = defining_roots(file)
+        if len(tops) > 1:
+            # Judged against whichever sorts first, a true balance was refused
+            # and a false one written; the refusal never said which root
+            # judged it. Ask instead (w5/775), whether the roots include the
+            # leaf directly or through a shared year index (w1/384).
+            listed = ", ".join(str(top) for top in tops)
+            into_example = Path(os.path.relpath(file.resolve(), tops[0].parent))
+            raise UsageError(
+                f"{file.name} is included by more than one root ledger: {listed}. Say which ledger "
+                f"to check the write against: bea --file {tops[0]} <command> --into {into_example}."
+            )
         if not tops:
             return file, into, None
         root = tops[0]
@@ -2529,17 +2537,28 @@ def root_ledger_hints(file: Path) -> list[str]:
 
     It names the root a write through the leaf is checked against. Judging
     only the nearest includer, a month file under a year index got no recipe
-    at all (w1/375).
+    at all (w1/375). Under more than one root it gives the recipe for each,
+    never one root picked by file-name order (w1/384).
     """
     with _includer_search(file):
-        root = defining_root(file)
-        if root is None:
+        roots = defining_roots(file)
+        if not roots:
             return []
-        relative = os.path.relpath(file.resolve(), root.parent)
+        recipes = " or ".join(
+            f"bea --file {shlex.quote(str(root))} <command> "
+            f"--into {shlex.quote(os.path.relpath(file.resolve(), root.parent))}"
+            for root in roots
+        )
+        if len(roots) > 1:
+            listed = ", ".join(str(root) for root in roots)
+            return [
+                f"{file.name} is included by more than one root ledger: {listed}; on its own it lacks the "
+                f"accounts and options a root provides. Run against the root you mean and pick the destination "
+                f"with --into: {recipes}."
+            ]
         return [
-            f"{file.name} is included by {root}; on its own it lacks the accounts and options that root provides. "
-            f"Run against the root and pick the destination with --into: "
-            f"bea --file {shlex.quote(str(root))} <command> --into {shlex.quote(relative)}."
+            f"{file.name} is included by {roots[0]}; on its own it lacks the accounts and options that root "
+            f"provides. Run against the root and pick the destination with --into: {recipes}."
         ]
 
 

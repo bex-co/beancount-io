@@ -214,5 +214,5 @@ def test_a_forecast_over_a_plugin_opened_ledger_stays_an_overlay(tmp_path: Path)
     (tmp_path / "forecast.bean").write_text('include "working.bean"\n' + FORECAST)
     (tmp_path / "wrapper.bean").write_text('option "operating_currency" "USD"\ninclude "forecast.bean"\n')
 
-    assert write.defining_root(tmp_path / "working.bean") is None
+    assert write.defining_roots(tmp_path / "working.bean") == []
     assert write.write_through_root(tmp_path / "working.bean", None) == (tmp_path / "working.bean", None, None)

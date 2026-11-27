@@ -1464,7 +1464,10 @@ entries naming accounts that ledger opens. Any other includer that defines
 nothing is passed through, such as a year index whose month files post to
 accounts the root opens, or one beside a new, empty month whose other files
 hold only prices, events or commodities: a write on any month file runs
-through the root above it.
+through the root above it. When two roots define what the file reads, whether
+they include it directly or through a shared intermediate such as one year
+index, the write exits **2** listing both, whatever the files are named; pick
+one with `--file` and `--into`.
 
 `update` uses the same governing-root discovery, then locates entries across
 that whole ledger and edits each in its existing file. It does not infer an
