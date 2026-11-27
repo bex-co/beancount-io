@@ -78,7 +78,10 @@ import {
   verifyScopedEntryMove,
 } from "./entry-move";
 import { verifyKnownLotErrors } from "./known-lot-errors";
-import { verifyEditErrorLines } from "./edit-error-lines";
+import {
+  verifyEditErrorLines,
+  verifyProjectedEditLines,
+} from "./edit-error-lines";
 import { verifyProjectedDocuments } from "./projected-documents";
 import { verifyProjectedIncludes } from "./projected-includes";
 import { verifySlashDatedEntries } from "./slash-dated-entries";
@@ -5981,6 +5984,7 @@ poptag #trip
   await verifyProjectedDocuments();
   await verifyKnownLotErrors();
   await verifyEditErrorLines();
+  await verifyProjectedEditLines();
 
   console.log("\nAll rustledger engine checks passed.");
 }

@@ -1,5 +1,5 @@
 import { BadUserInputError } from "@/shared/errors";
-import type { LineInsertion } from "./bean-check-errors";
+import type { LineEdit } from "./bean-check-errors";
 import { splitByteOrderMark } from "./byte-order-mark";
 import { isSkippedLine } from "./skipped-line";
 
@@ -458,7 +458,7 @@ export interface InsertionResult {
    * order it wrote them: what maps an error below them back to its line in
    * the file as it stands (w31/116).
    */
-  readonly insertions: readonly LineInsertion[];
+  readonly insertions: readonly LineEdit[];
   /**
    * True when the file's existing directives were not already in date order,
    * so the new ones were appended at the end rather than threaded in. Saying
@@ -513,7 +513,7 @@ export function insertDirectives(
   );
 
   const inserted: { line: number }[] = [];
-  const insertions: LineInsertion[] = [];
+  const insertions: LineEdit[] = [];
   const working = [...lines];
   // Applied newest-first would shift the offsets of the ones after it, so
   // each insertion recomputes against the file as it now stands.

@@ -3,6 +3,7 @@ import type { Identity } from "@/server/api/identity";
 import type { ILedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
 import {
   atCurrentLines,
+  atLinesBeforeEdits,
   checkFailureMessage,
   hasParseError,
   toBeanCheckErrors,
@@ -11,6 +12,7 @@ import {
   type BeanCheckError,
   type DroppedLines,
   type FileRenames,
+  type LineEdits,
   type WriteValidation,
 } from "./bean-check-errors";
 
@@ -83,9 +85,10 @@ export interface FileWriteGateServices {
  * that names it matches its copy under the new name, in the preview and the
  * commit alike (w31/114).
  *
- * Given the lines the write drops (`droppedLines`), a refusal or a `dryRun`
- * names each new error at its line in the file as it stands, since neither
- * commits (w31/102). A commit's verdict keeps the line after the write, where
+ * Given the lines the write drops (`droppedLines`) or replaces (`edits`, for
+ * the files it edits rather than writes whole), a refusal or a `dryRun` names
+ * each new error at its line in the file as it stands, since neither commits
+ * (w31/102, w31/118). A commit's verdict keeps the line after the write, where
  * the error then lives, as its post-write read reports it.
  */
 export async function gateFileWrite(
@@ -98,11 +101,13 @@ export async function gateFileWrite(
     renames,
     account,
     droppedLines,
+    edits,
     dryRun = false,
   }: {
     renames?: FileRenames;
     account?: AccountRenaming;
     droppedLines?: DroppedLines;
+    edits?: LineEdits;
     dryRun?: boolean;
   } = {},
 ): Promise<WriteValidation> {
@@ -144,12 +149,10 @@ export async function gateFileWrite(
     renames,
     account,
   );
-  const current = droppedLines
-    ? {
-        ...projection,
-        newErrors: atCurrentLines(projection.newErrors, droppedLines),
-      }
-    : projection;
+  let newErrors = projection.newErrors;
+  if (droppedLines) newErrors = atCurrentLines(newErrors, droppedLines);
+  if (edits) newErrors = atLinesBeforeEdits(newErrors, edits);
+  const current = { ...projection, newErrors };
   assertFileWriteValid(current, allowInvalid);
   return dryRun ? current : projection;
 }

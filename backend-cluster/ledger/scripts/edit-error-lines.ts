@@ -7,8 +7,15 @@
  * file as it stands, as an add names it. A forced edit names the line the
  * assertion has once the edit lands.
  *
+ * backend-v2's `updateLedgerFiles` maps an exact-text edit's errors back the
+ * same way (w31/118), from the projected check this package answers. The
+ * packages share no code, so that mapping is tested there; the premise it
+ * maps from, that the check names an error at its line in the edited text, is
+ * checked here.
+ *
  * Run by `verify-rustledger.ts` (live engine; not a jest test).
  */
+import { LedgerDataService } from "@/features/ledger/service/ledger-data-service";
 import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { committingRepo } from "./entry-move";
 
@@ -100,5 +107,47 @@ export async function verifyEditErrorLines(): Promise<void> {
     fail(`the forced edit names ${JSON.stringify(forced.validation.newErrors)}`);
   console.log(
     "✓ a forced edit reports the line the assertion has once the edit lands (w31/116)",
+  );
+}
+
+/**
+ * A projected exact-text edit that grows a posting line into three, as
+ * `updateLedgerFiles` sends it: the check names the assertion it breaks two
+ * lines below its current line, at its line in the edited text (w31/118).
+ */
+export async function verifyProjectedEditLines(): Promise<void> {
+  const { factory } = committingRepo({ "main.bean": MAIN });
+  const data = new LedgerDataService(factory as never, {} as never);
+  const groceries = "  Expenses:Food:Groceries  23.50 USD";
+  const edited = MAIN.replace(
+    groceries,
+    [
+      groceries,
+      "  Expenses:Food:Coffee  1.00 USD",
+      "  Assets:Cash  -1.00 USD",
+    ].join("\n"),
+  );
+  const current = MAIN.split("\n").indexOf(BALANCE) + 1;
+  const written = edited.split("\n").indexOf(BALANCE) + 1;
+  if (written !== current + 2) fail(`the edit put the assertion at ${written}`);
+  const errors = await data.checkProjectedErrors({
+    ledgerId: "synthetic/edit-lines",
+    userId: undefined,
+    overlays: [
+      { path: "main.bean", content: Buffer.from(edited).toString("base64") },
+    ],
+  });
+  const named = errors.map(
+    ({ message, source }) => `${source?.filename}:${source?.lineno} ${message}`,
+  );
+  if (
+    JSON.stringify(named) !==
+    JSON.stringify([
+      `main.bean:${written} Balance failed for Assets:Cash: expected 49.75 USD, got 48.75 USD`,
+    ])
+  )
+    fail(`the projected edit names ${JSON.stringify(named)}`);
+  console.log(
+    "✓ a projected file edit names the assertion it breaks at its line in the edited text, the line backend-v2 maps back (w31/118)",
   );
 }

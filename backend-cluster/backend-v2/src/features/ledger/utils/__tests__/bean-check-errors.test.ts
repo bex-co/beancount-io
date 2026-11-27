@@ -1,6 +1,6 @@
 import {
   atCurrentLines,
-  atLinesBeforeInserts,
+  atLinesBeforeEdits,
   diffBeanCheckErrors,
 } from "@/features/ledger/utils/bean-check-errors";
 
@@ -424,7 +424,7 @@ describe("atCurrentLines", () => {
 
 // w31/116: an append inserts lines, and bean-check reports the written file,
 // that many lines lower below each insertion.
-describe("atLinesBeforeInserts", () => {
+describe("atLinesBeforeEdits", () => {
   const failed = "Balance failed for Assets:Cash: expected 49.75 USD";
   const inserts = (...steps: [number, number][]) =>
     new Map([["main.bean", steps.map(([at, lines]) => ({ at, lines }))]]);
@@ -432,13 +432,13 @@ describe("atLinesBeforeInserts", () => {
   it("moves an error below an insertion up to where it stands now", () => {
     // Four lines inserted at index 40 (lines 41-44): the assertion at 87 is at 91.
     expect(
-      atLinesBeforeInserts([error(failed, "main.bean:91")], inserts([40, 4])),
+      atLinesBeforeEdits([error(failed, "main.bean:91")], inserts([40, 4])),
     ).toEqual([error(failed, "main.bean:87")]);
   });
 
   it("keeps an error above the insertion where it is", () => {
     expect(
-      atLinesBeforeInserts([error(failed, "main.bean:40")], inserts([40, 4])),
+      atLinesBeforeEdits([error(failed, "main.bean:40")], inserts([40, 4])),
     ).toEqual([error(failed, "main.bean:40")]);
   });
 
@@ -447,7 +447,7 @@ describe("atLinesBeforeInserts", () => {
       error(failed, "main.bean:41"),
       error(failed, "main.bean:44"),
     ];
-    expect(atLinesBeforeInserts(errors, inserts([40, 4]))).toEqual(errors);
+    expect(atLinesBeforeEdits(errors, inserts([40, 4]))).toEqual(errors);
   });
 
   it("undoes each step in the text it produced, last first", () => {
@@ -456,7 +456,7 @@ describe("atLinesBeforeInserts", () => {
     // before it.
     const steps = inserts([2, 1], [6, 3]);
     expect(
-      atLinesBeforeInserts(
+      atLinesBeforeEdits(
         [
           error(failed, "main.bean:2"),
           error(failed, "main.bean:5"),
@@ -481,15 +481,68 @@ describe("atLinesBeforeInserts", () => {
       error(failed, "other-main.bean:91"),
       error("Load failed"),
     ];
-    expect(atLinesBeforeInserts(errors, inserts([40, 4]))).toEqual(errors);
+    expect(atLinesBeforeEdits(errors, inserts([40, 4]))).toEqual(errors);
   });
 
   it("keeps the message and code it does not move", () => {
     expect(
-      atLinesBeforeInserts(
+      atLinesBeforeEdits(
         [{ message: failed, source: "a:b.bean:9", code: "E2001" }],
         new Map([["a:b.bean", [{ at: 1, lines: 2 }]]]),
       ),
     ).toEqual([{ message: failed, source: "a:b.bean:7", code: "E2001" }]);
+  });
+
+  // w31/118: a file edit replaces lines, so the ones below move by the
+  // difference, up or down.
+  const replaces = (...steps: [number, number, number][]) =>
+    new Map([
+      [
+        "main.bean",
+        steps.map(([at, replaced, lines]) => ({ at, replaced, lines })),
+      ],
+    ]);
+
+  it("moves an error below a replacement that grows by the lines it added", () => {
+    // Line 2 (index 1) became three lines: the assertion at 6 is at 8.
+    expect(
+      atLinesBeforeEdits([error(failed, "main.bean:8")], replaces([1, 1, 3])),
+    ).toEqual([error(failed, "main.bean:6")]);
+  });
+
+  it("moves an error below a replacement that shrinks down by the lines it removed", () => {
+    // Lines 2-4 became one line: the assertion at 6 is at 4.
+    expect(
+      atLinesBeforeEdits([error(failed, "main.bean:4")], replaces([1, 3, 1])),
+    ).toEqual([error(failed, "main.bean:6")]);
+  });
+
+  it("maps past a cut that wrote no lines", () => {
+    expect(
+      atLinesBeforeEdits(
+        [error(failed, "main.bean:1"), error(failed, "main.bean:2")],
+        replaces([1, 2, 0]),
+      ),
+    ).toEqual([error(failed, "main.bean:1"), error(failed, "main.bean:4")]);
+  });
+
+  it("keeps the written line of an error inside the replacement, and above it", () => {
+    const errors = [
+      error(failed, "main.bean:1"),
+      error(failed, "main.bean:2"),
+      error(failed, "main.bean:4"),
+    ];
+    expect(atLinesBeforeEdits(errors, replaces([1, 1, 3]))).toEqual(errors);
+  });
+
+  it("undoes chained replacements in the text each produced", () => {
+    // Line 1 became three (lines 1-3), then line 4 of that text was cut.
+    // Written line 7 was line 8 after the first edit, and 6 before it.
+    expect(
+      atLinesBeforeEdits(
+        [error(failed, "main.bean:7")],
+        replaces([0, 1, 3], [3, 1, 0]),
+      ),
+    ).toEqual([error(failed, "main.bean:6")]);
   });
 });

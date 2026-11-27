@@ -116,7 +116,16 @@ const WRITE_PREVIEW_RULES: Record<string, Entry> = {
   },
   updateLedgerFiles: {
     kind: "projection",
-    proofs: FILE_PARITY,
+    proofs: [
+      ...FILE_PARITY,
+      // A preview and a refusal name the line the caller has when an
+      // `old_string`/`new_string` edit adds or removes lines above it
+      // (w31/118).
+      {
+        file: "ai-agent/api/__tests__/file-edit-lines-parity.test.ts",
+        test: "an updateLedgerFiles exact-text edit names new errors at the current line (w31/118)",
+      },
+    ],
     differential: DIFFERENTIAL_CASE,
   },
   deleteLedgerFiles: {

@@ -22,6 +22,7 @@ import {
   unloadedNotice,
 } from "@/features/ledger/utils/file-write-gate";
 import { staleFileConflict } from "@/features/ledger/utils/stale-file-conflict";
+import type { LineEdit } from "@/features/ledger/utils/bean-check-errors";
 import { assertBlobShaFormat } from "@/features/ledger/utils/blob-sha";
 import { normalizeAgentRepoPath } from "./agent-repo-path";
 import {
@@ -229,6 +230,11 @@ const atLineStart = (text: string, index: number): boolean =>
  * One operation per path was a correctness requirement, not a nicety: each
  * Gitea operation writes the whole file, so two edits built from the original
  * text committed only the last (w23/028).
+ *
+ * `edits` holds, for each file changed only by exact-text edits, the lines
+ * each edit replaced, so the gate can name a new error below them at its line
+ * in the file as it stands (w31/118). A file written whole is all new text,
+ * so it has none.
  */
 function foldOperations(
   fileCache: Map<string, { content: string; sha: string; lossy?: true }>,
@@ -236,6 +242,7 @@ function foldOperations(
 ): {
   operations: LedgerChangeFileOperation[];
   projected: Map<string, string | null>;
+  edits: Map<string, LineEdit[]>;
 } {
   // `create` marks a new file; one created again after this call deleted it
   // is an overwrite of the existing file.
@@ -246,6 +253,8 @@ function foldOperations(
       create: boolean;
       changedLines: Set<number> | "all";
       checkPostFold: boolean;
+      /** `null` once the file is written whole or deleted. */
+      edits: LineEdit[] | null;
     }
   >();
   for (const f of files) {
@@ -257,6 +266,7 @@ function foldOperations(
         create: !(current === null && fileCache.has(f.path)),
         changedLines: "all",
         checkPostFold: false,
+        edits: null,
       });
       continue;
     }
@@ -279,6 +289,7 @@ function foldOperations(
         create,
         changedLines: "all",
         checkPostFold: false,
+        edits: null,
       });
       continue;
     }
@@ -288,6 +299,7 @@ function foldOperations(
         create,
         changedLines: new Set(),
         checkPostFold: false,
+        edits: null,
       });
       continue;
     }
@@ -338,6 +350,8 @@ function foldOperations(
       }
     }
 
+    // Lines `startLine..oldEnd` of `current` became `startLine..newEnd`.
+    const prior = state ? state.edits : [];
     touched.set(f.path, {
       content:
         current.slice(0, at) +
@@ -346,14 +360,23 @@ function foldOperations(
       create,
       changedLines,
       checkPostFold: true,
+      edits: prior && [
+        ...prior,
+        {
+          at: startLine,
+          replaced: oldEnd - startLine + 1,
+          lines: newEnd - startLine + 1,
+        },
+      ],
     });
   }
 
   const operations: LedgerChangeFileOperation[] = [];
   const projected = new Map<string, string | null>();
+  const edits = new Map<string, LineEdit[]>();
   for (const [
     path,
-    { content, create, changedLines, checkPostFold },
+    { content, create, changedLines, checkPostFold, edits: made },
   ] of touched) {
     // A change that leaves the file as it is commits nothing: it made an
     // empty commit reported as "Committed 1 change(s)" (w23/052).
@@ -369,6 +392,7 @@ function foldOperations(
       );
     }
     projected.set(path, content);
+    if (made) edits.set(path, made);
     const sha = fileCache.get(path)?.sha;
     if (content === null) operations.push({ operation: "delete", path, sha });
     // A create over a file that exists stays a create, so the preview and
@@ -376,7 +400,7 @@ function foldOperations(
     else if (create) operations.push({ operation: "create", path, content });
     else operations.push({ operation: "update", path, content, sha });
   }
-  return { operations, projected };
+  return { operations, projected, edits };
 }
 
 /** A write's summary, naming the files it wrote that nothing loads (w1/227). */
@@ -503,7 +527,7 @@ export async function executeEditLedgerFiles(
 
         return { fileCache, ...foldOperations(fileCache, normalizedFiles) };
       };
-      const { fileCache, operations, projected } = await prepare();
+      const { fileCache, operations, projected, edits } = await prepare();
       const overlays = () =>
         [...projected].map(([path, content]) => ({ path, content }));
       // Only exact-text edits and creations are re-applied after a lost race:
@@ -567,7 +591,7 @@ export async function executeEditLedgerFiles(
           ledgerId,
           overlays(),
           true,
-          { droppedLines, dryRun: true },
+          { droppedLines, edits, dryRun: true },
         );
         const notLoaded = await unloadedLedgerFiles(
           services,
@@ -612,7 +636,7 @@ export async function executeEditLedgerFiles(
         ledgerId,
         overlays(),
         allowInvalid,
-        { droppedLines },
+        { droppedLines, edits },
       );
       const notLoaded = await unloadedLedgerFiles(
         services,

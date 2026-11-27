@@ -1,6 +1,6 @@
 import { posix } from "path";
 import { BadUserInputError } from "@/shared/errors";
-import type { LineInsertion } from "./bean-check-errors";
+import type { LineEdit } from "./bean-check-errors";
 import { splitByteOrderMark } from "./byte-order-mark";
 import { isSkippedLine } from "./skipped-line";
 
@@ -118,7 +118,7 @@ export function addIncludeLines(
   content: string,
   paths: readonly string[],
   field = "path",
-  onInsert?: (insertion: LineInsertion) => void,
+  onInsert?: (insertion: LineEdit) => void,
 ): string {
   if (paths.length === 0) return content;
   for (const path of paths) assertLiteralIncludePath(path, field);

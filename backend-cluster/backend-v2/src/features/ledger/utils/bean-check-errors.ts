@@ -202,38 +202,42 @@ export function atCurrentLines(
 
 /**
  * Lines one step of a write put into a file: `lines` of them, starting at the
- * 0-based line `at` of the text as that step found it.
+ * 0-based line `at` of the text as that step found it, in place of the
+ * `replaced` lines there. An insertion replaces none.
  */
-export interface LineInsertion {
+export interface LineEdit {
   readonly at: number;
   readonly lines: number;
+  readonly replaced?: number;
 }
 
-/** Each file's insertions, by path, in the order the write made them. */
-export type InsertedLines = ReadonlyMap<string, readonly LineInsertion[]>;
+/** Each file's edits, by path, in the order the write made them. */
+export type LineEdits = ReadonlyMap<string, readonly LineEdit[]>;
 
 /**
- * `errors` at their lines in the files as they stand, before a write inserts
- * lines: bean-check reads the written text, where every line below an
- * insertion sits that much lower, so an append's refusal named `main.bean:91`
- * in an 87-line file (w31/116). An error on a line the write adds has no line
- * in the file as it stands and keeps its own, the one the preview's diff
- * shows. The inverse of {@link atCurrentLines}, for lines a write adds.
+ * `errors` at their lines in the files as they stand, before a write edits
+ * them: bean-check reads the written text, where every line below an edit
+ * moves by the lines it added or removed, so an append's refusal named
+ * `main.bean:91` in an 87-line file (w31/116), and a file edit that grew one
+ * line into three named every error below it two lines low (w31/118). An
+ * error on a line the write wrote has no line in the file as it stands and
+ * keeps its own, the one the preview's diff shows. The twin of {@link atCurrentLines}, which takes the lines a
+ * write drops by their number in the file as it stands.
  */
-export function atLinesBeforeInserts(
+export function atLinesBeforeEdits(
   errors: readonly BeanCheckError[],
-  inserted: InsertedLines,
+  edited: LineEdits,
 ): BeanCheckError[] {
   return errors.map((error) => {
     const located = error.source?.match(/^(.+):(\d+)$/);
-    const insertions = located && inserted.get(located[1]);
-    if (!located || !insertions) return error;
-    // Undo the insertions last to first, each in the text it produced.
+    const edits = located && edited.get(located[1]);
+    if (!located || !edits) return error;
+    // Undo the edits last to first, each in the text it produced.
     let index = Number(located[2]) - 1;
-    for (const { at, lines } of [...insertions].reverse()) {
+    for (const { at, lines, replaced = 0 } of [...edits].reverse()) {
       if (index < at) continue;
       if (index < at + lines) return error;
-      index -= lines;
+      index += replaced - lines;
     }
     return { ...error, source: `${located[1]}:${index + 1}` };
   });

@@ -175,3 +175,163 @@ describe("file writes gate on new bean-check errors", () => {
     ).toHaveLength(0);
   });
 });
+
+/**
+ * w31/118: an exact-text edit that adds or removes lines moves the lines
+ * below it in the text bean-check reads. bean-check here flags every line
+ * reading `BAD`; the file has one, below each edit. The preview and the
+ * refusal must name it at its line in the file as it stands, whatever shape
+ * the edit's line breaks take.
+ */
+describe("an exact-text edit's new errors at the line in the file as it stands", () => {
+  const BAD = (file: string) =>
+    file.split(/\r\n|\r|\n/).flatMap((line, index) =>
+      line === "BAD"
+        ? [
+            {
+              message: "bad line",
+              source: { filename: "a.bean", lineno: index + 1 },
+            },
+          ]
+        : [],
+    );
+
+  function run(content: string, files: object[], dryRun: boolean) {
+    const ledgerRepo = {
+      getFilesContent: jest
+        .fn()
+        .mockResolvedValue([{ path: "a.bean", content, sha: "sa" }]),
+      changeFiles: jest.fn().mockResolvedValue(undefined),
+      checkProjectedFiles: jest.fn(
+        async ({ overlays }: { overlays: { content: string }[] }) =>
+          BAD(overlays[0].content),
+      ),
+    };
+    return executeEditLedgerFiles(
+      {
+        services: {
+          ledgerRepo,
+          ledgerData: { getErrors: jest.fn().mockResolvedValue([]) },
+        } as never,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
+      {
+        description: "edit",
+        files: files.map((file) => ({
+          operation: "update",
+          path: "a.bean",
+          ...file,
+        })),
+        dry_run: dryRun,
+      } as never,
+    );
+  }
+
+  const FILE = "one\ntwo\nthree\n\nBAD\n";
+  it.each([
+    [
+      "one line into three",
+      FILE,
+      [{ old_string: "two", new_string: "2a\n2b\n2c" }],
+    ],
+    [
+      "three lines into one",
+      FILE,
+      [{ old_string: "one\ntwo\nthree", new_string: "123" }],
+    ],
+    ["a whole line cut", FILE, [{ old_string: "two\n", new_string: "" }]],
+    [
+      "two lines merged",
+      FILE,
+      [{ old_string: "one\ntwo", new_string: "onetwo" }],
+    ],
+    [
+      "a break cut from the line's start",
+      FILE,
+      [{ old_string: "\ntwo", new_string: "" }],
+    ],
+    ["a line split mid-word", FILE, [{ old_string: "hr", new_string: "h\nr" }]],
+    [
+      "lines added after a line's break",
+      FILE,
+      [{ old_string: "one\n", new_string: "one\nx\ny\n" }],
+    ],
+    [
+      "lines added before a line's text",
+      FILE,
+      [{ old_string: "th", new_string: "x\ny\nth" }],
+    ],
+    [
+      "the file's first text",
+      FILE,
+      [{ old_string: "one", new_string: "zero\none" }],
+    ],
+    [
+      "an edit that keeps the count",
+      FILE,
+      [{ old_string: "two", new_string: "TWO" }],
+    ],
+    [
+      "an edit below the error",
+      FILE + "tail\n",
+      [{ old_string: "tail", new_string: "a\nb" }],
+    ],
+    [
+      "CRLF lines into more",
+      "one\r\ntwo\r\n\r\nBAD\r\n",
+      [{ old_string: "two\r\n", new_string: "2a\r\n2b\r\n" }],
+    ],
+    [
+      "chained edits, each in the text the last produced",
+      FILE,
+      [
+        { old_string: "one", new_string: "one\nx\ny" },
+        { old_string: "x\ny\ntwo\n", new_string: "" },
+        { old_string: "three", new_string: "3\n3\n3" },
+      ],
+    ],
+  ])("%s", async (_name, content, files) => {
+    const current = `a.bean:${BAD(content)[0].source.lineno}`;
+    const preview = await run(content, files, true);
+    expect(preview).toMatchObject({
+      ok: true,
+      result: {
+        validation: { newErrors: [{ message: "bad line", source: current }] },
+      },
+    });
+    const refused = await run(content, files, false);
+    expect(refused).toMatchObject({
+      ok: false,
+      errorCode: "VALIDATION_FAILED",
+    });
+    expect((refused as { error: string }).error.match(/a\.bean:\d+/g)).toEqual([
+      current,
+    ]);
+  });
+
+  it("keeps the written line of an error the edit writes", async () => {
+    const preview = await run(
+      "one\ntwo\n",
+      [{ old_string: "one", new_string: "one\nx\nBAD" }],
+      true,
+    );
+    expect(preview).toMatchObject({
+      result: { validation: { newErrors: [{ source: "a.bean:3" }] } },
+    });
+  });
+
+  it("maps nothing in a file the batch also writes whole", async () => {
+    const preview = await run(
+      FILE,
+      [
+        { operation: "replace", content: "x\ny\n" + FILE },
+        { old_string: "two", new_string: "TWO" },
+      ],
+      true,
+    );
+    expect(preview).toMatchObject({
+      result: { validation: { newErrors: [{ source: "a.bean:7" }] } },
+    });
+  });
+});

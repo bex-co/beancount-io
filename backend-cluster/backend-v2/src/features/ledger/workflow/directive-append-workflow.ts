@@ -19,10 +19,10 @@ import { LEDGER_ENTRY_POINT } from "@/features/ledger/utils/ledger-entry-point";
 import { assertWritableText } from "@/shared/file-content";
 import { unifiedDiff } from "@/shared/unified-diff";
 import {
-  atLinesBeforeInserts,
+  atLinesBeforeEdits,
   diffBeanCheckErrors,
   toBeanCheckErrors,
-  type LineInsertion,
+  type LineEdit,
 } from "@/features/ledger/utils/bean-check-errors";
 import {
   checkBudgetAccountsExist,
@@ -194,7 +194,7 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
       if (entryPoint) existing.set(LEDGER_ENTRY_POINT, entryPoint);
     }
     const withIncludes = (target: string, content: string) => {
-      const insertions: LineInsertion[] = [];
+      const insertions: LineEdit[] = [];
       const written =
         target === LEDGER_ENTRY_POINT
           ? addIncludeLines(content, included, "path", (insertion) =>
@@ -271,7 +271,7 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
     // A refusal and a preview commit nothing, so each names an error at its
     // line in the file as it stands, above the lines the write would insert;
     // a commit reports the line the error has once written (w31/116).
-    const currentNewErrors = atLinesBeforeInserts(
+    const currentNewErrors = atLinesBeforeEdits(
       beanCheckNewErrors,
       new Map(targets.map((target) => [target.path, target.insertions])),
     );
