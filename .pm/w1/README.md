@@ -84,7 +84,6 @@ m46–m48 were materialized on 2026-11-14 from `/pm-brainstorm for w1` items 1, 
 
 ## Inbox
 
-- [382](./382.md) — Codex swaps in another `bea` when the installed one fails, and once rewrote the generated `AGENTS.md` (A1; from the w1/m42/t006 Codex rehearsal)
 - [383](./383.md) — The first-query and install guides' `codex exec --sandbox read-only` fails on macOS too (A2; from the w1/m42/t006 Codex rehearsal)
 - [241](./blocked/241.md) — Port the CLI off typer's private click so typer 0.29+ can install (A2; follow-up to the 239 stopgap) — **blocked:** its 2026-11-14 promotion (w3/m67) was dropped the same day; owner re-funds the port or drops the note
 
@@ -97,6 +96,7 @@ The four mobile QA findings filed on 2026-09-16 were drained the same day: [031]
 
 Blocked notes live under [`blocked/`](./blocked/) with their reason and **Unblock:** condition; they keep their IDs and return to the open tree when work can resume.
 
+- [382](./blocked/382.md) — Codex swaps in another `bea` when the installed one fails, and once rewrote the generated `AGENTS.md` (A1; from the w1/m42/t006 Codex rehearsal) — **blocked:** fix shipped (`640bda9e0`, `1a8e1cdba`) and the Claude Code half verified; the Codex run waits on Codex sign-in. **Unblock:** Codex signed in again and a trivial `codex exec` turn succeeds, then the Codex verify runs. Cleared by the user.
 - [033](./blocked/033.md) — Slice-delete success precedes removal by minutes; a refetch resurrects the row — **blocked:** no async-apply code exists in this monorepo and the acceptance cannot be proven here. **Unblock:** hosted diagnosis naming the lagging layer, or a local full-stack repro. Cleared by the user (hosted access plus QA credentials).
 - [210](./blocked/210.md) — GraphQL file writes skip the bean-check gate and have no preview — **blocked:** gating them changes how the dashboard file editor saves a mid-edit invalid state. **Unblock:** the user picks (a) the editor passes `allowInvalid: true`, or (b) refuse-then-confirm. Cleared by the user.
 

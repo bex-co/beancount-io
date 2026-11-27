@@ -21,7 +21,7 @@ Re-sequenced 2026-11-13: Adoption surface (t007) now follows t005, and Closeout 
 
 ## Blocked (cleared)
 
-**Unblocked and closed 2026-11-25** — Codex signed in again (CLI 0.171.0 on macOS). t006's Codex run passed: setup through `beancount-init`'s existing-ledger branch, 119.35 USD through `beancount-ask`, checksums unchanged, routing 4/4 on both clients. Its findings fixed the guide's Codex command and filed [w1/382](../../382.md) and [w1/383](../../383.md). The history below is kept.
+**Unblocked and closed 2026-11-25** — Codex signed in again (CLI 0.171.0 on macOS). t006's Codex run passed: setup through `beancount-init`'s existing-ledger branch, 119.35 USD through `beancount-ask`, checksums unchanged, routing 4/4 on both clients. Its findings fixed the guide's Codex command and filed [w1/382](../../blocked/382.md) and [w1/383](../../383.md). The history below is kept.
 
 **Milestone blocked 2026-11-13.** Everything but the Codex rehearsal is shipped: the command (`fd8914559`, `fe2ff1284`), the skill branch (`8a645730b`), the guide (`76c9457aa`), the adoption surfaces (`d43412d0f`), Simplify (`d2faee550`) and Test coverage (`300b7bad7`). Closeout (t010) waits on t006, the only open task that can still change anything. **Unblock:** the user signs Codex in again (`codex logout`, then `codex login`) so that a real turn succeeds, not just `codex login status`. The worker then runs the guide's setup and question turns with Codex, records versions and dates in t006's text, and closes t006 and t010. **Who can clear it:** the user.
 
