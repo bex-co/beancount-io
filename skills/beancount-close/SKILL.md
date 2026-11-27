@@ -77,7 +77,7 @@ An owner or a due date may be attached to a step or an account **only when the u
 
 ### 3. Assert
 
-Every tied account now has a period-end `balance` assertion (reconcile appends them). Check that each active account has an assertion dated on or after period end; accounts without one are **unpinned** in the report. An assertion that pins only part of the close period (a partly covered account) does not pin the close — the account stays partly covered, not tied.
+Every tied account now has a period-end `balance` assertion (reconcile appends them). Check that each active account has an assertion dated ≥ period end + 1 (the day-after rule — see beancount-reconcile; for 2026-06, on or after 2026-07-01). A `balance` assertion checks the balance at the start of its date, so one dated on the period's last day leaves out that day's postings and does not pin the period. Accounts without one are **unpinned** in the report. An assertion that pins only part of the close period (a partly covered account) does not pin the close — the account stays partly covered, not tied.
 
 ### 4. Recurring completeness
 
