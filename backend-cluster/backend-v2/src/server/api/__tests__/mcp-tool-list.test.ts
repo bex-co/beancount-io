@@ -340,9 +340,15 @@ describe("MCP tool list", () => {
     // line with deleteEntrySources (3,990), and most of it is again the shared
     // write outcome. Its prose was cut to one paragraph shared with REST and
     // GraphQL; m44's include_source option had taken the list to ~130.8 KB.
+    //
+    // 135 KB since w31/143 told runBqlQuery that getprice() and convert()
+    // chain through a third currency where bean-query answers NULL: measured
+    // at 137,446 bytes (+237). The list sat 7 bytes under 134 KB, and the
+    // sentence is the one place an agent that only reads tools learns why a
+    // hosted rate disagrees with its local bean-query.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(134 * 1024);
+    expect(bytes).toBeLessThan(135 * 1024);
   });
 
   // w23/173: the schema keeps both spellings of an alias pair optional (the

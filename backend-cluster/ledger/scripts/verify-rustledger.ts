@@ -204,6 +204,103 @@ async function verifyDecimalContextText(): Promise<void> {
   );
 }
 
+/**
+ * w31/143: the engine answers `getprice`, and `convert` of an amount or of
+ * units without cost, through one hop via a third currency, where stock
+ * beanquery 0.2.0 reads only the pair or its inverse (NULL, and `11 VTI`
+ * unconverted). The README's "BQL
+ * `getprice()` and `convert()` chain through a third currency" and the
+ * `runBqlQuery` description state the difference. The chained checks fail
+ * once an engine bump stops chaining: then pin the stock answers here and drop
+ * the documented difference.
+ */
+async function verifyChainedPriceLookup(): Promise<void> {
+  const source = `option "operating_currency" "USD"
+
+2026-01-01 open Assets:Broker VTI
+2026-01-01 open Assets:Cash USD
+
+2026-08-01 * "Buy"
+  Assets:Broker  10 VTI {100.00 USD}
+  Assets:Cash  -1000.00 USD
+
+2026-08-10 * "Buy"
+  Assets:Broker  1 VTI {110.00 USD}
+  Assets:Cash  -110.00 USD
+
+2026-08-15 price VTI 125.00 USD
+2026-08-20 price EUR 1.20 USD
+`;
+  const shell = new LedgerShellService(
+    singleFileRepoFactory(source) as never,
+    {} as never,
+  );
+  const rows = async (query: string) =>
+    (
+      await shell.queryShell({
+        ledgerId: "synthetic/chained-price",
+        userId: undefined,
+        query,
+      })
+    ).table?.rows;
+  const eur = (number: string) => ({ EUR: number });
+
+  deepStrictEqual(
+    await rows(
+      "SELECT getprice('VTI', 'EUR') AS p, getprice('EUR', 'VTI') AS q LIMIT 1",
+    ),
+    [["104.1666666666666666666666667", "0.00960"]],
+    "getprice still chains VTI→USD→EUR (stock: NULL, NULL)",
+  );
+  deepStrictEqual(
+    await rows(
+      "SELECT account, convert(units(sum(position)), 'EUR') AS e WHERE account ~ 'Broker' GROUP BY account",
+    ),
+    [["Assets:Broker", eur("1145.833333333333333333333333")]],
+    "convert of an inventory without cost still chains (stock: 11 VTI)",
+  );
+  deepStrictEqual(
+    await rows(
+      "SELECT convert(units(position), 'EUR', 2026-08-25) AS e WHERE account ~ 'Broker'",
+    ),
+    [
+      [eur("1041.666666666666666666666667")],
+      [eur("104.1666666666666666666666667")],
+    ],
+    "convert of an amount still chains (stock: 10 VTI, 1 VTI)",
+  );
+  console.log(
+    "✓ hosted getprice and convert still chain through a third currency (w31/143)",
+  );
+
+  deepStrictEqual(
+    await rows(
+      "SELECT getprice('USD', 'EUR') AS a, getprice('EUR', 'EUR') AS b, getprice('GBP', 'EUR') AS c LIMIT 1",
+    ),
+    [["0.8333333333333333333333333333", "1", null]],
+    "an inverted pair, the same currency and an unpriced one agree with stock",
+  );
+  deepStrictEqual(
+    await rows("SELECT convert(position, 'EUR') AS e WHERE account ~ 'Broker'"),
+    [
+      [eur("1041.666666666666666666666667")],
+      [eur("104.1666666666666666666666667")],
+    ],
+    "a lot at cost whose cost currency is the only route agrees with stock",
+  );
+  deepStrictEqual(
+    await rows("SELECT currency, amount FROM #prices"),
+    [
+      ["VTI", { USD: "125.00" }],
+      ["EUR", { USD: "1.20" }],
+    ],
+    "#prices lists only the recorded pairs, the check the README names",
+  );
+  console.log(
+    "✓ getprice and convert agree with stock where the pair or its inverse answers",
+  );
+}
+
 async function verifyPostingCostFilters(): Promise<void> {
   const source = `2026-01-01 open Assets:Broker ITOT
 2026-01-01 open Assets:Cash USD
@@ -6627,6 +6724,8 @@ poptag #trip
   await verifyBqlOracle();
   // w31/117: and the text table rounds BQL arithmetic like stock.
   await verifyDecimalContextText();
+  // w31/143: and the price lookups that chain where stock does not.
+  await verifyChainedPriceLookup();
 
   // w23/m41: replay the reports against the same stock answers.
   await verifyReportOracle();

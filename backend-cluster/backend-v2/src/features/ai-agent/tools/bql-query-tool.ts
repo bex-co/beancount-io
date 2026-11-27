@@ -15,6 +15,7 @@ export const description =
   "Columns: date, year, month, flag, payee, narration, account, number, currency, cost, weight, " +
   "balance, position, tags, links, meta. " +
   "An unaggregated query returns one row per posting, not per transaction, so LIMIT 5 can span 3 transactions; GROUP BY and DISTINCT return one row per group or value. LIMIT bounds the returned rows. " +
+  "Unlike bean-query, getprice() and convert() chain one hop through a third currency when the pair has no price either way: with VTI and EUR priced in USD, getprice('VTI', 'EUR') answers a rate, not NULL, and convert() turns VTI into EUR. " +
   "Output past 1,000 lines or 100 KB is cut and ends with a truncation line; add LIMIT or a narrower WHERE to see the rest. " +
   BQL_SIZE_DESCRIPTION +
   " " +

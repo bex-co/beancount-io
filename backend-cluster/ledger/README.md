@@ -196,6 +196,43 @@ supported form (`SELECT date, account, amount, discrepancy FROM balances`).
 Reported upstream as rustledger/rustledger#2823; drop the enrichment when the
 engine fills the column (w23/m19).
 
+## BQL `getprice()` and `convert()` chain through a third currency
+
+Stock beanquery reads a price only from the pair itself or its inverse:
+`getprice(base, quote[, date])` answers NULL, and `convert(<amount>,
+currency[, date])` leaves the amount in its own currency, when the ledger has
+neither by that date. Only `convert(<position>, …)` of a lot at cost goes
+further, through that lot's cost currency. The pinned engine falls back to one
+hop through any other currency for every `getprice` and `convert`, a deliberate
+rustledger extension (rustledger/rustledger#2152). On a ledger that holds
+11 VTI at cost in USD and records only `price VTI 125.00 USD` and
+`price EUR 1.20 USD`:
+
+| Query | REST, GraphQL and MCP | `bean-query`, `bea query` |
+| --- | --- | --- |
+| `SELECT getprice('VTI', 'EUR'), getprice('EUR', 'VTI') LIMIT 1` | `104.1666666666666666666666667`, `0.00960` | NULL, NULL |
+| `SELECT convert(units(sum(position)), 'EUR') WHERE account ~ 'Broker'` | `1145.833333333333333333333333 EUR` | `11 VTI` |
+| `SELECT convert(units(position), 'EUR', 2026-08-25) WHERE account ~ 'Broker'` | `1041.666… EUR`, `104.166… EUR` | `10 VTI`, `1 VTI` |
+
+Both agree on a recorded pair or its inverse (`getprice('USD', 'EUR')` is
+`0.8333333333333333333333333333`), on `getprice('EUR', 'EUR')` (`1`), on a
+currency with no route at all (`getprice('GBP', 'EUR')` is NULL), and on
+`convert(position, 'EUR')` for a lot whose cost currency is the only route
+(`1041.666… EUR`). When several routes exist, the engine takes the one whose
+older leg is newest rather than the lot's cost currency, so a lot can convert
+through another currency than stock uses. The engine's lookups also read a
+rate from a posting's `@` price, which stock does only with the
+`implicit_prices` plugin (w1/229). To match stock, convert only to a currency
+a `price` directive quotes against the source currency, either way round;
+`SELECT * FROM #prices` lists them on both.
+
+The engine has no option to turn the chain off, and the service cannot undo it
+afterwards: a chained figure looks like a direct one, and the lookup can sit
+anywhere in an expression. The hosted reports are unaffected, since they value
+from the ledger's own price map. `yarn verify:rustledger` fails its "hosted
+getprice and convert still chain" check once an engine bump stops chaining;
+then this section goes (w31/143).
+
 ## Validation: stock errors the engine does not raise
 
 These things stock `bean-check` refuses load without an error in the pinned
