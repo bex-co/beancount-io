@@ -4,11 +4,8 @@ import type { AppLayers } from "@/foundation/composition";
 import { OAUTH_CONFIG } from "@/features/oauth/data/config";
 import { assertSafeArchiveName } from "@/features/ledger/utils/safe-archive-name";
 import { resolveIdentity, identityHasCapability } from "@/server/api/identity";
-import { enforceRateLimit } from "@/server/api/rate-limit";
-import { requestOpId } from "@/server/api/rest-op-id";
 import { validateRequest } from "@/server/rest/validation-middleware";
-import { clientAddress } from "@/server/client-address";
-import { ForbiddenError, RateLimitedError } from "@/shared/errors";
+import { ForbiddenError } from "@/shared/errors";
 import { createLedgerId } from "@/shared/str";
 import { z } from "@/shared/zod-openapi-setup";
 import { MCP_ENDPOINT_PATH, refuseUnauthenticated } from "./mcp-route";
@@ -22,8 +19,13 @@ import { MCP_ENDPOINT_PATH, refuseUnauthenticated } from "./mcp-route";
  * audience token. This route is the one non-JSON-RPC path under the MCP
  * resource: it accepts the MCP audience, never a browser session, and goes
  * through the same ledger archive service as every other spelling, so the
- * credential pin, per-ledger read authorization and the shared archive budget
- * apply unchanged.
+ * credential pin and per-ledger read authorization apply unchanged.
+ *
+ * The shared archive budget is spent before this handler runs, by the REST
+ * limiter, which resolves this mount's bearer against the MCP audience (its
+ * fragment says so) and charges the credential. Charging here as well spent
+ * two tokens per download, so the documented 30 a minute stopped at 15
+ * (w31/112).
  */
 const MCP_ARCHIVE_PATH = `${MCP_ENDPOINT_PATH}/archive/:owner/:name/:archive`;
 const validateArchiveRequest = validateRequest({
@@ -48,23 +50,6 @@ export function setMcpArchiveRoute(
       throw new ForbiddenError(
         "This credential cannot download ledger archives: it needs the ledger.read scope",
       );
-    }
-
-    try {
-      await enforceRateLimit({
-        opId: requestOpId(["GET"], MCP_ARCHIVE_PATH, "GET"),
-        identity,
-        ip: clientAddress(ctx),
-      });
-    } catch (error) {
-      if (error instanceof RateLimitedError) {
-        const retryAfter = (
-          error.metadata as { retryAfter?: number } | undefined
-        )?.retryAfter;
-        if (retryAfter !== undefined)
-          ctx.set("Retry-After", String(retryAfter));
-      }
-      throw error;
     }
 
     // Mirror v1Route's request boundary (percent-encoding, NUL/surrogate/limit

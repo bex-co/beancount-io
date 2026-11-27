@@ -1,4 +1,4 @@
-import Router from "@koa/router";
+import Router, { type RouterContext } from "@koa/router";
 import { restOpId } from "./op-class";
 
 /**
@@ -52,14 +52,50 @@ export function opMethodsForLayer(methods: readonly string[]): string[] {
   return methods.filter((method) => method !== "HEAD");
 }
 
-/** The op id a request should be classified under, given its matched layer. */
+/**
+ * The op id a request should be classified under, given its matched layer.
+ *
+ * A `HEAD` that @koa/router paired with a `GET` runs that `GET`'s handler, so
+ * it is that op, exactly as {@link opMethodsForLayer} says at assembly time.
+ * Classified as `REST HEAD …` it matched no op: the scope gate treated it as an
+ * unclassified write, refusing a read-only credential, and the limiter charged
+ * it to a bucket of its own, so a `HEAD` of an archive URL fetched the archive
+ * outside the archive budget (w31/112).
+ */
 export function requestOpId(
   layerMethods: readonly string[],
   layerPath: string | RegExp,
   requestMethod: string,
 ): string {
+  const upper = requestMethod.toUpperCase();
   const method = isCatchAllMethods(layerMethods)
     ? "ALL"
-    : requestMethod.toUpperCase();
+    : upper === "HEAD" && layerMethods.includes("GET")
+      ? "GET"
+      : upper;
   return restOpId(method, normalizeRestPath(layerPath));
+}
+
+/**
+ * The op id of the route this request will be dispatched to, for the REST
+ * middleware that runs ahead of it (identity, rate limit, scope gate).
+ *
+ * `ctx._matchedRoute` cannot be used here: @koa/router rewrites it to each
+ * layer's own path as the chain runs, so by the time a middleware executes it
+ * names that middleware's own wildcard. `ctx.matched` is the whole set of
+ * path-matching layers, set before the chain, so the last one that also
+ * accepts the request's method is the route that will actually handle it —
+ * which is exactly how the router itself picks.
+ */
+export function matchedOpId(ctx: RouterContext): string | undefined {
+  const layers = ctx.matched;
+  if (!layers) return undefined;
+  const method = ctx.method.toUpperCase();
+  for (let i = layers.length - 1; i >= 0; i -= 1) {
+    const layer = layers[i];
+    if (layer.methods.length > 0 && layer.methods.includes(method)) {
+      return requestOpId(layer.methods, layer.path, method);
+    }
+  }
+  return undefined;
 }

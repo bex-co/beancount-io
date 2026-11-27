@@ -72,6 +72,7 @@ import {
 import { buildResolverContainer } from "@/server/graphql/resolver-registry";
 
 import { setOidcRoutes } from "@/features/oauth/api/oidc-route";
+import { OAUTH_CONFIG, type OAuthResource } from "@/features/oauth/data/config";
 import { setHealthzHandler } from "@/features/healthz/api/healthz-handler";
 import { setMetricHandler } from "@/metrics";
 import { setAdminApiRoute } from "@/features/admin/api/admin-api-handler";
@@ -184,6 +185,12 @@ export type ApiGate = "scoped" | "enforced" | "outside";
 interface RestFragment {
   readonly feature: string;
   readonly gate: ApiGate;
+  /**
+   * The OAuth resource whose tokens these routes accept, when it is not the
+   * application API. The shared identity middleware resolves bearers on them
+   * against it, so the limiter charges the credential rather than the IP.
+   */
+  readonly oauthResource?: OAuthResource;
   register(router: Router, deps: ApiDeps): void;
 }
 
@@ -342,6 +349,7 @@ const REST_FRAGMENTS: readonly RestFragment[] = [
     // every route here — must sit downstream of it, not upstream.
     feature: "ai-agent-mcp",
     gate: "outside",
+    oauthResource: OAUTH_CONFIG.resourceBindings.mcp,
     register: (router, { layers, config }) =>
       setMcpRoute(router, layers, config, (toolCtx) =>
         assembleMcpRegistry(toolCtx, config),
@@ -351,10 +359,12 @@ const REST_FRAGMENTS: readonly RestFragment[] = [
     // The MCP resource's one non-JSON-RPC path: it streams a ledger archive
     // of any size to an MCP-audience token (w23/026, ADR 0007). Outside the
     // matrix like the transport it extends: it authenticates the MCP audience
-    // itself, checks the read capability, spends the shared archive budget and
-    // goes through the same ledger archive service as the v1 route.
+    // itself, checks the read capability and goes through the same ledger
+    // archive service as the v1 route. The shared limiter spends the archive
+    // budget once, against the credential (w31/112).
     feature: "ai-agent-mcp-archive",
     gate: "outside",
+    oauthResource: OAUTH_CONFIG.resourceBindings.mcp,
     register: (router, { layers, config }) =>
       setMcpArchiveRoute(router, layers, config),
   },
@@ -410,12 +420,14 @@ function assembleRestRouter(router: Router, deps: ApiDeps): RestMount[] {
   // finishes long before the first request, so the middleware never sees it
   // half-built.
   const gates = new Map<string, ApiGate>();
+  // The audience index the identity middleware reads, filled the same way.
+  const oauthResources = new Map<string, OAuthResource>();
 
   // Outermost: the error adapter, so it wraps every route below. Then the
   // identity resolver (non-blocking — public routes simply see no caller), then
   // the scope gate, which needs the identity the previous one published.
   router.use(restErrorMiddleware());
-  router.use(restIdentityMiddleware(deps.layers, deps.config));
+  router.use(restIdentityMiddleware(deps.layers, deps.config, oauthResources));
   // Budget before authorization, and both before any handler reads a body.
   router.use(restRateLimitMiddleware());
   router.use(restScopeMiddleware(deps.config, gates));
@@ -427,6 +439,8 @@ function assembleRestRouter(router: Router, deps: ApiDeps): RestMount[] {
     for (const mount of collectMounts(router, before, fragment)) {
       mounts.push(mount);
       gates.set(mount.opId, mount.gate);
+      if (fragment.oauthResource)
+        oauthResources.set(mount.opId, fragment.oauthResource);
     }
   }
   return mounts;

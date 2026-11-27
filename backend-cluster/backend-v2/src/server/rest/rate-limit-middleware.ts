@@ -7,7 +7,7 @@ import {
 } from "@/server/api/rate-limit";
 import { RateLimitedError } from "@/shared/errors";
 import { identityFromState } from "./identity-middleware";
-import { requestOpId } from "@/server/api/rest-op-id";
+import { matchedOpId } from "@/server/api/rest-op-id";
 import { clientAddress } from "@/server/client-address";
 
 /**
@@ -74,17 +74,4 @@ export function restRateLimitMiddleware(): Router.Middleware {
  */
 function clientIp(ctx: RouterContext): string {
   return clientAddress(ctx);
-}
-
-function matchedOpId(ctx: RouterContext): string | undefined {
-  const layers = ctx.matched;
-  if (!layers) return undefined;
-  const method = ctx.method.toUpperCase();
-  for (let i = layers.length - 1; i >= 0; i -= 1) {
-    const layer = layers[i];
-    if (layer.methods.length > 0 && layer.methods.includes(method)) {
-      return requestOpId(layer.methods, layer.path, method);
-    }
-  }
-  return undefined;
 }

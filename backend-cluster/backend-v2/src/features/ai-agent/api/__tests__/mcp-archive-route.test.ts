@@ -3,18 +3,12 @@ jest.mock("@/server/api/identity", () => ({
   ...jest.requireActual("@/server/api/identity"),
   resolveIdentity: jest.fn(),
 }));
-jest.mock("@/server/api/rate-limit", () => ({
-  ...jest.requireActual("@/server/api/rate-limit"),
-  enforceRateLimit: jest.fn(),
-}));
 import http from "node:http";
 import Koa from "koa";
 import Router from "@koa/router";
 import { AuthorizationService } from "@/server/api/authorization";
 import { resolveIdentity, type Identity } from "@/server/api/identity";
-import { enforceRateLimit } from "@/server/api/rate-limit";
 import { restErrorMiddleware } from "@/server/rest/error-middleware";
-import { RateLimitedError } from "@/shared/errors";
 import {
   pinnedReadToken,
   readOnlyToken,
@@ -67,7 +61,6 @@ beforeEach(async () => {
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
   (resolveIdentity as jest.Mock).mockResolvedValue(readOnlyToken);
-  (enforceRateLimit as jest.Mock).mockResolvedValue(undefined);
 });
 
 afterEach(async () => {
@@ -136,22 +129,6 @@ describe("GET /api-gateway/mcp/archive/{owner}/{name}/{archive}", () => {
     expect((await fetch(`${base}${PATH}`)).status).toBe(200);
     check.mockResolvedValue(false);
     expect((await fetch(`${base}${PATH}`)).status).toBe(404);
-    expect(origin.requests).toHaveLength(1);
-  });
-
-  it("charges the shared archive budget and passes Retry-After on a refusal", async () => {
-    expect((await fetch(`${base}${PATH}`)).status).toBe(200);
-    expect(enforceRateLimit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        opId: "REST GET /api-gateway/mcp/archive/{owner}/{name}/{archive}",
-        identity: readOnlyToken,
-      }),
-    );
-
-    (enforceRateLimit as jest.Mock).mockRejectedValue(new RateLimitedError(17));
-    const limited = await fetch(`${base}${PATH}`);
-    expect(limited.status).toBe(429);
-    expect(limited.headers.get("retry-after")).toBe("17");
     expect(origin.requests).toHaveLength(1);
   });
 

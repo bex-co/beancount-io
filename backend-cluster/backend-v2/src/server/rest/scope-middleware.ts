@@ -2,7 +2,7 @@ import Router, { RouterContext } from "@koa/router";
 import type { AppConfig } from "@/config/config";
 import { identityFromState } from "./identity-middleware";
 import { requireScopeClass } from "@/server/api/op-class";
-import { requestOpId } from "@/server/api/rest-op-id";
+import { matchedOpId } from "@/server/api/rest-op-id";
 import { runWithOperationId } from "@/shared/async-context";
 // Type-only, so the composition root can keep importing this module without a
 // runtime cycle.
@@ -52,27 +52,4 @@ export function restScopeMiddleware(
       await next();
     }
   };
-}
-
-/**
- * The op id of the route this request will be dispatched to.
- *
- * `ctx._matchedRoute` cannot be used here: @koa/router rewrites it to each
- * layer's own path as the chain runs, so by the time this middleware executes
- * it names this middleware's own wildcard. `ctx.matched` is the whole set of
- * path-matching layers, set before the chain, so the last one that also
- * accepts the request's method is the route that will actually handle it —
- * which is exactly how the router itself picks.
- */
-function matchedOpId(ctx: RouterContext): string | undefined {
-  const layers = ctx.matched;
-  if (!layers) return undefined;
-  const method = ctx.method.toUpperCase();
-  for (let i = layers.length - 1; i >= 0; i -= 1) {
-    const layer = layers[i];
-    if (layer.methods.length > 0 && layer.methods.includes(method)) {
-      return requestOpId(layer.methods, layer.path, method);
-    }
-  }
-  return undefined;
 }
