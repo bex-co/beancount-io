@@ -409,6 +409,8 @@ export const sk: Translations = {
   ledgerInvalidFlag: "{{value}} nemožno použiť ako príznak.",
   ledgerEntryOneAtATime: "Upravujte naraz iba jeden záznam.",
   ledgerEntryIndent: "Odsaďte účtovania pod riadkom s dátumom.",
+  ledgerEntryDashedDate:
+    "Zapíšte dátum ako {{date}}. Je to ten istý dátum v tvare, v akom ho aplikácia ukladá.",
   ledgerEntryDateIndented:
     "Dátum musí byť na začiatku riadka: odstráňte medzeru pred ním.",
   ledgerEntryNotAnEntry:

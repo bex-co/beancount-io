@@ -398,6 +398,8 @@ export const nl: Translations = {
   ledgerInvalidFlag: "{{value}} kan niet als vlag worden gebruikt.",
   ledgerEntryOneAtATime: "Bewerk één boeking tegelijk.",
   ledgerEntryIndent: "Laat de boekingsregels inspringen onder de datumregel.",
+  ledgerEntryDashedDate:
+    "Schrijf de datum als {{date}}. Het is dezelfde datum, in de vorm die de app opslaat.",
   ledgerEntryDateIndented:
     "De datum moet aan het begin van de regel staan: verwijder de spatie ervoor.",
   ledgerEntryNotAnEntry:

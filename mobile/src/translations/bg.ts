@@ -399,6 +399,8 @@ export const bg: Translations = {
   ledgerInvalidFlag: "{{value}} не може да се използва като флаг.",
   ledgerEntryOneAtATime: "Редактирайте по един запис наведнъж.",
   ledgerEntryIndent: "Отместете постингите навътре под реда с датата.",
+  ledgerEntryDashedDate:
+    "Запишете датата като {{date}}. Това е същата дата във вида, в който приложението я записва.",
   ledgerEntryDateIndented:
     "Датата трябва да е в началото на реда: премахнете интервала пред нея.",
   ledgerEntryNotAnEntry:

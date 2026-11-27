@@ -409,6 +409,8 @@ export const ru: Translations = {
   ledgerInvalidFlag: "{{value}} нельзя использовать как флаг.",
   ledgerEntryOneAtATime: "Редактируйте по одной записи за раз.",
   ledgerEntryIndent: "Сделайте отступ у проводок под строкой с датой.",
+  ledgerEntryDashedDate:
+    "Запишите дату как {{date}}. Это та же дата в том виде, в котором её сохраняет приложение.",
   ledgerEntryDateIndented:
     "Дата должна стоять в начале строки: удалите пробел перед ней.",
   ledgerEntryNotAnEntry:

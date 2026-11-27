@@ -228,6 +228,13 @@ const SINGLE_ENTRY_REFUSALS: [RegExp, string][] = [
   [/^\S+'s date line is indented;/, "ledgerEntryDateIndented"],
   [/^\S+ holds no entry;/, "editTransactionEmpty"],
   [/^\S+ holds \d+ entries;/, "ledgerEntryOneAtATime"],
+  // An entry dated `2026/08/25` loads and Edit shows it as written, but a save
+  // that keeps the spelling is refused for it; read as the indent refusal, it
+  // told the user to indent postings that already were (w31/110).
+  [
+    /^\S+ dates its entry \S+; an entry edit takes YYYY-MM-DD: write \S+ as (?<date>\d{4}-\d{2}-\d{2})$/,
+    "ledgerEntryDashedDate",
+  ],
   [/^\S+ must be one dated directive:/, "ledgerEntryIndent"],
   [
     /^`[a-z]+` configures the ledger and is not an entry/,
@@ -242,7 +249,8 @@ function singleEntryRefusal(
   for (const message of refusalMessages(error)) {
     if (typeof message !== "string") continue;
     for (const [pattern, key] of SINGLE_ENTRY_REFUSALS) {
-      if (pattern.test(message)) return i18n.t(key);
+      const match = pattern.exec(message);
+      if (match) return i18n.t(key, match.groups);
     }
   }
   return undefined;

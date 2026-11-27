@@ -407,6 +407,8 @@ export const es: Translations = {
   ledgerInvalidFlag: "{{value}} no se puede usar como marca.",
   ledgerEntryOneAtATime: "Edita una sola entrada a la vez.",
   ledgerEntryIndent: "Sangra los apuntes bajo la línea de la fecha.",
+  ledgerEntryDashedDate:
+    "Escribe la fecha como {{date}}. Es la misma fecha, en la forma que guarda la aplicación.",
   ledgerEntryDateIndented:
     "La fecha debe empezar la línea: quita el espacio que tiene delante.",
   ledgerEntryNotAnEntry:

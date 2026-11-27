@@ -407,6 +407,8 @@ export const uk: Translations = {
   ledgerInvalidFlag: "{{value}} не можна використати як прапорець.",
   ledgerEntryOneAtATime: "Редагуйте по одному запису за раз.",
   ledgerEntryIndent: "Зробіть відступ у проводок під рядком із датою.",
+  ledgerEntryDashedDate:
+    "Запишіть дату як {{date}}. Це та сама дата у вигляді, у якому її зберігає застосунок.",
   ledgerEntryDateIndented:
     "Дата має стояти на початку рядка: видаліть пробіл перед нею.",
   ledgerEntryNotAnEntry:

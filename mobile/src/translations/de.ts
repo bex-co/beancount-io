@@ -410,6 +410,8 @@ export const de: Translations = {
   ledgerInvalidFlag: "{{value}} kann nicht als Flag verwendet werden.",
   ledgerEntryOneAtATime: "Bearbeiten Sie jeweils nur einen Eintrag.",
   ledgerEntryIndent: "Rücken Sie die Buchungszeilen unter der Datumszeile ein.",
+  ledgerEntryDashedDate:
+    "Schreiben Sie das Datum als {{date}}. Es ist dasselbe Datum in der Form, die die App speichert.",
   ledgerEntryDateIndented:
     "Das Datum muss am Zeilenanfang stehen: Entfernen Sie das Leerzeichen davor.",
   ledgerEntryNotAnEntry:

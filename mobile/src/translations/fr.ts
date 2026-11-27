@@ -408,6 +408,8 @@ export const fr: Translations = {
   ledgerInvalidFlag: "{{value}} ne peut pas servir de drapeau.",
   ledgerEntryOneAtATime: "Modifiez une seule écriture à la fois.",
   ledgerEntryIndent: "Indentez les lignes de mouvement sous la ligne de date.",
+  ledgerEntryDashedDate:
+    "Écrivez la date sous la forme {{date}}. C'est la même date, dans la forme qu'enregistre l'application.",
   ledgerEntryDateIndented:
     "La date doit commencer la ligne : supprimez l'espace qui la précède.",
   ledgerEntryNotAnEntry:

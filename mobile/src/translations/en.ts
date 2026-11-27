@@ -391,6 +391,8 @@ export const en = {
   ledgerInvalidFlag: "{{value}} can't be used as a flag.",
   ledgerEntryOneAtATime: "Edit one entry at a time.",
   ledgerEntryIndent: "Indent postings under the date line.",
+  ledgerEntryDashedDate:
+    "Write the date as {{date}}. It's the same date, in the form the app saves.",
   ledgerEntryDateIndented:
     "The date must start its line: remove the space before it.",
   ledgerEntryNotAnEntry:

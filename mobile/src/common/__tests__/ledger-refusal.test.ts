@@ -516,6 +516,28 @@ describe("ledgerWriteFailureMessage with a single-entry refusal", () => {
     }
   });
 
+  // w31/110: an entry dated 2026/08/25 keeps its spelling in an edit. It read
+  // as the indent refusal, though the postings were indented.
+  it("names the dashed date for an edit that keeps another spelling", () => {
+    const words = {
+      t: (key: string, params?: Record<string, string>) =>
+        `${key} ${JSON.stringify(params ?? {})}`,
+    };
+    for (const [written, dashed] of [
+      ["2026/08/25", "2026-08-25"],
+      ["2026-8-5", "2026-08-05"],
+    ]) {
+      expect(
+        ledgerWriteFailureMessage(
+          badInput(
+            `newContent dates its entry ${written}; an entry edit takes YYYY-MM-DD: write ${written} as ${dashed}`,
+          ),
+          words,
+        ),
+      ).toBe(`ledgerEntryDashedDate {"date":"${dashed}"}`);
+    }
+  });
+
   it("leaves other bad input as the server wrote it", () => {
     expect(
       ledgerWriteFailureMessage(badInput("limit must be positive"), keyed),

@@ -395,6 +395,8 @@ export const fa: Translations = {
   ledgerInvalidFlag: "{{value}} را نمی‌توان به‌عنوان پرچم به کار برد.",
   ledgerEntryOneAtATime: "هر بار فقط یک ورودی را ویرایش کنید.",
   ledgerEntryIndent: "ردیف‌های تراکنش را زیر خط تاریخ تورفتگی بدهید.",
+  ledgerEntryDashedDate:
+    "تاریخ را به صورت {{date}} بنویسید. همان تاریخ است، به شکلی که برنامه ذخیره می‌کند.",
   ledgerEntryDateIndented:
     "تاریخ باید در ابتدای خط باشد: فاصلهٔ پیش از آن را حذف کنید.",
   ledgerEntryNotAnEntry:
