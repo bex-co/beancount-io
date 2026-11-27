@@ -106,9 +106,9 @@ function decimal(number: string): BigNumber {
  * "<CURRENCY>:<tolerance>"` declarations, Beancount lexer semantics (quoted
  * name and value). Each adds one currency (or `*`); a later one for the same
  * currency wins. A bare number is not Beancount syntax, and both engines
- * report and ignore it, so it is ignored here too. Only files the bulk
- * endpoint already fetched are scanned — a declaration living in an unrelated
- * file is missed, noted at the call site.
+ * report and ignore it, so it is ignored here too. Both engines honor an
+ * option only in the entry point, so the caller passes that file's text alone
+ * (w31/103).
  */
 export function scanInferredToleranceDefaults(
   contents: string[],

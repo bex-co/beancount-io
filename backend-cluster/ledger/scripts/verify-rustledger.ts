@@ -5569,6 +5569,38 @@ async function main(): Promise<void> {
       `the precheck ${precheck ? "accepts" : "refuses"} ${numbers.join(" / ")} USD${option ? ` under ${option.slice(36)}` : ""}, as the engine does`,
     );
   }
+  // w31/103: the engine honors the option only in the entry point, also for a
+  // transaction routed to an included file; the precheck scans main.bean alone.
+  const routedOption = 'option "inferred_tolerance_default" "USD:0.01"\n';
+  const routedFare =
+    '2026-08-30 * "fare"\n  Assets:Cash -10.00 USD\n  Expenses:Transport 9.99 USD\n';
+  for (const optionInEntryPoint of [true, false]) {
+    const main = `${optionInEntryPoint ? routedOption : ""}2026-01-01 open Assets:Cash\n2026-01-01 open Expenses:Transport\ninclude "txns/2026.bean"\n`;
+    const routed = await parseLedgerFiles(
+      {
+        "main.bean": main,
+        "txns/2026.bean": `${optionInEntryPoint ? "" : routedOption}${routedFare}`,
+      },
+      "main.bean",
+    );
+    const engineBalances = !routed.errors.some((error) =>
+      error.message.startsWith("Transaction does not balance"),
+    );
+    const precheck = checkTransactionBalance(
+      [
+        { account: "Assets:Cash", units: { number: "-10.00", currency: "USD" } },
+        {
+          account: "Expenses:Transport",
+          units: { number: "9.99", currency: "USD" },
+        },
+      ],
+      scanInferredToleranceDefaults([main]),
+    ).ok;
+    assert(
+      engineBalances === optionInEntryPoint && precheck === engineBalances,
+      `a routed -0.01 USD residual with the option in ${optionInEntryPoint ? "main.bean" : "the routed file"} is ${optionInEntryPoint ? "accepted" : "refused"} by the engine and the precheck alike`,
+    );
+  }
 
   // w21/653: the entry validator accepts a tag (or a flag) exactly when the
   // engine reads it back as written.

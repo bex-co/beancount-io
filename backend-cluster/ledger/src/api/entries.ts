@@ -244,8 +244,8 @@ export function setEntriesHandler(router: Router): void {
 
       const client = giteaClientForRequest(ctx);
 
-      // Fetch every target file first: the balance check below needs the
-      // ledger's `inferred_tolerance_default`, which lives in file content.
+      // Current text and sha by path: each file the write touches, and the
+      // entry point once a check below reads it.
       const currentContents = new Map<
         string,
         { current: string; sha: string }
@@ -287,12 +287,17 @@ export function setEntriesHandler(router: Router): void {
       // its amount: the residual interpolates it, and the posting renders
       // elided, as written.
       if (!allowInvalid) {
-        // Only the files this batch touches are scanned for the override; an
-        // `inferred_tolerance_default` living in an unrelated file is missed
-        // (see scanInferredToleranceDefaults).
-        const toleranceDefaults = scanInferredToleranceDefaults(
-          [...currentContents.values()].map(({ current }) => current),
-        );
+        // Both engines honor an `option` only in the entry point, so the
+        // tolerance comes from main.bean alone — read even when no entry goes
+        // there, since a routed target holds no option the engine reads
+        // (w31/103). The include step below reuses the read.
+        const entry =
+          currentContents.get(DEFAULT_ENTRY_POINT) ??
+          (await readFile(DEFAULT_ENTRY_POINT));
+        currentContents.set(DEFAULT_ENTRY_POINT, entry);
+        const toleranceDefaults = scanInferredToleranceDefaults([
+          entry.current,
+        ]);
         rows.forEach((row, idx) => {
           if (row.type !== "transaction") return;
           const postings = (row.item as { postings?: unknown } | null)
