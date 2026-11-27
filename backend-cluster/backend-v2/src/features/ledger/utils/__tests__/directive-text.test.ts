@@ -1171,3 +1171,69 @@ describe("insertDirectives over lines Beancount skips (w31/099)", () => {
     },
   );
 });
+
+// w31/100: the engine reads a file past a leading byte-order mark. In front of
+// line 1 it hid that line's `pushtag` and date from the scanners, so an entry
+// was threaded into the file's scope or out of date order.
+describe("insertDirectives into a file that starts with a byte-order mark (w31/100)", () => {
+  const BOM = "\uFEFF";
+
+  it("keeps an entry out of a first-line pushtag scope and keeps the mark", () => {
+    const file = [
+      "pushtag #trip",
+      txn("2026-09-02", "A"),
+      "",
+      txn("2026-09-05", "B"),
+      "poptag #trip",
+      "",
+    ].join("\n");
+    const directives = parseDirectiveText(txn("2026-09-03", "New"));
+    const plain = insertDirectives(file, directives);
+    const result = insertDirectives(`${BOM}${file}`, directives);
+    expect(result.content).toBe(`${BOM}${plain.content}`);
+    expect(result.inserted).toEqual(plain.inserted);
+    expect(result.content).toBe(
+      [
+        `${BOM}pushtag #trip`,
+        txn("2026-09-02", "A"),
+        "",
+        "poptag #trip",
+        txn("2026-09-03", "New"),
+        "pushtag #trip",
+        "",
+        txn("2026-09-05", "B"),
+        "poptag #trip",
+        "",
+      ].join("\n"),
+    );
+    expect(result.content.split("\n")[result.inserted[0]!.line - 1]).toBe(
+      '2026-09-03 * "New" "note"',
+    );
+  });
+
+  it("puts an entry dated before a first-line entry above it, behind the mark", () => {
+    const file = [
+      txn("2026-09-10", "Ten"),
+      "",
+      txn("2026-09-20", "Twenty"),
+      "",
+    ].join("\n");
+    const directives = parseDirectiveText(txn("2026-09-08", "Eight"));
+    const plain = insertDirectives(file, directives);
+    const result = insertDirectives(`${BOM}${file}`, directives);
+    expect(result.appended).toBe(false);
+    expect(result.content).toBe(`${BOM}${plain.content}`);
+    expect(result.inserted).toEqual([{ line: 1 }]);
+    const dates = [
+      ...result.content.matchAll(/^\uFEFF?(\d{4}-\d{2}-\d{2}) \*/gm),
+    ].map((match) => match[1]);
+    expect(dates).toEqual(["2026-09-08", "2026-09-10", "2026-09-20"]);
+  });
+
+  it("writes into a file that holds only the mark after it", () => {
+    const [directive] = parseDirectiveText(txn("2026-09-08", "Eight"));
+    expect(insertDirectives(BOM, [directive]).content).toBe(
+      `${BOM}${txn("2026-09-08", "Eight")}\n`,
+    );
+  });
+});

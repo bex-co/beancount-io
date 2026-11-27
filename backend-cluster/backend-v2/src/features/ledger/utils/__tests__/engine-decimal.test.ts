@@ -286,6 +286,37 @@ describe("assertAmountsFitEngineDecimal", () => {
     },
   );
 
+  // w31/100: the engine reads a file past a leading byte-order mark, so a `#`
+  // line 1 behind one is still skipped.
+  it.each([
+    ["without a quote", ""],
+    ["with an unmatched quote", ' 5"'],
+  ])(
+    "skips a first-line # line %s behind a byte-order mark (w31/100)",
+    (_case, quote) => {
+      const skipped = `\uFEFF# ref 123456789012345678901234567890 USD${quote}`;
+      expect(textAmountLiterals(`${skipped}\n`)).toEqual([]);
+      expect(() =>
+        assertAmountsFitEngineDecimal(
+          `${skipped}\n2026-08-01 * "Cafe"\n  Expenses:Food 10.00 USD\n  Assets:Cash\n`,
+        ),
+      ).not.toThrow();
+      expect(() =>
+        assertAmountsFitEngineDecimal(
+          `${skipped}\n2026-08-01 * "Cafe"\n  Expenses:Food 123456789012345678901234567890 USD\n  Assets:Cash\n`,
+        ),
+      ).toThrow(BadUserInputError);
+    },
+  );
+
+  it("still checks a first-line amount behind a byte-order mark (w31/100)", () => {
+    expect(
+      textAmountLiterals(
+        "\uFEFF2026-08-01 price HOOL 123456789012345678901234567890 USD\n",
+      ),
+    ).toEqual(["123456789012345678901234567890"]);
+  });
+
   it.each(["*", "#", ":", "!", "&", "?", "%"])(
     "reads a %s line inside a multiline string as the string's content (w31/099)",
     (start) => {

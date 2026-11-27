@@ -2,6 +2,7 @@ import { type FavaApiClient, unwrapFavaResponse } from "@/foundation/fava";
 import { ValidationError } from "@/shared/errors";
 import type { ReportedProjection } from "@/features/ledger/utils/bean-check-errors";
 import type { ParsedDirective } from "@/features/ledger/utils/directive-text";
+import { splitByteOrderMark } from "@/features/ledger/utils/byte-order-mark";
 import { isSkippedLine } from "@/features/ledger/utils/skipped-line";
 
 interface BudgetAccountRef {
@@ -19,9 +20,12 @@ const OPEN_ACCOUNT = /^\d{4}-\d{2}-\d{2}[ \t]+open[ \t]+([^\s";]+)/;
 const BUDGET_ACCOUNT =
   /^\d{4}-\d{2}-\d{2}[ \t]+custom[ \t]+"budget"[ \t]+([^\s";]+)/;
 
-/** First non-blank, non-comment line of a directive's text that Beancount reads. */
+/**
+ * First non-blank, non-comment line of a directive's text that Beancount
+ * reads, past a leading byte-order mark as the engine reads it (w31/100).
+ */
 function headerLineOf(text: string): string | undefined {
-  for (const line of text.split("\n")) {
+  for (const line of splitByteOrderMark(text).text.split("\n")) {
     const trimmed = line.trim();
     if (trimmed.length === 0 || trimmed.startsWith(";")) continue;
     // Beancount skips a line starting with `*`, `#`, `:`, `!`, `&`, `?` or

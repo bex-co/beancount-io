@@ -1,5 +1,6 @@
 import { BadUserInputError } from "@/shared/errors";
 import { ACCOUNT_CHAR } from "./account-matcher";
+import { splitByteOrderMark } from "./byte-order-mark";
 import { isSkippedLine } from "./skipped-line";
 
 /**
@@ -285,9 +286,10 @@ function lineAmountLiterals(
  * The numeric literals a text would commit to the engine's `Decimal` parser,
  * skipping quoted strings (including escaped quotes and multiline strings),
  * `;` comments, and lines Beancount skips whole (`isSkippedLine`: a `*`
- * org-mode heading, a `#` line, and the rest, w31/099). When `onlyLines` is
- * given, string state is still tracked from line 0 so multiline strings stay
- * accurate, while only the named 0-based line indices are checked.
+ * org-mode heading, a `#` line, and the rest, w31/099). Line 1 is read past a
+ * leading byte-order mark, as the engine reads it (w31/100). When `onlyLines`
+ * is given, string state is still tracked from line 0 so multiline strings
+ * stay accurate, while only the named 0-based line indices are checked.
  */
 export function textAmountLiterals(
   text: string,
@@ -296,7 +298,9 @@ export function textAmountLiterals(
   const literals: string[] = [];
   let inString = false;
   let inCustomDirective = false;
-  const lines = text.replace(/\r\n?/g, "\n").split("\n");
+  const lines = splitByteOrderMark(text)
+    .text.replace(/\r\n?/g, "\n")
+    .split("\n");
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]!;
     if (!inString && isSkippedLine(line)) continue;

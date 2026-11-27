@@ -1653,3 +1653,111 @@ describe.each(["rest", "gql", "mcp"] as const)(
     });
   },
 );
+
+// w31/100: the engine reads a file past a leading byte-order mark. In front of
+// line 1 it hid that line's `pushtag` and date, so an append was stored with
+// a tag nobody wrote, or out of date order. The committed file keeps the mark.
+describe.each(["rest", "gql", "mcp"] as const)(
+  "appending to a file that starts with a byte-order mark via %s (w31/100)",
+  (surface) => {
+    const BOM = String.fromCharCode(0xfeff);
+    const txn = (date: string, narration: string) =>
+      [
+        `${date} * "qa payee" "${narration}"`,
+        "  Expenses:Food:Coffee   3.00 USD",
+        "  Assets:Cash",
+      ].join("\n");
+
+    it("keeps the entry out of a first-line pushtag scope on preview and commit", async () => {
+      const scoped = [
+        "pushtag #qa-trip",
+        txn("2026-09-02", "scoped A"),
+        "",
+        txn("2026-09-05", "scoped B"),
+        "poptag #qa-trip",
+        "",
+      ].join("\n");
+      const text = `${txn("2026-09-03", "appended")}\n`;
+      const f = await fixture();
+      f.state.files.set("main.bean", `${BOM}${scoped}`);
+      try {
+        const dry = await f.call(surface, { text, dryRun: true });
+        expect(dry.ok).toBe(true);
+        const preview = dry.ok ? (dry.data as Record<string, never>) : {};
+        const [{ diff }] = preview.diff as { path: string; diff: string }[];
+        expect(diff).toMatch(/^\+poptag #qa-trip$/m);
+        expect(diff).toMatch(/^\+pushtag #qa-trip$/m);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+
+        const result = await f.call(surface, { text });
+        expect(result.ok).toBe(true);
+        const data = result.ok ? (result.data as Record<string, never>) : {};
+        const written = f.state.files.get("main.bean")!;
+        expect(written).toBe(
+          [
+            `${BOM}pushtag #qa-trip`,
+            txn("2026-09-02", "scoped A"),
+            "",
+            "poptag #qa-trip",
+            txn("2026-09-03", "appended"),
+            "pushtag #qa-trip",
+            "",
+            txn("2026-09-05", "scoped B"),
+            "poptag #qa-trip",
+            "",
+          ].join("\n"),
+        );
+        const lines = written.split("\n");
+        expect(
+          (data.wrote as { line: number }[]).map(({ line }) => lines[line - 1]),
+        ).toEqual(['2026-09-03 * "qa payee" "appended"']);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("puts an entry dated before line 1's entry above it on preview and commit", async () => {
+      const file = [
+        txn("2026-09-10", "ten"),
+        "",
+        txn("2026-09-20", "twenty"),
+        "",
+      ].join("\n");
+      const text = `${txn("2026-09-08", "eight")}\n`;
+      const f = await fixture();
+      f.state.files.set("main.bean", `${BOM}${file}`);
+      try {
+        const dry = await f.call(surface, { text, dryRun: true });
+        expect(dry.ok).toBe(true);
+        const preview = dry.ok ? (dry.data as Record<string, never>) : {};
+        expect(preview.appendedUnsorted).toEqual([]);
+        const [{ diff }] = preview.diff as { path: string; diff: string }[];
+        // The mark stays the file's first character, so line 1 shows as
+        // changed: the new entry takes the mark, and the old line 1 moves down.
+        expect(
+          diff.indexOf(`+${BOM}2026-09-08 * "qa payee" "eight"`),
+        ).toBeGreaterThan(-1);
+        expect(
+          diff.indexOf(`+${BOM}2026-09-08 * "qa payee" "eight"`),
+        ).toBeLessThan(diff.indexOf('+2026-09-10 * "qa payee" "ten"'));
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+
+        const result = await f.call(surface, { text });
+        expect(result.ok).toBe(true);
+        const data = result.ok ? (result.data as Record<string, never>) : {};
+        expect(data.appendedUnsorted).toEqual([]);
+        expect(data.wrote).toEqual([{ path: "main.bean", line: 1 }]);
+        const written = f.state.files.get("main.bean")!;
+        expect(
+          written.startsWith(`${BOM}2026-09-08 * "qa payee" "eight"`),
+        ).toBe(true);
+        expect(written.slice(BOM.length).indexOf(BOM)).toBe(-1);
+        expect(written.indexOf('2026-09-08 * "qa payee" "eight"')).toBeLessThan(
+          written.indexOf('2026-09-10 * "qa payee" "ten"'),
+        );
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);

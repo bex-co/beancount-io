@@ -100,6 +100,36 @@ describe("scanIncludeLines over lines Beancount skips (w31/099)", () => {
   );
 });
 
+// w31/100: the engine reads a file past a leading byte-order mark, so line 1
+// behind one is read as written, and the mark survives every rewrite.
+describe("scanIncludeLines behind a byte-order mark (w31/100)", () => {
+  it("finds the include after a first-line odd-quote # line", () => {
+    const content = '\uFEFF# a 5" ruler\ninclude "a.bean"\n';
+    expect(
+      scanIncludeLines(content)
+        .filter((entry) => entry.include !== null)
+        .map((entry) => [entry.index, entry.include!.target]),
+    ).toEqual([[1, "a.bean"]]);
+    expect(addIncludeLines(content, ["b.bean"])).toBe(
+      '\uFEFF# a 5" ruler\ninclude "a.bean"\ninclude "b.bean"\n',
+    );
+  });
+
+  it("keeps the mark on a first-line include's line and its rewrite", () => {
+    const content = '\uFEFFinclude "a.bean"\ninclude "b.bean"';
+    const scanned = scanIncludeLines(content);
+    expect(scanned.map((entry) => entry.include?.target)).toEqual([
+      "a.bean",
+      "b.bean",
+    ]);
+    expect(scanned.map((entry) => entry.line).join("\n")).toBe(content);
+    expect(scanned[0]!.include!.prefix).toBe("\uFEFFinclude ");
+    expect(formatIncludeLine(scanned[0]!.include!, "c.bean")).toBe(
+      '\uFEFFinclude "c.bean"',
+    );
+  });
+});
+
 describe("include targets", () => {
   it.each([
     ["main.bean", "x.bean", "x.bean"],

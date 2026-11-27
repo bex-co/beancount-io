@@ -136,6 +136,49 @@ describe("renameAccountInText (w1/m43)", () => {
     },
   );
 
+  // w31/100: the engine reads a file past a leading byte-order mark, so a `#`
+  // line 1 behind one is still a comment, and the mark is kept.
+  it.each([
+    ["without a quote", ""],
+    ["with an unmatched quote", ' 5"'],
+  ])(
+    "leaves a first-line # comment %s behind a byte-order mark alone (w31/100)",
+    (_case, quote) => {
+      const body = [
+        `# Assets:Bank:Checking is the petty cash box${quote}`,
+        "2026-08-30 open Assets:Bank:Checking USD",
+        '2026-08-31 * "payee" "paid from Assets:Bank:Checking"',
+        "  Expenses:Coffee    1.00 USD",
+        "  Assets:Bank:Checking   -1.00 USD",
+        "",
+      ].join("\n");
+      const plain = renameAccountInText(body, FROM, TO);
+      const { text, changes } = renameAccountInText(`\uFEFF${body}`, FROM, TO);
+      expect(changes).toEqual(plain.changes);
+      expect(changes.map((change) => change.line)).toEqual([2, 5]);
+      expect(text).toBe(`\uFEFF${plain.text}`);
+      expect(text.split("\n")[0]).toBe(
+        `\uFEFF# Assets:Bank:Checking is the petty cash box${quote}`,
+      );
+    },
+  );
+
+  it("renames on line 1 behind a byte-order mark and reports the line without it (w31/100)", () => {
+    const { text, changes } = renameAccountInText(
+      "\uFEFF2026-01-01 open Assets:Bank:Checking\n",
+      FROM,
+      TO,
+    );
+    expect(text).toBe("\uFEFF2026-01-01 open Assets:Bank:Main\n");
+    expect(changes).toEqual([
+      {
+        line: 1,
+        before: "2026-01-01 open Assets:Bank:Checking",
+        after: "2026-01-01 open Assets:Bank:Main",
+      },
+    ]);
+  });
+
   it("keeps CRLF line endings and a final line without a newline", () => {
     const source =
       "2026-01-01 open Assets:Bank:Checking\r\n2026-01-02 close Assets:Bank:Checking";

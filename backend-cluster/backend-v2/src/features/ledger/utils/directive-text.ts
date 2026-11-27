@@ -1,4 +1,5 @@
 import { BadUserInputError } from "@/shared/errors";
+import { splitByteOrderMark } from "./byte-order-mark";
 import { isSkippedLine } from "./skipped-line";
 
 /**
@@ -451,11 +452,15 @@ export function insertDirectives(
   existing: string,
   directives: readonly ParsedDirective[],
 ): InsertionResult {
+  // Read past a leading byte-order mark, as the engine does: in front of
+  // line 1 it hid that line's `pushtag` or date, so an entry was threaded
+  // into the file's scope or out of date order (w31/100). It is written back.
+  const { bom, text } = splitByteOrderMark(existing);
   // A Windows-authored file keeps CRLF: rejoining with LF rewrote every line,
   // so each append was a whole-file diff (w1/197). Detected as the ledger
   // service's own appends and edits detect it (w21/673, w21/252).
-  const eol = lineEndingOf(existing);
-  const normalized = existing.replace(/\r\n?/g, "\n");
+  const eol = lineEndingOf(text);
+  const normalized = text.replace(/\r\n?/g, "\n");
   const lines = normalized === "" ? [] : normalized.split("\n");
 
   // Where each existing directive starts, and on what date.
@@ -518,7 +523,7 @@ export function insertDirectives(
     inserted.push({ line: at + prefix.length + open.length + 1 });
   }
 
-  const content = `${working.join(eol).replace(/(?:\r?\n)+$/, "")}${eol}`;
+  const content = `${bom}${working.join(eol).replace(/(?:\r?\n)+$/, "")}${eol}`;
   return { content, inserted, appended: !sorted };
 }
 

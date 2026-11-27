@@ -1,5 +1,6 @@
 import { posix } from "path";
 import { BadUserInputError } from "@/shared/errors";
+import { splitByteOrderMark } from "./byte-order-mark";
 import { isSkippedLine } from "./skipped-line";
 
 /**
@@ -74,15 +75,24 @@ interface ScannedIncludeLine {
 /**
  * Walk `content` line by line while tracking Beancount multiline string state,
  * so lines that start inside an open `"..."` string never produce an `include`
- * directive (w31/097).
+ * directive (w31/097). Line 1 is read past a leading byte-order mark, as the
+ * engine reads it (w31/100); the mark stays at the front of that line and of
+ * its include's `prefix`, so joining the lines or rewriting the include keeps
+ * the file's bytes.
  */
 export function scanIncludeLines(content: string): ScannedIncludeLine[] {
-  const lines = content.split("\n");
+  const { bom, text } = splitByteOrderMark(content);
+  const lines = text.split("\n");
   let inString = false;
   return lines.map((line, index) => {
     const include = inString ? null : parseIncludeLine(line);
     inString = endsInsideString(line, inString);
-    return { line, index, include };
+    if (index > 0 || !bom) return { line, index, include };
+    return {
+      line: bom + line,
+      index,
+      include: include && { ...include, prefix: bom + include.prefix },
+    };
   });
 }
 

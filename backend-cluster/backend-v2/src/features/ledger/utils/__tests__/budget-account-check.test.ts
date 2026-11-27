@@ -82,6 +82,30 @@ describe("extractSingleBudgetAccount", () => {
     },
   );
 
+  // w31/100: the engine reads text past a leading byte-order mark, so a `#`
+  // line 1 behind one is still skipped.
+  it.each([
+    ["without a quote", ""],
+    ["with an unmatched quote", ' "q'],
+  ])(
+    "finds a budget under a first-line # line %s behind a byte-order mark (w31/100)",
+    (_case, quote) => {
+      expect(
+        extractSingleBudgetAccount(
+          `\uFEFF# a${quote}\n2026-02-10 custom "budget" Expenses:Nope "monthly" 100 USD\n`,
+        ),
+      ).toBe("Expenses:Nope");
+    },
+  );
+
+  it("finds a first-line budget behind a byte-order mark (w31/100)", () => {
+    expect(
+      extractSingleBudgetAccount(
+        '\uFEFF2026-02-10 custom "budget" Expenses:Nope "monthly" 100 USD',
+      ),
+    ).toBe("Expenses:Nope");
+  });
+
   it("returns undefined for non-budget directives and non-account tokens", () => {
     expect(
       extractSingleBudgetAccount('2026-02-10 * "Cafe"\n  Expenses:Food 5 USD'),

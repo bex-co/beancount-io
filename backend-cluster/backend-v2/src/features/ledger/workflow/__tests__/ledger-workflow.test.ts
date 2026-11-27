@@ -2217,6 +2217,73 @@ describe("LedgerWorkflow", () => {
       expect(result).toEqual({ path: "second.bean", commit: "c0mm1t5ha" });
     });
 
+    // w31/100: an includer that starts with a byte-order mark is read past it,
+    // as the engine reads it, and keeps it when the include is dropped.
+    it.each([
+      ["a first-line include", 'include "second.bean"\n; main\n', "; main\n"],
+      [
+        "an include after a first-line odd-quote # line",
+        '# a 5" ruler\ninclude "second.bean"\n',
+        '# a 5" ruler\n',
+      ],
+    ])(
+      "keeps the byte-order mark of an includer whose include it drops: %s",
+      async (_case, before, after) => {
+        const bom = Buffer.from([0xef, 0xbb, 0xbf]);
+        const bytes = (text: string) =>
+          Buffer.concat([bom, Buffer.from(text, "utf-8")]).toString("base64");
+        mockFavaApiClient.ledgers.getLedgerDirContent.mockResolvedValue({
+          data: {
+            success: true,
+            data: [
+              { type: "file", path: "main.bean" },
+              { type: "file", path: "second.bean" },
+            ],
+          },
+        });
+        mockFavaApiClient.ledgers.getLedgerFilesContent.mockResolvedValue({
+          data: {
+            success: true,
+            data: [
+              {
+                path: "main.bean",
+                sha: BLOB_SHA_1,
+                content: bytes(before),
+                encoding: "base64",
+              },
+            ],
+          },
+        });
+        mockFavaApiClient.ledgers.changeLedgerFiles.mockResolvedValue({
+          data: { success: true, data: { commit: "c0mm1t5ha" } },
+        });
+
+        await workflow.deleteLedgerFile({
+          identity: IDENTITY,
+          ledgerId,
+          input: { path: "second.bean", sha: BLOB_SHA_1, removeIncludes: true },
+        });
+
+        expect(
+          mockFavaApiClient.ledgers.changeLedgerFiles,
+        ).toHaveBeenCalledWith("testuser", "test-ledger", {
+          files: [
+            { operation: "delete", path: "second.bean", sha: BLOB_SHA_1 },
+            {
+              operation: "update",
+              path: "main.bean",
+              content: bytes(after),
+              sha: BLOB_SHA_1,
+            },
+          ],
+          message: expect.any(String),
+        });
+        expect(
+          mockFavaApiClient.ledgers.deleteLedgerFile,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
     it("omits commit when changeLedgerFiles returns no commit for removeIncludes", async () => {
       mockFavaApiClient.ledgers.getLedgerDirContent.mockResolvedValue({
         data: {

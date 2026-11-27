@@ -1,4 +1,5 @@
 import { ACCOUNT_CHAR } from "./account-matcher";
+import { splitByteOrderMark } from "./byte-order-mark";
 import { isSkippedLine } from "./skipped-line";
 
 /**
@@ -11,7 +12,8 @@ import { isSkippedLine } from "./skipped-line";
  * Strings may span lines and hold `\"`; a `;` starts a comment to the end of
  * the line; a line Beancount skips whole (one starting with `*`, `#`, `:`,
  * `!`, `&`, `?` or `%`, see `isSkippedLine`) is a comment too, and a `"` on it
- * opens no string (w31/099). Line endings are kept byte for byte.
+ * opens no string (w31/099). Line 1 starts past a leading byte-order mark, as
+ * the engine reads it (w31/100). Line endings are kept byte for byte.
  */
 
 /** What the rename does, as REST, GraphQL and MCP describe it; each adds its own preview and undo names. */
@@ -42,8 +44,10 @@ function continuesName(text: string, j: number): boolean {
 /** Each position in `text` where an account token names `account` or one under it. */
 export function accountTokenOffsets(text: string, account: string): number[] {
   const offsets: number[] = [];
+  // Offsets stay positions in `text`, mark included, so a rewrite keeps it.
+  const start = splitByteOrderMark(text).bom.length;
   let inString = false;
-  for (let i = 0; i < text.length; i++) {
+  for (let i = start; i < text.length; i++) {
     const char = text[i];
     if (inString) {
       if (char === "\\") i++;
@@ -52,7 +56,7 @@ export function accountTokenOffsets(text: string, account: string): number[] {
       inString = true;
     } else if (
       char === ";" ||
-      ((i === 0 || text[i - 1] === "\n") && isSkippedLine(char))
+      ((i === start || text[i - 1] === "\n") && isSkippedLine(char))
     ) {
       const end = text.indexOf("\n", i);
       if (end === -1) break;
@@ -129,8 +133,9 @@ export function renameAccountAt(
     last = offset + from.length;
   }
   renamed += text.slice(last);
-  const before = text.split("\n");
-  const after = renamed.split("\n");
+  // Each changed line as the engine reads it: no byte-order mark on line 1.
+  const before = splitByteOrderMark(text).text.split("\n");
+  const after = splitByteOrderMark(renamed).text.split("\n");
   const changes = before.flatMap((line, index) =>
     line === after[index]
       ? []

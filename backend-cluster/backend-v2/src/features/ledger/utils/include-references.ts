@@ -16,6 +16,7 @@ import type { ILedgerDataService } from "@/features/ledger/service/ledger-data-s
 import { BadUserInputError } from "@/shared/errors";
 import { type FavaApiClient, unwrapFavaResponse } from "@/foundation/fava";
 import { operationNotAllowedFromCause } from "./operation-not-allowed-from-cause";
+import { splitByteOrderMark } from "./byte-order-mark";
 import {
   isGlobPattern,
   isUrlTarget,
@@ -237,13 +238,17 @@ export async function findDanglingDeleteIncluders(opts: {
   return dangling;
 }
 
-/** `content` without the exact `include` lines that resolve into `deleted`. */
+/**
+ * `content` without the exact `include` lines that resolve into `deleted`.
+ * A leading byte-order mark stays even when line 1 is one of them (w31/100).
+ */
 function stripIncludeLines(
   includerPath: string,
   content: string,
   deleted: ReadonlySet<string>,
 ): string {
-  return scanIncludeLines(content)
+  const { bom, text } = splitByteOrderMark(content);
+  const kept = scanIncludeLines(text)
     .filter(({ include }) => {
       if (!include || isUrlTarget(include.target)) return true;
       const resolved = resolveIncludeTarget(includerPath, include.target);
@@ -251,6 +256,7 @@ function stripIncludeLines(
     })
     .map(({ line }) => line)
     .join("\n");
+  return bom + kept;
 }
 
 export interface IncludeRemoval {
