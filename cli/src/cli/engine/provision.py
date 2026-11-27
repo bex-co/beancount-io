@@ -701,7 +701,11 @@ def _find_uv() -> str:
 #: What a failed install says last: the fix is network and uv, then a retry,
 #: not a manual Beancount install. Shared with `bea upgrade`, which appends
 #: the same line when its own engine refresh fails (w5/788).
-RETRY_ONCE_ONLINE = "Retry with a local command such as 'bea check' once the network and uv are available."
+RETRY_ONCE_ONLINE = (
+    "Retry with a local command such as 'bea check' once the network and uv are available; "
+    "if an agent's sandbox blocks the network, run it once in your own terminal. "
+    "Later commands reuse the installed engine offline."
+)
 
 
 def _run(command: list[str], *, failure: str) -> None:

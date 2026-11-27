@@ -28,7 +28,11 @@ INSTALLED_CONTEXT = (
 
 def test_failed_install_ends_with_the_retry_advice(tmp_path: Path) -> None:
     # Literal, not the shared constant: the wording itself is the contract.
-    retry = "Retry with a local command such as 'bea check' once the network and uv are available."
+    retry = (
+        "Retry with a local command such as 'bea check' once the network and uv are available; "
+        "if an agent's sandbox blocks the network, run it once in your own terminal. "
+        "Later commands reuse the installed engine offline."
+    )
 
     (tmp_path / "main.bean").write_text(LEDGER)
     shim = tmp_path / "uv"
