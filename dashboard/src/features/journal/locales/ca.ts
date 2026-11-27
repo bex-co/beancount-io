@@ -683,6 +683,12 @@ const caJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because a posting line is not indented under the date line",
   },
+  "journal.entryRefusal.dashedDate": {
+    message:
+      "Escriviu la data com a {date}. És la mateixa data, en la forma que desa aquest editor.",
+    description:
+      "Entry Context save refused because the entry's date is written another way Beancount reads, such as 2026/08/25 or 2026-8-25; {date} is the same date as YYYY-MM-DD",
+  },
   "journal.entryRefusal.notAnEntry": {
     message:
       "Les línies «{keyword}» configuren el llibre i van al fitxer, no en un apunt.",

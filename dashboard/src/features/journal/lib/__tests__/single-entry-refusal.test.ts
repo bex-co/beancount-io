@@ -31,6 +31,21 @@ describe("getSingleEntryRefusal", () => {
       "newContent must be one dated directive: Assets:Cash  -23.50 USD",
       { key: "journal.entryRefusal.indentPostings" },
     ],
+    // w31/110: a slash-dated or unpadded entry's own date, kept in an edit.
+    [
+      "newContent dates its entry 2026/08/25; an entry edit takes YYYY-MM-DD: write 2026/08/25 as 2026-08-25",
+      {
+        key: "journal.entryRefusal.dashedDate",
+        params: { date: "2026-08-25" },
+      },
+    ],
+    [
+      "newContent dates its entry 2026-8-5; an entry edit takes YYYY-MM-DD: write 2026-8-5 as 2026-08-05",
+      {
+        key: "journal.entryRefusal.dashedDate",
+        params: { date: "2026-08-05" },
+      },
+    ],
     [
       '`plugin` configures the ledger and is not an entry; change it with updateLedgerFiles: plugin "beancount.plugins.auto"',
       { key: "journal.entryRefusal.notAnEntry", params: { keyword: "plugin" } },

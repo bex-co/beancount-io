@@ -638,6 +638,12 @@ const koJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because a posting line is not indented under the date line",
   },
+  "journal.entryRefusal.dashedDate": {
+    message:
+      "날짜를 {date} 형식으로 쓰세요. 같은 날짜를 이 편집기가 저장하는 형식으로 쓴 것입니다.",
+    description:
+      "Entry Context save refused because the entry's date is written another way Beancount reads, such as 2026/08/25 or 2026-8-25; {date} is the same date as YYYY-MM-DD",
+  },
   "journal.entryRefusal.notAnEntry": {
     message:
       "“{keyword}” 줄은 장부를 설정하는 줄이므로 항목이 아니라 파일에 둡니다.",

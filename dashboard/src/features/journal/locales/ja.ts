@@ -639,6 +639,12 @@ const jaJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because a posting line is not indented under the date line",
   },
+  "journal.entryRefusal.dashedDate": {
+    message:
+      "日付を {date} と書いてください。同じ日付を、このエディターが保存する形式で書いたものです。",
+    description:
+      "Entry Context save refused because the entry's date is written another way Beancount reads, such as 2026/08/25 or 2026-8-25; {date} is the same date as YYYY-MM-DD",
+  },
   "journal.entryRefusal.notAnEntry": {
     message:
       "「{keyword}」行は台帳を設定するもので、仕訳ではなくファイルに記述します。",

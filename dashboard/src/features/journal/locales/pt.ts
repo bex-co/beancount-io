@@ -683,6 +683,12 @@ const ptJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because a posting line is not indented under the date line",
   },
+  "journal.entryRefusal.dashedDate": {
+    message:
+      "Escreva a data como {date}. É a mesma data, no formato que este editor salva.",
+    description:
+      "Entry Context save refused because the entry's date is written another way Beancount reads, such as 2026/08/25 or 2026-8-25; {date} is the same date as YYYY-MM-DD",
+  },
   "journal.entryRefusal.notAnEntry": {
     message:
       "Linhas “{keyword}” configuram o livro e ficam no arquivo, não em um lançamento.",

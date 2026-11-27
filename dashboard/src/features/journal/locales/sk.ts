@@ -703,6 +703,12 @@ const skJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because a posting line is not indented under the date line",
   },
+  "journal.entryRefusal.dashedDate": {
+    message:
+      "Zapíšte dátum ako {date}. Je to ten istý dátum v tvare, v akom ho tento editor ukladá.",
+    description:
+      "Entry Context save refused because the entry's date is written another way Beancount reads, such as 2026/08/25 or 2026-8-25; {date} is the same date as YYYY-MM-DD",
+  },
   "journal.entryRefusal.notAnEntry": {
     message:
       "Riadky „{keyword}“ nastavujú knihu a patria do súboru, nie do záznamu.",

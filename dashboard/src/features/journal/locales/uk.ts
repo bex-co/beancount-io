@@ -703,6 +703,12 @@ const ukJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because a posting line is not indented under the date line",
   },
+  "journal.entryRefusal.dashedDate": {
+    message:
+      "Запишіть дату як {date}. Це та сама дата у вигляді, у якому її зберігає редактор.",
+    description:
+      "Entry Context save refused because the entry's date is written another way Beancount reads, such as 2026/08/25 or 2026-8-25; {date} is the same date as YYYY-MM-DD",
+  },
   "journal.entryRefusal.notAnEntry": {
     message:
       "Рядки «{keyword}» налаштовують книгу й мають бути у файлі, а не в записі.",
