@@ -41,7 +41,7 @@ This skill exists because a fluent-but-unverifiable answer about money is worse 
 
 ## Prefer `bea`
 
-Read beancount-init's `references/bea-cli.md` (from this skill's folder, `../beancount-init/references/bea-cli.md`; a copy at `references/bea-cli.md` when this skill was installed alone) before running ledger commands: it binds the root ledger, lists the read recipes, explains valuation and missing prices, and records version notes. Without `bea`, use beancount-init's `references/compatibility.md`. Run the queries yourself: `bea ask` hands the question to another model, and its figures are not queries you can show.
+Read beancount-init's `references/bea-cli.md` (from this skill's folder, `../beancount-init/references/bea-cli.md`; a copy at `references/bea-cli.md` when this skill was installed alone) before running ledger commands: it binds the root ledger, lists the read recipes, explains valuation and missing prices, and records version notes. Without `bea`, use beancount-init's `references/compatibility.md`; an installed `bea` that fails is reported with its repair step and the question stops there (`bea-cli.md`, When the installed `bea` fails), never answered through `bean-query`. Run the queries yourself: `bea ask` hands the question to another model, and its figures are not queries you can show.
 
 ## Scope
 

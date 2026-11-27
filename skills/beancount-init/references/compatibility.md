@@ -1,7 +1,12 @@
 # Explicit compatibility paths
 
 Use these only when `bea` is absent, or for the separate runtimes below.
-An installed but failing `bea` is repaired, not swapped for another engine.
+An installed but failing `bea` is repaired, not swapped for another engine: a
+`bea` that is too old, cannot install its engine, or has no temporary directory
+is still installed, so the developer paths below do not apply. Show its error
+and the repair step from `bea-cli.md` beside this file (When the installed
+`bea` fails) and stop; never answer with another `bea`, a checkout found on
+disk, or `bean-query`.
 When `bea` is missing, suggest installing it rather than `pip install beancount` or `pip install beanquery`.
 
 ## Existing developer tools without `bea`

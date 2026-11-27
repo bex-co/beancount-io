@@ -7,15 +7,14 @@ Use only the recipes its current workflow needs. `--no-input` suppresses CLI
 prompts; the skill's proposal and conversational confirmation still apply.
 Check that `bea` is on PATH (`command -v bea`; PowerShell `Get-Command bea`) and run `bea --version` once. The suite needs `bea` 0.3.1
 or later. If it is absent, suggest `brew install bex-co/tap/bea` or
-`uv tool install beancount-io`; if it is older, suggest `bea upgrade`. The
-explicit developer fallback is in beancount-init's `references/compatibility.md`.
+`uv tool install beancount-io`. The explicit developer fallback in
+beancount-init's `references/compatibility.md` is for an absent `bea` only.
 Behavior that depends on the `bea` version is listed under [Version notes](#version-notes).
-If an installed `bea` cannot run its managed engine — provisioning fails, or
-the error names the engine rather than the ledger — surface that error and
-repair/retry the engine. A nonzero exit carrying bea's JSON error envelope (an
-invalid ledger, missing prices, a bad argument) is bea's answer about the
-ledger or the request: act on its `message`, `details` and `result`, not on
-the engine. Do not install another Beancount CLI or configure private engine paths.
+A nonzero exit carrying bea's JSON error envelope (an invalid ledger, missing
+prices, a bad argument) is bea's answer about the ledger or the request: act
+on its `message`, `details` and `result`, not on the engine. When the installed
+`bea` itself cannot serve the command, follow
+[When the installed `bea` fails](#when-the-installed-bea-fails).
 
 In a workspace sandbox, `bea` also needs a writable cache for its ledger
 locks. If the default cache is outside the writable workspace, set
@@ -25,6 +24,31 @@ locks. If the default cache is outside the writable workspace, set
 out of version control. On a permission failure, inspect the reported result
 and existing entries before retrying; a cache setting does not authorize a
 different ledger, an unchecked write, or a broader sandbox.
+
+## When the installed `bea` fails
+
+The `bea` on PATH is the user's. When it is too old for the command, or cannot
+run its managed engine (provisioning fails, or the error names the engine or
+the machine rather than the ledger), show the error and the one step that
+repairs it, then stop the workflow:
+
+- **Too old** (`No such option`, an unknown command, or a version below what
+  the workflow needs): `bea upgrade`.
+- **The engine cannot install** (`Could not install the hash-pinned engine
+  packages`, `uv exited …`), most often in an agent sandbox without network:
+  the user runs `bea --file "$ledger" check` once in their own terminal. The
+  engine downloads once; later commands reuse it offline.
+- **No usable temporary directory** in a read-only sandbox: rerun in a sandbox
+  that allows scratch files while the ledger stays read-only (for Codex, the
+  scratch-only permission profile in the suite's first-query guide).
+- **Any other engine failure:** retry once; if it fails again, show it and stop.
+
+Never work around the failure. Do not run another `bea` (an older install, a
+development checkout, a copy found on disk), the engine's own `bean-query`,
+`bean-check` or Python, or a global `bean-*` tool; do not install another
+Beancount CLI or configure private engine paths. The `AGENTS.md` and
+`CLAUDE.md` that `bea` writes are its output: never edit them, least of all to
+record a workaround. Resume when the user says the repair is done.
 
 ## Hosted ledgers
 

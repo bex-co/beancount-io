@@ -247,7 +247,9 @@ Keep the report tight — one short line per item.
 ## Existing ledger
 
 For books the user already keeps. Read-only on the ledger: only `AGENTS.md`
-and `CLAUDE.md` may be created, and only when absent.
+and `CLAUDE.md` may be created, only when absent, and only by `bea`. They are
+its output: never edit them afterwards. If `bea` fails at any step, follow
+`references/bea-cli.md` (When the installed `bea` fails) and stop.
 
 1. **Root.** The ledger's root is the file that includes the others. Use the
    one the user names. Otherwise `bea init --existing` finds it in a folder
