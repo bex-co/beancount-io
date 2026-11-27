@@ -556,6 +556,27 @@ describe("a malformed resource URI", () => {
       await close();
     }
   });
+
+  // w31/142: commas are encoded before the SDK matcher for simple path
+  // variables; `{+path}` already took them, and still reads the same file.
+  it.each(["a,b.beancount", "a%2Cb.beancount"])(
+    "reads files/%s as the file a,b.beancount",
+    async (path) => {
+      const getFilesContent = contentOf("a,b.beancount", "comma path ok");
+      const { client, close } = await connect(ctx(getFilesContent));
+      try {
+        const file = await client.readResource({
+          uri: `${RESOURCE_SCHEME}://alice/main/files/${path}`,
+        });
+        expect(file.contents[0]).toMatchObject({ text: "comma path ok" });
+        expect(getFilesContent).toHaveBeenCalledWith(
+          expect.objectContaining({ paths: ["a,b.beancount"] }),
+        );
+      } finally {
+        await close();
+      }
+    },
+  );
 });
 
 /**
@@ -732,6 +753,9 @@ describe("an unmatched resource URI", () => {
     // Shaped like a template but registered as none of them; this is the URI
     // the prompt-list guard was written for.
     `${RESOURCE_SCHEME}://alice/main/bank/list`,
+    // A raw comma is now part of a path value (w31/142); a URI that still
+    // matches no template keeps its NOT_FOUND.
+    `${RESOURCE_SCHEME}://alice/main/nosuch/No,Such`,
   ];
 
   it.each(unmatched)("answers %s as a coded, hinted NOT_FOUND", async (uri) => {

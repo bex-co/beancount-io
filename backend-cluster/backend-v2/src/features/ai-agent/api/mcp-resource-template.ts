@@ -42,7 +42,12 @@ export class QueryResourceTemplate extends UriTemplate {
 
   override match(uri: string): Variables | null {
     const url = new URL(uri);
-    const path = uri.split("?")[0].split("#")[0];
+    // The SDK matches a simple `{var}` as `([^/,]+)`, because RFC 6570
+    // separates list values with commas. No template here takes a list, so a
+    // raw comma (`payee-transactions/Acme, Inc.`) is part of the value, as it
+    // is in REST's query; encoded here, the decode below turns it back into
+    // `,` (w31/142).
+    const path = uri.split("?")[0].split("#")[0].replace(/,/g, "%2C");
     let variables: Variables | null = null;
     for (const template of this.pathTemplates) {
       variables = template.match(path);

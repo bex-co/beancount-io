@@ -443,6 +443,63 @@ describe("report query validation", () => {
   );
 });
 
+/**
+ * w31/142. The SDK matches a simple `{var}` as `([^/,]+)`, because RFC 6570
+ * separates list values with commas, so a raw comma in a payee ended the
+ * variable early, matched no template, and the catch-all answered NOT_FOUND
+ * — while REST took the same comma in its query. No template here takes a
+ * list, so a raw comma and `%2C` read the same value REST reads.
+ */
+describe("a raw comma in a resource path value (w31/142)", () => {
+  it.each([
+    ["payee-transactions", "getPayeeTransactions", "payee", "Acme, Inc."],
+    ["payee-accounts", "getPayeeAccounts", "payee", "Smith, John"],
+    [
+      "narration-transactions",
+      "getNarrationTransactions",
+      "narration",
+      "Transit,pass",
+    ],
+  ] as const)(
+    "%s reads a raw comma as %%2C and REST do",
+    async (segment, method, name, value) => {
+      const services = fakeServices();
+      const context = ctx(services);
+      const rest = await startV1TestServer(
+        { services } as unknown as AppLayers,
+        config,
+        { apiKeys: false },
+      );
+      rest.setIdentity(context.identity);
+      const { client, close } = await connect(context);
+      const raw = value.replace(/ /g, "%20");
+      try {
+        const response = await fetch(
+          `${rest.url}/api-gateway/v1/ledgers/alice/main/${segment}?${name}=${raw}`,
+        );
+        expect(response.status).toBe(200);
+        const viaRest: unknown = await response.json();
+        for (const path of [raw, encodeURIComponent(value)]) {
+          const result = await client.readResource({
+            uri: `${RESOURCE_SCHEME}://alice/main/${segment}/${path}`,
+          });
+          const content = result.contents[0];
+          if (!("text" in content)) throw new Error("Expected JSON");
+          expect(JSON.parse(content.text)).toEqual(viaRest);
+        }
+        const calls = services.ledgerData[method].mock.calls;
+        expect(calls).toHaveLength(3);
+        for (const [args] of calls) {
+          expect(args).toMatchObject({ ledgerId: LEDGER, [name]: value });
+        }
+      } finally {
+        await close();
+        await rest.close();
+      }
+    },
+  );
+});
+
 describe("account-report and interval-totals blank accountName parity (w31/040, w31/045)", () => {
   let resolvers: Map<unknown, object>;
   let schemaPromise: ReturnType<typeof buildSchema> | undefined;
