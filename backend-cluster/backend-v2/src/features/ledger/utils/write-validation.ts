@@ -115,14 +115,9 @@ async function projectedWriteValidation(
 ): Promise<WriteValidation> {
   try {
     // `allowInvalid`: a preview returns the new errors, it never refuses.
-    return await gateFileWrite(
-      services,
-      identity,
-      ledgerId,
-      overlays,
-      true,
+    return await gateFileWrite(services, identity, ledgerId, overlays, true, {
       renames,
-    );
+    });
   } catch (error) {
     validationLogger.warn("Projected bean-check failed", {
       ledgerId,

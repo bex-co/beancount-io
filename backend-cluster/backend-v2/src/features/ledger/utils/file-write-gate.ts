@@ -2,11 +2,13 @@ import { NewLedgerErrorsError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import type { ILedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
 import {
+  atCurrentLines,
   checkFailureMessage,
   hasParseError,
   toBeanCheckErrors,
   toWriteValidation,
   type BeanCheckError,
+  type DroppedLines,
   type FileRenames,
   type WriteValidation,
 } from "./bean-check-errors";
@@ -21,11 +23,10 @@ import {
  * the commit can report it.
  */
 function assertFileWriteValid(
-  validation: WriteValidation,
+  { newErrors }: WriteValidation,
   allowInvalid: boolean,
-): WriteValidation {
-  const { newErrors } = validation;
-  if (allowInvalid || newErrors.length === 0) return validation;
+): void {
+  if (allowInvalid || newErrors.length === 0) return;
   const detail = newErrors
     .map((error) =>
       error.source ? `${error.message} (${error.source})` : error.message,
@@ -76,6 +77,11 @@ export interface FileWriteGateServices {
  * that cannot be read cannot tell an error the write adds from one the ledger
  * already had, so the verdict says it was not checked and why, as the
  * post-write verdict does (w23/031), and nothing is refused on it (w23/233).
+ *
+ * Given the lines the write drops (`droppedLines`), a refusal or a `dryRun`
+ * names each new error at its line in the file as it stands, since neither
+ * commits (w31/102). A commit's verdict keeps the line after the write, where
+ * the error then lives, as its post-write read reports it.
  */
 export async function gateFileWrite(
   services: FileWriteGateServices,
@@ -83,7 +89,15 @@ export async function gateFileWrite(
   ledgerId: string,
   overlays: FileOverlay[],
   allowInvalid: boolean,
-  renames?: FileRenames,
+  {
+    renames,
+    droppedLines,
+    dryRun = false,
+  }: {
+    renames?: FileRenames;
+    droppedLines?: DroppedLines;
+    dryRun?: boolean;
+  } = {},
 ): Promise<WriteValidation> {
   const getErrors = services.ledgerData?.getErrors;
   const readBaseline = async (): Promise<
@@ -117,11 +131,19 @@ export async function gateFileWrite(
       checkError: before.failure,
     };
   }
-  const projected = toBeanCheckErrors(projectedErrors);
-  return assertFileWriteValid(
-    toWriteValidation(before.errors, projected, renames),
-    allowInvalid,
+  const projection = toWriteValidation(
+    before.errors,
+    toBeanCheckErrors(projectedErrors),
+    renames,
   );
+  const current = droppedLines
+    ? {
+        ...projection,
+        newErrors: atCurrentLines(projection.newErrors, droppedLines),
+      }
+    : projection;
+  assertFileWriteValid(current, allowInvalid);
+  return dryRun ? current : projection;
 }
 
 const LEDGER_FILE = /\.(bean|beancount)$/u;

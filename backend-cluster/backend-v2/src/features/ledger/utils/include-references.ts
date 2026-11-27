@@ -239,30 +239,39 @@ export async function findDanglingDeleteIncluders(opts: {
 }
 
 /**
- * `content` without the exact `include` lines that resolve into `deleted`.
- * A leading byte-order mark stays even when line 1 is one of them (w31/100).
+ * `content` without the exact `include` lines that resolve into `deleted`,
+ * and the 1-based lines it dropped. A leading byte-order mark stays even when
+ * line 1 is one of them (w31/100).
  */
 function stripIncludeLines(
   includerPath: string,
   content: string,
   deleted: ReadonlySet<string>,
-): string {
+): { content: string; droppedLines: number[] } {
   const { bom, text } = splitByteOrderMark(content);
-  const kept = scanIncludeLines(text)
-    .filter(({ include }) => {
-      if (!include || isUrlTarget(include.target)) return true;
-      const resolved = resolveIncludeTarget(includerPath, include.target);
-      return isGlobPattern(resolved) || !deleted.has(resolved);
-    })
-    .map(({ line }) => line)
-    .join("\n");
-  return bom + kept;
+  const kept: string[] = [];
+  const droppedLines: number[] = [];
+  for (const { line, index, include } of scanIncludeLines(text)) {
+    const resolved =
+      include && !isUrlTarget(include.target)
+        ? resolveIncludeTarget(includerPath, include.target)
+        : undefined;
+    if (resolved && !isGlobPattern(resolved) && deleted.has(resolved))
+      droppedLines.push(index + 1);
+    else kept.push(line);
+  }
+  return { content: bom + kept.join("\n"), droppedLines };
 }
 
 export interface IncludeRemoval {
   path: string;
   /** The includer's new plain UTF-8 text, the exact include lines dropped. */
   content: string;
+  /**
+   * The lines dropped, 1-based in the file as it stands, ascending: what maps
+   * a new error in the rewritten text back to the caller's line (w31/102).
+   */
+  droppedLines: number[];
   sha?: string;
 }
 
@@ -295,7 +304,7 @@ export async function planIncludeRemovals(opts: {
     );
     return {
       path: file.path,
-      content: stripIncludeLines(file.path, decoded.content, deleted),
+      ...stripIncludeLines(file.path, decoded.content, deleted),
       ...(file.sha ? { sha: file.sha } : {}),
     };
   });

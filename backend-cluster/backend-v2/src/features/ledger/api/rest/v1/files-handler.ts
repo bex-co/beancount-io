@@ -378,6 +378,13 @@ export const FILE_ROUTES = [
             { primary: body.allow_invalid, legacy: body.allowInvalid },
             ALLOW_INVALID_NAMES,
           ),
+        {
+          // Name each new error at the includer's line as it stands (w31/102).
+          droppedLines: new Map(
+            removals.map(({ path, droppedLines }) => [path, droppedLines]),
+          ),
+          dryRun,
+        },
       );
       const committed = dryRun
         ? {}

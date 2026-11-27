@@ -66,3 +66,48 @@ describe("gateFileWrite", () => {
     });
   });
 });
+
+// w31/102: a delete's removeIncludes rewrites the includer without its
+// include line, so bean-check names a line one above the one the caller has.
+describe("gateFileWrite with dropped lines", () => {
+  const never = {
+    message: "Account Assets:Gone was never opened",
+    source: { filename: "main.bean", lineno: 89 },
+  };
+  const above = {
+    message: "Account Assets:Above was never opened",
+    source: { filename: "main.bean", lineno: 3 },
+  };
+  const droppedLines = new Map([["main.bean", [7]]]);
+  const gate = (allowInvalid: boolean, dryRun?: boolean) =>
+    gateFileWrite(
+      services(async () => [], [never, above]),
+      identity,
+      "alice/main",
+      overlays,
+      allowInvalid,
+      { droppedLines, ...(dryRun !== undefined && { dryRun }) },
+    );
+
+  it("refuses naming each new error at its line in the file as it stands", async () => {
+    const refusal = gate(false);
+    await expect(refusal).rejects.toBeInstanceOf(NewLedgerErrorsError);
+    await expect(refusal).rejects.toThrow(
+      "Account Assets:Gone was never opened (main.bean:90); Account Assets:Above was never opened (main.bean:3)",
+    );
+  });
+
+  it("previews the same lines", async () => {
+    expect((await gate(true, true)).newErrors).toEqual([
+      { message: never.message, source: "main.bean:90" },
+      { message: above.message, source: "main.bean:3" },
+    ]);
+  });
+
+  it("keeps the line after the write on a commit it lets through", async () => {
+    expect((await gate(true)).newErrors).toEqual([
+      { message: never.message, source: "main.bean:89" },
+      { message: above.message, source: "main.bean:3" },
+    ]);
+  });
+});

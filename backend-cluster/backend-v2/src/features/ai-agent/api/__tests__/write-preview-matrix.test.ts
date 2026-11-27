@@ -115,7 +115,15 @@ const WRITE_PREVIEW_RULES: Record<string, Entry> = {
   },
   deleteLedgerFiles: {
     kind: "projection",
-    proofs: FILE_PARITY,
+    proofs: [
+      ...FILE_PARITY,
+      // A preview and a refusal name the line the caller has when
+      // `remove_includes` drops include lines above it (w31/102).
+      {
+        file: "ai-agent/api/__tests__/include-removal-lines-parity.test.ts",
+        test: "a removeIncludes delete names new errors at the current line via %s (w31/102)",
+      },
+    ],
     differential: DIFFERENTIAL_CASE,
   },
   updateEntrySource: {

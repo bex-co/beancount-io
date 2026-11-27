@@ -448,6 +448,9 @@ export async function executeEditLedgerFiles(
           assertBlobShaFormat(file.sha);
         }
       }
+      // The include lines a rewrite below drops, so the gate can name each
+      // new error at the line the caller has (w31/102).
+      const droppedLines = new Map<string, number[]>();
       if (options.removeIncludes) {
         // The deletes' exact include lines go in the same commit, as
         // whole-file rewrites of each includer the batch does not change.
@@ -461,9 +464,10 @@ export async function executeEditLedgerFiles(
                 ...repoServiceFileAccess(services, ledgerId, identity),
                 deletedPaths: deleted,
               });
-        for (const { path, content } of removals) {
+        for (const { path, content, droppedLines: lines } of removals) {
           if (normalizedFiles.some((f) => f.path === path)) continue;
           normalizedFiles.push({ operation: "replace", path, content });
+          droppedLines.set(path, lines);
         }
       }
       const pathsToFetch = [
@@ -563,6 +567,7 @@ export async function executeEditLedgerFiles(
           ledgerId,
           overlays(),
           true,
+          { droppedLines, dryRun: true },
         );
         const notLoaded = await unloadedLedgerFiles(
           services,
@@ -607,6 +612,7 @@ export async function executeEditLedgerFiles(
         ledgerId,
         overlays(),
         allowInvalid,
+        { droppedLines },
       );
       const notLoaded = await unloadedLedgerFiles(
         services,

@@ -138,6 +138,33 @@ export type FileRenames = ReadonlyMap<string, string>;
 const NO_RENAMES: FileRenames = new Map();
 
 /**
+ * Lines a write drops from files it otherwise keeps, by path: 1-based in the
+ * file as it stands, ascending. A delete's `removeIncludes` drops include
+ * lines this way (w31/102).
+ */
+export type DroppedLines = ReadonlyMap<string, readonly number[]>;
+
+/**
+ * `errors` at their lines in the files as they stand. bean-check reads the
+ * rewritten text, where every line below a dropped one sits one higher, so
+ * `main.bean:89` named the blank line above the entry at 90 (w31/102). The
+ * ledger service maps a delete's cut entries back the same way (w5/1202).
+ */
+export function atCurrentLines(
+  errors: readonly BeanCheckError[],
+  dropped: DroppedLines,
+): BeanCheckError[] {
+  return errors.map((error) => {
+    const located = error.source?.match(/^(.+):(\d+)$/);
+    const lines = located && dropped.get(located[1]);
+    if (!located || !lines) return error;
+    let line = Number(located[2]);
+    for (const droppedLine of lines) if (droppedLine <= line) line += 1;
+    return { ...error, source: `${located[1]}:${line}` };
+  });
+}
+
+/**
  * Errors in `after` that `before` did not have, matched by message and file
  * but not line: a write that inserts or removes lines moves every error below
  * it without introducing one, and keying on `file:line` refused a valid append

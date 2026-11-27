@@ -1,4 +1,7 @@
-import { diffBeanCheckErrors } from "@/features/ledger/utils/bean-check-errors";
+import {
+  atCurrentLines,
+  diffBeanCheckErrors,
+} from "@/features/ledger/utils/bean-check-errors";
 
 const error = (message: string, source?: string) => ({
   message,
@@ -97,5 +100,79 @@ describe("diffBeanCheckErrors with renamed files", () => {
         renames,
       ),
     ).toEqual([]);
+  });
+});
+
+// w31/102: a delete's removeIncludes drops include lines, and bean-check
+// reports the rewritten file, one line higher below each dropped line.
+describe("atCurrentLines", () => {
+  const never = "Account Assets:Gone was never opened";
+
+  it("moves an error below a dropped line down to where it stands now", () => {
+    expect(
+      atCurrentLines(
+        [error(never, "main.bean:89")],
+        new Map([["main.bean", [7]]]),
+      ),
+    ).toEqual([error(never, "main.bean:90")]);
+  });
+
+  it("keeps an error above the dropped line where it is", () => {
+    expect(
+      atCurrentLines(
+        [error(never, "main.bean:5")],
+        new Map([["main.bean", [7]]]),
+      ),
+    ).toEqual([error(never, "main.bean:5")]);
+  });
+
+  it("moves an error past every dropped line at or above it", () => {
+    // Current file: 1 include, 2 entry, 3 include, 4 entry, 5 entry.
+    // Rewritten: 1 entry (was 2), 2 entry (was 4), 3 entry (was 5).
+    const dropped = new Map([["main.bean", [1, 3]]]);
+    expect(
+      atCurrentLines(
+        [
+          error(never, "main.bean:1"),
+          error(never, "main.bean:2"),
+          error(never, "main.bean:3"),
+        ],
+        dropped,
+      ),
+    ).toEqual([
+      error(never, "main.bean:2"),
+      error(never, "main.bean:4"),
+      error(never, "main.bean:5"),
+    ]);
+  });
+
+  it("moves an error that took a dropped line's place past it", () => {
+    // Dropping lines 3 and 4 leaves line 5 at 3.
+    expect(
+      atCurrentLines(
+        [error(never, "main.bean:3")],
+        new Map([["main.bean", [3, 4]]]),
+      ),
+    ).toEqual([error(never, "main.bean:5")]);
+  });
+
+  it("leaves errors in other files, and errors with no file, alone", () => {
+    const errors = [
+      error(never, "books/2026.bean:89"),
+      error(never, "other-main.bean:89"),
+      error("Load failed"),
+    ];
+    expect(atCurrentLines(errors, new Map([["main.bean", [7]]]))).toEqual(
+      errors,
+    );
+  });
+
+  it("keeps the message and code it does not move", () => {
+    expect(
+      atCurrentLines(
+        [{ message: never, source: "a:b.bean:9", code: "E1001" }],
+        new Map([["a:b.bean", [2]]]),
+      ),
+    ).toEqual([{ message: never, source: "a:b.bean:10", code: "E1001" }]);
   });
 });

@@ -9,10 +9,11 @@ import { posix } from "node:path";
  * `LedgerRepoService` make. A write applies its operations and appends a
  * commit, answering with its sha as the ledger service does. bean-check is a
  * rule instead of an engine: a line reading `BAD` is an error in any file the
- * include graph from `main.bean` reaches, and an include naming no file is one
- * too. That is enough to tell a preview's verdict from a commit's, and nothing
- * more; what the real engine decides (balance assertions, lot matching) is not
- * modeled.
+ * include graph from `main.bean` reaches, an include naming no file is one
+ * too, and so is a `balance` of an account no loaded file `open`s. That is
+ * enough to tell a preview's verdict from a commit's, and to see a delete
+ * strand an entry, and nothing more; what the real engine decides (balance
+ * amounts, lot matching) is not modeled.
  */
 export type Snapshot = Record<string, string>;
 
@@ -59,19 +60,40 @@ function loadedFiles(files: ReadonlyMap<string, string>): string[] {
 
 const ERROR_MESSAGE = "Account Expenses:Nope was never opened";
 
-/** The ledger service's `errors`: a `BAD` line, or an include that names nothing. */
+const OPEN = /^\d{4}-\d{2}-\d{2} open (\S+)/;
+const BALANCE = /^\d{4}-\d{2}-\d{2} balance (\S+)/;
+
+/**
+ * The ledger service's `errors`: a `BAD` line, an include that names nothing,
+ * or a `balance` of an account no loaded file opens.
+ */
 function errorsOf(files: ReadonlyMap<string, string>) {
   const errors: {
     message: string;
     source: { filename: string; lineno: number };
   }[] = [];
-  for (const path of loadedFiles(files)) {
+  const loaded = loadedFiles(files);
+  const opened = new Set(
+    loaded.flatMap((path) =>
+      (files.get(path) ?? "")
+        .split("\n")
+        .flatMap((line) => OPEN.exec(line)?.[1] ?? []),
+    ),
+  );
+  for (const path of loaded) {
     (files.get(path) ?? "").split("\n").forEach((line, index) => {
       const source = { filename: path, lineno: index + 1 };
       if (line.includes("BAD")) errors.push({ message: ERROR_MESSAGE, source });
       const resolved = includedBy(path, line);
       if (resolved && !resolved.includes("*") && !files.has(resolved)) {
         errors.push({ message: `File "${resolved}" does not exist`, source });
+      }
+      const balanced = BALANCE.exec(line)?.[1];
+      if (balanced && !opened.has(balanced)) {
+        errors.push({
+          message: `Account ${balanced} was never opened`,
+          source,
+        });
       }
     });
   }
