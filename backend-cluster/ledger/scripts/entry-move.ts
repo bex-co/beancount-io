@@ -449,6 +449,114 @@ export async function verifyScopedEntryMove(): Promise<void> {
 }
 
 /**
+ * Moving a document entry to another folder (w31/133). Beancount resolves a
+ * relative `document` filename against the folder of the file that declares
+ * it, so the entry moved as it stood named a file beside the target that is
+ * not there, and the move was refused for the `Document file not found` it
+ * would add. On the live engine, the move writes the filename for the
+ * target's folder: the preview and the commit are clean, the journal names
+ * the same file, and `getContext` resolves the new hash the move reports.
+ */
+export async function verifyDocumentEntryMove(): Promise<void> {
+  const receipt = '2026-08-30 document Assets:Cash "receipt.txt" #qa-trip';
+  const main = [
+    'option "operating_currency" "USD"',
+    "2026-01-01 open Assets:Cash USD",
+    'include "qa-books/docs.bean"',
+    "",
+  ].join("\n");
+  const files: Record<string, string> = {
+    "main.bean": main,
+    "qa-books/docs.bean": `${receipt}\n`,
+    "qa-books/receipt.txt": "receipt\n",
+  };
+  const { factory, commits } = committingRepo(files);
+  // Read through a function: the checks below must see each new commit.
+  const commitCount = () => commits.length;
+  const journal = new LedgerJournalService(factory as never, {} as never);
+  const params = { ledgerId: "synthetic/document-move", userId: "usr_1" };
+  // The document check needs the repository's file list.
+  const errorsOf = async (layout: Record<string, string>) =>
+    (
+      await parseLedgerFiles({ ...layout }, "main.bean", {
+        repoPaths: Object.keys(layout),
+      })
+    ).errors.map((error) => error.message);
+  const document = async () => {
+    const { data } = await journal.getJournal({
+      ...params,
+      userId: undefined,
+      query: { includeSource: true },
+    });
+    const row = (data as unknown as (SourcedRow & { filename?: string })[]).find(
+      (item) => item.filename !== undefined,
+    );
+    if (!row?.source) fail("no source for the document");
+    return row;
+  };
+
+  if ((await errorsOf(files)).length > 0)
+    fail(`the document fixture has errors: ${JSON.stringify(await errorsOf(files))}`);
+  // The control: the same line, moved as it stands, names a file not there.
+  const bare = await errorsOf({
+    ...files,
+    "main.bean": `${main}${receipt}\n`,
+    "qa-books/docs.bean": "",
+  });
+  if (!bare.some((message) => message.includes("Document file not found")))
+    fail(`the bare move reads ${JSON.stringify(bare)}`);
+
+  const was = await document();
+  if (was.filename !== "qa-books/receipt.txt")
+    fail(`the document names ${was.filename}`);
+  const move = {
+    ...params,
+    entries: [{ entryHash: was.entry_hash, sha256sum: was.source!.sha256sum }],
+    toPath: "main.bean",
+  };
+  const written = '2026-08-30 document Assets:Cash "qa-books/receipt.txt" #qa-trip';
+
+  const preview = await journal.moveSourceSlices({ ...move, dryRun: true });
+  if (commitCount() !== 0) fail("the preview committed");
+  if (preview.validation.newErrors.length !== 0)
+    fail(`the preview is not clean: ${JSON.stringify(preview.validation)}`);
+  if (JSON.stringify(preview.preview.map(({ text }) => text)) !== JSON.stringify([written]))
+    fail(`the preview shows ${JSON.stringify(preview.preview)}`);
+
+  const result = await journal.moveSourceSlices(move);
+  if (commitCount() !== 1 || result.validation.newErrors.length !== 0)
+    fail(`the move did not commit cleanly: ${JSON.stringify(result.validation)}`);
+  if (files["main.bean"] !== `${main.trimEnd()}\n\n${written}\n`)
+    fail(`main.bean holds:\n${files["main.bean"]}`);
+  if ((await errorsOf(files)).length > 0)
+    fail(`the moved ledger has errors: ${JSON.stringify(await errorsOf(files))}`);
+  const is = await document();
+  if (is.filename !== "qa-books/receipt.txt")
+    fail(`the moved document names ${is.filename}`);
+  // The filename is part of the hash, so the move reports the new one, the
+  // preview the same as the commit.
+  if (
+    is.entry_hash === was.entry_hash ||
+    JSON.stringify(result.movedHashes) !== JSON.stringify([is.entry_hash]) ||
+    JSON.stringify(preview.movedHashes) !== JSON.stringify(result.movedHashes)
+  )
+    fail(
+      `movedHashes ${JSON.stringify({ preview: preview.movedHashes, commit: result.movedHashes, was: was.entry_hash, is: is.entry_hash })}`,
+    );
+  const context = await journal.getContext({
+    ...params,
+    userId: undefined,
+    entryHash: result.movedHashes[0],
+  });
+  if (context.slice !== written)
+    fail(`${result.movedHashes[0]} resolves to ${context.slice}`);
+
+  console.log(
+    "✓ a document entry moved to another folder keeps naming its file, and its new hash resolves (w31/133)",
+  );
+}
+
+/**
  * An entry that writes a key an open `pushmeta` holds keeps its own value, as
  * Beancount's grammar sets the pushed keys first and the entry's on top
  * (w31/028). The engine let the push win, so the journal, the entry context

@@ -73,6 +73,7 @@ import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-s
 import { verifyBatchDeleteScale } from "./batch-delete-scale";
 import { verifyPatternLimits } from "./pattern-limits";
 import {
+  verifyDocumentEntryMove,
   verifyEntryMove,
   verifyEntryMoveWithKnownError,
   verifyOwnKeyUnderPushmeta,
@@ -6172,6 +6173,7 @@ poptag #trip
   await verifyEntryMove();
   await verifyEntryMoveWithKnownError();
   await verifyScopedEntryMove();
+  await verifyDocumentEntryMove();
   await verifyOwnKeyUnderPushmeta();
   await verifySlashDatedEntries();
   await verifyProjectedIncludes();

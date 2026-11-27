@@ -18,6 +18,7 @@ export * from "./directive-filter";
 export * from "./beancount-options";
 export * from "./journal-running-balance";
 export * from "./source-slice";
+export * from "./moved-document-path";
 export * from "./source-slice-worker";
 export * from "./source-slice-resolver";
 export * from "./updated-entry-id";

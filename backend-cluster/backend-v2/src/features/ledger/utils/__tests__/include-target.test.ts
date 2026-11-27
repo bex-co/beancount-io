@@ -1,9 +1,11 @@
 import {
   addIncludeLines,
   assertLiteralIncludePath,
+  formatDocumentLine,
   formatIncludeLine,
   globMatches,
   includeTargetFor,
+  movedDocumentTarget,
   parseIncludeLine,
   resolveIncludeTarget,
   scanIncludeLines,
@@ -127,6 +129,89 @@ describe("scanIncludeLines behind a byte-order mark (w31/100)", () => {
     expect(formatIncludeLine(scanned[0]!.include!, "c.bean")).toBe(
       '\uFEFFinclude "c.bean"',
     );
+  });
+});
+
+// w31/133: a relative `document` filename resolves against its own file's
+// folder, so a file moving to another folder has it rewritten.
+describe("document lines", () => {
+  const documentOf = (line: string) => scanIncludeLines(line)[0]!.document;
+
+  it.each([
+    ['2026-08-30 document Assets:Cash "receipt.txt"', "receipt.txt"],
+    ['2026/08/30 document Assets:Cash "r.txt" #trip ; c', "r.txt"],
+    ['2026-8-3\tdocument\tAssets:Cash\t"r.txt"\r', "r.txt"],
+    ['2026-08-30 document Assets:Cash "we\\"ird.txt"', 'we"ird.txt'],
+  ])("reads the filename of %p", (line, target) => {
+    expect(documentOf(line)).toMatchObject({ target });
+  });
+
+  it.each([
+    '2026-08-30 note Assets:Cash "receipt.txt"',
+    '  2026-08-30 document Assets:Cash "receipt.txt"',
+    '; 2026-08-30 document Assets:Cash "receipt.txt"',
+    '20260830 document Assets:Cash "receipt.txt"',
+    "2026-08-30 document Assets:Cash receipt.txt",
+    '2026-08-30 document Assets:Cash "open',
+  ])("reads %p as no document", (line) => expect(documentOf(line)).toBeNull());
+
+  it("skips a document line inside a multiline string, and keeps a mark on line 1", () => {
+    const scanned = scanIncludeLines(
+      [
+        '\uFEFF2026-08-30 document Assets:Cash "a.txt"',
+        '2026-08-31 * "memo',
+        '2026-08-31 document Assets:Cash "b.txt"',
+        'end"',
+      ].join("\n"),
+    );
+    expect(scanned.map((entry) => entry.document?.target ?? null)).toEqual([
+      "a.txt",
+      null,
+      null,
+      null,
+    ]);
+    expect(formatDocumentLine(scanned[0]!.document!, "d/a.txt")).toBe(
+      '\uFEFF2026-08-30 document Assets:Cash "d/a.txt"',
+    );
+  });
+
+  it("writes the filename escaped, keeping the rest of the line", () => {
+    const line = '2026-08-30 document Assets:Cash "r.txt" #trip ; c\r';
+    expect(formatDocumentLine(documentOf(line)!, 'd/we"ird\\x.txt')).toBe(
+      '2026-08-30 document Assets:Cash "d/we\\"ird\\\\x.txt" #trip ; c\r',
+    );
+  });
+
+  const files = new Set(["books/receipt.txt", "receipt.txt", "shared/s.pdf"]);
+  const exists = (path: string) => files.has(path);
+  it.each([
+    ["books/docs.bean", "docs.bean", "receipt.txt", "books/receipt.txt"],
+    ["books/docs.bean", "books/sub/docs.bean", "receipt.txt", "../receipt.txt"],
+    [
+      "books/docs.bean",
+      "other/docs.bean",
+      "./receipt.txt",
+      "../books/receipt.txt",
+    ],
+    ["books/docs.bean", "docs.bean", "./receipt.txt", "./books/receipt.txt"],
+    ["books/docs.bean", "docs.bean", "../shared/s.pdf", "shared/s.pdf"],
+    ["docs.bean", "books/docs.bean", "receipt.txt", "../receipt.txt"],
+  ])("moves %s to %s: %p reads %p", (oldPath, newPath, target, written) => {
+    expect(movedDocumentTarget(oldPath, newPath, target, exists)).toBe(written);
+  });
+
+  it.each([
+    ["books/docs.bean", "books/docs2.bean", "receipt.txt"],
+    ["books/docs.bean", "docs.bean", "/books/receipt.txt"],
+    ["books/docs.bean", "docs.bean", "https://example.com/r.txt"],
+    ["books/docs.bean", "docs.bean", "missing.txt"],
+    ["books/docs.bean", "docs.bean", "../../outside.txt"],
+    ["a/docs.bean", "b/docs.bean", "../shared/s.pdf"],
+    ["books/docs.bean", "docs.bean", ""],
+  ])("leaves %s → %s's %p as written", (oldPath, newPath, target) => {
+    expect(
+      movedDocumentTarget(oldPath, newPath, target, exists),
+    ).toBeUndefined();
   });
 });
 

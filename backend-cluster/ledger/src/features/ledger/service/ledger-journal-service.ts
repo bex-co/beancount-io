@@ -65,11 +65,12 @@ import {
   replacementLineEnding,
   servedReplacementSlice,
   servedSliceText,
-  resolveEntryIdAtSource,
+  resolveEntryIdsAtSources,
   failedBalanceDiffs,
   serializeDirective,
   sliceSha256,
   slicesWithPushScopes,
+  withDocumentPathFor,
   TimeFilterParseError,
   AdvancedFilterParseError,
   type EntrySlice,
@@ -291,6 +292,18 @@ function relocateSlices(
 
 /** Where each transform edited its file, recorded when it runs (w31/116). */
 type LineEdits = Map<string, LineEdit[]>;
+
+/** The files a write's transforms would leave, run over `files`; nothing is committed. */
+async function projectFiles(
+  files: FileMap,
+  transforms: ReadonlyMap<string, LedgerFileTransform>,
+): Promise<FileMap> {
+  const projected: FileMap = { ...files };
+  for (const [path, transform] of transforms) {
+    projected[path] = await transform(files[path] ?? null);
+  }
+  return projected;
+}
 
 /**
  * A {@link LedgerFileTransform} that deletes one or more entries' blocks from a
@@ -812,10 +825,7 @@ export class LedgerJournalService implements ILedgerJournalService {
     moved?: readonly MovedLines[],
   ): Promise<ProjectedLedgerErrors> {
     const { files, entryPoint, repoPaths } = loaded;
-    const projected: FileMap = { ...files };
-    for (const [path, transform] of transforms) {
-      projected[path] = await transform(files[path] ?? null);
-    }
+    const projected = await projectFiles(files, transforms);
     const errorsOf = async (fileMap: FileMap) =>
       toBeancountErrorsPublic(
         (await parseLedgerFiles(fileMap, entryPoint, { repoPaths })).errors,
@@ -1657,18 +1667,32 @@ export class LedgerJournalService implements ILedgerJournalService {
         order(a.slice.file) - order(b.slice.file) ||
         a.slice.startLine - b.slice.startLine,
     );
-    const texts = slicesWithPushScopes(
+    const scoped = slicesWithPushScopes(
       loaded.files,
       moved.map(({ slice }) => slice),
     );
+    // A relative document filename names a file beside its own file, so it
+    // is rewritten to name that file from toPath's folder (w31/133).
+    const repoFiles = new Set(repoPaths);
+    const texts = scoped.map((text, index) =>
+      withDocumentPathFor(text, moved[index].slice.file, toPath, (path) =>
+        repoFiles.has(path),
+      ),
+    );
     const block = texts.map(withoutTrailingNewlines).join("\n\n");
 
-    // After a blank line, in the target's own line ending (w21/673).
+    // After a blank line, in the target's own line ending (w21/673). Where
+    // the block starts is what locates a rewritten entry's new hash.
+    let blockStart = 0;
     transforms.set(toPath, (current) => {
-      if (current === null || current.trim() === "")
+      if (current === null || current.trim() === "") {
+        blockStart = 0;
         return `${withLineEnding(block, "\n")}\n`;
+      }
       const eol = lineEndingOf(current);
-      return `${withoutTrailingNewlines(current)}${eol}${eol}${withLineEnding(block, eol)}${eol}`;
+      const kept = withoutTrailingNewlines(current);
+      blockStart = kept.split("\n").length + 1;
+      return `${kept}${eol}${eol}${withLineEnding(block, eol)}${eol}`;
     });
     const includeAdded = includeFrom !== undefined && !reached;
     if (includeFrom !== undefined && !reached) {
@@ -1699,6 +1723,30 @@ export class LedgerJournalService implements ILedgerJournalService {
         to: toPath,
       })),
     );
+    // A document's filename is part of its hash, so an entry whose filename
+    // was rewritten is known by a new one, read from the files the move
+    // leaves: the commit lands on exactly the content projected here
+    // (w31/131). Every other entry keeps its hash (w31/016).
+    const movedHashes = moved.map(({ hash }) => hash);
+    if (texts.some((text, index) => text !== scoped[index])) {
+      const ranges: ReplacedSourceRange[] = [];
+      let start = blockStart;
+      for (const text of texts) {
+        const lineCount = withoutTrailingNewlines(text).split("\n").length;
+        ranges.push({ file: toPath, startLine: start, lineCount });
+        start += lineCount + 1;
+      }
+      const resolved = await this.resolveEntryHashesAt(
+        await projectFiles(loaded.files, transforms),
+        entryPoint,
+        repoPaths,
+        ranges,
+      );
+      texts.forEach((text, index) => {
+        if (text !== scoped[index])
+          movedHashes[index] = resolved[index] ?? movedHashes[index];
+      });
+    }
     let commit: CommitSha = {};
     if (!dryRun) {
       commit = await this.commitTransforms(
@@ -1711,7 +1759,7 @@ export class LedgerJournalService implements ILedgerJournalService {
     }
     return {
       message: `${dryRun ? "Would move" : "Moved"} ${entryCount(moved.length)} to ${toPath}${includeAdded ? `; ${includeFrom} ${dryRun ? "would include" : "now includes"} it` : ""}`,
-      movedHashes: moved.map(({ hash }) => hash),
+      movedHashes,
       includeAdded,
       files: [...transforms.keys()],
       preview: moved.map(({ slice }, index) => ({
@@ -1838,16 +1886,20 @@ export class LedgerJournalService implements ILedgerJournalService {
     const newEntryHash =
       applied.current === undefined
         ? entryHash
-        : ((await this.resolveUpdatedEntryHash(
-            { ...files, [found.file]: applied.current.content },
-            entryPoint,
-            repoPaths,
-            {
-              file: found.file,
-              startLine: applied.current.startLine,
-              lineCount: applied.current.stored.split("\n").length,
-            },
-          )) ?? entryHash);
+        : ((
+            await this.resolveEntryHashesAt(
+              { ...files, [found.file]: applied.current.content },
+              entryPoint,
+              repoPaths,
+              [
+                {
+                  file: found.file,
+                  startLine: applied.current.startLine,
+                  lineCount: applied.current.stored.split("\n").length,
+                },
+              ],
+            )
+          )[0] ?? entryHash);
     return {
       message: dryRun ? "Would update the entry" : "Entry updated successfully",
       entryHash: newEntryHash,
@@ -1880,30 +1932,29 @@ export class LedgerJournalService implements ILedgerJournalService {
   }
 
   /**
-   * Public entry ID of the block a source-slice write just produced, from one
-   * full, correctly booked parse of the post-commit files. Best-effort: the
-   * write has already landed, so a parse failure here must not fail the
-   * request — it only costs the client the fresh identity.
+   * Public entry ID of each block a source-slice write produces (an edit's
+   * replacement, a move's rewritten entries), from one full, correctly booked
+   * parse of the files the write leaves. Best-effort: a parse failure here
+   * must not fail the write — it only costs the client the fresh identities.
    */
-  private async resolveUpdatedEntryHash(
+  private async resolveEntryHashesAt(
     files: FileMap,
     entryPoint: string,
     repoPaths: string[],
-    range: ReplacedSourceRange,
-  ): Promise<string | undefined> {
+    ranges: readonly ReplacedSourceRange[],
+  ): Promise<(string | undefined)[]> {
     try {
       const snapshot = await parseLedgerFiles(files, entryPoint, {
         repoPaths,
         includeSourceDetails: true,
       });
-      return resolveEntryIdAtSource(snapshot, range);
+      return resolveEntryIdsAtSources(snapshot, ranges);
     } catch (error) {
-      log.warn("could not resolve the updated entry hash after a save", {
-        file: range.file,
-        startLine: range.startLine,
+      log.warn("could not resolve the written entries' hashes", {
+        files: [...new Set(ranges.map((range) => range.file))],
         error: error instanceof Error ? error.message : String(error),
       });
-      return undefined;
+      return ranges.map(() => undefined);
     }
   }
 }

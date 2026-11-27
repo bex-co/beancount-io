@@ -78,7 +78,13 @@ type MoveBody = {
 };
 
 async function fixture(
-  options: { readOnly?: boolean; breaks?: boolean; carries?: boolean } = {},
+  options: {
+    readOnly?: boolean;
+    breaks?: boolean;
+    carries?: boolean;
+    /** The new hash the ledger reports for a rewritten entry (w31/133). */
+    rehashed?: Record<string, string>;
+  } = {},
 ) {
   const slices = new Map([
     [H_TEA, TEA],
@@ -168,7 +174,7 @@ async function fixture(
       if (body.dryRun !== true) commits.push(body);
       return envelope({
         message: `${body.dryRun ? "Would move" : "Moved"} ${hashes.length} entries to ${body.to_path}`,
-        moved_hashes: hashes,
+        moved_hashes: hashes.map((h) => options.rehashed?.[h] ?? h),
         include_added: includeAdded,
         files: [
           "main.bean",
@@ -445,6 +451,26 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
       await env.close();
     }
   });
+
+  it.each([false, true])(
+    "reports the new hash the ledger gives a rewritten entry (dryRun=%s, w31/133)",
+    async (dryRun) => {
+      const H_CAKE_MOVED = "dd".repeat(16);
+      const env = await fixture({ rehashed: { [H_CAKE]: H_CAKE_MOVED } });
+      try {
+        const { success, result } = await env.call(surface, {
+          ...MOVE,
+          ...(dryRun ? { dryRun: true } : {}),
+        });
+        expect(success).toBe(true);
+        expect(result).toMatchObject({ movedHashes: [H_CAKE_MOVED, H_TEA] });
+        if (surface === "mcp")
+          expect(result).toMatchObject({ entryHashes: [H_CAKE_MOVED, H_TEA] });
+      } finally {
+        await env.close();
+      }
+    },
+  );
 
   it("previews a breaking move as invalid, and refuses its commit unless allowInvalid", async () => {
     const env = await fixture({ breaks: true });
@@ -801,7 +827,7 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
 });
 
 describe("moveEntrySources description (w31/017)", () => {
-  it("says on every surface that a scoped entry keeps its pushed tags and metadata", async () => {
+  it("says on every surface what a moved entry's text and hash become", async () => {
     const env = await fixture();
     try {
       const { tools } = await env.listTools();
@@ -821,6 +847,11 @@ describe("moveEntrySources description (w31/017)", () => {
           "An entry inside its file's pushtag or pushmeta scope keeps that scope's tags and metadata, written onto the entry",
         );
         expect(description).not.toMatch(/byte for byte/);
+        // Since w31/133 a document entry's relative filename is rewritten for
+        // toPath's folder, which changes its hash.
+        expect(description).toContain(
+          "A document's relative filename is rewritten for toPath's folder, so movedHashes gives its new hash.",
+        );
       }
     } finally {
       await env.close();

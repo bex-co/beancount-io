@@ -4069,7 +4069,7 @@ export interface MoveSourceSlicesResponse {
   commit?: string | null;
   /**
    * Moved Hashes
-   * Hashes of the moved entries, in ledger order
+   * Hashes of the moved entries, in ledger order; a document whose filename the move rewrote has a new one
    */
   moved_hashes: string[];
   /**
@@ -6780,7 +6780,7 @@ export class Api<
       }),
 
     /**
-     * @description Move entries into another file in one commit: each slice leaves its file and is appended, in ledger order, to to_path (created when absent). A slice inside its file's pushtag or pushmeta scope gets that scope's tags and metadata written onto it; any other slice moves unchanged. include_from gains the include line when the target is not reached.
+     * @description Move entries into another file in one commit: each slice leaves its file and is appended, in ledger order, to to_path (created when absent). A slice inside its file's pushtag or pushmeta scope gets that scope's tags and metadata written onto it, and a document's relative filename is rewritten to name the same file from to_path's folder; any other slice moves unchanged. include_from gains the include line when the target is not reached.
      *
      * @tags journal
      * @name MoveSourceSlices

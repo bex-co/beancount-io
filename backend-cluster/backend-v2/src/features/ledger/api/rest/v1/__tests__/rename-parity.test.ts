@@ -17,6 +17,7 @@ import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import { formatError } from "@/server/graphql/format-error";
+import { clearRateLimitShadows } from "@/server/api/rate-limit";
 import { FavaApiError } from "@/foundation/fava/api-client";
 import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
@@ -43,6 +44,9 @@ beforeAll(async () => {
     validate: true,
   });
 });
+// Every MCP call here is charged to one identity's write budget; the file
+// makes more than a minute's worth, so each test starts with a fresh one.
+beforeEach(() => clearRateLimitShadows());
 
 type FixtureFiles = Map<
   string,
@@ -1615,6 +1619,160 @@ describe.each(["rest", "gql", "mcp"])(
         });
         expect(outcome.success).toBe(false);
         expect(f.change).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
+/**
+ * w31/133. Beancount resolves a relative `document` filename against the
+ * directory of the file that declares it, as it does an include, so moving
+ * `qa-books/docs.bean` to the root left `document … "receipt.txt"` naming a
+ * root `receipt.txt` that is not there, and the commit was red.
+ */
+describe.each(["rest", "gql", "mcp"])(
+  "moving a file whose documents name files beside it via %s",
+  (surface) => {
+    const previewFlag =
+      surface === "mcp" ? { dry_run: true } : { dryRun: true };
+    const DOC = '2026-08-30 document Assets:Cash "receipt.txt"';
+    const tree = {
+      "main.bean": 'include "qa-books/docs.bean"\n',
+      "qa-books/docs.bean": `${DOC}\n`,
+      "qa-books/receipt.txt": "receipt\n",
+    };
+
+    it("refuses the move without updateIncludes, naming the document", async () => {
+      // Nothing includes the file, so the document is all the refusal names.
+      const f = await fixture(identity, {
+        "qa-books/docs.bean": `${DOC}\n`,
+        "qa-books/receipt.txt": "receipt\n",
+      });
+      try {
+        for (const extra of [{}, previewFlag]) {
+          const refused = await f.call(
+            surface,
+            "qa-books/docs.bean",
+            "docs.bean",
+            extra,
+          );
+          expect(refused).toMatchObject({
+            success: false,
+            code: "BAD_USER_INPUT",
+          });
+          expect(refused.message).toContain(
+            'qa-books/docs.bean names the document "receipt.txt" relative to its folder; pass updateIncludes: true to rewrite it for docs.bean',
+          );
+        }
+        expect(f.change).not.toHaveBeenCalled();
+        expect(f.files.get("qa-books/docs.bean")?.content).toBe(`${DOC}\n`);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("previews the document line rewritten to name the same file", async () => {
+      const f = await fixture(identity, tree);
+      try {
+        const preview = await f.call(
+          surface,
+          "qa-books/docs.bean",
+          "docs.bean",
+          {
+            ...previewFlag,
+            updateIncludes: true,
+          },
+        );
+        expect(preview.success).toBe(true);
+        expect(preview.result).toMatchObject({
+          updatedIncludes: ["docs.bean", "main.bean"],
+          preview: [
+            {
+              path: "docs.bean",
+              text: '2026-08-30 document Assets:Cash "qa-books/receipt.txt"',
+            },
+            { path: "main.bean", text: 'include "docs.bean"' },
+          ],
+        });
+        expect(f.change).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+
+    it.each([
+      ["docs.bean", '"qa-books/receipt.txt"'],
+      ["qa-books/sub/docs.bean", '"../receipt.txt"'],
+      ["other/docs.bean", '"../qa-books/receipt.txt"'],
+    ])(
+      "commits a move to %s with the filename %s",
+      async (newPath, written) => {
+        const f = await fixture(identity, tree);
+        try {
+          const moved = await f.call(surface, "qa-books/docs.bean", newPath, {
+            updateIncludes: true,
+          });
+          expect(moved.success).toBe(true);
+          expect(f.files.get(newPath)?.content).toBe(
+            `2026-08-30 document Assets:Cash ${written}\n`,
+          );
+          expect(f.files.has("qa-books/docs.bean")).toBe(false);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("moves the bytes unchanged within the folder", async () => {
+      const f = await fixture(identity, tree);
+      try {
+        const moved = await f.call(
+          surface,
+          "qa-books/docs.bean",
+          "qa-books/docs2.bean",
+          { updateIncludes: true },
+        );
+        expect(moved.success).toBe(true);
+        expect(f.files.get("qa-books/docs2.bean")?.content).toBe(`${DOC}\n`);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("rewrites only the relative filenames that name a file, keeping each line's other bytes", async () => {
+      const content = [
+        '\uFEFF2026-08-30 document Assets:Cash "receipt.txt" #trip ^r1 ; kept',
+        '2026/8/31\tdocument  Assets:Cash   "./receipt.txt"\r',
+        '2026-09-01 document Assets:Cash "/qa-books/receipt.txt"',
+        '2026-09-02 document Assets:Cash "https://example.com/r.txt"',
+        '2026-09-03 document Assets:Cash "missing.txt"',
+        '2026-09-04 note Assets:Cash "document Assets:Cash \\"receipt.txt\\""',
+        '2026-09-05 * "multi',
+        '2026-09-05 document Assets:Cash "receipt.txt"',
+        'line"',
+        "  Assets:Cash  0 USD",
+        '; 2026-09-06 document Assets:Cash "receipt.txt"',
+        '2026-09-07 document Assets:Cash "we\\"ird.txt"',
+        "",
+      ].join("\n");
+      const f = await fixture(identity, {
+        "qa-books/docs.bean": content,
+        "qa-books/receipt.txt": "receipt\n",
+        'qa-books/we"ird.txt': "odd\n",
+      });
+      try {
+        const moved = await f.call(surface, "qa-books/docs.bean", "docs.bean", {
+          updateIncludes: true,
+        });
+        expect(moved.success).toBe(true);
+        expect(f.files.get("docs.bean")?.content).toBe(
+          content
+            .replace('"receipt.txt" #trip', '"qa-books/receipt.txt" #trip')
+            .replace('"./receipt.txt"\r', '"./qa-books/receipt.txt"\r')
+            .replace('"we\\"ird.txt"', '"qa-books/we\\"ird.txt"'),
+        );
       } finally {
         await f.close();
       }

@@ -141,11 +141,13 @@ import { assertWritableText, decodeFileContent } from "@/shared/file-content";
 import { posix } from "path";
 import {
   assertLiteralIncludePath,
+  formatDocumentLine,
   formatIncludeLine,
   globMatches,
   includeTargetFor,
   isGlobPattern,
   isUrlTarget,
+  movedDocumentTarget,
   resolveIncludeTarget,
   scanIncludeLines,
   type IncludeLine,
@@ -1641,6 +1643,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
           input.oldPath,
           input.newPath,
           input.updateIncludes === true,
+          new Set(allFiles),
         )
       : undefined;
     const movedContent = moved?.content;
@@ -1984,6 +1987,8 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   /**
    * The moved file's own relative includes resolve from its new folder, so a
    * move to another one pointed them at files that are not there (w23/056).
+   * Its relative `document` filenames resolve from its folder as well, so they
+   * are rewritten under the same rule to keep naming the same file (w31/133).
    * The caller passes only an includer, which a `.txt` the ledger loads is
    * as much as a `.bean` file (w31/023). Returns the file's content with
    * them rewritten, as base64, plus the rewritten lines for the preview — or
@@ -1995,14 +2000,29 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     oldPath: string,
     newPath: string,
     updateIncludes: boolean,
+    repoFiles: ReadonlySet<string>,
   ): { content: string; lines: string[] } | undefined {
     if (posix.dirname(oldPath) === posix.dirname(newPath)) return undefined;
     const decoded = decodeFileContent(file);
     const moved: string[] = [];
+    const documents: string[] = [];
     const globs: string[] = [];
     const lines: string[] = [];
     const rewritten = scanIncludeLines(decoded.content).map(
-      ({ line, include }) => {
+      ({ line, include, document }) => {
+        if (document) {
+          const target = movedDocumentTarget(
+            oldPath,
+            newPath,
+            document.target,
+            (path) => repoFiles.has(path),
+          );
+          if (target === undefined) return line;
+          documents.push(document.target);
+          const replacement = formatDocumentLine(document, target);
+          lines.push(replacement);
+          return replacement;
+        }
         if (!include || isUrlTarget(include.target)) return line;
         const before = resolveIncludeTarget(oldPath, include.target);
         if (before === resolveIncludeTarget(newPath, include.target))
@@ -2027,14 +2047,27 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         "Rename it within its folder, or change the include line first.",
       );
     }
-    if (moved.length === 0) return undefined;
+    const count = moved.length + documents.length;
+    if (count === 0) return undefined;
     if (!updateIncludes) {
+      const quoted = (targets: string[]) =>
+        targets.map((target) => `"${target}"`).join(", ");
+      const names = [
+        ...(moved.length > 0 ? [`includes ${quoted(moved)}`] : []),
+        ...(documents.length > 0
+          ? [
+              `names the document${documents.length === 1 ? "" : "s"} ${quoted(documents)}`,
+            ]
+          : []),
+      ].join(" and ");
       throw new BadUserInputError(
-        `${oldPath} includes ${moved.map((target) => `"${target}"`).join(", ")} relative to its folder; pass updateIncludes: true to rewrite ${
-          moved.length === 1 ? "it" : "them"
+        `${oldPath} ${names} relative to its folder; pass updateIncludes: true to rewrite ${
+          count === 1 ? "it" : "them"
         } for ${newPath} in the same commit`,
         "updateIncludes",
-        "Pass `updateIncludes: true` so the rename rewrites the `include` lines in the same commit.",
+        documents.length > 0
+          ? "Pass `updateIncludes: true` so the rename rewrites the `include` lines and `document` filenames in the same commit."
+          : "Pass `updateIncludes: true` so the rename rewrites the `include` lines in the same commit.",
       );
     }
     // A rewrite re-encodes the whole file (w23/030).

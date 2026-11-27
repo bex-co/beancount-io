@@ -6,7 +6,7 @@ import { writeFlagsInput } from "@/features/ledger/utils/flag-alias";
  * its own spelling of the preview flag and the undo.
  */
 export const MOVE_ENTRIES_DESCRIPTION =
-  "Move entries into another ledger file in one commit: each entry's source text leaves its file and is appended to toPath in ledger order. An entry inside its file's pushtag or pushmeta scope keeps that scope's tags and metadata, written onto the entry, so its hash stays but its text and sha256sum change; any other entry's text moves unchanged. listLedgerEntries with include_source returns each entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless includeFrom is given, a stale sha256sum (CONFLICT), an entry already in toPath, and a move that adds a bean-check error (VALIDATION_FAILED, unless allowInvalid).";
+  "Move entries into another ledger file in one commit: each entry's source text leaves its file and is appended to toPath in ledger order. An entry inside its file's pushtag or pushmeta scope keeps that scope's tags and metadata, written onto the entry, so its hash stays but its text and sha256sum change. A document's relative filename is rewritten for toPath's folder, so movedHashes gives its new hash. listLedgerEntries with include_source returns each hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless includeFrom is given, a stale sha256sum (CONFLICT), an entry already in toPath, and a move that adds a bean-check error (VALIDATION_FAILED, unless allowInvalid).";
 
 /** What `toPath` and `includeFrom` mean, shared by every surface's input. */
 export const MOVE_TO_PATH_DESCRIPTION =

@@ -586,6 +586,17 @@ entry's text and `sha256sum` change, though, so take the new `sha256sum` from
 `getEntryContext` or `listLedgerEntries` with `include_source` before editing
 it.
 
+A relative `document` filename resolves against the folder of the file that
+declares it, as an include does, so a document entry moving to another folder
+would name a file that is not there. The move rewrites it to name the same
+repository file from `toPath`'s folder (w31/133): `"receipt.txt"` in
+`books/docs.bean` moved to `main.bean` reads `"books/receipt.txt"`, and a
+leading `./` is kept. A root-anchored or URL filename, a move within one
+folder, and a filename that names no file in the repository are left as
+written. The filename is part of a document's hash, so a rewritten entry's
+`movedHashes` (and MCP `entryHashes`) entry is its new hash, the one
+`getEntryContext` resolves after the commit; a preview reports the same one.
+
 It refuses, writing nothing:
 
 - no entries, or a `toPath` that is not a `.bean` or `.beancount` repository
@@ -2347,7 +2358,11 @@ matches a glob that `newPath` would not, the rename is refused even with
 `updateIncludes`. The moved file's own relative includes are held to the same
 rule: a move to another folder that would point them elsewhere is refused
 without `updateIncludes` and rewritten with it, and a glob in the moved file
-is refused. The result contains `message`, `oldPath`, `newPath`,
+is refused. So are its relative `document` filenames, which resolve against
+its folder too (w31/133): each one that names a file in the repository is
+refused without `updateIncludes`, naming it, and with it is rewritten to name
+that same file from the new folder, listed in `preview`. A root-anchored or
+URL filename, and one that names no file, are left as written. The result contains `message`, `oldPath`, `newPath`,
 `updatedIncludes`, and `preview`; on MCP, the write outcome's `wrote` names
 `newPath`, the removed `oldPath`, and every file whose include was rewritten,
 and is empty on a preview (w1/186). Write capability and current content-write

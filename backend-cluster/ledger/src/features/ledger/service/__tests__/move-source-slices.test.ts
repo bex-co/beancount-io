@@ -759,3 +759,201 @@ describe("an error the moved entry already has (w31/126)", () => {
     expect(commitMock).not.toHaveBeenCalled();
   });
 });
+
+// w31/133: Beancount resolves a relative `document` filename against the
+// folder of the file that declares it, so a document entry moved to another
+// folder as it stood named a file that is not there, and the move was refused
+// for the error it would add. Its filename is now written for toPath's
+// folder, and since the filename is part of its hash, the hash it reports is
+// the one the moved entry has.
+describe("moving a document entry to another folder (w31/133)", () => {
+  const RECEIPT = '2026-08-30 document Assets:Cash "receipt.txt" #trip';
+  const SCAN = '2026/9/1 document Assets:Cash "./scans/s.pdf" ; scanned';
+  const document = (date: string, path: string, tags: string[] = []) =>
+    ({
+      type: "document",
+      date,
+      account: "Assets:Cash",
+      path,
+      tags,
+      links: [],
+    }) as DirectiveJson;
+  const RECEIPT_D = document("2026-08-30", "receipt.txt", ["trip"]);
+  const SCAN_D = document("2026-09-01", "./scans/s.pdf");
+  const OLD = buildEntryIdMap([RECEIPT_D, TEA_D, SCAN_D]);
+  const RECEIPT_NEW_D = document("2026-08-30", "qa-books/receipt.txt", [
+    "trip",
+  ]);
+  const SCAN_NEW_D = document("2026-09-01", "./qa-books/scans/s.pdf");
+  const NEW = buildEntryIdMap([RECEIPT_NEW_D, SCAN_NEW_D]);
+  const TEXT = new Map([
+    [OLD.get(RECEIPT_D)!, RECEIPT],
+    [OLD.get(TEA_D)!, TEA],
+    [OLD.get(SCAN_D)!, SCAN],
+  ]);
+  const MAIN_DOCS = [
+    "2026-01-01 open Assets:Cash USD",
+    'include "qa-books/docs.bean"',
+    "",
+  ].join("\n");
+  const DOCS = [RECEIPT, "", TEA, "", SCAN, ""].join("\n");
+  /** Where the projected parse finds each entry in main.bean, 1-based. */
+  let landed: Map<string, number>;
+
+  beforeEach(() => {
+    files = {
+      "main.bean": MAIN_DOCS,
+      "qa-books/docs.bean": DOCS,
+      "qa-books/receipt.txt": "receipt\n",
+      "qa-books/scans/s.pdf": "%PDF\n",
+    };
+    sourceFiles = ["main.bean", "qa-books/docs.bean"];
+    landed = new Map([
+      [NEW.get(RECEIPT_NEW_D)!, 4],
+      [OLD.get(TEA_D)!, 6],
+      [NEW.get(SCAN_NEW_D)!, 10],
+    ]);
+    findMock.mockImplementation(
+      async (fileMap: Record<string, string>, _e: unknown, hash: string) => {
+        const text = TEXT.get(hash);
+        const block = splitIntoBlocks(fileMap["qa-books/docs.bean"]).find(
+          (candidate) => candidate.text === text,
+        );
+        if (!block) return null;
+        return {
+          file: "qa-books/docs.bean",
+          slice: block.text,
+          sha256: sliceSha256(block.text),
+          startLine: block.startLine,
+          endLine: block.endLine,
+          localOccurrence: 0,
+        };
+      },
+    );
+    parseMock.mockImplementation(
+      async (
+        _fileMap: Record<string, string>,
+        _entryPoint: string,
+        options?: { includeSourceDetails?: boolean },
+      ) =>
+        options?.includeSourceDetails
+          ? {
+              directives: [RECEIPT_NEW_D, TEA_D, SCAN_NEW_D],
+              errors: [],
+              sourceDetails: Object.fromEntries(
+                [...landed].map(([id, lineno]) => [
+                  id,
+                  { filename: "main.bean", lineno },
+                ]),
+              ),
+            }
+          : {
+              directives: [RECEIPT_D, TEA_D, SCAN_D],
+              errors: [],
+              sourceDetails: {},
+            },
+    );
+  });
+
+  const ref = (directive: DirectiveJson, text: string) => ({
+    entryHash: OLD.get(directive)!,
+    sha256sum: sliceSha256(text),
+  });
+  const moveDocs = (
+    input: Partial<Parameters<LedgerJournalService["moveSourceSlices"]>[0]>,
+  ) =>
+    service().moveSourceSlices({
+      ledgerId: "alice/main",
+      userId: "user-1",
+      entries: [ref(SCAN_D, SCAN), ref(TEA_D, TEA), ref(RECEIPT_D, RECEIPT)],
+      toPath: "main.bean",
+      ...input,
+    });
+
+  const MOVED_RECEIPT =
+    '2026-08-30 document Assets:Cash "qa-books/receipt.txt" #trip';
+  const MOVED_SCAN =
+    '2026/9/1 document Assets:Cash "./qa-books/scans/s.pdf" ; scanned';
+
+  it("previews each document with its filename written for toPath, and its new hash", async () => {
+    const result = await moveDocs({ dryRun: true });
+    expect(commitMock).not.toHaveBeenCalled();
+    expect(result.preview).toEqual([
+      { path: "qa-books/docs.bean", text: MOVED_RECEIPT },
+      { path: "qa-books/docs.bean", text: TEA },
+      { path: "qa-books/docs.bean", text: MOVED_SCAN },
+    ]);
+    expect(result.movedHashes).toEqual([
+      NEW.get(RECEIPT_NEW_D),
+      OLD.get(TEA_D),
+      NEW.get(SCAN_NEW_D),
+    ]);
+  });
+
+  it("commits the rewritten filenames and reports the hashes the moved entries have", async () => {
+    const result = await moveDocs({});
+    expect(commitMock).toHaveBeenCalledTimes(1);
+    expect(files["main.bean"]).toBe(
+      `${MAIN_DOCS.trimEnd()}\n\n${MOVED_RECEIPT}\n\n${TEA}\n\n${MOVED_SCAN}\n`,
+    );
+    expect(files["qa-books/docs.bean"]).not.toContain("document");
+    // Each hash is the one the projected parse finds where the entry landed.
+    expect(result.movedHashes).toEqual([
+      NEW.get(RECEIPT_NEW_D),
+      OLD.get(TEA_D),
+      NEW.get(SCAN_NEW_D),
+    ]);
+    expect(parseMock.mock.calls.at(-1)?.[2]).toEqual(
+      expect.objectContaining({ includeSourceDetails: true }),
+    );
+  });
+
+  it("keeps the request's hash when the new one cannot be found", async () => {
+    landed = new Map();
+    const result = await moveDocs({ dryRun: true });
+    expect(result.movedHashes).toEqual([
+      OLD.get(RECEIPT_D),
+      OLD.get(TEA_D),
+      OLD.get(SCAN_D),
+    ]);
+  });
+
+  it("moves the text byte for byte within its folder, with no extra parse", async () => {
+    files["qa-books/2026.bean"] = "; this year\n";
+    sourceFiles = [...sourceFiles, "qa-books/2026.bean"];
+    const result = await moveDocs({ toPath: "qa-books/2026.bean" });
+    expect(files["qa-books/2026.bean"]).toBe(
+      `; this year\n\n${RECEIPT}\n\n${TEA}\n\n${SCAN}\n`,
+    );
+    expect(result.movedHashes).toEqual([
+      OLD.get(RECEIPT_D),
+      OLD.get(TEA_D),
+      OLD.get(SCAN_D),
+    ]);
+    expect(
+      parseMock.mock.calls.some(
+        ([, , options]) => options?.includeSourceDetails,
+      ),
+    ).toBe(false);
+  });
+
+  it.each([
+    ["a root-anchored filename", '"/qa-books/receipt.txt"'],
+    ["a filename that names no file", '"missing.txt"'],
+    ["a URL", '"https://example.com/r.txt"'],
+  ])("leaves %s as written", async (_label, filename) => {
+    const text = `2026-08-30 document Assets:Cash ${filename} #trip`;
+    files["qa-books/docs.bean"] = DOCS.replace(RECEIPT, text);
+    TEXT.set(OLD.get(RECEIPT_D)!, text);
+    try {
+      const result = await moveDocs({
+        entries: [ref(RECEIPT_D, text)],
+        dryRun: true,
+      });
+      expect(result.preview).toEqual([{ path: "qa-books/docs.bean", text }]);
+      expect(result.movedHashes).toEqual([OLD.get(RECEIPT_D)]);
+    } finally {
+      TEXT.set(OLD.get(RECEIPT_D)!, RECEIPT);
+    }
+  });
+});

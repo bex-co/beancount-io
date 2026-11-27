@@ -67,19 +67,76 @@ function endsInsideString(line: string, startsInside: boolean): boolean {
   return inside;
 }
 
+/** One `document` directive's header split around its filename string. */
+interface DocumentLine {
+  prefix: string;
+  target: string;
+  suffix: string;
+}
+
+/**
+ * A `document` header: a date as the lexer reads it (`2026/08/30` and
+ * `2026-8-30` too, w31/106), the keyword, the account, then the filename as a
+ * one-line double-quoted string. Its tags, links and comment are the suffix.
+ */
+const DOCUMENT_LINE =
+  /^(\d{4}[-/]\d{1,2}[-/]\d{1,2}[ \t]+document[ \t]+[^\s"]+[ \t]*)"((?:[^"\\]|\\.)*)"([^\n]*)$/;
+
+function parseDocumentLine(line: string): DocumentLine | null {
+  const match = line.match(DOCUMENT_LINE);
+  if (!match) return null;
+  const [, prefix, target, suffix] = match;
+  return {
+    prefix: prefix!,
+    target: target!.replace(/\\(.)/g, "$1"),
+    suffix: suffix!,
+  };
+}
+
+/** Writes `target` as the line's filename, escaped so it parses back intact. */
+export function formatDocumentLine(line: DocumentLine, target: string): string {
+  return `${line.prefix}"${target.replace(/[\\"]/g, "\\$&")}"${line.suffix}`;
+}
+
+/**
+ * The filename a `document` line in a file moving from `oldPath` to `newPath`
+ * must read to name the same repository file, or `undefined` when it needs no
+ * rewrite. Beancount resolves a relative filename against the directory of
+ * the file that declares it, as it does an include (w31/133), so a move to
+ * another folder points it elsewhere. A root-anchored or URL filename, one
+ * that resolves the same from both folders, and one that names no file in
+ * the repository (`exists`) are left as written: the last names nothing to
+ * keep.
+ */
+export function movedDocumentTarget(
+  oldPath: string,
+  newPath: string,
+  target: string,
+  exists: (path: string) => boolean,
+): string | undefined {
+  if (!target || target.startsWith("/") || isUrlTarget(target)) return;
+  if (/[\r\n]/.test(target)) return;
+  const before = resolveIncludeTarget(oldPath, target);
+  if (before === resolveIncludeTarget(newPath, target) || !exists(before))
+    return;
+  return includeTargetFor(newPath, before, target);
+}
+
 interface ScannedIncludeLine {
   line: string;
   index: number;
   include: IncludeLine | null;
+  /** The line's `document` directive, read under the same rules (w31/133). */
+  document: DocumentLine | null;
 }
 
 /**
  * Walk `content` line by line while tracking Beancount multiline string state,
  * so lines that start inside an open `"..."` string never produce an `include`
- * directive (w31/097). Line 1 is read past a leading byte-order mark, as the
- * engine reads it (w31/100); the mark stays at the front of that line and of
- * its include's `prefix`, so joining the lines or rewriting the include keeps
- * the file's bytes.
+ * or `document` directive (w31/097). Line 1 is read past a leading
+ * byte-order mark, as the engine reads it (w31/100); the mark stays at the
+ * front of that line and of its directive's `prefix`, so joining the lines or
+ * rewriting the directive keeps the file's bytes.
  */
 export function scanIncludeLines(content: string): ScannedIncludeLine[] {
   const { bom, text } = splitByteOrderMark(content);
@@ -87,12 +144,14 @@ export function scanIncludeLines(content: string): ScannedIncludeLine[] {
   let inString = false;
   return lines.map((line, index) => {
     const include = inString ? null : parseIncludeLine(line);
+    const document = inString || include ? null : parseDocumentLine(line);
     inString = endsInsideString(line, inString);
-    if (index > 0 || !bom) return { line, index, include };
+    if (index > 0 || !bom) return { line, index, include, document };
     return {
       line: bom + line,
       index,
       include: include && { ...include, prefix: bom + include.prefix },
+      document: document && { ...document, prefix: bom + document.prefix },
     };
   });
 }
