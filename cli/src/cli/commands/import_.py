@@ -1760,7 +1760,10 @@ def import_entries(
                         "proven_date_format": date_format,
                         "proven_date_source": source.name,
                     }
-            elif earlier_proof is not None and date_format == earlier_proof[0]:
+            elif earlier_proof is not None and (
+                date_format == earlier_proof[0]
+                or (date_order(date_format) is not None and date_order(date_format) == date_order(earlier_proof[0]))
+            ):
                 order = date_order(date_format)
                 inferred_notes.append(
                     f"Read {source.name} {f'{order} ' if order else ''}as {earlier_proof[1]} was "

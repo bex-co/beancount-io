@@ -200,6 +200,10 @@ def test_an_ambiguous_export_in_another_shape_follows_the_proved_convention(book
 
     assert _dates(data) == ["2026-08-03", "2026-08-05"]
     assert data["date_format"] == "%d-%m-%Y"
+    assert any(
+        note.startswith("Read dash.csv day-first as july.csv was (--date-format %d-%m-%Y)") for note in data["notes"]
+    ), data["notes"]
+    assert not any("cannot be told apart" in note for note in data["notes"]), data["notes"]
     # Nothing exact was proved, so july.csv's proof stands for the next file.
     entry = _record(bea_config_dir)
     assert (entry["proven_date_format"], entry["proven_date_source"]) == ("%d/%m/%Y", "july.csv")
