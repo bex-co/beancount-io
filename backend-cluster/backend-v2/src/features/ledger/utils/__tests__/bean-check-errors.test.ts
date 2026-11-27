@@ -285,6 +285,77 @@ describe("diffBeanCheckErrors with a commodity-plugin error already in the ledge
   });
 });
 
+// w31/128: `coherent_cost` places its error on the first transaction by date
+// that holds the currency without a cost, `unique_prices` on the day's first
+// price by line whatever its file, and `noduplicates` on the later copy by
+// date and line. A write in one file moves each into another without adding
+// one (the ledger service's wording, as stock Beancount's).
+describe("diffBeanCheckErrors with a plugin error a write moves to another file", () => {
+  const mixedCost = (currency: string, source: string) =>
+    error(`Currency '${currency}' is used both with and without cost`, source);
+  const disagreeing = (source: string) =>
+    error("Disagreeing price entries", source);
+  const duplicate = (source: string) =>
+    error(
+      "Duplicate entry: Balance: 2026-02-01 balance Assets:Cash 10 USD",
+      source,
+    );
+
+  it("is not new when an earlier or remaining uncosted holding sits in another file", () => {
+    expect(
+      diffBeanCheckErrors(
+        [mixedCost("VTI", "main.bean:98")],
+        [mixedCost("VTI", "qa-other.bean:3")],
+      ),
+    ).toEqual([]);
+  });
+
+  it("is not new when the day's prices reorder across files", () => {
+    expect(
+      diffBeanCheckErrors(
+        [disagreeing("qa-other.bean:7")],
+        [disagreeing("main.bean:10")],
+      ),
+    ).toEqual([]);
+  });
+
+  it("is not new when the later duplicate is the copy in another file", () => {
+    expect(
+      diffBeanCheckErrors(
+        [duplicate("main.bean:10")],
+        [duplicate("other.bean:11")],
+      ),
+    ).toEqual([]);
+  });
+
+  it("counts a second currency held both ways as new", () => {
+    const bnd = mixedCost("BND", "main.bean:120");
+    expect(
+      diffBeanCheckErrors(
+        [mixedCost("VTI", "main.bean:98")],
+        [mixedCost("VTI", "qa-other.bean:3"), bnd],
+      ),
+    ).toEqual([bnd]);
+  });
+
+  it("counts a second disagreeing day, or a third duplicate, as new", () => {
+    const second = disagreeing("qa-other.bean:9");
+    expect(
+      diffBeanCheckErrors(
+        [disagreeing("qa-other.bean:7")],
+        [disagreeing("main.bean:10"), second],
+      ),
+    ).toEqual([second]);
+    const third = duplicate("main.bean:12");
+    expect(
+      diffBeanCheckErrors(
+        [duplicate("main.bean:10")],
+        [duplicate("other.bean:11"), third],
+      ),
+    ).toEqual([third]);
+  });
+});
+
 // w1/236: a renamed file's errors went with it; keyed on the old path every
 // one of them read as new.
 describe("diffBeanCheckErrors with renamed files", () => {

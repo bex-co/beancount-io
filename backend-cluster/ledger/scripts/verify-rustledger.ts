@@ -80,6 +80,7 @@ import {
 } from "./entry-move";
 import { verifyKnownCommodityErrors } from "./known-commodity-errors";
 import { verifyKnownLotErrors } from "./known-lot-errors";
+import { verifyKnownPlacedErrors } from "./known-placed-errors";
 import {
   verifyEditErrorLines,
   verifyProjectedEditLines,
@@ -6177,6 +6178,7 @@ poptag #trip
   await verifyProjectedDocuments();
   await verifyKnownLotErrors();
   await verifyKnownCommodityErrors();
+  await verifyKnownPlacedErrors();
   await verifyEditErrorLines();
   await verifyProjectedEditLines();
 

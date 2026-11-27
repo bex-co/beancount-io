@@ -104,4 +104,44 @@ describe("SOURCE_SLICE_EXECUTORS", () => {
     });
     expect(result.result).not.toHaveProperty("files");
   });
+
+  // w31/128: deleting the first of two uncosted VTI holdings moves
+  // coherent_cost's error to the other, in another file. The commit's re-read
+  // named the error the ledger already had as new.
+  it("delete reports no new error when it moves a coherent_cost error to another file", async () => {
+    const mixedCost = (filename: string, lineno: number) => ({
+      message: "Currency 'VTI' is used both with and without cost",
+      source: { filename, lineno },
+      code: "PLUGIN",
+    });
+    const deleteSourceSlice = jest.fn().mockResolvedValue({
+      message: "Entry deleted successfully",
+      entryHash: "h1",
+      files: ["main.bean"],
+      dryRun: false,
+      validation: {
+        errorsBefore: 1,
+        errorsAfter: 1,
+        newErrors: [],
+        valid: true,
+      },
+    });
+    const ctx = context({ deleteSourceSlice });
+    ctx.services.ledgerData.getErrors = jest
+      .fn()
+      .mockResolvedValueOnce([mixedCost("main.bean", 98)])
+      .mockResolvedValueOnce([mixedCost("qa-other.bean", 3)]);
+    const result = await SOURCE_SLICE_EXECUTORS.delete(ctx, {
+      ledger: LEDGER_ID,
+      entryHash: "h1",
+      sha256sum: "s1",
+    });
+    if (!result.ok) throw new Error("expected ok");
+    expect(result.result.validation).toEqual({
+      errorsBefore: 1,
+      errorsAfter: 1,
+      newErrors: [],
+      valid: true,
+    });
+  });
 });

@@ -149,6 +149,66 @@ describe("gateFileWrite", () => {
     ).rejects.toBeInstanceOf(NewLedgerErrorsError);
   });
 
+  // w31/128: one updateLedgerFiles commit that writes an uncosted VTI holding
+  // dated earlier, and lines above a price, into the other file moves both
+  // coherent_cost's and unique_prices' errors there.
+  describe("over a plugin error the edit moves to another file", () => {
+    const placed = (message: string, filename: string, lineno: number) => ({
+      message,
+      source: { filename, lineno },
+    });
+    const VTI = "Currency 'VTI' is used both with and without cost";
+    const PRICES = "Disagreeing price entries";
+    const before = async () => [
+      placed(VTI, "main.bean", 98),
+      placed(PRICES, "qa-other.bean", 7),
+    ];
+
+    it("passes it", async () => {
+      const result = await gateFileWrite(
+        services(before, [
+          placed(VTI, "qa-other.bean", 3),
+          placed(PRICES, "main.bean", 10),
+        ]),
+        identity,
+        "alice/main",
+        overlays,
+        false,
+      );
+      expect(result).toMatchObject({
+        errorsBefore: 2,
+        errorsAfter: 2,
+        newErrors: [],
+        valid: true,
+      });
+    });
+
+    it("still refuses a second currency held both ways, or a second disagreeing day", async () => {
+      for (const added of [
+        placed(
+          "Currency 'BND' is used both with and without cost",
+          "a.bean",
+          4,
+        ),
+        placed(PRICES, "qa-other.bean", 12),
+      ]) {
+        await expect(
+          gateFileWrite(
+            services(before, [
+              placed(VTI, "qa-other.bean", 3),
+              placed(PRICES, "main.bean", 10),
+              added,
+            ]),
+            identity,
+            "alice/main",
+            overlays,
+            false,
+          ),
+        ).rejects.toBeInstanceOf(NewLedgerErrorsError);
+      }
+    });
+  });
+
   // w23/233: an unreadable baseline read as "no errors", so each error the
   // ledger already had counted as new.
   it("says it was not checked, and refuses nothing, when the baseline cannot be read", async () => {

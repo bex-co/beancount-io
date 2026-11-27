@@ -465,7 +465,20 @@ currency first, so opening an account that sorts before that one, or
 renaming that one, reports none as new. `onecommodity`'s error matches on
 its account and its set of currencies, in any order and in any file, because
 it sits on the account's last entry. A new undeclared currency, or a third
-currency in a mixed account, still counts. `moveEntrySources` matches an
+currency in a mixed account, still counts. Three more plugin errors match on
+their message in any file, because each is issued once per thing and placed
+by a rule that reads entries across files, as stock Beancount places it, so
+a write in one file can move it into another. `coherent_cost`'s `Currency
+'<currency>' is used both with and without cost` sits on the first
+transaction by date that holds the currency without a cost, so an earlier
+one in another file, or deleting the first one, moves it. `unique_prices`'
+`Disagreeing price entries` sits on the day's first price by line, whatever
+its file, so lines written above one price move it to the other's file. Its
+message names no pair or day, so it matches on the message alone.
+`noduplicates`' `Duplicate entry: …` for a balance, note or event sits on
+the later copy by date and line, so lines written above one copy move it. A
+second currency held both ways, a second disagreeing pair or day, or a third
+copy still counts. `moveEntrySources` matches an
 error inside a moved entry in `toPath`, where the entry goes, so moving an
 entry that already has an error reports none as new; a second copy of its
 message, or an error the move causes elsewhere such as a balance assertion

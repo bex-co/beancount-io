@@ -133,6 +133,36 @@ const MIXED_ACCOUNT =
   /^(More than one (?:cost )?currency in account '[^']*': )(.*)$/s;
 
 /**
+ * Errors a plugin issues once per thing and places by a rule that reads
+ * entries across files, as stock Beancount places them, so a write in one
+ * file can move one into another without adding one. Each matches in
+ * whichever file it sits, on its message:
+ *
+ * - `onecommodity`'s, on its account and its sorted currencies (w31/127).
+ * - `coherent_cost`'s "Currency 'VTI' is used both with and without cost",
+ *   once per currency, on the first transaction by date that holds it
+ *   without a cost. An earlier one in another file, or deleting the first,
+ *   moved it there (w31/128).
+ * - `unique_prices`' "Disagreeing price entries", once per pair and day, on
+ *   the price that comes first when the day's prices are sorted by line,
+ *   whatever their file, so lines written above one price moved it to the
+ *   other's file (w31/128). The message names no pair or day; a second
+ *   disagreeing pair or day still counts by the per-message count.
+ * - `noduplicates`' "Duplicate entry: …" for a balance, note or event, on
+ *   the later copy by date and line, whatever their file (w31/128).
+ */
+const PLACED_ACROSS_FILES = [
+  MIXED_ACCOUNT,
+  /^Currency '[^']*' is used both with and without cost$/,
+  /^Disagreeing price entries$/,
+  /^Duplicate entry: /,
+];
+
+/** Whether an error with this matching message matches in any file. */
+const placedAcrossFiles = (message: string) =>
+  PLACED_ACROSS_FILES.some((pattern) => pattern.test(message));
+
+/**
  * The engine ends an interpolation or lot-match error with the entry's date
  * and narration, `(2026-08-30, "Groceries")`, so editing either one rewrote
  * an existing error's message.
@@ -271,10 +301,10 @@ export function atLinesBeforeEdits(
  * but not line: a write that inserts or removes lines moves every error below
  * it without introducing one, and keying on `file:line` refused a valid append
  * over the moved error (w23/034). Each `before` error excuses one `after`
- * error, so a second copy of a known message still counts as new. An
- * account's mixed-currency error matches in any file (w31/127). This is the
- * ledger service's `newLedgerErrors` rule (w21/m1), restated because packages
- * share no code.
+ * error, so a second copy of a known message still counts as new. A plugin
+ * error placed by a rule that reads across files matches in any file
+ * (w31/127, w31/128). This is the ledger service's `newLedgerErrors` rule
+ * (w21/m1), restated because packages share no code.
  */
 export function diffBeanCheckErrors(
   before: readonly BeanCheckError[],
@@ -293,7 +323,7 @@ export function diffBeanCheckErrors(
     : (message: string) => message;
   const key = (error: BeanCheckError, file: string) => {
     const message = withoutEntryTag(named(error.message));
-    return `${message}\u0000${MIXED_ACCOUNT.test(message) ? "" : file}`;
+    return `${message}\u0000${placedAcrossFiles(message) ? "" : file}`;
   };
   const left = new Map<string, number>();
   for (const error of before) {

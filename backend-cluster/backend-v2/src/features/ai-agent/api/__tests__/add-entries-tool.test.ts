@@ -301,4 +301,42 @@ describe("addLedgerEntries", () => {
       });
     });
   });
+
+  // w31/128: an uncosted VTI holding dated before the first one, added to
+  // another file, moves coherent_cost's error there; the commit's re-read
+  // named the old error as new.
+  describe("over a coherent_cost error the entry moves to another file", () => {
+    const mixedCost = (currency: string, filename: string, lineno: number) => ({
+      message: `Currency '${currency}' is used both with and without cost`,
+      source: { filename, lineno },
+      code: "PLUGIN",
+    });
+
+    it("reports no new error", async () => {
+      const result = await commit(
+        [mixedCost("VTI", "main.bean", 98)],
+        [mixedCost("VTI", "qa-other.bean", 3)],
+      );
+      expect(result.validation).toEqual({
+        errorsBefore: 1,
+        errorsAfter: 1,
+        newErrors: [],
+        valid: true,
+      });
+    });
+
+    it("still reports a second currency held both ways", async () => {
+      const result = await commit(
+        [mixedCost("VTI", "main.bean", 98)],
+        [
+          mixedCost("BND", "main.bean", 40),
+          mixedCost("VTI", "qa-other.bean", 3),
+        ],
+      );
+      expect(result.validation).toMatchObject({
+        newErrors: [{ message: mixedCost("BND", "main.bean", 40).message }],
+        valid: false,
+      });
+    });
+  });
 });

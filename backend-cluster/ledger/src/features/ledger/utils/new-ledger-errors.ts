@@ -23,6 +23,38 @@ const MIXED_ACCOUNT =
   /^(More than one (?:cost )?currency in account '[^']*': )(.*)$/s;
 
 /**
+ * Errors a plugin issues once per thing and places by a rule that reads
+ * entries across files, as stock Beancount places them, so a write in one
+ * file can move one into another without adding one. Each matches in
+ * whichever file it sits, on its message:
+ *
+ * - `onecommodity`'s, on its account and its sorted currencies (w31/127).
+ * - `coherent_cost`'s "Currency 'VTI' is used both with and without cost",
+ *   once per currency, on the first transaction by date that holds it
+ *   without a cost (`coherent-cost.ts`). An earlier one in another file, or
+ *   deleting the first, moved it there (w31/128).
+ * - `unique_prices`' "Disagreeing price entries", once per pair and day, on
+ *   the price that comes first when the day's prices are sorted by line,
+ *   whatever their file (`unique-prices.ts`), so lines written above one
+ *   price moved it to the other's file (w31/128). The message names no pair
+ *   or day; a second disagreeing pair or day still counts by the per-message
+ *   count.
+ * - `noduplicates`' "Duplicate entry: …" for a balance, note or event, on
+ *   the later copy by date and line, whatever their file (`noduplicates.ts`,
+ *   w31/128).
+ */
+const PLACED_ACROSS_FILES = [
+  MIXED_ACCOUNT,
+  /^Currency '[^']*' is used both with and without cost$/,
+  /^Disagreeing price entries$/,
+  /^Duplicate entry: /,
+];
+
+/** Whether an error with this matching message matches in any file. */
+const placedAcrossFiles = (message: string) =>
+  PLACED_ACROSS_FILES.some((pattern) => pattern.test(message));
+
+/**
  * The engine ends an interpolation or lot-match error with the entry's date
  * and narration, `(2026-08-30, "Groceries")`. Editing either one rewrote the
  * message, so the error the ledger already had read as a new one and the
@@ -94,8 +126,8 @@ export interface MovedLines {
  * but not line: editing or deleting a block shifts every later line, so an
  * existing error below the edit moves without being new (w21/m1). Each
  * `before` error excuses one `after` error, in order, so a second copy of a
- * known message still counts as introduced. An account's mixed-currency
- * error matches in any file (w31/127).
+ * known message still counts as introduced. A plugin error placed by a rule
+ * that reads across files matches in any file (w31/127, w31/128).
  *
  * An error inside lines the write `moved` is matched in the file they move
  * to: an entry that already had an error carries it to its new file, where
@@ -108,7 +140,7 @@ export function newLedgerErrors(
 ): BeancountErrorPublic[] {
   const key = (error: BeancountErrorPublic, file = error.source?.filename) => {
     const message = withoutEntryTag(error.message);
-    return `${message}\u0000${MIXED_ACCOUNT.test(message) ? "" : (file ?? "")}`;
+    return `${message}\u0000${placedAcrossFiles(message) ? "" : (file ?? "")}`;
   };
   const fileBefore = ({ source }: BeancountErrorPublic) => {
     if (!source) return undefined;

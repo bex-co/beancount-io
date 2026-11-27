@@ -1415,6 +1415,195 @@ describe.each(["rest", "gql", "mcp"] as const)(
   },
 );
 
+// w31/128: `coherent_cost` puts its error on the first transaction by date
+// that holds the currency without a cost, and `unique_prices` on the day's
+// first price by line, whatever its file. An uncosted holding dated earlier
+// in the other file, or an entry threaded in above that file's price, moves
+// the error the ledger already had into another file (the note's setup).
+describe.each(["rest", "gql", "mcp"] as const)(
+  "appendLedgerText over a plugin error the append moves to another file via %s",
+  (surface) => {
+    const MAIN = [
+      'plugin "beancount.plugins.coherent_cost"',
+      'plugin "beancount.plugins.unique_prices"',
+      'include "qa-other.bean"',
+      "",
+      "2026-06-01 price VTI 100.00 USD",
+      "2026-06-02 price VTI 100.00 USD",
+      "",
+      '2026-03-01 * "buy VTI"',
+      "  Assets:Broker:VTI  10 VTI {100.00 USD}",
+      "  Assets:Bank:Savings  -1000.00 USD",
+      "",
+      '2026-04-01 * "VTI gift"',
+      "  Assets:Gift  2 VTI @ 100.00 USD",
+      "  Income:Salary  -200.00 USD",
+      "",
+    ].join("\n");
+    const OTHER = "; qa other\n\n2026-06-01 price VTI 101.00 USD\n";
+    const mixedCost = (currency: string) =>
+      `Currency '${currency}' is used both with and without cost`;
+    const PRICES = "Disagreeing price entries";
+
+    /** The stand-in engine, placing both errors by the plugins' own rules. */
+    const errorsOf = (files: ReadonlyMap<string, string>) => {
+      type At = { filename: string; lineno: number };
+      const costed = new Set<string>();
+      const uncosted = new Map<string, At & { date: string }>();
+      const days = new Map<string, (At & { number: string })[]>();
+      for (const [filename, text] of files) {
+        let date = "";
+        text.split("\n").forEach((line, index) => {
+          const at = { filename, lineno: index + 1 };
+          date = /^(\d{4}-\d{2}-\d{2}) /.exec(line)?.[1] ?? date;
+          const price = /^(\S+) price VTI (\S+) USD$/.exec(line);
+          if (price) {
+            days.set(price[1]!, [
+              ...(days.get(price[1]!) ?? []),
+              { ...at, number: price[2]! },
+            ]);
+          }
+          const posting = /^\s+\S+\s+-?[\d.]+ ([A-Z]+)(.*)$/.exec(line);
+          if (!posting || posting[1] === "USD") return;
+          const currency = posting[1]!;
+          if (posting[2]!.includes("{")) costed.add(currency);
+          else if ((uncosted.get(currency)?.date ?? "9999") > date) {
+            uncosted.set(currency, { ...at, date });
+          }
+        });
+      }
+      return [
+        ...[...uncosted]
+          .filter(([currency]) => costed.has(currency))
+          .map(([currency, { filename, lineno }]) => ({
+            message: mixedCost(currency),
+            source: { filename, lineno },
+          })),
+        ...[...days.values()]
+          .filter((prices) => new Set(prices.map((p) => p.number)).size > 1)
+          .map((prices) => {
+            const [{ filename, lineno }] = [...prices].sort(
+              (a, b) => a.lineno - b.lineno,
+            );
+            return { message: PRICES, source: { filename, lineno } };
+          }),
+      ];
+    };
+
+    async function ledger() {
+      // Its own caller, so these calls spend no other test's write budget.
+      const f = await fixture({
+        ...identity,
+        userId: `usr_text_placed_${surface}`,
+      });
+      f.state.files = new Map([
+        ["main.bean", MAIN],
+        ["qa-other.bean", OTHER],
+      ]);
+      f.state.errorsOf = errorsOf;
+      return f;
+    }
+    const verdict = (res: { ok: boolean; data?: unknown }) => {
+      const data = res.ok ? (res.data as Record<string, unknown>) : {};
+      return (data.validation ?? data) as {
+        valid: boolean;
+        errorsBefore: number;
+        errorsAfter: number;
+        newErrors: { message: string; source?: unknown }[];
+      };
+    };
+
+    it("starts from the note's errors", () => {
+      expect(
+        errorsOf(
+          new Map([
+            ["main.bean", MAIN],
+            ["qa-other.bean", OTHER],
+          ]),
+        ),
+      ).toEqual([
+        {
+          message: mixedCost("VTI"),
+          source: { filename: "main.bean", lineno: 13 },
+        },
+        { message: PRICES, source: { filename: "qa-other.bean", lineno: 3 } },
+      ]);
+    });
+
+    it.each([
+      [
+        "an uncosted holding dated before the first one",
+        '2026-02-01 * "qa early gift"\n  Assets:Gift  1 VTI @ 100.00 USD\n  Income:Salary  -100.00 USD',
+        "qa-other.bean",
+      ],
+      [
+        "an unrelated entry threaded in above the other file's price",
+        '2026-02-01 * "qa coffee"\n  Expenses:Food:Coffee  3.00 USD\n  Assets:Bank:Savings  -3.00 USD',
+        "main.bean",
+      ],
+    ])(
+      "previews %s valid: true and commits it without allowInvalid",
+      async (_what, text, vtiIn) => {
+        const f = await ledger();
+        const args = { text, path: "qa-other.bean" };
+        try {
+          const preview = await f.call(surface, { ...args, dryRun: true });
+          expect(preview.ok).toBe(true);
+          expect(verdict(preview)).toMatchObject({
+            valid: true,
+            errorsBefore: 2,
+            errorsAfter: 2,
+            newErrors: [],
+          });
+          expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+          const commit = await f.call(surface, args);
+          expect(commit.ok).toBe(true);
+          expect(verdict(commit)).toMatchObject({ valid: true, newErrors: [] });
+          expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+          // Both texts land above the other file's price, which moves the
+          // disagreement the ledger had into main.bean; the early gift moves
+          // coherent_cost's into the other file.
+          const after = errorsOf(f.state.files);
+          expect(after).toContainEqual({
+            message: PRICES,
+            source: { filename: "main.bean", lineno: 5 },
+          });
+          expect(
+            after.find(({ message }) => message === mixedCost("VTI"))?.source
+              .filename,
+          ).toBe(vtiIn);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it.each([
+      [
+        "a second currency held both ways",
+        '2026-02-01 * "qa BND"\n  Assets:Broker:BND  5 BND {70.00 USD}\n  Assets:Gift  1 BND @ 70.00 USD\n  Assets:Bank:Savings  -420.00 USD',
+        mixedCost("BND"),
+      ],
+      ["a second disagreeing day", "2026-06-02 price VTI 102.00 USD", PRICES],
+    ])("still refuses %s", async (_what, text, message) => {
+      const f = await ledger();
+      const args = { text, path: "qa-other.bean" };
+      try {
+        const preview = await f.call(surface, { ...args, dryRun: true });
+        expect(verdict(preview)).toMatchObject({
+          valid: false,
+          newErrors: [{ message }],
+        });
+        const commit = await f.call(surface, args);
+        expect(commit.ok).toBe(false);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
 // w31/116: an append threads its text in by date, so everything below the
 // insertion sits that many lines lower in the text bean-check reads. A preview
 // and a refusal commit nothing, so both name a new error at its line in the

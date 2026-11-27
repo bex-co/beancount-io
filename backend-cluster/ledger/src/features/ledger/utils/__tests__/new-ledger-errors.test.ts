@@ -300,6 +300,82 @@ describe("a commodity-plugin error already in the ledger", () => {
   });
 });
 
+// w31/128: `coherent_cost` places its error on the first transaction by date
+// that holds the currency without a cost (`coherent-cost.ts`),
+// `unique_prices` on the day's first price by line whatever its file
+// (`unique-prices.ts`), and `noduplicates` on the later copy by date and line
+// (`noduplicates.ts`). A write in one file moves each into another.
+describe("a plugin error a write moves to another file", () => {
+  const mixedCost = (currency: string, filename: string, lineno: number) =>
+    at(
+      `Currency '${currency}' is used both with and without cost`,
+      filename,
+      lineno,
+    );
+  const disagreeing = (filename: string, lineno: number) =>
+    at("Disagreeing price entries", filename, lineno);
+  const duplicate = (filename: string, lineno: number) =>
+    at(
+      "Duplicate entry: Balance: 2026-02-01 balance Assets:Cash 10 USD",
+      filename,
+      lineno,
+    );
+
+  it("is not new when an earlier or remaining uncosted holding sits in another file", () => {
+    expect(
+      newLedgerErrors(
+        [mixedCost("VTI", "main.bean", 98)],
+        [mixedCost("VTI", "qa-other.bean", 3)],
+      ),
+    ).toEqual([]);
+  });
+
+  it("is not new when the day's prices reorder across files", () => {
+    expect(
+      newLedgerErrors(
+        [disagreeing("qa-other.bean", 7)],
+        [disagreeing("main.bean", 10)],
+      ),
+    ).toEqual([]);
+  });
+
+  it("is not new when the later duplicate is the copy in another file", () => {
+    expect(
+      newLedgerErrors(
+        [duplicate("main.bean", 10)],
+        [duplicate("other.bean", 11)],
+      ),
+    ).toEqual([]);
+  });
+
+  it("counts a second currency held both ways as new", () => {
+    const bnd = mixedCost("BND", "main.bean", 120);
+    expect(
+      newLedgerErrors(
+        [mixedCost("VTI", "main.bean", 98)],
+        [mixedCost("VTI", "qa-other.bean", 3), bnd],
+      ),
+    ).toEqual([bnd]);
+  });
+
+  it("counts a second disagreeing day, or a third duplicate, as new", () => {
+    const second = disagreeing("qa-other.bean", 9);
+    expect(
+      newLedgerErrors(
+        [disagreeing("qa-other.bean", 7)],
+        [disagreeing("main.bean", 10), second],
+      ),
+    ).toEqual([second]);
+    const third = duplicate("main.bean", 12);
+    expect(
+      newLedgerErrors(
+        [duplicate("main.bean", 10)],
+        [duplicate("other.bean", 11), third],
+      ),
+    ).toEqual([third]);
+  });
+});
+
 describe("newLedgerErrors after an edit or delete", () => {
   it("does not count an existing error the write moved to another line", () => {
     // Deleting a block above it shifts the duplicate open up (w21/m1).
