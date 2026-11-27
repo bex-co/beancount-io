@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import { boundEchoes, DomainError, ErrorCategory } from "@/shared/errors";
 import { carrierFields } from "../utils/run-tool";
 
@@ -170,6 +171,11 @@ function describeIssue(issue: ZodIssueJson, prefix: unknown[] = []): string {
   return named ? `${named}: ${issue.message}` : String(issue.message);
 }
 
+function describeIssues(issues: readonly ZodIssueJson[]): string | undefined {
+  if (issues.length === 0) return undefined;
+  return issues.map((issue) => describeIssue(issue)).join("; ");
+}
+
 function compactZodMessage(message: string): string | undefined {
   const trimmed = message.trim();
   if (!trimmed.startsWith("[") && !trimmed.includes('"path"')) return undefined;
@@ -177,8 +183,7 @@ function compactZodMessage(message: string): string | undefined {
     const issues = JSON.parse(
       trimmed.slice(trimmed.indexOf("[")),
     ) as ZodIssueJson[];
-    if (!Array.isArray(issues) || issues.length === 0) return undefined;
-    return issues.map((issue) => describeIssue(issue)).join("; ");
+    return Array.isArray(issues) ? describeIssues(issues) : undefined;
   } catch {
     return undefined;
   }
@@ -286,18 +291,23 @@ export function envelopeFromThrown(
     };
   }
   // A DomainError bounded its own echoes; anything else is bounded here
-  // (w1/225).
-  const raw = boundEchoes(
-    error instanceof Error ? error.message : String(error),
-  );
-  const compacted = compactZodMessage(raw);
+  // (w1/225), and a Zod refusal only once it is read. Its message is the
+  // issue array as JSON, where a control character is already `\u001b` and a
+  // backslash `\\`: a cut inside one left JSON that did not parse, and parsing
+  // turned the escapes the bound had let through back into ESC (w31/135).
+  const text = error instanceof Error ? error.message : String(error);
+  const compacted =
+    error instanceof ZodError
+      ? describeIssues(error.issues)
+      : compactZodMessage(text);
   if (compacted) {
     return {
       code: ErrorCategory.BAD_USER_INPUT,
-      message: compacted,
+      message: boundEchoes(compacted),
       hint: fallbackHintFor(ErrorCategory.BAD_USER_INPUT, options),
     };
   }
+  const raw = boundEchoes(text);
   // Anything else is unexpected, whatever its text says: a database error
   // that quoted "Plaid Item not found" was once read as NOT_FOUND and so
   // escaped the mask, SQL and user id included (w1/189). A guard that means

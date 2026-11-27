@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import { GraphQLError } from "graphql";
+import { z } from "zod";
 import type { RouterContext } from "@koa/router";
 import { boundEchoes, NotFoundError, BadUserInputError } from "@/shared/errors";
 import { ECHO_MAX } from "../bound-echoes";
@@ -102,4 +103,50 @@ describe("on each surface", () => {
     });
     expect(envelope.message).toBe(`preview refused: ${bounded}`);
   });
+});
+
+/**
+ * w31/135. MCP bounded a Zod refusal's JSON text and then parsed it. A cut
+ * inside an escape (`\u00…`, `\…`) left JSON that no longer parsed, so a
+ * misspelt key became an INTERNAL_SERVER_ERROR carrying the issue dump; and
+ * the bound saw the JSON's own `\u001b`, which parsing turned back into ESC.
+ */
+describe("an MCP Zod refusal", () => {
+  const refusal = (key: string): z.ZodError => {
+    const parsed = z
+      .object({})
+      .strict()
+      .safeParse({ [key]: 1 });
+    if (parsed.success) throw new Error("expected a refusal");
+    return parsed.error;
+  };
+  const Z = (n: number) => "Z".repeat(n);
+
+  it.each([
+    ["ESC", "\u001b[31mred", 'Unrecognized key: "\\u001b[31mred"'],
+    ["CR", "a\rb", 'Unrecognized key: "a\\u000db"'],
+    [
+      "30 × BEL",
+      `a${"\u0007".repeat(30)}`,
+      `Unrecognized key: "a${"\\u0007".repeat(19)}\\u00…"`,
+    ],
+    [
+      "a backslash at the cut",
+      `${Z(118)}\\x`,
+      `Unrecognized key: "${Z(118)}\\…"`,
+    ],
+    ["no escape near the cut", Z(300), `Unrecognized key: "${Z(119)}…"`],
+  ])(
+    "names a key holding %s, escaped and cut, as BAD_USER_INPUT",
+    (_label, key, message) => {
+      const error = refusal(key);
+      // The ZodError itself, and its issue array arriving as plain text.
+      for (const thrown of [error, new Error(error.message)]) {
+        expect(envelopeFromThrown(thrown)).toMatchObject({
+          code: "BAD_USER_INPUT",
+          message,
+        });
+      }
+    },
+  );
 });

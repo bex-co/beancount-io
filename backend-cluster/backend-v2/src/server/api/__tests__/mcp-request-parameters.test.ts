@@ -31,6 +31,7 @@ async function withClient(
     queryShellText: jest.Mock;
     listLedgers: jest.Mock;
   }) => Promise<void>,
+  appConfig: AppConfig = config,
 ) {
   const domainAccess = jest.fn();
   const queryShellText = jest
@@ -51,7 +52,7 @@ async function withClient(
       },
     },
   ) as unknown as McpRequestContext;
-  const server = assembleMcpRegistry(context, config);
+  const server = assembleMcpRegistry(context, appConfig);
   const client = new Client({ name: "request-parameters", version: "1" });
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -820,4 +821,76 @@ describe("MCP task-augmented requests (w31/080)", () => {
       expect(f.listLedgers).not.toHaveBeenCalled();
     });
   });
+});
+
+/**
+ * w31/135. A misspelt key is the caller's mistake on both MCP paths that parse
+ * arguments with Zod, and its echo is short and inert (w1/225): every control
+ * character `\uXXXX`, the run cut at 120 with `…`. The bound used to run on
+ * the issue array's JSON text before it was parsed, so a cut inside an escape
+ * answered an unmasked INTERNAL_SERVER_ERROR dump, and ESC came back raw.
+ */
+describe("a misspelt argument key on MCP (w31/135)", () => {
+  const production = { ...config, env: "production" } as AppConfig;
+  const RAW_CONTROL = /(?![\t\n])\p{Cc}/u;
+  const Z = (n: number) => "Z".repeat(n);
+  const keys = [
+    ["ESC", "\u001b[31mred", 'Unrecognized key: "\\u001b[31mred"'],
+    ["CR", "a\rb", 'Unrecognized key: "a\\u000db"'],
+    [
+      "30 × BEL",
+      `a${"\u0007".repeat(30)}`,
+      `Unrecognized key: "a${"\\u0007".repeat(19)}\\u00…"`,
+    ],
+    [
+      "a backslash at the cut",
+      `${Z(118)}\\x`,
+      `Unrecognized key: "${Z(118)}\\…"`,
+    ],
+    ["no escape near the cut", Z(300), `Unrecognized key: "${Z(119)}…"`],
+  ] as const;
+
+  it.each(keys)(
+    "a tool refuses a key holding %s as BAD_USER_INPUT in production",
+    async (_label, key, message) => {
+      await withClient(async (f) => {
+        const result = await f.client.callTool({
+          name: "checkLedger",
+          arguments: { ledger: "alice/main", [key]: 1 },
+        });
+        expect(result.isError).toBe(true);
+        expect(result.structuredContent).toMatchObject({
+          ok: false,
+          error: { code: "BAD_USER_INPUT", message },
+        });
+        const [text] = result.content as { type: string; text: string }[];
+        expect(text.text).toContain(`BAD_USER_INPUT: ${message}\n`);
+        expect(text.text).not.toMatch(RAW_CONTROL);
+        expect(JSON.stringify(result)).not.toContain("unrecognized_keys");
+        expect(f.domainAccess).not.toHaveBeenCalled();
+      }, production);
+    },
+  );
+
+  it.each(keys)(
+    "a prompt refuses a key holding %s as -32602 BAD_USER_INPUT in production",
+    async (_label, key, message) => {
+      await withClient(async (f) => {
+        const error = await f.client
+          .getPrompt({
+            name: "close-month",
+            arguments: { ledger: "alice/main", [key]: "x" },
+          })
+          .catch((caught: unknown) => caught);
+        expect(error).toBeInstanceOf(McpError);
+        expect((error as McpError).code).toBe(-32602);
+        expect((error as McpError).data).toMatchObject({
+          code: "BAD_USER_INPUT",
+          message,
+        });
+        expect((error as McpError).message).not.toMatch(RAW_CONTROL);
+        expect(f.domainAccess).not.toHaveBeenCalled();
+      }, production);
+    },
+  );
 });

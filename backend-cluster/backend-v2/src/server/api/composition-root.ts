@@ -639,14 +639,18 @@ export function assembleMcpRegistry(
       entry.descriptor.inputSchema,
     ).safeParseAsync(request.params.arguments ?? {});
     if (!parsed.success) {
-      // A Zod error's message is its issue array, which `envelopeFromThrown`
-      // reduces to `path: reason` per wrong field, nested paths included.
+      // A Zod error's issues, which `envelopeFromThrown` reduces to
+      // `path: reason` per wrong field, nested paths included. Masked like
+      // every other tool failure, should one ever not reduce (w31/135).
       const envelope = envelopeFromThrown(parsed.error);
       mcpLogger.info("MCP tool arguments refused", {
         tool: name,
         error: envelope.message,
       });
-      return toolFailureResult(name, envelope);
+      return toolFailureResult(
+        name,
+        envelopeFromThrown(parsed.error, maskingFor(config)),
+      );
     }
     const result = await entry.handle(parsed.data as never);
     // The output check the SDK dispatcher ran: a success must match the
@@ -697,7 +701,7 @@ export function assembleMcpRegistry(
           return CallToolResultSchema.parse(
             toolFailureResult(
               named.data.name,
-              envelopeFromThrown(parsed.error),
+              envelopeFromThrown(parsed.error, maskingFor(config)),
             ),
           );
         }
