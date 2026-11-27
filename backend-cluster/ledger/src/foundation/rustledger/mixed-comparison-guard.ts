@@ -305,8 +305,11 @@ function classifyOperand(text: string, shadowed: Set<string>): OperandClass {
   return "unknown";
 }
 
-/** Split on commas outside any paren level. */
-function splitTopLevel(text: string): string[] {
+/**
+ * Split on commas outside any paren level. The single shared copy: the
+ * GROUP-BY coverage guard splits SELECT lists through this too.
+ */
+export function splitTopLevel(text: string): string[] {
   const parts: string[] = [];
   let depth = 0;
   let current = "";

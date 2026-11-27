@@ -1,4 +1,5 @@
 import type { BeancountOptionsPublic } from "@/foundation/ledger-api-types";
+import { decodeStringLiteral } from "./plugins/collect-plugins";
 import { DEFAULT_CLAMP_ACCOUNTS, type ClampAccountOptions } from "./time-clamp";
 
 /**
@@ -77,33 +78,6 @@ function parseBoolean(value: string): boolean {
     value.toLowerCase() === "true" ||
     value.toLowerCase() === "yes"
   );
-}
-
-/**
- * Decode Beancount's string-literal escapes as its C lexer does: the recognized
- * escapes `\n \t \r \\ \"` map to their control/literal characters; any other
- * `\<char>` sequence drops the backslash and keeps the following character
- * (verified empirically: `\x41` -> `x41`, `\q` -> `q`).
- */
-function decodeStringLiteral(raw: string): string {
-  let out = "";
-  let escaped = false;
-  for (const ch of raw) {
-    if (escaped) {
-      if (ch === "n") out += "\n";
-      else if (ch === "t") out += "\t";
-      else if (ch === "r") out += "\r";
-      else out += ch;
-      escaped = false;
-    } else if (ch === "\\") {
-      escaped = true;
-    } else {
-      out += ch;
-    }
-  }
-  // A trailing lone backslash is not reachable for a well-formed quoted literal
-  // (the closing quote would have terminated it); drop it defensively.
-  return out;
 }
 
 /**
