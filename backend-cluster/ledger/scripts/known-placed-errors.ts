@@ -13,8 +13,16 @@
  * now matches it in any file, while a second currency held both ways, a
  * second disagreeing day and a third duplicate still count as new.
  *
+ * The engine also runs a `coherent_cost` of its own when the plugin is
+ * declared by name. It refuses only an uncosted posting with an `@` price, and
+ * says so with no location, so beside Beancount's error the ledger listed two
+ * where bean-check lists one. A write adding the first priced gift to a ledger
+ * that already had the error brought the engine's in as new, and it was
+ * refused (w31/129). The ledger now lists Beancount's one error, at its line.
+ *
  * Run by `verify-rustledger.ts` (live engine; not a jest test).
  */
+import { deepStrictEqual } from "node:assert";
 import { LedgerDataService } from "@/features/ledger/service/ledger-data-service";
 import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { projectNewLedgerErrors } from "@/features/ledger/utils/new-ledger-errors";
@@ -89,7 +97,7 @@ async function ledgerOver(files: Record<string, string>, name: string) {
       fail(`${what}: ${JSON.stringify(added)}`);
     }
   };
-  return { factory, commits, baseline, moves, adds };
+  return { factory, commits, baseline, project, moves, adds };
 }
 
 const COST_MAIN = [
@@ -195,6 +203,91 @@ async function verifyMovedCoherentCost(): Promise<void> {
   );
 }
 
+/** `COST_MAIN` with a gift that has no price: the engine finds nothing. */
+const UNPRICED_MAIN = COST_MAIN.replace(
+  "Assets:Gift  2 VTI @ 100.00 USD\n  Income:Salary  -200.00 USD",
+  "Assets:Gift  2 VTI\n  Income:Salary  -2 VTI",
+);
+
+async function verifyCoherentCostOnce(): Promise<void> {
+  // Where bean-check 3.2.3 places the error on both fixtures: the gift's line.
+  const at = COST_MAIN.split("\n").indexOf('2026-04-01 * "VTI gift"') + 1;
+  const reported = async (files: Record<string, string>) =>
+    (await parseLedgerFiles({ ...files }, "main.bean")).errors.map(
+      (error) => [error.message, error.file, error.line] as const,
+    );
+  const once = async (what: string, files: Record<string, string>) => {
+    const errors = await reported(files);
+    try {
+      deepStrictEqual(errors, [[VTI, "main.bean", at]]);
+    } catch {
+      fail(`${what} reports ${JSON.stringify(errors)}`);
+    }
+  };
+  await once("a priced gift beside a costed buy", {
+    "main.bean": COST_MAIN,
+    [OTHER]: "; other\n",
+  });
+
+  // A ledger whose only uncosted VTI has no price, and an entry to edit.
+  const salary = txn(
+    "2026-05-01",
+    "salary",
+    "Assets:Bank:Savings  100.00 USD",
+    "Income:Salary  -100.00 USD",
+  );
+  const files: Record<string, string> = {
+    "main.bean": `${UNPRICED_MAIN}\n${salary}`,
+    [OTHER]: "; other\n",
+  };
+  await once("an unpriced gift beside a costed buy", files);
+  const ledger = await ledgerOver(files, "coherent-cost-once");
+  // An appendLedgerText preview of a priced gift adds nothing.
+  const appended = await ledger.project({
+    "main.bean": `${files["main.bean"]}\n${gift("2026-06-01", "priced gift")}`,
+  });
+  if (
+    appended.newErrors.length > 0 ||
+    appended.errorsBefore !== 1 ||
+    appended.errorsAfter !== 1
+  ) {
+    fail(
+      `a priced gift's preview reads ${JSON.stringify({
+        errorsBefore: appended.errorsBefore,
+        errorsAfter: appended.errorsAfter,
+        newErrors: messages(appended.newErrors),
+      })}`,
+    );
+  }
+  // An edit that turns the salary into a priced gift commits unforced.
+  const journal = new LedgerJournalService(ledger.factory as never, {} as never);
+  const { data } = await journal.getJournal({
+    ledgerId: "synthetic/coherent-cost-once",
+    userId: undefined,
+    query: { includeSource: true },
+  });
+  const row = (
+    data as unknown as {
+      entry_hash: string;
+      narration?: string;
+      source?: { sha256sum: string } | null;
+    }[]
+  ).find((item) => item.narration === "salary");
+  if (!row?.source) fail("no source for the salary");
+  await journal.updateSourceSlice({
+    ledgerId: "synthetic/coherent-cost-once",
+    userId: "usr_1",
+    entryHash: row.entry_hash,
+    sha256sum: row.source.sha256sum,
+    newContent: gift("2026-05-01", "priced gift").trimEnd(),
+  });
+  if (ledger.commits.length !== 1) fail("the priced gift did not commit");
+  await once("the committed priced gift", files);
+  console.log(
+    "✓ a priced gift beside a costed buy reports Beancount's one coherent_cost error, at its line, and a write adding one is nothing new (w31/129)",
+  );
+}
+
 const PRICE_MAIN = [
   'plugin "beancount.plugins.unique_prices"',
   `include "${OTHER}"`,
@@ -283,6 +376,7 @@ async function verifyMovedDuplicateBalance(): Promise<void> {
 }
 
 export async function verifyKnownPlacedErrors(): Promise<void> {
+  await verifyCoherentCostOnce();
   await verifyMovedCoherentCost();
   await verifyMovedPriceDisagreement();
   await verifyMovedDuplicateBalance();

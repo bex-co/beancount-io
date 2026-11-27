@@ -1,5 +1,5 @@
 import type { BeancountError, DirectiveJson } from "@rustledger/wasm";
-import { coherentCostErrors } from "../coherent-cost";
+import { reconcileCoherentCostErrors } from "../coherent-cost";
 import { reconcileLeafOnlyErrors } from "../leafonly";
 import { locateDuplicateErrors } from "../noduplicates";
 
@@ -160,7 +160,7 @@ describe("locateDuplicateErrors", () => {
   });
 });
 
-describe("coherentCostErrors", () => {
+describe("reconcileCoherentCostErrors", () => {
   const source = [
     'plugin "beancount.plugins.coherent_cost"',
     '2024-01-04 * "Buy"',
@@ -180,24 +180,55 @@ describe("coherentCostErrors", () => {
       ["Equity:Opening", "VTI"],
     ]),
   ];
+  const reconcile = (errors: BeancountError[], text: string) =>
+    reconcileCoherentCostErrors(
+      errors,
+      stream,
+      { "main.bean": text },
+      "main.bean",
+    );
+  const VTI = "Currency 'VTI' is used both with and without cost";
+  // rustledger's own coherent_cost, for a priced gift: unlocated (w31/129).
+  const engine = pluginError(
+    "Currency 'VTI' is used with both cost and price-only notation - this may cause inconsistencies",
+  );
+  const other = pluginError("Some other plugin error");
 
   it("refuses a commodity held at cost and without, on its first uncosted use", () => {
-    expect(
-      placed(coherentCostErrors(stream, { "main.bean": source }, "main.bean")),
-    ).toEqual([[5, "Currency 'VTI' is used both with and without cost"]]);
+    expect(placed(reconcile([], source))).toEqual([[5, VTI]]);
+  });
+
+  it("replaces the engine's error for a priced gift with Beancount's one, located", () => {
+    // bean-check 3.2.3 lists one error for `1 VTI @ 100 USD` beside a costed
+    // buy; the engine's unlocated duplicate was kept beside it.
+    const priced = source.replace(
+      "  Assets:Broker  1 VTI\n",
+      "  Assets:Broker  1 VTI @ 100 USD\n",
+    );
+    expect(placed(reconcile([other, engine], priced))).toEqual([
+      [null, other.message],
+      [5, VTI],
+    ]);
   });
 
   it("runs under pedantic, and not without either", () => {
     const pedantic = source.replace("coherent_cost", "pedantic");
+    expect(placed(reconcile([], pedantic))).toEqual([[5, VTI]]);
+    const without = source.split("\n").slice(1).join("\n");
+    expect(reconcile([], without)).toEqual([]);
+    // Undeclared, nothing of the engine's is touched.
+    expect(reconcile([engine], without)).toEqual([engine]);
+  });
+
+  it("keeps the other errors when no currency is held both ways", () => {
+    const costed = [stream[0]!];
     expect(
-      coherentCostErrors(stream, { "main.bean": pedantic }, "main.bean"),
-    ).toHaveLength(1);
-    expect(
-      coherentCostErrors(
-        stream,
-        { "main.bean": source.split("\n").slice(1).join("\n") },
+      reconcileCoherentCostErrors(
+        [other, engine],
+        costed,
+        { "main.bean": source },
         "main.bean",
       ),
-    ).toEqual([]);
+    ).toEqual([other]);
   });
 });
