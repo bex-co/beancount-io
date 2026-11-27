@@ -240,6 +240,14 @@ const SINGLE_ENTRY_REFUSALS: [RegExp, string][] = [
     /^`[a-z]+` configures the ledger and is not an entry/,
     "ledgerEntryNotAnEntry",
   ],
+  // A new control character is refused outright, naming the field and the
+  // code point in server English (w21/816). Entry Context maps it to its own
+  // copy; the shape matches both the text edit (`newContent …`) and the
+  // structured add (`entry 0: …`).
+  [
+    /\bcontains the control character (?<code>U\+[0-9A-F]{4,6}), which the ledger cannot store as text/,
+    "ledgerEntryControlCharacter",
+  ],
 ];
 
 function singleEntryRefusal(

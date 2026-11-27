@@ -413,6 +413,8 @@ export const uk: Translations = {
     "Дата має стояти на початку рядка: видаліть пробіл перед нею.",
   ledgerEntryNotAnEntry:
     "Опції, плагіни та включення не є записами. Змінюйте їх у редакторі файлу книги.",
+  ledgerEntryControlCharacter:
+    "Ця правка додає невидимий керівний символ ({{code}}). Видаліть його та збережіть знову.",
   openAccountInvalidRoot: "Оберіть дійсний тип рахунку.",
   openAccountNameRequired: "Введіть хоча б одну частину назви рахунку.",
   openAccountEmptyComponent: "Частини назви рахунку не можуть бути порожніми.",

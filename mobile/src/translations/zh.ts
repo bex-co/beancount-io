@@ -364,6 +364,8 @@ export const zh: Translations = {
   ledgerEntryDateIndented: "日期必须位于行首：请删除它前面的空格。",
   ledgerEntryNotAnEntry:
     "选项、插件和包含指令不是记录。请在账本文件编辑器中修改它们。",
+  ledgerEntryControlCharacter:
+    "此编辑会添加一个不可见的控制字符（{{code}}）。请将其删除后再保存。",
   openAccountInvalidRoot: "请选择有效的账户类型。",
   openAccountNameRequired: "请至少输入一级账户名称。",
   openAccountEmptyComponent: "各级账户名称不能为空。",

@@ -401,6 +401,8 @@ export const fa: Translations = {
     "تاریخ باید در ابتدای خط باشد: فاصلهٔ پیش از آن را حذف کنید.",
   ledgerEntryNotAnEntry:
     "گزینه‌ها، افزونه‌ها و شامل‌شدن‌ها ورودی نیستند. آن‌ها را در ویرایشگر فایل دفتر تغییر دهید.",
+  ledgerEntryControlCharacter:
+    "این ویرایش یک نویسه کنترلی نامرئی ({{code}}) اضافه می‌کند. آن را حذف کنید و دوباره ذخیره کنید.",
   openAccountInvalidRoot: "یک نوع حساب معتبر انتخاب کنید.",
   openAccountNameRequired: "دست‌کم یک بخش از نام حساب را وارد کنید.",
   openAccountEmptyComponent: "بخش‌های نام حساب نمی‌توانند خالی باشند.",

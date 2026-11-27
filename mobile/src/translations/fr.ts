@@ -414,6 +414,8 @@ export const fr: Translations = {
     "La date doit commencer la ligne : supprimez l'espace qui la précède.",
   ledgerEntryNotAnEntry:
     "Les options, les plugins et les inclusions ne sont pas des écritures. Modifiez-les dans l'éditeur de fichier du grand livre.",
+  ledgerEntryControlCharacter:
+    "Cette modification ajoute un caractère de contrôle invisible ({{code}}). Supprimez-le et enregistrez à nouveau.",
   openAccountInvalidRoot: "Choisissez un type de compte valide.",
   openAccountNameRequired: "Saisissez au moins un élément du nom.",
   openAccountEmptyComponent: "Les éléments du nom ne peuvent pas être vides.",

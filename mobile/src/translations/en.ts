@@ -397,6 +397,8 @@ export const en = {
     "The date must start its line: remove the space before it.",
   ledgerEntryNotAnEntry:
     "Options, plugins and includes aren't entries. Change them in the ledger file editor.",
+  ledgerEntryControlCharacter:
+    "This edit adds an invisible control character ({{code}}). Remove it and save again.",
   openAccountInvalidRoot: "Choose a valid account type.",
   openAccountNameRequired: "Enter at least one account name component.",
   openAccountEmptyComponent: "Account components cannot be empty.",

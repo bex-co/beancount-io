@@ -404,6 +404,8 @@ export const nl: Translations = {
     "De datum moet aan het begin van de regel staan: verwijder de spatie ervoor.",
   ledgerEntryNotAnEntry:
     "Opties, plugins en includes zijn geen boekingen. Wijzig ze in de bestandseditor van het grootboek.",
+  ledgerEntryControlCharacter:
+    "Deze bewerking voegt een onzichtbaar stuurteken ({{code}}) toe. Verwijder het en sla opnieuw op.",
   openAccountInvalidRoot: "Kies een geldig accounttype.",
   openAccountNameRequired: "Voer minstens één naamdeel in.",
   openAccountEmptyComponent: "Naamdelen mogen niet leeg zijn.",

@@ -413,6 +413,8 @@ export const es: Translations = {
     "La fecha debe empezar la línea: quita el espacio que tiene delante.",
   ledgerEntryNotAnEntry:
     "Las opciones, los complementos y las inclusiones no son asientos. Cámbialos en el editor de archivos del libro.",
+  ledgerEntryControlCharacter:
+    "Esta edición añade un carácter de control invisible ({{code}}). Quítalo y vuelve a guardar.",
   openAccountInvalidRoot: "Elige un tipo de cuenta válido.",
   openAccountNameRequired: "Escribe al menos un componente del nombre.",
   openAccountEmptyComponent:
