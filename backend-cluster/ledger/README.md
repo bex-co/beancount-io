@@ -199,21 +199,30 @@ engine fills the column (w23/m19).
 ## Validation: stock errors the engine does not raise
 
 These things stock `bean-check` refuses load without an error in the pinned
-engine (`@rustledger/wasm` 0.24.0), so `src/foundation/rustledger/stock-syntax-errors.ts`
-reports them at their line, in the same error list `checkLedger`, the post-write
-report and the write gates read (w23/240, w31/120, w31/121):
+engine (`@rustledger/wasm` 0.24.0), so the ledger reports them at their line, in
+the same error list `checkLedger`, the post-write report and the write gates
+read. Two scans in `src/foundation/rustledger/` read the source text for them:
+`stock-syntax-errors.ts` (w23/240, w31/120, w31/121), which reads a posting's
+cost and price with `posting-syntax-errors.ts`, and `balance-tolerance-syntax.ts`
+(w23/197). Each row names the file whose rule finds it:
 
-| Code | Construct | Stock's message |
-| --- | --- | --- |
-| `SYNTAX` | an unquoted booking method on `open` (`open Assets:Stock ABC STRICT`) | `syntax error, unexpected CURRENCY` |
-| `DUPLICATE_COMMODITY` | a second `commodity` directive for a currency, on the later one | `Duplicate commodity directives for 'ZZZ'` |
-| `DUPLICATE_METADATA` | one metadata key twice on a transaction, or on a posting, at the transaction's line | `Duplicate metadata field on entry`, `Duplicate posting metadata field` |
-| `NEGATIVE_PRICE` | a negative per-unit or total price (`10 EUR @ -1.10 USD`), on the posting's line | `Negative prices are not allowed: -1.10 USD (see …)` |
-| `COST_MERGE` | a merge cost (`-5 HOOL {*}`), on the posting's line | `Cost merging is not supported yet`, `Duplicate merge-cost spec` |
-| `DUPLICATE_COST_COMPONENT` | a second amount, date or label in one `{…}`, on the posting's line | `Duplicate cost: …`, `Duplicate date: '2026-01-05'.`, `Duplicate label: 'b'.` |
-| `P0012` | an account with a colon after it (`Assets:Cash:`), on a posting, an `open`, `close`, `pad`, `balance`, `note`, `document` or `custom` line, or a metadata value | `syntax error, unexpected COLON, expecting …` (the tokens stock expected there) |
-| `P0012` | a string where a dated line's flag goes (`2026-09-02 "x"`) | `syntax error, unexpected STRING` |
-| `P0012` | a number with no leading digit (`.50 USD`), at each one | `Invalid token: '.50'` |
+| Code | Construct | Stock's message | Source |
+| --- | --- | --- | --- |
+| `SYNTAX` | an unquoted booking method on `open` (`open Assets:Stock ABC STRICT`) | `syntax error, unexpected CURRENCY` | `stock-syntax-errors.ts` |
+| `DUPLICATE_COMMODITY` | a second `commodity` directive for a currency, on the later one | `Duplicate commodity directives for 'ZZZ'` | `stock-syntax-errors.ts` |
+| `DUPLICATE_METADATA` | one metadata key twice on a transaction, or on a posting, at the transaction's line | `Duplicate metadata field on entry`, `Duplicate posting metadata field` | `stock-syntax-errors.ts` |
+| `NEGATIVE_PRICE` | a negative per-unit or total price (`10 EUR @ -1.10 USD`), on the posting's line | `Negative prices are not allowed: -1.10 USD (see …)` | `posting-syntax-errors.ts` |
+| `COST_MERGE` | a merge cost (`-5 HOOL {*}`), on the posting's line | `Cost merging is not supported yet`, `Duplicate merge-cost spec` | `posting-syntax-errors.ts` |
+| `DUPLICATE_COST_COMPONENT` | a second amount, date or label in one `{…}`, on the posting's line | `Duplicate cost: …`, `Duplicate date: '2026-01-05'.`, `Duplicate label: 'b'.` | `posting-syntax-errors.ts` |
+| `P0012` | an account with a colon after it (`Assets:Cash:`), on a posting, an `open`, `close`, `pad`, `balance`, `note`, `document` or `custom` line, or a metadata value | `syntax error, unexpected COLON, expecting …` (the tokens stock expected there) | `stock-syntax-errors.ts` |
+| `P0012` | a string where a dated line's flag goes (`2026-09-02 "x"`) | `syntax error, unexpected STRING` | `stock-syntax-errors.ts` |
+| `P0012` | a number with no leading digit (`.50 USD`), at each one | `Invalid token: '.50'` | `stock-syntax-errors.ts` |
+| `TOLERANCE` | a currency before a balance tolerance's `~` (`balance Assets:Cash 49.75 USD ~ 0.05 USD`, where the grammar wants `49.75 ~ 0.05 USD`), on the `balance` line | `syntax error, unexpected TILDE, expecting end of file or EOL` | `balance-tolerance-syntax.ts` |
+
+The table lists these two scans only. Other files that `engine.ts` calls
+reconcile what Beancount's booking (a sale from an AVERAGE position), its
+plugins (`noduplicates`, `coherent_cost`, `sellgains` and others) and its pad
+checks refuse where the engine does not, and those are not listed here.
 
 The engine keeps a negative price's sign, so `10 EUR @ -1.10 USD` weighed
 -11.00 USD; it keeps a cost spec's first date, label and amount, and reads `{*}`
@@ -254,6 +263,14 @@ way Python's `Decimal` does, so each message prints the number stock prints. A
 line stock refuses as a syntax error, or a label that spans lines, is left
 alone. Checked against stock 3.2.3 on 1,800 random postings and the 126 tracked
 ledger fixtures with no difference.
+
+The tolerance rule (`balance-tolerance-syntax.ts`) reads a `balance` line that
+starts with a date, in any spelling stock's lexer reads, and has a currency
+straight before its `~`. The valid spelling has the `~` straight after the
+number, so it never matches. Like the scan above, it skips a line inside a
+multi-line string and a line Beancount skips. The engine reads the misplaced
+spelling with the tolerance as written (`0.05`). The error is in the ledger's
+own words and names the spelling stock takes (`49.75 ~ 0.05 USD`).
 
 `yarn verify:rustledger` pins each construct: it fails when the raw engine
 starts to reject one, which is the cue to delete that rule. The unquoted
