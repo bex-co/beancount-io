@@ -348,3 +348,126 @@ describe("assertAmountsFitEngineDecimal", () => {
     );
   });
 });
+
+/**
+ * w31/108: three written forms Beancount reads as amounts slipped past the
+ * scanner — posting units (and an `@` price) with no currency, a number
+ * written flush against its currency, and a `custom` value under an unpadded
+ * or slash date — and committed rounded.
+ */
+describe("amounts Beancount reads without a spaced currency (w31/108)", () => {
+  const BIG = "1.0000000000000000000000000000001";
+  const FITS = "1.000000000000000000000000001";
+
+  const forms = (amount: string): [string, string][] => [
+    [
+      "posting units with no currency",
+      `2026-09-02 * "p" "n"\n  Assets:Cash  -${amount}\n  Expenses:Food:Coffee  1.00 USD\n`,
+    ],
+    [
+      "flagged posting units with no currency before a cost",
+      `2026-09-02 * "p" "n"\n  ! Assets:Broker  ${amount} {10 USD}\n  Assets:Cash\n`,
+    ],
+    [
+      "posting units with no currency before a price",
+      `2026-09-02 * "p" "n"\n  Assets:Broker  ${amount} @ 10 USD\n  Assets:Cash\n`,
+    ],
+    [
+      "a per-unit price with no currency",
+      `2026-09-02 * "p" "n"\n  Assets:Broker  1 HOOL @ ${amount}\n  Assets:Cash  -1.00 USD\n`,
+    ],
+    [
+      "a total price with no currency",
+      `2026-09-02 * "p" "n"\n  Assets:Broker  1 HOOL @@ ${amount}\n  Assets:Cash  -1.00 USD\n`,
+    ],
+    [
+      "a price flush against its currency",
+      `2026-09-02 price EUR ${amount}USD\n`,
+    ],
+    [
+      "posting units flush against their currency",
+      `2026-09-02 * "p" "n"\n  Assets:Cash  -${amount}USD\n  Expenses:Food:Coffee\n`,
+    ],
+    [
+      "a metadata amount flush against its currency",
+      `2026-09-02 * "p" "n"\n  limit: ${amount}USD\n  Expenses:Food:Coffee  1.00 USD\n  Assets:Cash\n`,
+    ],
+    [
+      "a balance amount flush against its currency",
+      `2026-09-02 balance Assets:Cash ${amount}USD\n`,
+    ],
+    [
+      "a custom value under an unpadded date",
+      `2026-9-1 custom "qa" ${amount}\n`,
+    ],
+    ["a custom value under a slash date", `2026/9/1 custom "qa" ${amount}\n`],
+    [
+      "a custom value under a mixed unpadded date",
+      `2026-09-1 custom "qa" ${amount}\n`,
+    ],
+  ];
+
+  it.each(forms(BIG))("refuses %s", (_name, text) => {
+    expect(textAmountLiterals(text)).toContain(
+      text.includes(`-${BIG}`) ? `-${BIG}` : BIG,
+    );
+    expect(() => assertAmountsFitEngineDecimal(text)).toThrow(
+      BadUserInputError,
+    );
+    expect(() => assertAmountsFitEngineDecimal(text)).toThrow(
+      /has more than 28 significant digits/,
+    );
+  });
+
+  it.each(forms(FITS))("accepts %s with 28 digits", (_name, text) => {
+    expect(() => assertAmountsFitEngineDecimal(text)).not.toThrow();
+  });
+
+  it("reads unpadded dates as dates, not as numbers", () => {
+    expect(
+      textAmountLiterals(
+        [
+          '2026-9-1 * "x" "y"',
+          "  due: 2026-9-1",
+          "  paid: 2026/9/01",
+          "  Expenses:Food:Coffee  1.00 USD",
+          "  Assets:Cash",
+          "2026/9/1 balance Assets:Cash -1.00 USD",
+        ].join("\n"),
+      ),
+    ).toEqual(["1.00", "-1.00"]);
+  });
+
+  it.each([
+    [
+      "an unpadded transaction header",
+      `2026-9-1 * "x"\n  Expenses:Food:Coffee  1.00 USD\n  Assets:Cash\n`,
+    ],
+    [
+      "an unpadded metadata date",
+      `2026-09-01 * "x"\n  due: 2026-9-1\n  Expenses:Food:Coffee  1.00 USD\n  Assets:Cash\n`,
+    ],
+    [
+      "account components holding digits",
+      `2026-09-01 * "x"\n  Assets:Bank2  1.00 USD\n  Assets:Vault123456789012345678901234567890\n`,
+    ],
+    [
+      "a digit run followed by lowercase letters",
+      `2026-09-01 * "x"\n  ref: 123456789012345678901234567890abc\n  Expenses:Food:Coffee  1.00 USD\n  Assets:Cash\n`,
+    ],
+    [
+      "a long number inside a string on a posting line",
+      `2026-09-01 * "x"\n  Expenses:Food:Coffee  1.00 USD\n  Assets:Cash  "123456789012345678901234567890"\n`,
+    ],
+    [
+      "a long number after ; on a posting line",
+      `2026-09-01 * "x"\n  Expenses:Food:Coffee  1.00 USD ; 123456789012345678901234567890\n  Assets:Cash ;123456789012345678901234567890\n`,
+    ],
+    [
+      "a long number on a continuation line of a multiline string",
+      `2026-09-01 * "x" "line 1\n  Assets:Cash 123456789012345678901234567890"\n  Expenses:Food:Coffee  1.00 USD\n  Assets:Cash\n`,
+    ],
+  ])("does not refuse %s", (_name, text) => {
+    expect(() => assertAmountsFitEngineDecimal(text)).not.toThrow();
+  });
+});

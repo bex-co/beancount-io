@@ -901,6 +901,74 @@ describe.each<Surface>(["rest", "gql", "mcp"])(
 );
 
 /**
+ * w31/108. Posting units with no currency, a number flush against its
+ * currency, and a `custom` value under an unpadded date are amounts the engine
+ * reads back rounded: a create or a replacement holding one is refused on
+ * every surface, and the same text with 28 digits still commits.
+ */
+describe.each<Surface>(["rest", "gql", "mcp"])(
+  "amounts written without a spaced currency via %s (w31/108)",
+  (surface) => {
+    const BIG = "1.0000000000000000000000000000001";
+    const FITS = "1.000000000000000000000000001";
+    const forms = (amount: string): [string, string][] => [
+      [
+        "posting units with no currency",
+        `2026-09-02 * "qa" "no currency"\n  Assets:Cash  -${amount}\n  Expenses:Food  1.00 USD\n`,
+      ],
+      [
+        "a price flush against its currency",
+        `2026-09-02 price EUR ${amount}USD\n`,
+      ],
+      [
+        "a custom value under an unpadded date",
+        `2026-9-1 custom "qa" ${amount}\n`,
+      ],
+    ];
+
+    it.each(forms(BIG))(
+      "refuses a create or a replacement holding %s",
+      async (_label, content) => {
+        const original = "; previous\n";
+        const f = await fixture({ "existing.bean": original });
+        try {
+          for (const update of [false, true]) {
+            expect(await f.write(surface, content, update)).toMatchObject({
+              ok: false,
+              code: "BAD_USER_INPUT",
+            });
+          }
+          expect(f.files.has("new.bean")).toBe(false);
+          expect(f.files.get("existing.bean")?.content).toBe(original);
+          expect(f.commits).toHaveLength(0);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it.each(forms(FITS))(
+      "still creates and replaces a file holding %s with 28 digits",
+      async (_label, content) => {
+        const f = await fixture({ "existing.bean": "; previous\n" });
+        try {
+          for (const update of [false, true]) {
+            expect(await f.write(surface, content, update)).toMatchObject({
+              ok: true,
+            });
+          }
+          expect(f.files.get("new.bean")?.content).toBe(content);
+          expect(f.files.get("existing.bean")?.content).toBe(content);
+          expect(f.commits).toHaveLength(2);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+  },
+);
+
+/**
  * w1/212. A blank commit message wrote a blank commit, and "" defaulted
  * differently by surface (Gitea's "Add <path>" through MCP, the server's
  * "Create <path>" on REST). Blank is omitted: REST and GraphQL default it,

@@ -1761,3 +1761,81 @@ describe.each(["rest", "gql", "mcp"] as const)(
     });
   },
 );
+
+// w31/108: posting units with no currency, a number flush against its
+// currency, and a `custom` value under an unpadded date are all amounts the
+// engine reads back rounded. Each is refused on every surface, preview and
+// commit alike, and each still commits with 28 digits.
+describe.each(["rest", "gql", "mcp"] as const)(
+  "amounts written without a spaced currency via %s (w31/108)",
+  (surface) => {
+    const BIG = "1.0000000000000000000000000000001";
+    const FITS = "1.000000000000000000000000001";
+    const forms = (amount: string): [string, string, string][] => [
+      [
+        "posting units with no currency",
+        [
+          '2026-09-02 * "qa" "no currency"',
+          `  Assets:Cash  -${amount}`,
+          "  Expenses:Food:Coffee  1.00 USD",
+        ].join("\n"),
+        `-${amount}`,
+      ],
+      [
+        "a price flush against its currency",
+        `2026-09-02 price EUR ${amount}USD`,
+        amount,
+      ],
+      [
+        "a custom value under an unpadded date",
+        `2026-9-1 custom "qa" ${amount}`,
+        amount,
+      ],
+    ];
+
+    it.each(forms(BIG))(
+      "refuses %s with BAD_USER_INPUT on dryRun and commit",
+      async (_label, text, literal) => {
+        const f = await fixture();
+        try {
+          for (const dryRun of [true, false]) {
+            const res = await f.call(surface, { text, dryRun });
+            expect(res.ok).toBe(false);
+            const error = (res.ok ? {} : res.error) as {
+              code?: string;
+              message?: string;
+              originalError?: { category?: string; message?: string };
+            };
+            expect(error.code ?? error.originalError?.category).toBe(
+              "BAD_USER_INPUT",
+            );
+            expect(error.message ?? error.originalError?.message).toContain(
+              `amount ${literal} has more than 28 significant digits`,
+            );
+          }
+          expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    // appendLedgerText reads only `YYYY-MM-DD` heads (w23/240), so it refuses
+    // the unpadded `custom` as not a directive whatever its value; the other
+    // file writes commit it (file-write-size-parity, source-slice-parity).
+    it.each(forms(FITS).filter(([label]) => !label.includes("unpadded")))(
+      "still commits %s with 28 digits",
+      async (_label, text) => {
+        const f = await fixture();
+        try {
+          const res = await f.call(surface, { text });
+          expect(res.ok).toBe(true);
+          expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+          expect(f.state.files.get("main.bean")).toContain(FITS);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+  },
+);

@@ -1710,6 +1710,100 @@ describe.each(["rest", "gql", "mcp"])(
   },
 );
 
+// w31/108: posting units with no currency, a number flush against its
+// currency, and a `custom` value under an unpadded date are amounts the engine
+// reads back rounded. An entry-source update holding one is refused on every
+// surface, preview and commit alike; the same text with 28 digits still lands.
+describe.each(["rest", "gql", "mcp"])(
+  "amounts written without a spaced currency on update via %s (w31/108)",
+  (surface) => {
+    const BIG = "1.0000000000000000000000000000001";
+    const FITS = "1.000000000000000000000000001";
+    const forms = (amount: string): [string, string, string][] => [
+      [
+        "posting units with no currency",
+        `2026-09-02 * "qa" "no currency"\n  Assets:Cash  -${amount}\n  Expenses:Food:Coffee  1.00 USD\n`,
+        `-${amount}`,
+      ],
+      [
+        "a price flush against its currency",
+        `2026-09-02 price EUR ${amount}USD\n`,
+        amount,
+      ],
+      [
+        "a custom value under an unpadded date",
+        `2026-9-1 custom "qa" ${amount}\n`,
+        amount,
+      ],
+    ];
+    const dryRunFlag = (dryRun: boolean) =>
+      surface === "mcp" ? { dry_run: dryRun } : { dryRun };
+
+    it.each(forms(BIG))(
+      "refuses %s with BAD_USER_INPUT on preview and commit without calling the ledger",
+      async (_label, newContent, literal) => {
+        const f = await fixture();
+        try {
+          for (const dryRun of [true, false]) {
+            const result = await f.call(surface, "update", {
+              ...args("update"),
+              newContent,
+              ...dryRunFlag(dryRun),
+            });
+            expect(result.success).toBe(false);
+            const expected = expect.stringContaining(
+              `amount ${literal} has more than 28 significant digits`,
+            );
+            if (surface === "rest") {
+              expect(result.status).toBe(400);
+              expect(result.result).toMatchObject({
+                ok: false,
+                error: { code: "BAD_USER_INPUT", message: expected },
+              });
+            } else if (surface === "gql") {
+              expect(result.errors?.[0]?.originalError).toMatchObject({
+                category: "BAD_USER_INPUT",
+                message: expected,
+              });
+            } else {
+              expect(result.full).toMatchObject({
+                ok: false,
+                error: { code: "BAD_USER_INPUT", message: expected },
+              });
+            }
+          }
+          expect(f.journal.updateSourceSlice).not.toHaveBeenCalled();
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it.each(forms(FITS))(
+      "still previews and commits %s with 28 digits",
+      async (_label, newContent) => {
+        const f = await fixture();
+        try {
+          for (const dryRun of [true, false]) {
+            const result = await f.call(surface, "update", {
+              ...args("update"),
+              newContent,
+              ...dryRunFlag(dryRun),
+            });
+            expect(result.success).toBe(true);
+          }
+          expect(f.journal.updateSourceSlice).toHaveBeenCalledTimes(2);
+          const commit = f.journal.updateSourceSlice.mock.calls[1]?.[2];
+          expect(commit).toMatchObject({ new_content: newContent });
+          expect(commit?.dryRun).toBeUndefined();
+        } finally {
+          await f.close();
+        }
+      },
+    );
+  },
+);
+
 // w31/096: updateEntrySource / PUT .../entry-source / updateLedgerEntrySourceSlice
 // must enforce the same unopened `custom "budget"` account check as
 // addLedgerEntries and appendLedgerText while preserving CONFLICT/unchanged

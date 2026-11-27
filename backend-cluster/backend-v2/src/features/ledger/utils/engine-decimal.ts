@@ -9,15 +9,22 @@ import { isSkippedLine } from "./skipped-line";
  * refuses such literals (`backend-cluster/ledger` `entry-build.ts`, w21/997);
  * packages share no code, so this is the same rule restated for Beancount
  * text and setup opening balances, applied before any write or check
- * (`w23/081`, `w31/078`, `w31/095`).
+ * (`w23/081`, `w31/078`, `w31/095`, `w31/108`).
  */
 export const MAX_DECIMAL_DIGITS = 28;
 
 /** How much of an offending literal the refusal names before trimming. */
 const LITERAL_PREVIEW = 64;
 
+/**
+ * A date as Beancount's lexer reads it: four digits, `-` or `/`, the month,
+ * `-` or `/`, the day, so `2026-9-1` and `2026/9/1` are dates as much as
+ * `2026-09-01`. The ledger service's `SOURCE_DATE` (w31/106), restated.
+ */
+const SOURCE_DATE = String.raw`\d{4}[-/]\d{1,2}[-/]\d{1,2}`;
+
 const WS = /\s+/y;
-const DATE_TOKEN = /\d{4}[-/]\d{2}[-/]\d{2}(?![A-Za-z0-9_./-])/y;
+const DATE_TOKEN = new RegExp(`${SOURCE_DATE}(?![A-Za-z0-9_./-])`, "y");
 const TAG_TOKEN = /#[^\s#^,;{}()]+/y;
 const LINK_TOKEN = /\^[^\s#^,;{}()]+/y;
 const SLASH_CURRENCY = /\/[A-Z][A-Za-z0-9'._-]*/y;
@@ -30,7 +37,11 @@ const ACCOUNT_TOKEN = new RegExp(
 );
 const WORD_TOKEN = /[\p{L}][\p{L}\p{Nd}'._-]*/uy;
 const CURRENCY_WORD = /^(?:\/[A-Z]|[A-Za-z])[A-Za-z0-9'._-]*$/;
-const CUSTOM_DIRECTIVE_START = /^\s*\d{4}[-/]\d{2}[-/]\d{2}\s+custom\b/;
+const CUSTOM_DIRECTIVE_START = new RegExp(
+  String.raw`^\s*${SOURCE_DATE}\s+custom\b`,
+);
+/** A posting or metadata line: indented, as Beancount's grammar requires. */
+const INDENTED_LINE = /^[ \t]/;
 const EXPR_PUNCT = new Set(["+", "-", "*", "/", "(", ")"]);
 
 type CodeTokenKind =
@@ -173,7 +184,10 @@ function tokenizeCode(code: string): CodeToken[] {
       if (digits) {
         const end = digitsAt + digits.length;
         const after = code[end];
-        if (after && /[A-Za-z_.]/.test(after)) {
+        // A capital right after the digits starts a currency, as Beancount's
+        // lexer reads `1.00USD` (w31/108); a lowercase letter, `_` or `.`
+        // keeps the run one word, such as `2026abc`.
+        if (after && /[a-z_.]/.test(after)) {
           if (canBeUnarySign) {
             tokens.push({ kind: "punct", text: char, braceDepth });
             i += 1;
@@ -232,11 +246,14 @@ function isCurrencyWord(token: CodeToken | undefined): boolean {
  * Numeric literals from one tokenized line that the Beancount engine parses as
  * `Decimal`: amounts and arithmetic expressions before a currency, `balance`
  * amounts before `~`, compound `{per # total}` / `{cost}` lot specs, bare
- * metadata numbers, and `custom` directive numeric values.
+ * metadata numbers, and `custom` directive numeric values. On a posting line,
+ * the units after the account and the price after `@` / `@@` count with or
+ * without a currency, since Beancount infers a missing one (w31/108).
  */
 function lineAmountLiterals(
   tokens: readonly CodeToken[],
   isCustomDirective: boolean,
+  isIndentedLine: boolean,
 ): string[] {
   const literals: string[] = [];
   let seenAccountOutsideBraces = false;
@@ -270,6 +287,10 @@ function lineAmountLiterals(
           (prev?.kind === "punct" && prev.text === "#") ||
           seenAccountOutsideBraces)) ||
       (prev?.kind === "metaKey" && end === tokens.length - 1) ||
+      (isIndentedLine &&
+        !inBraces &&
+        (prev?.kind === "account" ||
+          (prev?.kind === "punct" && prev.text === "@"))) ||
       isCustomDirective;
 
     if (!isAmountContext) continue;
@@ -314,7 +335,11 @@ export function textAmountLiterals(
     if (onlyLines && !onlyLines.has(index)) continue;
     if (!scanned.code.trim()) continue;
     literals.push(
-      ...lineAmountLiterals(tokenizeCode(scanned.code), customLine),
+      ...lineAmountLiterals(
+        tokenizeCode(scanned.code),
+        customLine,
+        !startedInString && INDENTED_LINE.test(line),
+      ),
     );
   }
   return literals;

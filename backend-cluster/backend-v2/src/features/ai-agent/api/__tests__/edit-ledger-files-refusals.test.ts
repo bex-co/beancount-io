@@ -1188,6 +1188,86 @@ describe("amounts past 28 digits in file writes", () => {
 });
 
 /**
+ * w31/108. An exact-text edit that writes posting units with no currency, a
+ * number flush against its currency, or a `custom` value under an unpadded
+ * date puts an amount the engine reads back rounded into the file: refused on
+ * preview and commit, while the same edit with 28 digits lands.
+ */
+describe("amounts written without a spaced currency in exact-text edits (w31/108)", () => {
+  const BIG = "1.0000000000000000000000000000001";
+  const FITS = "1.000000000000000000000000001";
+  const edits = (amount: string): [string, string, string][] => [
+    ["posting units with no currency", "3000.00 USD", `-${amount}`],
+    [
+      "posting units flush against their currency",
+      "3000.00 USD",
+      `${amount}USD`,
+    ],
+    [
+      "a custom value under an unpadded date",
+      "  Income:Salary\n",
+      `  Income:Salary\n2026-9-1 custom "qa" ${amount}\n`,
+    ],
+  ];
+  const edit = (
+    f: Awaited<ReturnType<typeof fixture>>,
+    dry_run: boolean,
+    old_string: string,
+    new_string: string,
+  ) =>
+    f.client.callTool({
+      name: "updateLedgerFiles",
+      arguments: {
+        ledger: "alice/main",
+        description: "edit amount",
+        dry_run,
+        files: [{ path: "amounts.bean", old_string, new_string }],
+      },
+    });
+
+  it.each(edits(BIG))(
+    "refuses an edit writing %s on dry_run and commit",
+    async (_label, old_string, new_string) => {
+      const f = await fixture();
+      try {
+        for (const dry_run of [true, false]) {
+          const result = await edit(f, dry_run, old_string, new_string);
+          expect(result.isError).toBe(true);
+          expect(result.structuredContent).toMatchObject({
+            error: {
+              code: "BAD_USER_INPUT",
+              message: expect.stringContaining(
+                `${BIG} has more than 28 significant digits`,
+              ),
+            },
+          });
+        }
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each(edits(FITS))(
+    "still commits an edit writing %s with 28 digits",
+    async (_label, old_string, new_string) => {
+      const f = await fixture();
+      f.changeLedgerFiles.mockResolvedValue({
+        data: { success: true, data: {} },
+      });
+      try {
+        const result = await edit(f, false, old_string, new_string);
+        expect(result.isError).toBeFalsy();
+        expect(f.changeLedgerFiles).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+});
+
+/**
  * w31/085. A batch creating files inside case-, Unicode-, or
  * invisible-character-colliding parent folders must be refused upfront on both
  * dry-run and commit, while multiple files in the exact same new folder remain
