@@ -92,6 +92,22 @@ export interface GiteaFileCommitClient {
 /** How many times to re-read + re-apply + re-commit on a CAS conflict. */
 const MAX_ATTEMPTS = 5;
 
+/**
+ * Another write changed a file after the caller checked its write against
+ * that file, so nothing was committed (w31/131). Thrown only for a caller that
+ * passes `checked`: it runs its whole write again on what landed, check
+ * included, instead of the commit applying the change to content the check
+ * never saw.
+ */
+export class LostWriteRaceError extends ConflictError {
+  constructor(path: string) {
+    super(
+      "Ledger",
+      `another write changed ${path} after this write was checked`,
+    );
+  }
+}
+
 // Status/message extraction for the client's Response-shaped rejections and
 // the conflict taxonomy (`isGiteaWriteConflict`) are shared with the other
 // Gitea-write paths — see `@/features/ledger/utils/gitea-error`.
@@ -206,6 +222,13 @@ async function readFileOrNull(
  * commit as the text transforms — so an attachment (e.g. a receipt image) and
  * the ledger entries that reference it are atomic: both land or neither.
  *
+ * A caller that checked its write against the files it loaded passes that
+ * content as `checked`: every transformed path, `null` for a file that did not
+ * exist. The commit then lands only on exactly that content. A file that holds
+ * anything else when an attempt reads it was changed by a write the check
+ * never saw, and the commit stops with a {@link LostWriteRaceError} rather
+ * than re-applying the transform to it (w31/131).
+ *
  * Every commit made here is held to the free-tier directive limit, checked on
  * each attempt against the content that attempt would commit, so no caller has
  * to remember the check. `directiveLimit` is required so none forgets the
@@ -220,7 +243,12 @@ export async function commitLedgerFiles(
   {
     directiveLimit,
     rawCreates = [],
-  }: { directiveLimit: DirectiveLimitOptions; rawCreates?: RawFileCreate[] },
+    checked,
+  }: {
+    directiveLimit: DirectiveLimitOptions;
+    rawCreates?: RawFileCreate[];
+    checked?: ReadonlyMap<string, string | null>;
+  },
 ): Promise<{ commit?: string }> {
   // One tier lookup per commit, however many attempts it takes.
   const limit: DirectiveLimitOptions = directiveLimit.exempt
@@ -239,6 +267,11 @@ export async function commitLedgerFiles(
       [...transforms.entries()].map(
         async ([path, transform]): Promise<CommitOperation | null> => {
           const read = await readFileOrNull(client, owner, repo, path);
+          if (
+            checked &&
+            (read?.content ?? null) !== (checked.get(path) ?? null)
+          )
+            throw new LostWriteRaceError(path);
           const transformed = await transform(read?.content ?? null);
           // Idempotent retry paths (notably Plaid recovery after its DB mark
           // failed) can discover the desired block already exists. Do not send

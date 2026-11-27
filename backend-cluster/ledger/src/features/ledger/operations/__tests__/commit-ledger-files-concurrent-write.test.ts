@@ -1,4 +1,7 @@
-import { commitLedgerFiles } from "@/features/ledger/operations/commit-ledger-files";
+import {
+  commitLedgerFiles,
+  LostWriteRaceError,
+} from "@/features/ledger/operations/commit-ledger-files";
 import { isGiteaWriteConflict } from "@/features/gitea/utils/gitea-error";
 import { ServiceUnavailableError } from "@/shared/errors";
 
@@ -291,5 +294,140 @@ describe("a commit that loses the race for the branch ref", () => {
       );
       expect(fixture.calls()).toBe(1);
     });
+  });
+});
+
+/**
+ * w31/131. A caller that checked its write against the files it loaded passes
+ * that content as `checked`, and the commit lands only on exactly that content.
+ * Re-applying the transform to whatever another write left committed a change
+ * the caller's check never saw.
+ */
+describe("a commit held to the content its caller checked", () => {
+  function remoteHolding(initial: Record<string, string>) {
+    const remote = new Map(Object.entries(initial));
+    let attempts = 0;
+    const client = {
+      repos: {
+        repoGetContents: jest.fn(
+          async (_o: string, _r: string, path: string) => {
+            const text = remote.get(path);
+            if (text === undefined)
+              throw Object.assign(new Error("HTTP 404"), { status: 404 });
+            return {
+              data: {
+                content: Buffer.from(text).toString("base64"),
+                encoding: "base64",
+                sha: `blob-${text}`,
+              },
+            };
+          },
+        ),
+        repoChangeFiles: jest.fn(
+          async (
+            _o: string,
+            _r: string,
+            body: { files: Array<{ path: string; content: string }> },
+          ) => {
+            attempts += 1;
+            for (const file of body.files)
+              remote.set(
+                file.path,
+                Buffer.from(file.content, "base64").toString("utf8"),
+              );
+            return { data: { commit: { sha: `c${attempts}` } } };
+          },
+        ),
+      },
+    };
+    return { client, remote, attempts: () => attempts };
+  }
+  const commit = (
+    client: unknown,
+    transforms: Map<string, (content: string | null) => string>,
+    checked: Map<string, string | null>,
+  ) =>
+    commitLedgerFiles(client as never, "alice", "books", transforms, "edit", {
+      directiveLimit: { exempt: true },
+      checked,
+    });
+
+  it("commits when every file still holds what was checked", async () => {
+    const f = remoteHolding({ "main.bean": "; a\n" });
+    await expect(
+      commit(
+        f.client,
+        new Map([
+          ["main.bean", (content) => `${content}; mine\n`],
+          ["new.bean", (content) => `${content ?? ""}; created\n`],
+        ]),
+        new Map([
+          ["main.bean", "; a\n"],
+          ["new.bean", null],
+        ]),
+      ),
+    ).resolves.toEqual({ commit: "c1" });
+    expect(f.remote.get("main.bean")).toBe("; a\n; mine\n");
+    expect(f.remote.get("new.bean")).toBe("; created\n");
+  });
+
+  it("refuses a file another write changed, applying and committing nothing", async () => {
+    const f = remoteHolding({ "main.bean": "; a\n; theirs\n" });
+    const transform = jest.fn((content: string | null) => `${content}; mine\n`);
+    const outcome = commit(
+      f.client,
+      new Map([["main.bean", transform]]),
+      new Map([["main.bean", "; a\n"]]),
+    );
+    await expect(outcome).rejects.toBeInstanceOf(LostWriteRaceError);
+    await expect(outcome).rejects.toThrow(
+      "another write changed main.bean after this write was checked",
+    );
+    expect(transform).not.toHaveBeenCalled();
+    expect(f.client.repos.repoChangeFiles).not.toHaveBeenCalled();
+    expect(f.remote.get("main.bean")).toBe("; a\n; theirs\n");
+  });
+
+  it("refuses a file another write created where the check saw none", async () => {
+    const f = remoteHolding({ "new.bean": "; theirs\n" });
+    await expect(
+      commit(
+        f.client,
+        new Map([["new.bean", () => "; mine\n"]]),
+        new Map([["new.bean", null]]),
+      ),
+    ).rejects.toBeInstanceOf(LostWriteRaceError);
+    expect(f.client.repos.repoChangeFiles).not.toHaveBeenCalled();
+  });
+
+  it("re-reads after a lost ref race and refuses what the winner changed", async () => {
+    const f = remoteHolding({ "main.bean": "; a\n" });
+    f.client.repos.repoChangeFiles.mockImplementationOnce(async () => {
+      f.remote.set("main.bean", "; a\n; theirs\n");
+      throw LOST_RACE;
+    });
+    await expect(
+      commit(
+        f.client,
+        new Map([["main.bean", (content) => `${content}; mine\n`]]),
+        new Map([["main.bean", "; a\n"]]),
+      ),
+    ).rejects.toBeInstanceOf(LostWriteRaceError);
+    expect(f.remote.get("main.bean")).toBe("; a\n; theirs\n");
+  });
+
+  it("commits again after a lost ref race that left its files as checked", async () => {
+    const f = remoteHolding({ "main.bean": "; a\n" });
+    // The winner wrote another file; the branch moved, this file did not.
+    f.client.repos.repoChangeFiles.mockImplementationOnce(async () => {
+      throw LOST_RACE;
+    });
+    await commit(
+      f.client,
+      new Map([["main.bean", (content) => `${content}; mine\n`]]),
+      new Map([["main.bean", "; a\n"]]),
+    );
+    expect(f.client.repos.repoChangeFiles).toHaveBeenCalledTimes(2);
+    expect(f.remote.get("main.bean")).toBe("; a\n; mine\n");
   });
 });

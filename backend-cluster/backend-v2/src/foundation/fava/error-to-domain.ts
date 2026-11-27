@@ -28,6 +28,17 @@ const NEW_LEDGER_ERRORS = "NEW_LEDGER_ERRORS";
 /** The ledger service's wording for a file write whose `sha` went stale. */
 const LEDGER_FILE_CONFLICT = /^Ledger file conflict:/i;
 /**
+ * The ledger service's refusal of an entry-source edit, delete or move that
+ * another write overtook on every attempt (w31/131). Each attempt re-reads
+ * the ledger and checks the write against what landed, so the caller's
+ * `entryHash` and `sha256sum` still name the entry; the fix is to send the
+ * same call again, not to fetch a file `sha` these writes do not take.
+ */
+const LEDGER_SOURCE_WRITE_RACE =
+  /^Ledger conflict: (concurrent writes changed the files this write touches .+)$/s;
+const SOURCE_WRITE_RACE_HINT =
+  "Another write changed a file this write touches each time it tried to commit, so nothing was written. Send the same call again: it re-reads the ledger, finds the entries again, and checks the write against what landed.";
+/**
  * The ledger service's wording for a create over a path that exists (its
  * error middleware's `conflictMessage`), pinned by that package's tests.
  */
@@ -278,6 +289,12 @@ export function favaApiErrorToDomainError(
       if (LEDGER_FILE_CONFLICT.test(message)) {
         return new ConflictError("Ledger resource", message, {
           hint: "Re-read the file to get its current `sha`, then retry the write with that `sha`.",
+        });
+      }
+      const raced = LEDGER_SOURCE_WRITE_RACE.exec(message);
+      if (raced) {
+        return new ConflictError("Ledger", raced[1]!, {
+          hint: SOURCE_WRITE_RACE_HINT,
         });
       }
       return new ConflictError("Ledger resource", message);

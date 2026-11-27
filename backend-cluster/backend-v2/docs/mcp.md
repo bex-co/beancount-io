@@ -225,7 +225,8 @@ Five calls cover almost every session. Each links to the section that defines it
 5. **Edit one entry.** Take its `entry_hash` from `listLedgerEntries`, read
    `getEntryContext` for the current `sha256sum`, and send both with
    `updateEntrySource` or `deleteEntrySource`. A `CONFLICT` means the entry
-   changed since you read it: read it again and resend
+   changed since you read it: read it again and resend. When its hint says to
+   send the same call again, other writes kept landing first; resend it as is
    ([failure codes](#failure-codes)).
 
 ## Permissions and ledger boundaries
@@ -594,6 +595,11 @@ It refuses, writing nothing:
 - an entry that already lives in `toPath` (`BAD_USER_INPUT`);
 - a stale `sha256sum` for any listed entry (`CONFLICT`): the whole move is
   refused, not the rest of it;
+- other writes that changed a file the move touches before each of its 3
+  attempts could commit (`CONFLICT`, with a hint to send the same call again;
+  see [entry source](#update-or-delete-entry-source));
+- a `toPath` or `includeFrom` the ledger cannot read as text
+  (`BAD_USER_INPUT`);
 - an entry in a managed price include (`OPERATION_NOT_ALLOWED`);
 - a credential that cannot write the ledger's files (`FORBIDDEN`);
 - a move that adds a bean-check error the ledger did not have
@@ -1925,7 +1931,7 @@ A `NOT_FOUND` on a bank connection, pull request, commit, branch, archive or use
 | `PREMIUM_REQUIRED`       | `-32003` | The operation needs a paid plan on the credential's account.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `RESOURCE_LIMIT_REACHED` | `-32003` | A limit is reached. Remove something; `limitOwner`, when present, says whose plan set it.                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `OPERATION_NOT_ALLOWED`  | `-32003` | The ledger's current state forbids it.                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `CONFLICT`               | `-32000` | Something changed since you read it. Re-read with `getEntryContext` and resend the fresh `sha256sum`. `addLedgerEntries` and `appendLedgerText` take no `sha` and retry a lost race themselves: from them it means every attempt lost, so send the same call again (with its `requestId`). `renameAccount` and `renameLedgerFile` take no `sha` either: from them it means another write changed a file the rename touches, nothing was renamed, and the same call sent again re-reads the files. |
+| `CONFLICT`               | `-32000` | Something changed since you read it. Re-read with `getEntryContext` and resend the fresh `sha256sum`. `addLedgerEntries` and `appendLedgerText` take no `sha` and retry a lost race themselves: from them it means every attempt lost, so send the same call again (with its `requestId`). `renameAccount` and `renameLedgerFile` take no `sha` either: from them it means another write changed a file the rename touches, nothing was renamed, and the same call sent again re-reads the files. The entry-source edits, deletes and move also run again on a lost race: a `CONFLICT` from them whose hint says to send the same call again means every attempt lost and nothing was written. |
 | `RATE_LIMITED`           | `-32000` | Over budget. Wait `retryAfter` seconds; batch writes rather than looping.                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `SERVICE_UNAVAILABLE`    | `-32000` | A dependency is down, or the ledger did not answer before its deadline (30 seconds for a read, 90 for a write). Retry with backoff; the request is not the problem. After a timeout a write may already have committed: re-read the ledger before repeating it, or resend an entry write with the same `requestId` ([retry-safe entry writes](#retry-safe-entry-writes-requestid)).                                                                                                               |
 | `CONFIGURATION_ERROR`    | `-32000` | The deployment is missing configuration it needs (object storage for uploads, an LLM key for AI features). Do not retry: the hint names the variables the operator must set. REST answers `503`.                                                                                                                                                                                                                                                                                                  |
@@ -2408,6 +2414,17 @@ refusal is `UNBALANCED` with the residual instead, as on add. Errors the
 ledger already had never block. Pass `allowInvalid: true` to commit the write
 anyway. A preview is not refused for those errors: it returns them in
 `validation.newErrors` with `valid: false` (see [the preview rule](#the-preview-rule)).
+
+The check judges exactly the content the commit writes. When another write
+changes a file that an edit, delete or move touches after the check read it,
+the write runs again from the start: it re-reads the ledger, finds the entries
+by the same `entryHash` and `sha256sum`, and checks against what landed, up to
+3 attempts. So a refusal, and the `validation` an `allowInvalid` commit
+reports, describe the ledger the write lands on. An entry that the other write
+changed is still a `CONFLICT` to re-read. Only when every attempt loses is the
+call refused with `CONFLICT` and nothing written; its hint says to send the
+same call again. As with the entry writes, a write to a file this one does not
+touch is not checked against. REST and GraphQL behave the same (w31/131).
 
 ### Insert structured directives
 

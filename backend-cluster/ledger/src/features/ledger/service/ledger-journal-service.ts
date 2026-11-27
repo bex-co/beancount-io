@@ -76,6 +76,7 @@ import {
   type JournalItem,
   type ReplacedSourceRange,
   type ReportAccounts,
+  UNDECODABLE_SOURCE,
 } from "@/foundation/rustledger";
 import {
   loadCachedFileMapForRepo,
@@ -88,6 +89,7 @@ import {
 } from "@/foundation/managed-prices";
 import {
   commitLedgerFiles,
+  LostWriteRaceError,
   type GiteaFileCommitClient,
   type LedgerFileTransform,
 } from "@/features/ledger/operations/commit-ledger-files";
@@ -203,11 +205,62 @@ function sliceTarget(
 const STALE_TARGET = "it has changed since it was loaded; refresh and retry";
 
 /**
- * Re-locate an entry's exact source block in ONE file's CURRENT content. Runs
- * against the FRESH content at commit time, so unrelated concurrent insertions
- * that shift line offsets are handled without re-booking the target in
- * isolation. If the old line now contains another dated block, treat the target
- * as changed; if it disappeared entirely, report it missing.
+ * How many times a source-slice write runs before a lost race is the
+ * caller's: the bound backend-v2 gives the entry writes (w31/007).
+ */
+const SOURCE_WRITE_ATTEMPTS = 3;
+
+/**
+ * Why a source-slice write that lost every attempt was refused. backend-v2
+ * keys its hint to send the same call again on this wording (w31/131).
+ */
+const SOURCE_WRITE_RACE_LOST = `concurrent writes changed the files this write touches before each of ${SOURCE_WRITE_ATTEMPTS} attempts could commit; nothing was written`;
+
+/**
+ * Where a write's first attempt found each entry it addresses, so an attempt
+ * run again after a lost race addresses the same blocks (w31/131). A re-run
+ * resolves the caller's entry hashes on a fresh load, where a twin that a
+ * concurrent write added or removed makes the same hash name another block.
+ * The commit's re-location refuses that (w23/m1), and so does the re-run:
+ * every entry must be found again, in the same file, among as many twins.
+ */
+class LocationFence {
+  private first: readonly { file: string; matchCount: number }[] | undefined;
+
+  /** Whether an earlier attempt located the entries, so this one re-runs. */
+  get rerun(): boolean {
+    return this.first !== undefined;
+  }
+
+  /**
+   * Keep the first attempt's locations, one per request entry, and refuse a
+   * re-run whose locations differ from them.
+   */
+  hold(locations: readonly { file: string; matchCount: number }[]): void {
+    const first = this.first;
+    if (first === undefined) {
+      this.first = locations;
+      return;
+    }
+    if (
+      locations.length !== first.length ||
+      locations.some(
+        ({ file, matchCount }, index) =>
+          file !== first[index]?.file ||
+          matchCount !== first[index]?.matchCount,
+      )
+    ) {
+      throw new ConflictError("Entry", STALE_TARGET);
+    }
+  }
+}
+
+/**
+ * Re-locate an entry's exact source block in ONE file's CURRENT content: the
+ * loaded content for the check's projection, then the content the commit
+ * read, which it lands on only when that is still what the check judged
+ * (w31/131). If the old line now contains another dated block, treat the
+ * target as changed; if it disappeared entirely, report it missing.
  *
  * A changed twin count is a changed target too: with two identical entries the
  * stale (SHA, occurrence) pair still matches after a raced edit — but it
@@ -672,12 +725,14 @@ export class LedgerJournalService implements ILedgerJournalService {
     managedPricePaths: readonly string[],
     entryHash: string,
     sha256sum: string,
+    fence: LocationFence,
   ): Promise<EntrySlice> {
     const [found] = await this.locateSlices(
       files,
       entryPoint,
       managedPricePaths,
       [{ entryHash, sha256sum }],
+      fence,
     );
     return found;
   }
@@ -687,12 +742,17 @@ export class LedgerJournalService implements ILedgerJournalService {
    * nothing. Locating each in turn re-parsed the ledger per entry, so a
    * 1,000-entry delete took 90 s and committed after its caller was told to
    * retry (w1/237).
+   *
+   * An entry a re-run no longer finds was there for the first attempt: a
+   * concurrent write changed it, the same `CONFLICT` the commit's
+   * re-location gives (w31/131).
    */
   private async locateSlices(
     files: FileMap,
     entryPoint: string,
     managedPricePaths: readonly string[],
     requests: readonly { entryHash: string; sha256sum: string }[],
+    fence: LocationFence,
   ): Promise<EntrySlice[]> {
     const found = await findEntrySlicesAsync(
       files,
@@ -701,13 +761,13 @@ export class LedgerJournalService implements ILedgerJournalService {
     );
     return requests.map(({ entryHash, sha256sum }, index) => {
       const slice = found[index];
-      if (!slice) throw entryNotResolvableError(entryHash, files, entryPoint);
+      if (!slice) {
+        if (fence.rerun) throw new ConflictError("Entry", STALE_TARGET);
+        throw entryNotResolvableError(entryHash, files, entryPoint);
+      }
       assertNotManagedPricePath(slice.file, managedPricePaths);
       if (slice.sha256 !== sha256sum) {
-        throw new ConflictError(
-          "Entry",
-          "it has changed since it was loaded; refresh and retry",
-        );
+        throw new ConflictError("Entry", STALE_TARGET);
       }
       return slice;
     });
@@ -728,10 +788,11 @@ export class LedgerJournalService implements ILedgerJournalService {
    * Check a source-slice write's projection against the loaded files, and
    * refuse it when it would leave the ledger with bean-check errors it did
    * not have, as structured adds are refused (w0/m2, w21/m1). The transforms
-   * run over the loaded files, so nothing is committed; the commit
-   * re-applies them to fresh content under CAS. Errors the ledger already
-   * had never block. The check always runs: `allowInvalid` suppresses only
-   * the refusal, and the projection is reported on the response (w23/161).
+   * run over the loaded files, so nothing is committed; the commit lands them
+   * only on that same content, and a write that another write overtakes runs
+   * again from its load (w31/131). Errors the ledger already had never block.
+   * The check always runs: `allowInvalid` suppresses only the refusal, and
+   * the projection is reported on the response (w23/161).
    *
    * Given where the transforms edited each file (the lines a delete cuts,
    * an edit replaces, an include goes in), a refusal or a `dryRun` names each
@@ -771,13 +832,16 @@ export class LedgerJournalService implements ILedgerJournalService {
 
   /**
    * Commit source-slice edits (delete/replace) with optimistic-concurrency
-   * safety: each transform re-locates + re-applies against the FRESH file
-   * content immediately before the commit, and retries on a concurrent-write
-   * conflict — so an edit can't silently clobber another writer.
+   * safety, onto exactly the content `loaded` holds for each file: the
+   * content {@link projectWriteErrors} checked. A file another write changed
+   * since is a {@link LostWriteRaceError}, which {@link rerunLostRace} answers
+   * by running the whole write again. Re-applying the edit to the fresh
+   * content committed a change bean-check never saw (w31/131).
    */
   private async commitTransforms(
     ledgerId: string,
     userId: string,
+    loaded: LoadedLedgerWithManagedPrices,
     transforms: Map<string, LedgerFileTransform>,
     message: string,
   ): Promise<CommitSha> {
@@ -792,8 +856,45 @@ export class LedgerJournalService implements ILedgerJournalService {
       ledgerName,
       transforms,
       message,
-      { directiveLimit: this.directiveLimit },
+      {
+        directiveLimit: this.directiveLimit,
+        checked: new Map(
+          [...transforms.keys()].map((path) => [
+            path,
+            loaded.files[path] ?? null,
+          ]),
+        ),
+      },
     );
+  }
+
+  /**
+   * Run a source-slice write, and run it again from its load when another
+   * write changes a file it touches before it commits (w31/131). Each attempt
+   * loads the ledger, locates the entries, checks the projection, and
+   * commits onto exactly the content it checked, so a refusal and the
+   * reported projection apply to the ledger the write lands on. The fence
+   * keeps every attempt on the blocks the first one found (w23/m1). A dry
+   * run commits nothing, so it never loses a race.
+   */
+  private async rerunLostRace<T>(
+    write: (fence: LocationFence) => Promise<T>,
+  ): Promise<T> {
+    const fence = new LocationFence();
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        return await write(fence);
+      } catch (error) {
+        if (!(error instanceof LostWriteRaceError)) throw error;
+        if (attempt >= SOURCE_WRITE_ATTEMPTS) {
+          throw new ConflictError("Ledger", SOURCE_WRITE_RACE_LOST);
+        }
+        log.info("source-slice write lost a race; running it again", {
+          attempt,
+          reason: error.message,
+        });
+      }
+    }
   }
 
   /** Apply Fava `get_filtered`, including TimeFilter's clamp semantics. */
@@ -1231,6 +1332,15 @@ export class LedgerJournalService implements ILedgerJournalService {
     /** Run every check and commit nothing. */
     dryRun?: boolean;
   }): Promise<DeleteSliceResult> {
+    return this.rerunLostRace((fence) =>
+      this.deleteSourceSliceOnce(params, fence),
+    );
+  }
+
+  private async deleteSourceSliceOnce(
+    params: Parameters<LedgerJournalService["deleteSourceSlice"]>[0],
+    fence: LocationFence,
+  ): Promise<DeleteSliceResult> {
     const { ledgerId, userId, entryHash, sha256sum, allowInvalid, dryRun } =
       params;
     const loaded = await this.loadFileMap(ledgerId, userId);
@@ -1243,32 +1353,26 @@ export class LedgerJournalService implements ILedgerJournalService {
     );
 
     // Locate on the loaded snapshot to find WHICH file the entry is in (and
-    // fast-fail if it changed since the client loaded it); the commit transform
-    // re-locates + re-deletes against the fresh content under CAS.
+    // fast-fail if it changed since the client loaded it); the commit lands
+    // the delete on that same content.
     const found = await this.locateSlice(
       files,
       entryPoint,
       managedPricePaths,
       sourceEntryHash,
       sha256sum,
+      fence,
     );
+    const target = sliceTarget(
+      files,
+      found,
+      parseEntryId(sourceEntryHash).base,
+      sha256sum,
+    );
+    fence.hold([{ file: found.file, matchCount: target.matchCount }]);
     const edits: LineEdits = new Map();
     const transforms = new Map([
-      [
-        found.file,
-        makeDeleteTransform(
-          found.file,
-          [
-            sliceTarget(
-              files,
-              found,
-              parseEntryId(sourceEntryHash).base,
-              sha256sum,
-            ),
-          ],
-          edits,
-        ),
-      ],
+      [found.file, makeDeleteTransform(found.file, [target], edits)],
     ]);
     const validation = await this.projectWriteErrors(
       loaded,
@@ -1282,6 +1386,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       commit = await this.commitTransforms(
         ledgerId,
         userId,
+        loaded,
         transforms,
         entryCommitMessage("Delete", found.slice),
       );
@@ -1305,18 +1410,28 @@ export class LedgerJournalService implements ILedgerJournalService {
     /** Run every check and commit nothing. */
     dryRun?: boolean;
   }): Promise<DeleteMultiSlicesResult> {
-    const { ledgerId, userId, entries, allowInvalid, dryRun } = params;
-    if (entries.length === 0) {
+    if (params.entries.length === 0) {
       throw new BadUserInputError(
         "entries must name at least one entry",
         "entries",
       );
     }
+    return this.rerunLostRace((fence) =>
+      this.deleteMultiSourceSlicesOnce(params, fence),
+    );
+  }
+
+  private async deleteMultiSourceSlicesOnce(
+    params: Parameters<LedgerJournalService["deleteMultiSourceSlices"]>[0],
+    fence: LocationFence,
+  ): Promise<DeleteMultiSlicesResult> {
+    const { ledgerId, userId, entries, allowInvalid, dryRun } = params;
     const loaded = await this.loadFileMap(ledgerId, userId);
     const edits: LineEdits = new Map();
     const { removed, transforms } = await this.planSliceRemoval(
       loaded,
       entries,
+      fence,
       edits,
     );
     const deletedHashes = removed.map(({ hash }) => hash);
@@ -1333,6 +1448,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       commit = await this.commitTransforms(
         ledgerId,
         userId,
+        loaded,
         transforms,
         "Delete entries",
       );
@@ -1368,6 +1484,7 @@ export class LedgerJournalService implements ILedgerJournalService {
   private async planSliceRemoval(
     loaded: LoadedLedgerWithManagedPrices,
     entries: readonly { entryHash: string; sha256sum: string }[],
+    fence: LocationFence,
     edits?: LineEdits,
   ): Promise<{
     /** Each removed entry once, as the caller named it, in request order. */
@@ -1388,9 +1505,25 @@ export class LedgerJournalService implements ILedgerJournalService {
         entryHash: sourceHashes[index],
         sha256sum: entry.sha256sum,
       })),
+      fence,
+    );
+    const indexes = new Map<string, ReturnType<typeof indexDatedBlocks>>();
+    const targets = located.map((slice, index) =>
+      sliceTarget(
+        files,
+        slice,
+        parseEntryId(sourceHashes[index]).base,
+        entries[index].sha256sum,
+        indexes,
+      ),
+    );
+    fence.hold(
+      located.map((slice, index) => ({
+        file: slice.file,
+        matchCount: targets[index].matchCount,
+      })),
     );
     const byFile = new Map<string, SliceTarget[]>();
-    const indexes = new Map<string, ReturnType<typeof indexDatedBlocks>>();
     const seen = new Set<string>();
     const removed: { hash: string; slice: EntrySlice }[] = [];
     located.forEach((slice, index) => {
@@ -1398,13 +1531,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       if (seen.has(identity)) return;
       seen.add(identity);
       removed.push({ hash: entries[index].entryHash, slice });
-      const target = sliceTarget(
-        files,
-        slice,
-        parseEntryId(sourceHashes[index]).base,
-        entries[index].sha256sum,
-        indexes,
-      );
+      const target = targets[index];
       const list = byFile.get(slice.file);
       if (list) list.push(target);
       else byFile.set(slice.file, [target]);
@@ -1441,15 +1568,7 @@ export class LedgerJournalService implements ILedgerJournalService {
     allowInvalid?: boolean;
     dryRun?: boolean;
   }): Promise<MoveSlicesResult> {
-    const {
-      ledgerId,
-      userId,
-      entries,
-      toPath,
-      includeFrom,
-      allowInvalid,
-      dryRun,
-    } = params;
+    const { entries, toPath } = params;
     if (entries.length === 0) {
       throw new BadUserInputError(
         "entries must name at least one entry",
@@ -1463,6 +1582,24 @@ export class LedgerJournalService implements ILedgerJournalService {
         "toPath",
       );
     }
+    return this.rerunLostRace((fence) =>
+      this.moveSourceSlicesOnce(params, fence),
+    );
+  }
+
+  private async moveSourceSlicesOnce(
+    params: Parameters<LedgerJournalService["moveSourceSlices"]>[0],
+    fence: LocationFence,
+  ): Promise<MoveSlicesResult> {
+    const {
+      ledgerId,
+      userId,
+      entries,
+      toPath,
+      includeFrom,
+      allowInvalid,
+      dryRun,
+    } = params;
     const loaded = await this.loadFileMap(ledgerId, userId);
     const { entryPoint, repoPaths, sourceFiles } = loaded;
     const reached = sourceFiles.includes(toPath);
@@ -1484,10 +1621,24 @@ export class LedgerJournalService implements ILedgerJournalService {
     if (includeFrom !== undefined && !reached) {
       assertLiteralIncludePath(toPath, "toPath");
     }
+    // A file the load could not decode as text holds nothing for the check to
+    // judge, so the commit would write onto bytes no check saw (w31/131).
+    for (const [path, field] of [
+      [toPath, "toPath"],
+      [includeFrom, "includeFrom"],
+    ] as const) {
+      if (path !== undefined && loaded.files[path] === UNDECODABLE_SOURCE) {
+        throw new BadUserInputError(
+          `${path} is not text the ledger can read, so nothing can be written to it; fix or replace that file first`,
+          field,
+        );
+      }
+    }
     const edits: LineEdits = new Map();
     const { removed, transforms } = await this.planSliceRemoval(
       loaded,
       entries,
+      fence,
       edits,
     );
     if (removed.some(({ slice }) => slice.file === toPath)) {
@@ -1553,6 +1704,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       commit = await this.commitTransforms(
         ledgerId,
         userId,
+        loaded,
         transforms,
         `Move ${entryCount(moved.length)} to ${toPath}`,
       );
@@ -1582,6 +1734,19 @@ export class LedgerJournalService implements ILedgerJournalService {
     /** Run every check and commit nothing. */
     dryRun?: boolean;
   }): Promise<UpdateSliceResult> {
+    const { newContent } = params;
+    // Control characters are checked against the entry being replaced, once
+    // it is found (w21/816).
+    assertSingleEntryText(newContent, "newContent", { controls: false });
+    return this.rerunLostRace((fence) =>
+      this.updateSourceSliceOnce(params, fence),
+    );
+  }
+
+  private async updateSourceSliceOnce(
+    params: Parameters<LedgerJournalService["updateSourceSlice"]>[0],
+    fence: LocationFence,
+  ): Promise<UpdateSliceResult> {
     const {
       ledgerId,
       userId,
@@ -1591,9 +1756,6 @@ export class LedgerJournalService implements ILedgerJournalService {
       allowInvalid,
       dryRun,
     } = params;
-    // Control characters are checked against the entry being replaced, once
-    // it is found (w21/816).
-    assertSingleEntryText(newContent, "newContent", { controls: false });
     const loaded = await this.loadFileMap(ledgerId, userId);
     const { files, entryPoint, repoPaths, managedPricePaths } = loaded;
     const sourceEntryHash = await this.resolveSourceEntryId(
@@ -1609,6 +1771,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       managedPricePaths,
       sourceEntryHash,
       sha256sum,
+      fence,
     );
     assertNoNewControlCharacters(newContent, "newContent", found.slice);
     // A date spelled `2026/08/25` is refused in new text, but the entry's own
@@ -1624,6 +1787,13 @@ export class LedgerJournalService implements ILedgerJournalService {
     ) {
       assertDashedEntryDate(newContent, "newContent");
     }
+    const target = sliceTarget(
+      files,
+      found,
+      parseEntryId(sourceEntryHash).base,
+      sha256sum,
+    );
+    fence.hold([{ file: found.file, matchCount: target.matchCount }]);
     const applied: { current?: AppliedReplace } = {};
     const edits: LineEdits = new Map();
     const transforms = new Map([
@@ -1631,12 +1801,7 @@ export class LedgerJournalService implements ILedgerJournalService {
         found.file,
         makeReplaceTransform(
           found.file,
-          sliceTarget(
-            files,
-            found,
-            parseEntryId(sourceEntryHash).base,
-            sha256sum,
-          ),
+          target,
           newContent,
           (result) => {
             applied.current = result;
@@ -1659,6 +1824,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       commit = await this.commitTransforms(
         ledgerId,
         userId,
+        loaded,
         transforms,
         entryCommitMessage("Update", newContent),
       );
