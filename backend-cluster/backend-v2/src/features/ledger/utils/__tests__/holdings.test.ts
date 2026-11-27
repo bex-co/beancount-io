@@ -170,6 +170,24 @@ describe("valueHoldingRows", () => {
     expect(dates(valued)).toEqual(["2026-10-01", "2026-10-01"]);
   });
 
+  // w31/141: 200 EUR bought at a cost of 1.10 USD, read in EUR. Beancount's
+  // price map answers 1 for a currency in itself; without it the lot went
+  // through USD and back and read 199.9999999999999999992 EUR.
+  it("quotes the conversion currency in itself at 1, undated", () => {
+    const valued = value(
+      [["2026-08-20", "EUR", map("USD", "1.20")]],
+      [["Assets:Fx", "EUR", "USD", map("EUR", "200"), map("USD", "220")]],
+      "EUR",
+    );
+    expect(added(valued)).toEqual([
+      map("USD", "240"),
+      "1.2",
+      "0.83333333333333333333",
+      "1",
+    ]);
+    expect(dates(valued)).toEqual(["2026-08-20", ""]);
+  });
+
   // w1/292: the engine's cell for `price DEAD 0 USD` is `{}`, with USD in the
   // quote column. `bea report holdings` values the lot at nothing; read as
   // no quote, the lot was valued at an older quote, or at cost.
@@ -811,6 +829,67 @@ describe("composeHoldings", () => {
         price: { number: "85", currency: "EUR" },
       });
     });
+
+    // w31/141: 212 EUR and 50 GBP held without a cost in a USD ledger, EUR
+    // quoted in USD and GBP not at all. Read in its own currency, each is
+    // worth its units at 1, as the balance sheet and `bea report holdings`
+    // answer. Valued through USD and back, 212 EUR read
+    // 211.999999999999999999152 EUR at 0.999999999999999999996, and 50 GBP
+    // read partial for a GBP→USD quote this report never needed.
+    describe("a position in the conversion currency", () => {
+      const held: Cell[][] = [
+        ["Assets:Bank", "USD", null, map("USD", "780"), map("USD", "780")],
+        ["Assets:Euro", "EUR", null, map("EUR", "212.00"), map("EUR", "212")],
+        ["Assets:Pound", "GBP", null, map("GBP", "50.00"), map("GBP", "50")],
+      ];
+      const eur: Cell[][] = [["2026-08-20", "EUR", map("USD", "1.20"), "USD"]];
+
+      it.each(["account", "commodity"] as const)(
+        "values the %s group at its units, at a price of 1",
+        (groupBy) => {
+          const result = compose(
+            { conversionTarget: "EUR", account: "Assets:Euro", groupBy },
+            held,
+            eur,
+          );
+          expect(result.groups).toHaveLength(1);
+          expect(result.groups[0]).toMatchObject({
+            units: { number: "212", currency: "EUR" },
+            market_value: { number: "212", currency: "EUR" },
+            price: { number: "1", currency: "EUR" },
+            cost_basis: null,
+          });
+          expect(result.totals.market_value).toEqual({ EUR: "212" });
+          expect(result.valuation).toBe("complete");
+        },
+      );
+
+      it("needs no quote in the operating currency", () => {
+        const result = compose(
+          { conversionTarget: "GBP", account: "Assets:Pound" },
+          held,
+          eur,
+        );
+        expect(result.groups[0]).toMatchObject({
+          market_value: { number: "50", currency: "GBP" },
+          price: { number: "1", currency: "GBP" },
+        });
+        expect(result.valuation).toBe("complete");
+        expect(result.missing_prices).toEqual([]);
+        expect(result.missing_price_summary).toEqual([]);
+      });
+
+      it("still names the leg another unquoted position needs", () => {
+        const result = compose({ conversionTarget: "EUR" }, held, eur);
+        expect(
+          result.groups.map((group) => [group.account, group.market_value]),
+        ).toEqual([
+          ["Assets:Euro", { number: "212", currency: "EUR" }],
+          ["Assets:Pound", { number: "50", currency: "GBP" }],
+        ]);
+        expect(result.missing_prices).toEqual([{ from: "GBP", to: "EUR" }]);
+      });
+    });
   });
 
   // w1/288: 10 VT bought at 100 USD and 10 at 90 EUR. Valued into USD they
@@ -1176,6 +1255,26 @@ describe("composeHoldings", () => {
         prices,
         operatingCurrencies: ["USD"],
       });
+
+    // w31/141: `bea report holdings -x EUR` answers 200.00 EUR at a price of
+    // 1 EUR for 200 EUR held at a cost of 1.10 USD.
+    it.each(["account", "commodity"] as const)(
+      "values a %s group of the conversion currency at its units",
+      (groupBy) => {
+        const result = compose(
+          [lot("Assets:Fx", "EUR", "USD", "1.10", "2026-07-08", "200", "220")],
+          [["2026-08-20", "EUR", map("USD", "1.20"), "USD"]],
+          groupBy,
+          "EUR",
+        );
+        expect(result.groups[0]).toMatchObject({
+          market_value: { number: "200", currency: "EUR" },
+          price: { number: "1", currency: "EUR" },
+        });
+        expect(result.groups[0]!.cost_basis!.currency).toBe("EUR");
+        expect(result.valuation).toBe("complete");
+      },
+    );
 
     describe("a zero quote", () => {
       // 10 DEAD bought at 50 USD, quoted at 40 USD, then at 0 USD.

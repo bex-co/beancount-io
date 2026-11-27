@@ -869,10 +869,13 @@ def _holdings(
         if not held:
             # No cost currency to value into: the first operating currency
             # (or other currency the commodity is quoted in) with a quote,
-            # as Fava's `at_value` values cost-less positions.
+            # as Fava's `at_value` values cost-less positions. A position in
+            # the requested currency is already in it, at the price map's 1:
+            # 50 GBP under `-x GBP` searched only USD and refused the report
+            # for a GBP→USD quote it never needed (w31/141).
             candidates = [target] if target is not None else []
             candidates += [*operating, *sorted(_quote_currencies(prices, commodity))]
-            candidates = [c for c in dict.fromkeys(candidates) if c != commodity]
+            candidates = [c for c in dict.fromkeys(candidates) if c != commodity or c == target]
             held = next((c for c in candidates if prices.get_price((commodity, c), end) is not None), "")
             if not held:
                 if candidates:

@@ -183,7 +183,8 @@ type Quote = { date: string; rate: BigNumber };
  * years of daily quotes costs one pass, not a list per directive. A zero
  * quote counts, as in the CLI's price map: a delisted share quoted at `0 USD`
  * is worth nothing, not its cost or an older quote (w1/292). It has no
- * inverse, so the reverse pair keeps its previous rate.
+ * inverse, so the reverse pair keeps its previous rate. A currency is worth 1
+ * of itself, undated, as in Beancount's price map (w31/141).
  */
 function priceLookup(priceRows: BqlCell[][], asOf: string) {
   const latest = new Map<string, Quote>();
@@ -210,7 +211,9 @@ function priceLookup(priceRows: BqlCell[][], asOf: string) {
     }
   }
   return (base: string, quote: string): Quote | null =>
-    latest.get(JSON.stringify([base, quote])) ?? null;
+    base === quote
+      ? { date: "", rate: new BigNumber(1) }
+      : (latest.get(JSON.stringify([base, quote])) ?? null);
 }
 
 /**
@@ -640,13 +643,18 @@ export function composeHoldings(params: {
     }
     // No cost currency to value into: the first operating currency (or other
     // currency the commodity is quoted in) with a quote, as Fava's `at_value`.
+    // A position in the requested currency is already in it, at 1: through
+    // USD and back, 212 EUR read 211.999999999999999999152 EUR, and with no
+    // USD quote it named a leg this report never needed (w31/141).
     const candidates = [
       ...new Set([
         ...(conversionTarget === null ? [] : [conversionTarget]),
         ...operating,
         ...quoteCurrencies(prices, commodity),
       ]),
-    ].filter((currency) => currency !== commodity);
+    ].filter(
+      (currency) => currency !== commodity || currency === conversionTarget,
+    );
     const held = candidates.find(
       (currency) => quote(commodity, currency) !== null,
     );

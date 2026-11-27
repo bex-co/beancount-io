@@ -383,3 +383,47 @@ def test_a_quote_still_merges_uncosted_units_into_the_costed_group(tmp_path: Pat
 
     assert _held(data) == [("5", {"number": "175.00", "currency": "USD"}, None)]
     assert data["valuation"] == "complete"
+
+
+# w31/141: 212 EUR and 50 GBP held without a cost in a USD ledger, EUR quoted
+# in USD and GBP not at all. Read in its own currency, a position is already
+# in it, at the price map's 1. The candidates dropped the requested currency
+# when it was the commodity and searched only USD: `-x GBP` refused the report
+# for a GBP→USD quote it never needed.
+OWN_CURRENCY = """option "operating_currency" "USD"
+2026-01-01 open Assets:Bank USD
+2026-01-01 open Equity:Opening
+2026-01-01 open Assets:Euro
+2026-01-01 open Assets:Pound
+2026-01-01 open Income:Dividends
+2026-01-02 * "fund"
+  Assets:Bank 1000.00 USD
+  Equity:Opening
+2026-07-08 * "buy EUR"
+  Assets:Euro   200.00 EUR @ 1.10 USD
+  Assets:Bank  -220.00 USD
+2026-08-10 * "EUR dividend"
+  Assets:Euro       12.00 EUR
+  Income:Dividends -12.00 EUR
+2026-08-20 price EUR 1.20 USD
+2026-08-26 * "GBP grant"
+  Assets:Pound      50.00 GBP
+  Income:Dividends -50.00 GBP
+"""
+
+
+@pytest.mark.parametrize("group_by", ["account", "commodity"])
+@pytest.mark.parametrize(
+    ("currency", "account", "units"), [("GBP", "Assets:Pound", "50.00"), ("EUR", "Assets:Euro", "212.00")]
+)
+def test_a_position_in_the_conversion_currency_is_worth_its_units(
+    tmp_path: Path, group_by: str, currency: str, account: str, units: str
+) -> None:
+    data = _data(tmp_path, OWN_CURRENCY, "-x", currency, "-a", account, "--group-by", group_by)
+
+    (group,) = data["groups"]  # type: ignore[misc]
+    assert group["market_value"] == {"number": units, "currency": currency}
+    assert group["price"] == {"number": "1", "currency": currency}
+    assert group["conversion_source"] is None
+    assert data["valuation"] == "complete"
+    assert data["missing_prices"] == []
