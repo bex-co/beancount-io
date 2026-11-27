@@ -49,6 +49,9 @@ const BALANCE_FAILED =
   "Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD (main.bean:84)";
 const hash = (text: string) => createHash("sha256").update(text).digest("hex");
 const original = '2026-09-01 * "Café" "Breakfast"\n';
+const SLASHED_DATE = "2026/09/01";
+/** The ledger service's wording, which backend-v2 maps to add its hint. */
+const UNDASHED_REFUSAL = `newContent dates its entry ${SLASHED_DATE}; an entry edit takes YYYY-MM-DD: write ${SLASHED_DATE} as 2026-09-01`;
 // Entry hashes are 32 lowercase hex digits (plus optional `:<n>` on repeated
 // entries), as the ledger service issues them.
 const ENTRY1 = "11".repeat(16);
@@ -209,6 +212,15 @@ async function fixture(caller = identity) {
       validate(body);
       // The ledger service compares the file before and after (w23/m43).
       const unchanged = slices.get(body.entry_hash) === body.new_content;
+      // Its date rule (w31/110): an edit that keeps a date spelled
+      // `2026/09/01` is refused naming the rewrite; the entry's own text is not.
+      if (!unchanged && body.new_content.startsWith(`${SLASHED_DATE} `)) {
+        throw new FavaApiError(UNDASHED_REFUSAL, 400, {
+          error: UNDASHED_REFUSAL,
+          code: null,
+          details: null,
+        });
+      }
       refuseBreaking(body, "update");
       // The ledger service's commit-boundary check (w0/m6): the replacement
       // would take a free ledger past its directive limit.
@@ -453,6 +465,76 @@ describe.each(["rest", "gql", "mcp"])(
       try {
         const result = await f.call(surface, "update", args("update"));
         expect(result.result).toMatchObject({ unchanged: false });
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
+/**
+ * w31/110: since w31/106 the ledger serves a `2026/09/01` entry's text as
+ * written. Resent as served it writes nothing on every surface; an edit that
+ * keeps the spelling is refused naming the rewrite, with a hint that says the
+ * dashed date loads the same, not MCP's generic "fix the named argument".
+ */
+describe.each(["rest", "gql", "mcp"])(
+  "a slash-dated entry edit via %s",
+  (surface) => {
+    const slashed = original.replace("2026-09-01", SLASHED_DATE);
+
+    it("reports the entry's own text as unchanged", async () => {
+      const f = await fixture();
+      f.slices.set(ENTRY1, slashed);
+      try {
+        const result = await f.call(surface, "update", {
+          entryHash: ENTRY1,
+          sha256sum: hash(slashed),
+          newContent: slashed,
+        });
+        expect(result.success).toBe(true);
+        expect(result.result).toMatchObject({ unchanged: true });
+        expect(f.slices.get(ENTRY1)).toBe(slashed);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("refuses an edit that keeps the spelling, naming the rewrite", async () => {
+      const f = await fixture();
+      f.slices.set(ENTRY1, slashed);
+      try {
+        const result = await f.call(surface, "update", {
+          entryHash: ENTRY1,
+          sha256sum: hash(slashed),
+          newContent: slashed.replace("Breakfast", "Brunch"),
+        });
+        expect(result.success).toBe(false);
+        expect(f.slices.get(ENTRY1)).toBe(slashed);
+        const hint = expect.stringContaining(
+          `Beancount reads ${SLASHED_DATE} as 2026-09-01, so the entry loads the same`,
+        );
+        if (surface === "rest") {
+          expect(result.result).toMatchObject({
+            ok: false,
+            error: {
+              code: "BAD_USER_INPUT",
+              message: UNDASHED_REFUSAL,
+              metadata: { field: "newContent", hint },
+            },
+          });
+        } else if (surface === "gql") {
+          expect(result.errors?.[0]?.originalError).toMatchObject({
+            category: "BAD_USER_INPUT",
+            message: UNDASHED_REFUSAL,
+            metadata: { field: "newContent", hint },
+          });
+        } else {
+          expect(result.full).toMatchObject({
+            ok: false,
+            error: { code: "BAD_USER_INPUT", message: UNDASHED_REFUSAL, hint },
+          });
+        }
       } finally {
         await f.close();
       }

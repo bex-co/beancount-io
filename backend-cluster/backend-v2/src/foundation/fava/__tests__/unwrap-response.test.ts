@@ -335,6 +335,47 @@ describe("unwrapFavaResponse", () => {
     });
   });
 
+  // w31/110: the ledger refuses an entry edit dated 2026/08/25 by name, but
+  // its envelope has no field or hint, so MCP said only "fix the argument".
+  it.each([
+    ["2026/08/25", "2026-08-25"],
+    ["2026-8-5", "2026-08-05"],
+  ])(
+    "gives the ledger's %s entry-date refusal its field and hint (w31/110)",
+    async (written, dashed) => {
+      const error = `newContent dates its entry ${written}; an entry edit takes YYYY-MM-DD: write ${written} as ${dashed}`;
+      const response = Promise.reject(
+        new FavaApiError("bad input", 400, { success: false, error }),
+      );
+
+      const caught = await unwrapFavaResponse(
+        response,
+        "update source slice",
+      ).catch((e: unknown) => e);
+      expect(caught).toBeInstanceOf(BadUserInputError);
+      expect(caught).toMatchObject({
+        message: error,
+        metadata: {
+          field: "newContent",
+          hint: `Beancount reads ${written} as ${dashed}, so the entry loads the same with its date rewritten; the rest of the file keeps its own spelling. To keep ${written} as written, edit the file with \`updateLedgerFiles\`.`,
+        },
+      });
+    },
+  );
+
+  it("pins the ledger service's entry-date wording it maps (w31/110)", () => {
+    const tokens = readFileSync(
+      path.resolve(
+        __dirname,
+        "../../../../../ledger/src/features/ledger/utils/entry-tokens.ts",
+      ),
+      "utf8",
+    );
+    expect(tokens).toContain(
+      "`${field} dates its entry ${written}; an entry edit takes YYYY-MM-DD: write ${written} as ${dashed}`",
+    );
+  });
+
   it("pins the ledger service's 'already exists' wording it maps (w31/008)", () => {
     const middleware = readFileSync(
       path.resolve(

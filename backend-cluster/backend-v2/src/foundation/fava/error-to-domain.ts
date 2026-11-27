@@ -44,6 +44,26 @@ const RESOURCE_LIMIT_MESSAGE =
   /^(.*?) limit reached\. Maximum: (\d+), Current: (\d+)\./i;
 
 /**
+ * The ledger service's refusal of an entry edit dated `2026/08/25` or
+ * `2026-8-25` (its `assertDashedEntryDate`, w31/110), pinned by this
+ * package's tests. Its envelope carries no field or hint, so MCP's category
+ * fallback said only to fix the argument, with nothing about why the spelling
+ * is refused or what the rewrite changes.
+ */
+const LEDGER_UNDASHED_ENTRY_DATE =
+  /^(\S+) dates its entry (\S+); an entry edit takes YYYY-MM-DD: write \2 as (\d{4}-\d{2}-\d{2})$/;
+
+/** The hint for {@link LEDGER_UNDASHED_ENTRY_DATE}, the way w31/109 words it for appends. */
+function undashedEntryDateRefusal(match: RegExpExecArray): BadUserInputError {
+  const [message, field, written, dashed] = match;
+  return new BadUserInputError(
+    message,
+    field,
+    `Beancount reads ${written} as ${dashed}, so the entry loads the same with its date rewritten; the rest of the file keeps its own spelling. To keep ${written} as written, edit the file with \`updateLedgerFiles\`.`,
+  );
+}
+
+/**
  * What a ledger-service 404 says is missing (w23/047). It names the thing —
  * `Entry with ID 'h' not found` — and dropping that for a bare "Ledger resource
  * not found" told an agent holding a stale entry hash that its ledger was gone.
@@ -236,8 +256,11 @@ export function favaApiErrorToDomainError(
 
   switch (error.status) {
     case 400:
-    case 422:
+    case 422: {
+      const undashed = LEDGER_UNDASHED_ENTRY_DATE.exec(message);
+      if (undashed) return undashedEntryDateRefusal(undashed);
       return new BadUserInputError(message);
+    }
     case 401:
       return new UnauthenticatedError();
     case 402:
