@@ -4,7 +4,10 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import type {
+  ResourceTemplate,
+  Tool,
+} from "@modelcontextprotocol/sdk/types.js";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import {
   MAX_BQL_TEXT_BYTES,
@@ -44,6 +47,8 @@ const FLAT = DOC.replace(/\s+/g, " ");
 
 interface Served {
   tools: Map<string, Tool>;
+  /** Resource templates by `uriTemplate`. */
+  templates: Map<string, ResourceTemplate>;
   capabilities: NonNullable<ReturnType<Client["getServerCapabilities"]>>;
 }
 
@@ -57,8 +62,12 @@ async function serve(): Promise<Served> {
   await Promise.all([client.connect(a), server.connect(b)]);
   try {
     const { tools } = await client.listTools();
+    const { resourceTemplates } = await client.listResourceTemplates();
     return {
       tools: new Map(tools.map((tool) => [tool.name, tool])),
+      templates: new Map(
+        resourceTemplates.map((template) => [template.uriTemplate, template]),
+      ),
       capabilities: client.getServerCapabilities() ?? {},
     };
   } finally {
@@ -180,6 +189,27 @@ const CLAIMS: Claim[] = [
       ),
   },
   {
+    // w31/111: the archive-download-url URL streams any size to the MCP
+    // credential itself (w23/026); the guide said MCP OAuth alone could not.
+    id: "the archive URL streams any size with the same MCP credential",
+    doc: "streams at any size with the same MCP credential, an OAuth token or a personal API key",
+    violations: (s) =>
+      [
+        [
+          "beancount://{owner}/{name}/archive/{archive}",
+          "streams it at any size with the same MCP credential",
+        ],
+        [
+          "beancount://{owner}/{name}/archive-download-url",
+          "the same MCP credential, at any archive size",
+        ],
+      ]
+        .filter(
+          ([uri, says]) => !s.templates.get(uri)?.description?.includes(says),
+        )
+        .map(([uri]) => uri),
+  },
+  {
     id: "MCP has no API-key tool",
     doc: "MCP has no API-key tool",
     violations: (s) =>
@@ -209,6 +239,8 @@ const STALE = [
   // w23/244: resources/read answers every unmatched URI, whatever its scheme,
   // as a coded NOT_FOUND (mcp-resources.test.ts).
   "still returns the SDK's own refusal",
+  // w31/111: the MCP archive route takes an MCP OAuth token at any size.
+  "cannot fetch an archive larger than the cap",
 ];
 
 let served: Served;

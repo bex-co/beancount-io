@@ -991,10 +991,12 @@ message, so the archive is held whole in memory, and base64 adds a third. A
 larger archive is refused with `OPERATION_NOT_ALLOWED` (JSON-RPC `-32003`) as
 soon as its `Content-Length` or the bytes read so far pass the cap, and the
 error's `hint` names `beancount://{owner}/{name}/archive-download-url`. The URL
-that resource returns streams at any size, but only with a personal API key or
-browser session, as above; a client connected only through MCP OAuth cannot
-fetch an archive larger than the cap. It names `main.zip`, and its last path
-segment takes any other `<ref>.zip` or `<ref>.tar.gz`.
+that resource returns to an MCP caller streams at any size with the same MCP
+credential, an OAuth token or a personal API key, as above, so a client
+connected only through MCP OAuth needs no other credential to download a larger
+archive; a browser session is refused there. The URL names `main.zip`, and its
+last path segment takes any other `<ref>.zip` or `<ref>.tar.gz`. The cap applies
+only to the `archive/{archive}` blob.
 
 MCP and both REST spellings share the existing 30-downloads-per-minute
 credential bucket; a refused read still spends one. Every download checks
