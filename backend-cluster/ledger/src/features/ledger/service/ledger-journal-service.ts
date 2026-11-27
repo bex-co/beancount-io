@@ -718,12 +718,17 @@ export class LedgerJournalService implements ILedgerJournalService {
    * re-applies them to fresh content under CAS. Errors the ledger already
    * had never block. The check always runs: `allowInvalid` suppresses only
    * the refusal, and the projection is reported on the response (w23/161).
+   *
+   * Given the lines a delete cuts, a refusal or a `dryRun` names each new
+   * error at its line in the file as it stands, since neither commits
+   * (w5/1202, w31/101). A committed delete reports the line after the cut,
+   * where the error now lives.
    */
   private async projectWriteErrors(
     loaded: LoadedLedgerWithManagedPrices,
     transforms: Map<string, LedgerFileTransform>,
     action: LedgerWriteAction,
-    allowInvalid: boolean | undefined,
+    { allowInvalid, dryRun }: { allowInvalid?: boolean; dryRun?: boolean },
     deletedLines?: DeletedSourceLines,
   ): Promise<ProjectedLedgerErrors> {
     const { files, entryPoint, repoPaths } = loaded;
@@ -739,9 +744,10 @@ export class LedgerJournalService implements ILedgerJournalService {
       await errorsOf(projected),
       () => errorsOf(files),
     );
-    if (!allowInvalid) {
-      const newErrors = deletedLines
-        ? projection.newErrors.map((error) => {
+    const current = deletedLines
+      ? {
+          ...projection,
+          newErrors: projection.newErrors.map((error) => {
             const source = error.source;
             const cuts = source && deletedLines.get(source.filename);
             if (!source || !cuts) return error;
@@ -752,11 +758,11 @@ export class LedgerJournalService implements ILedgerJournalService {
               source.lineno,
             );
             return { ...error, source: { ...source, lineno } };
-          })
-        : projection.newErrors;
-      refuseProjectedErrors({ ...projection, newErrors }, action);
-    }
-    return projection;
+          }),
+        }
+      : projection;
+    if (!allowInvalid) refuseProjectedErrors(current, action);
+    return dryRun ? current : projection;
   }
 
   /**
@@ -1264,7 +1270,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       loaded,
       transforms,
       "delete",
-      allowInvalid,
+      { allowInvalid, dryRun },
       deletedLines,
     );
     let commit: CommitSha = {};
@@ -1315,7 +1321,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       loaded,
       transforms,
       "delete",
-      allowInvalid,
+      { allowInvalid, dryRun },
       deletedLines,
     );
     let commit: CommitSha = {};
@@ -1525,7 +1531,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       loaded,
       transforms,
       "move",
-      allowInvalid,
+      { allowInvalid },
     );
     let commit: CommitSha = {};
     if (!dryRun) {
@@ -1615,7 +1621,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       loaded,
       transforms,
       "update",
-      allowInvalid,
+      { allowInvalid },
     );
     let commit: CommitSha = {};
     if (!dryRun) {

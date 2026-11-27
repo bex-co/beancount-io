@@ -394,6 +394,94 @@ describe("source-slice previews that would break the ledger", () => {
   });
 });
 
+// w31/101: a delete that commits nothing names each new error where the
+// reader finds it, in the file as it stands, so the preview an agent runs
+// first agrees with the refusal of the same call (w5/1202). A committed
+// delete names the line the error has after the cut.
+describe("where a delete's new errors are reported", () => {
+  // COFFEE sits between FARMERS and the assertion, so a multi-delete cuts two
+  // blocks above the error, each with the blank line that separated it.
+  beforeEach(() => {
+    files = { "main.bean": ledger(FARMERS, COFFEE, BALANCE) };
+  });
+
+  const deleteOne = (opts: { allowInvalid?: boolean; dryRun?: boolean }) =>
+    service().deleteSourceSlice({
+      ledgerId: LEDGER_ID,
+      userId: "user-1",
+      entryHash: "farmers",
+      sha256sum: sliceSha256(FARMERS),
+      ...opts,
+    });
+
+  const deleteBoth = (opts: { allowInvalid?: boolean; dryRun?: boolean }) =>
+    service().deleteMultiSourceSlices({
+      ledgerId: LEDGER_ID,
+      userId: "user-1",
+      entries: [
+        { entryHash: "farmers", sha256sum: sliceSha256(FARMERS) },
+        { entryHash: "coffee", sha256sum: sliceSha256(COFFEE) },
+      ],
+      ...opts,
+    });
+
+  /** The `file:line` a refused delete names in its message. */
+  async function refusedAt(refused: Promise<unknown>): Promise<string> {
+    const error = await refused.then(
+      () => undefined,
+      (reason: unknown) => reason,
+    );
+    expect(error).toBeInstanceOf(NewLedgerErrorsError);
+    const [, at] = /\((main\.bean:\d+)\)$/.exec((error as Error).message) ?? [];
+    return at;
+  }
+
+  const reportedAt = (validation: {
+    newErrors: { source?: { filename: string; lineno: number } | null }[];
+  }) =>
+    validation.newErrors.map(
+      ({ source }) => source && `${source.filename}:${source.lineno}`,
+    );
+
+  it.each([
+    ["deleteSourceSlice", deleteOne],
+    ["deleteMultiSourceSlices", deleteBoth],
+  ])(
+    "%s previews the line the refusal names, in the file as it stands",
+    async (_name, remove) => {
+      const before = files["main.bean"];
+      const current = `main.bean:${lineOf(before, BALANCE)}`;
+
+      expect(await refusedAt(remove({}))).toBe(current);
+      // backend-v2 sends every preview with allowInvalid (w23/m7/t008).
+      const preview = await remove({ allowInvalid: true, dryRun: true });
+
+      expect(reportedAt(preview.validation)).toEqual([current]);
+      expect(commitMock).not.toHaveBeenCalled();
+      expect(files["main.bean"]).toBe(before);
+    },
+  );
+
+  it.each([
+    ["deleteSourceSlice", deleteOne],
+    ["deleteMultiSourceSlices", deleteBoth],
+  ])(
+    "%s reports the line after the cut once a forced delete commits",
+    async (_name, remove) => {
+      const before = files["main.bean"];
+
+      const deleted = await remove({ allowInvalid: true });
+
+      const after = files["main.bean"];
+      expect(after).not.toBe(before);
+      expect(lineOf(after, BALANCE)).toBeLessThan(lineOf(before, BALANCE));
+      expect(reportedAt(deleted.validation)).toEqual([
+        `main.bean:${lineOf(after, BALANCE)}`,
+      ]);
+    },
+  );
+});
+
 describe("source-slice writes on a ledger that already has errors", () => {
   it("does not count an existing error that the write only moved", async () => {
     // Deleting COFFEE shifts the duplicate open three lines up.
