@@ -538,6 +538,30 @@ describe("ledgerWriteFailureMessage with a single-entry refusal", () => {
     }
   });
 
+  // The ledger refuses a new control character outright, in server English
+  // naming the field (w21/816). Entry Context maps it to its own copy; the
+  // Edit banner here showed the raw text.
+  it("names a refused control character in the app's words", () => {
+    const words = {
+      t: (key: string, params?: Record<string, string>) =>
+        `${key} ${JSON.stringify(params ?? {})}`,
+    };
+    for (const [message, code] of [
+      [
+        "newContent contains the control character U+001B, which the ledger cannot store as text",
+        "U+001B",
+      ],
+      [
+        "entry 0: narration contains the control character U+0000, which the ledger cannot store as text",
+        "U+0000",
+      ],
+    ]) {
+      expect(ledgerWriteFailureMessage(badInput(message), words)).toBe(
+        `ledgerEntryControlCharacter {"code":"${code}"}`,
+      );
+    }
+  });
+
   it("leaves other bad input as the server wrote it", () => {
     expect(
       ledgerWriteFailureMessage(badInput("limit must be positive"), keyed),

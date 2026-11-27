@@ -416,6 +416,8 @@ export const de: Translations = {
     "Das Datum muss am Zeilenanfang stehen: Entfernen Sie das Leerzeichen davor.",
   ledgerEntryNotAnEntry:
     "Optionen, Plugins und Includes sind keine Einträge. Ändern Sie sie im Dateieditor des Buchs.",
+  ledgerEntryControlCharacter:
+    "Diese Bearbeitung fügt ein unsichtbares Steuerzeichen ({{code}}) ein. Entfernen Sie es und speichern Sie erneut.",
   openAccountInvalidRoot: "Wählen Sie einen gültigen Kontotyp.",
   openAccountNameRequired: "Geben Sie mindestens einen Namensbestandteil ein.",
   openAccountEmptyComponent: "Namensbestandteile dürfen nicht leer sein.",

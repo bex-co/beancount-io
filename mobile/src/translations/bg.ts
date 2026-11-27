@@ -405,6 +405,8 @@ export const bg: Translations = {
     "Датата трябва да е в началото на реда: премахнете интервала пред нея.",
   ledgerEntryNotAnEntry:
     "Опциите, плъгините и включванията не са записи. Променяйте ги в редактора на файла на книгата.",
+  ledgerEntryControlCharacter:
+    "Тази редакция добавя невидим управляващ символ ({{code}}). Премахнете го и запазете отново.",
   openAccountInvalidRoot: "Изберете валиден вид сметка.",
   openAccountNameRequired: "Въведете поне една част от името на сметката.",
   openAccountEmptyComponent:

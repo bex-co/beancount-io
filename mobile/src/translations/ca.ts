@@ -414,6 +414,8 @@ export const ca: Translations = {
     "La data ha de començar la línia: elimina l'espai que té davant.",
   ledgerEntryNotAnEntry:
     "Les opcions, els connectors i les inclusions no són entrades. Canvia-les a l'editor de fitxers del llibre.",
+  ledgerEntryControlCharacter:
+    "Aquesta edició afegeix un caràcter de control invisible ({{code}}). Traieu-lo i torneu a desar.",
   openAccountInvalidRoot: "Tria un tipus de compte vàlid.",
   openAccountNameRequired: "Escriu almenys un component del nom.",
   openAccountEmptyComponent: "Els components del nom no poden ser buits.",

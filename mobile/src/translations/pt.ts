@@ -412,6 +412,8 @@ export const pt: Translations = {
     "A data deve começar a linha: remova o espaço antes dela.",
   ledgerEntryNotAnEntry:
     "Opções, plugins e inclusões não são lançamentos. Altere-os no editor de arquivos do livro.",
+  ledgerEntryControlCharacter:
+    "Esta edição adiciona um caractere de controle invisível ({{code}}). Remova-o e salve novamente.",
   openAccountInvalidRoot: "Escolha um tipo de conta válido.",
   openAccountNameRequired: "Digite pelo menos uma parte do nome da conta.",
   openAccountEmptyComponent:

@@ -415,6 +415,8 @@ export const sk: Translations = {
     "Dátum musí byť na začiatku riadka: odstráňte medzeru pred ním.",
   ledgerEntryNotAnEntry:
     "Možnosti, pluginy a zahrnutia nie sú záznamy. Zmeňte ich v editore súboru knihy.",
+  ledgerEntryControlCharacter:
+    "Táto úprava pridáva neviditeľný riadiaci znak ({{code}}). Odstráňte ho a uložte znova.",
   openAccountInvalidRoot: "Vyberte platný typ účtu.",
   openAccountNameRequired: "Zadajte aspoň jednu časť názvu účtu.",
   openAccountEmptyComponent: "Časti názvu účtu nemôžu byť prázdne.",
