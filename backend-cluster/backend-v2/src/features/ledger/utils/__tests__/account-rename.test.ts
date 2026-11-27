@@ -80,6 +80,62 @@ describe("renameAccountInText (w1/m43)", () => {
     );
   });
 
+  // w31/099: Beancount skips a whole line starting with any of `*#:!&?%`,
+  // and a `"` on it opens no string, so the scanner must read it as a comment.
+  it.each(
+    ["*", "#", ":", "!", "&", "?", "%"].flatMap((start) => [
+      [start, "without a quote", ""],
+      [start, "with an unmatched quote", ' 5"'],
+    ]),
+  )(
+    "leaves a %s line %s and the narration after it alone, and renames every posting (w31/099)",
+    (start, _case, quote) => {
+      const source = [
+        "2026-08-30 open Assets:Bank:Checking USD",
+        `${start} Assets:Bank:Checking is the petty cash box${quote}`,
+        '2026-08-30 * "payee" "top-up"',
+        "  Expenses:Coffee    1.00 USD",
+        "  Assets:Bank:Checking   -1.00 USD",
+        `${start} a ruler${quote}`,
+        '2026-08-31 * "payee" "paid from Assets:Bank:Checking"',
+        "  Expenses:Coffee    1.00 USD",
+        "  Assets:Bank:Checking   -1.00 USD",
+        "",
+      ].join("\n");
+      const { text, changes } = renameAccountInText(source, FROM, TO);
+      expect(changes.map((change) => change.line)).toEqual([1, 5, 9]);
+      const lines = text.split("\n");
+      expect(lines[1]).toBe(
+        `${start} Assets:Bank:Checking is the petty cash box${quote}`,
+      );
+      expect(lines[6]).toBe(
+        '2026-08-31 * "payee" "paid from Assets:Bank:Checking"',
+      );
+      expect(lines[8]).toBe("  Assets:Bank:Main   -1.00 USD");
+    },
+  );
+
+  it.each(["*", "#", ":", "!", "&", "?", "%"])(
+    "reads a %s line inside a multiline string as the string's content (w31/099)",
+    (start) => {
+      const source = [
+        '2026-01-03 note Assets:Cash "first line',
+        `${start} Assets:Bank:Checking inside the note"`,
+        '2026-01-04 * "Coffee"',
+        "  Assets:Bank:Checking  -3 USD",
+        "  Expenses:Coffee",
+      ].join("\n");
+      const { changes } = renameAccountInText(source, FROM, TO);
+      expect(changes).toEqual([
+        {
+          line: 4,
+          before: "  Assets:Bank:Checking  -3 USD",
+          after: "  Assets:Bank:Main  -3 USD",
+        },
+      ]);
+    },
+  );
+
   it("keeps CRLF line endings and a final line without a newline", () => {
     const source =
       "2026-01-01 open Assets:Bank:Checking\r\n2026-01-02 close Assets:Bank:Checking";

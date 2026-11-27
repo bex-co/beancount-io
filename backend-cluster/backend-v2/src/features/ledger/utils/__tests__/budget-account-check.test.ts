@@ -66,6 +66,22 @@ describe("extractSingleBudgetAccount", () => {
     ).toBe("Expenses:NoSuch");
   });
 
+  it.each(
+    ["*", "#", ":", "!", "&", "?", "%"].flatMap((start) => [
+      [start, "without a quote", ""],
+      [start, "with an unmatched quote", ' 5"'],
+    ]),
+  )(
+    "finds a budget under a %s line Beancount skips, %s (w31/099)",
+    (start, _case, quote) => {
+      expect(
+        extractSingleBudgetAccount(
+          `${start} Monthly caps${quote}\n2026-02-10 custom "budget" Expenses:NoSuch "monthly" 100 USD\n`,
+        ),
+      ).toBe("Expenses:NoSuch");
+    },
+  );
+
   it("returns undefined for non-budget directives and non-account tokens", () => {
     expect(
       extractSingleBudgetAccount('2026-02-10 * "Cafe"\n  Expenses:Food 5 USD'),

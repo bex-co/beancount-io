@@ -37,6 +37,19 @@ const YEAR =
 /** A non-Latin leaf, which stock Beancount and the hosted engine both load (w31/013). */
 const FOOD =
   '2026-01-01 open Expenses:Food:日本 USD\n2026-03-01 * "Ramen"\n  Expenses:Food:日本  12 USD\n  Expenses:Coffee\n';
+/** Lines Beancount skips whole, one with an unmatched quote (w31/099). */
+const SKIPPED = [
+  "2026-08-30 open Assets:Qa:Wallet USD",
+  "# Assets:Qa:Wallet is the petty cash box",
+  '2026-08-30 * "payee" "top-up"',
+  "  Expenses:Coffee    1.00 USD",
+  "  Assets:Qa:Wallet   -1.00 USD",
+  '# a 5" ruler',
+  '2026-08-31 * "payee" "paid from Assets:Qa:Wallet"',
+  "  Expenses:Coffee    1.00 USD",
+  "  Assets:Qa:Wallet   -1.00 USD",
+  "",
+].join("\n");
 
 let resolver: LedgerMutationResolver;
 let schema: Awaited<ReturnType<typeof buildSchema>>;
@@ -59,6 +72,7 @@ async function fixture(
     ["main.bean", { content: MAIN, sha: "sha-main" }],
     ["2026.bean", { content: YEAR, sha: "sha-year" }],
     ["food.bean", { content: FOOD, sha: "sha-food" }],
+    ["skipped.bean", { content: SKIPPED, sha: "sha-skipped" }],
   ]);
   const commits: {
     path: string;
@@ -317,6 +331,51 @@ describe.each(SURFACES)("renameAccount on %s (w1/m43)", (surface) => {
               "Expenses:Food:Japan",
             ),
             sha: "sha-food",
+          },
+        ],
+      ]);
+    } finally {
+      await env.close();
+    }
+  });
+
+  it("leaves lines Beancount skips and the narrations after them alone, renaming every posting (w31/099)", async () => {
+    const env = await fixture();
+    try {
+      const wallet = { from: "Assets:Qa:Wallet", to: "Assets:Qa:Purse" };
+      const preview = await env.call(surface, { ...wallet, dryRun: true });
+      expect(preview.success).toBe(true);
+      const verdict = preview.result as {
+        valid?: boolean;
+        validation?: { valid: boolean };
+      };
+      expect(verdict.valid ?? verdict.validation?.valid).toBe(true);
+      expect(preview.result).toMatchObject({
+        files: [
+          {
+            path: "skipped.bean",
+            changes: [
+              { line: 1, after: "2026-08-30 open Assets:Qa:Purse USD" },
+              { line: 5, after: "  Assets:Qa:Purse   -1.00 USD" },
+              { line: 9, after: "  Assets:Qa:Purse   -1.00 USD" },
+            ],
+          },
+        ],
+      });
+      expect(env.commits).toHaveLength(0);
+      const renamed = await env.call(surface, wallet);
+      expect(renamed.success).toBe(true);
+      const lines = SKIPPED.split("\n");
+      for (const index of [0, 4, 8]) {
+        lines[index] = lines[index].replace("Wallet", "Purse");
+      }
+      expect(env.commits).toEqual([
+        [
+          {
+            operation: "update",
+            path: "skipped.bean",
+            content: lines.join("\n"),
+            sha: "sha-skipped",
           },
         ],
       ]);

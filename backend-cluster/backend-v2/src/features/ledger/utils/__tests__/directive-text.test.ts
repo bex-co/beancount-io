@@ -1087,3 +1087,87 @@ describe("insertDirectives with multiline strings in the existing file", () => {
     expect(appended.content).toBe(`${unclosed}\n${coffeeTxn}\n`);
   });
 });
+
+// w31/099: Beancount skips a whole line starting with any of `*#:!&?%`, and a
+// `"` on it opens no string; the scanners over the target file read it so.
+describe("insertDirectives over lines Beancount skips (w31/099)", () => {
+  const later = txn("2026-09-01", "Later");
+
+  it.each(
+    ["*", "#", ":", "!", "&", "?", "%"].flatMap((start) => [
+      [start, "without a quote", ""],
+      [start, "with an unmatched quote", ' 5"'],
+    ]),
+  )("keeps date order past a %s line %s", (start, _case, quote) => {
+    const file = [
+      txn("2026-08-30", "First"),
+      `${start} a ruler${quote}`,
+      txn("2026-08-31", "Second"),
+      "",
+    ].join("\n");
+    const result = insertDirectives(file, parseDirectiveText(later));
+    expect(result.appended).toBe(false);
+    expect(result.content).toBe(`${file}\n${later}\n`);
+    expect(result.content.split("\n")[result.inserted[0]!.line - 1]).toBe(
+      '2026-09-01 * "Later" "note"',
+    );
+  });
+
+  it.each(
+    ["*", "#", ":", "!", "&", "?", "%"].flatMap((start) => [
+      [start, "without a quote", ""],
+      [start, "with an unmatched quote", ' 5"'],
+    ]),
+  )(
+    "threads an entry between two others below a %s line %s",
+    (start, _case, quote) => {
+      const between = txn("2026-08-31", "Between");
+      const file = [
+        `${start} see the 5 note${quote}`,
+        txn("2026-08-30", "First"),
+        "",
+        txn("2026-09-05", "Last"),
+        "",
+      ].join("\n");
+      const result = insertDirectives(file, parseDirectiveText(between));
+      expect(result.appended).toBe(false);
+      expect(result.content).toBe(
+        [
+          `${start} see the 5 note${quote}`,
+          txn("2026-08-30", "First"),
+          "",
+          between,
+          "",
+          txn("2026-09-05", "Last"),
+          "",
+        ].join("\n"),
+      );
+    },
+  );
+
+  it.each(["*", "#", ":", "!", "&", "?", "%"])(
+    "reads a %s line inside a multiline string as the string's content",
+    (start) => {
+      const file = [
+        '2026-08-30 note Assets:Cash "first line',
+        `${start} 2026-12-31 still the note"`,
+        "",
+        txn("2026-09-05", "Last"),
+        "",
+      ].join("\n");
+      const result = insertDirectives(file, parseDirectiveText(later));
+      expect(result.appended).toBe(false);
+      expect(result.content).toBe(
+        [
+          '2026-08-30 note Assets:Cash "first line',
+          `${start} 2026-12-31 still the note"`,
+          "",
+          later,
+          "",
+          txn("2026-09-05", "Last"),
+          "",
+        ].join("\n"),
+      );
+    },
+  );
+});

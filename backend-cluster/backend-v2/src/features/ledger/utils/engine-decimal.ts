@@ -1,5 +1,6 @@
 import { BadUserInputError } from "@/shared/errors";
 import { ACCOUNT_CHAR } from "./account-matcher";
+import { isSkippedLine } from "./skipped-line";
 
 /**
  * The engine's Decimal holds 28 significant digits: a literal past that is an
@@ -283,9 +284,10 @@ function lineAmountLiterals(
 /**
  * The numeric literals a text would commit to the engine's `Decimal` parser,
  * skipping quoted strings (including escaped quotes and multiline strings),
- * `;` comments, and column-0 `*` org-mode headings. When `onlyLines` is given,
- * string state is still tracked from line 0 so multiline strings stay accurate,
- * while only the named 0-based line indices are checked.
+ * `;` comments, and lines Beancount skips whole (`isSkippedLine`: a `*`
+ * org-mode heading, a `#` line, and the rest, w31/099). When `onlyLines` is
+ * given, string state is still tracked from line 0 so multiline strings stay
+ * accurate, while only the named 0-based line indices are checked.
  */
 export function textAmountLiterals(
   text: string,
@@ -297,7 +299,7 @@ export function textAmountLiterals(
   const lines = text.replace(/\r\n?/g, "\n").split("\n");
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]!;
-    if (!inString && line.startsWith("*")) continue;
+    if (!inString && isSkippedLine(line)) continue;
     const startedInString = inString;
     const scanned = scanLine(line, inString);
     inString = scanned.inString;

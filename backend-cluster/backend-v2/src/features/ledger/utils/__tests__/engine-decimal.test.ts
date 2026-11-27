@@ -262,6 +262,45 @@ describe("assertAmountsFitEngineDecimal", () => {
     expect(() => assertAmountsFitEngineDecimal(text)).not.toThrow();
   });
 
+  // w31/099: Beancount skips a whole line starting with any of `*#:!&?%`, and
+  // a `"` on it opens no string.
+  it.each(
+    ["*", "#", ":", "!", "&", "?", "%"].flatMap((start) => [
+      [start, "without a quote", ""],
+      [start, "with an unmatched quote", ' 5"'],
+    ]),
+  )(
+    "skips a %s line %s, and still checks the amounts after it",
+    (start, _case, quote) => {
+      const skipped = `${start} ref 123456789012345678901234567890 USD${quote}`;
+      expect(() =>
+        assertAmountsFitEngineDecimal(
+          `${skipped}\n2026-08-01 * "Cafe"\n  Expenses:Food 10.00 USD\n  Assets:Cash\n`,
+        ),
+      ).not.toThrow();
+      expect(() =>
+        assertAmountsFitEngineDecimal(
+          `${skipped}\n2026-08-01 * "Cafe"\n  Expenses:Food 123456789012345678901234567890 USD\n  Assets:Cash\n`,
+        ),
+      ).toThrow(BadUserInputError);
+    },
+  );
+
+  it.each(["*", "#", ":", "!", "&", "?", "%"])(
+    "reads a %s line inside a multiline string as the string's content (w31/099)",
+    (start) => {
+      const text = [
+        '2026-08-01 * "Cafe" "line1',
+        `${start} 123456789012345678901234567890 USD"`,
+        "  Expenses:Food 123456789012345678901234567890 USD",
+        "  Assets:Cash",
+      ].join("\n");
+      expect(textAmountLiterals(text)).toEqual([
+        "123456789012345678901234567890",
+      ]);
+    },
+  );
+
   it("tracks multiline string state from line 0 when checking only changed lines", () => {
     const file = [
       '2026-08-01 * "Cafe" "line 1',

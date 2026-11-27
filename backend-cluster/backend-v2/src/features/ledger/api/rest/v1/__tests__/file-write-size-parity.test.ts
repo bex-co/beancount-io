@@ -883,6 +883,11 @@ describe.each<Surface>(["rest", "gql", "mcp"])(
         "org heading",
         '* Ref 123456789012345678901234567890 USD\n2026-08-01 * "Cafe"\n  Expenses:Food 10.00 USD\n  Assets:Cash\n',
       ],
+      // w31/099: every line Beancount skips whole, with an unmatched quote.
+      ...["#", ":", "!", "&", "?", "%"].map((start) => [
+        `a skipped ${start} line`,
+        `${start} ref 5" 123456789012345678901234567890 USD\n2026-08-01 * "Cafe"\n  Expenses:Food 10.00 USD\n  Assets:Cash\n`,
+      ]),
     ])("accepts %s (w31/095)", async (_label, content) => {
       const f = await fixture();
       try {

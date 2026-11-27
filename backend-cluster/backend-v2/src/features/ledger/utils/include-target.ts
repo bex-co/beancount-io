@@ -1,5 +1,6 @@
 import { posix } from "path";
 import { BadUserInputError } from "@/shared/errors";
+import { isSkippedLine } from "./skipped-line";
 
 /**
  * `include` lines as the ledger service loads them: a target resolves against
@@ -43,11 +44,12 @@ export function parseIncludeLine(line: string): IncludeLine | null {
 /**
  * Whether a Beancount double-quoted string is still open after `line`, given
  * whether one was open at its start: `\"` and `\\` escape inside strings;
- * outside strings, `;` starts a comment and a column-0 `*` starts an
- * org-mode heading, both running to the end of the line.
+ * outside strings, `;` starts a comment running to the end of the line, and a
+ * line Beancount skips whole (`isSkippedLine`: a `*` org-mode heading, a `#`
+ * line, and the rest, w31/099) opens no string.
  */
 function endsInsideString(line: string, startsInside: boolean): boolean {
-  if (!startsInside && line.startsWith("*")) return false;
+  if (!startsInside && isSkippedLine(line)) return false;
   let inside = startsInside;
   for (let i = 0; i < line.length; i += 1) {
     const char = line[i];

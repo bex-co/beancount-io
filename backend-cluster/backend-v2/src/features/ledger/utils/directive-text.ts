@@ -1,4 +1,5 @@
 import { BadUserInputError } from "@/shared/errors";
+import { isSkippedLine } from "./skipped-line";
 
 /**
  * Beancount text, as directives (w2/m28:t005).
@@ -523,15 +524,16 @@ export function insertDirectives(
 
 /**
  * Whether each line in `lines` begins inside a quoted string opened on an
- * earlier line (w31/098). Outside strings, a column-0 `*` starts an org-mode
- * heading ignored to end of line, and `;` starts a comment via `scanLine`.
+ * earlier line (w31/098). Outside strings, a line Beancount skips whole
+ * (`isSkippedLine`: a `*` org-mode heading, a `#` line, and the rest, w31/099)
+ * opens no string, and `;` starts a comment via `scanLine`.
  */
 function lineStartsInString(lines: readonly string[]): boolean[] {
   const starts: boolean[] = new Array(lines.length);
   let inString = false;
   for (let i = 0; i < lines.length; i += 1) {
     starts[i] = inString;
-    if (!inString && lines[i].startsWith("*")) continue;
+    if (!inString && isSkippedLine(lines[i])) continue;
     inString = scanLine(lines[i], inString).inString;
   }
   return starts;

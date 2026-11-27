@@ -63,6 +63,43 @@ describe("include lines", () => {
   });
 });
 
+// w31/099: Beancount skips a whole line starting with any of `*#:!&?%`, and a
+// `"` on it opens no string, so the include after it is still an include.
+describe("scanIncludeLines over lines Beancount skips (w31/099)", () => {
+  it.each(
+    ["*", "#", ":", "!", "&", "?", "%"].flatMap((start) => [
+      [start, "without a quote", ""],
+      [start, "with an unmatched quote", ' 5"'],
+    ]),
+  )("finds the include after a %s line %s", (start, _case, quote) => {
+    const content = `${start} see the 5 note${quote}\ninclude "a.bean"\n`;
+    expect(
+      scanIncludeLines(content)
+        .filter((entry) => entry.include !== null)
+        .map((entry) => [entry.index, entry.include!.target]),
+    ).toEqual([[1, "a.bean"]]);
+    expect(addIncludeLines(content, ["b.bean"])).toBe(
+      `${start} see the 5 note${quote}\ninclude "a.bean"\ninclude "b.bean"\n`,
+    );
+  });
+
+  it.each(["*", "#", ":", "!", "&", "?", "%"])(
+    "reads a %s line inside a multiline string as the string's content",
+    (start) => {
+      const content = [
+        '2026-08-30 note Assets:Cash "first line',
+        `${start} still the note"`,
+        'include "a.bean"',
+      ].join("\n");
+      expect(
+        scanIncludeLines(content)
+          .filter((entry) => entry.include !== null)
+          .map((entry) => entry.index),
+      ).toEqual([2]);
+    },
+  );
+});
+
 describe("include targets", () => {
   it.each([
     ["main.bean", "x.bean", "x.bean"],

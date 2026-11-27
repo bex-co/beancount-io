@@ -1,4 +1,5 @@
 import { ACCOUNT_CHAR } from "./account-matcher";
+import { isSkippedLine } from "./skipped-line";
 
 /**
  * Rename one account, and every account under it, in Beancount source text
@@ -8,8 +9,9 @@ import { ACCOUNT_CHAR } from "./account-matcher";
  * becomes `<to>:Old`.
  *
  * Strings may span lines and hold `\"`; a `;` starts a comment to the end of
- * the line; a line starting with `*` is an org-mode heading Beancount skips.
- * Line endings are kept byte for byte.
+ * the line; a line Beancount skips whole (one starting with `*`, `#`, `:`,
+ * `!`, `&`, `?` or `%`, see `isSkippedLine`) is a comment too, and a `"` on it
+ * opens no string (w31/099). Line endings are kept byte for byte.
  */
 
 /** What the rename does, as REST, GraphQL and MCP describe it; each adds its own preview and undo names. */
@@ -50,7 +52,7 @@ export function accountTokenOffsets(text: string, account: string): number[] {
       inString = true;
     } else if (
       char === ";" ||
-      (char === "*" && (i === 0 || text[i - 1] === "\n"))
+      ((i === 0 || text[i - 1] === "\n") && isSkippedLine(char))
     ) {
       const end = text.indexOf("\n", i);
       if (end === -1) break;

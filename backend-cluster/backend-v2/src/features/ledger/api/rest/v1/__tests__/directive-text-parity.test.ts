@@ -1589,6 +1589,45 @@ describe.each(["rest", "gql", "mcp"] as const)(
       },
     );
 
+    it.each(["#", ":", "!", "&", "?", "%"])(
+      "keeps date order past a skipped %s line with an unmatched quote (w31/099)",
+      async (start) => {
+        const existingFile = [
+          'option "title" "T"',
+          "",
+          '2026-08-29 * "Earlier" "note"',
+          "  Expenses:Food:Groceries  2.00 USD",
+          "  Assets:Cash",
+          `${start} a 5" ruler`,
+          '2026-08-30 * "Later" "note"',
+          "  Expenses:Food:Groceries  1.00 USD",
+          "  Assets:Cash",
+          "",
+        ].join("\n");
+        const f = await fixture();
+        f.state.files.set("main.bean", existingFile);
+        try {
+          const dry = await f.call(surface, { text: coffeeTxn, dryRun: true });
+          expect(dry.ok).toBe(true);
+          const preview = dry.ok ? (dry.data as Record<string, never>) : {};
+          const [{ diff }] = preview.diff as { path: string; diff: string }[];
+          expect(diff.indexOf('2026-08-30 * "Later" "note"')).toBeLessThan(
+            diff.indexOf('+2026-08-31 * "Coffee" "Latte"'),
+          );
+          expect(preview.appendedUnsorted).toEqual([]);
+          expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+
+          const res = await f.call(surface, { text: coffeeTxn });
+          expect(res.ok).toBe(true);
+          expect(f.state.files.get("main.bean")).toBe(
+            `${existingFile}\n${coffeeTxn}\n`,
+          );
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
     it("inserts cleanly before a multiline-narration entry without corrupting date order", async () => {
       const f = await fixture();
       f.state.files.set("main.bean", keywordMultilineExisting);

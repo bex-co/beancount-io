@@ -583,7 +583,9 @@ loads, in one commit. It changes account tokens outside strings and comments,
 on whole names: renaming `Assets:Check` leaves `Assets:Checking` alone, and
 `Assets:Check:Old` becomes `<to>:Old`. Payees, narrations, string metadata,
 `note` text and comments keep the old name, and a file the ledger does not load
-is not touched.
+is not touched. A comment is a `;` comment or a line Beancount skips whole: one
+that starts with `*`, `#`, `:`, `!`, `&`, `?` or `%`, where a `"` opens no
+string.
 
 `to` may be any name stock Beancount loads, and that includes non-Latin
 components after the first: `Expenses:Food:日本` renames to

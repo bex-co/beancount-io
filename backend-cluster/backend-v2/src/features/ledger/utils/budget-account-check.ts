@@ -2,6 +2,7 @@ import { type FavaApiClient, unwrapFavaResponse } from "@/foundation/fava";
 import { ValidationError } from "@/shared/errors";
 import type { ReportedProjection } from "@/features/ledger/utils/bean-check-errors";
 import type { ParsedDirective } from "@/features/ledger/utils/directive-text";
+import { isSkippedLine } from "@/features/ledger/utils/skipped-line";
 
 interface BudgetAccountRef {
   readonly index: number;
@@ -18,17 +19,16 @@ const OPEN_ACCOUNT = /^\d{4}-\d{2}-\d{2}[ \t]+open[ \t]+([^\s";]+)/;
 const BUDGET_ACCOUNT =
   /^\d{4}-\d{2}-\d{2}[ \t]+custom[ \t]+"budget"[ \t]+([^\s";]+)/;
 
-/** First non-blank, non-comment, non-org-heading line of a directive's text. */
+/** First non-blank, non-comment line of a directive's text that Beancount reads. */
 function headerLineOf(text: string): string | undefined {
   for (const line of text.split("\n")) {
     const trimmed = line.trim();
     if (trimmed.length === 0 || trimmed.startsWith(";")) continue;
-    // A column-0 `*` line is an org-mode heading Beancount skips whole
-    // (directive-text.ts; rustledger's balance-tolerance-syntax.ts), so a
-    // budget under one is still the header to validate — otherwise an
-    // `updateSourceSlice` edit hid the budget from this check while the
-    // ledger committed it (w31/096 follow-up).
-    if (line.startsWith("*")) continue;
+    // Beancount skips a line starting with `*`, `#`, `:`, `!`, `&`, `?` or
+    // `%` whole (`isSkippedLine`), so a budget under one is still the header
+    // to validate — otherwise an `updateSourceSlice` edit hid the budget from
+    // this check while the ledger committed it (w31/096 follow-up, w31/099).
+    if (isSkippedLine(line)) continue;
     return line;
   }
   return undefined;
