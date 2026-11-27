@@ -721,8 +721,12 @@ export default function LedgerOverviewPage() {
               ledgerOwner={ledgerOwner}
               ledgerName={ledgerName}
               entryFile={
-                ledgerData.bcioOptions.transactionFile ??
-                ledgerData.bcioOptions.defaultFile
+                // A valueless `custom "beancountio-option"` parses as `""`,
+                // which means unset — mirror resolveEntryFile's routing order
+                // (entry-type file → default_file → "main.bean").
+                ledgerData.bcioOptions.transactionFile ||
+                ledgerData.bcioOptions.defaultFile ||
+                "main.bean"
               }
               canWrite={canWrite}
             />
