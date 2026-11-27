@@ -773,6 +773,13 @@ function toDirectoryType(type: string | undefined): "file" | "dir" | undefined {
 }
 
 /**
+ * An ASCII control character, space or DEL (U+0000–U+0020, U+007F): any ASCII
+ * character outside the printable range `!`–`~`. Non-ASCII stays valid, as git
+ * allows it in a ref name.
+ */
+const ASCII_CONTROL_OR_SPACE = /[^\x21-\x7e\P{ASCII}]/u;
+
+/**
  * A branch name travels to the git host as the tail of a URL path, so it is
  * held to git's own ref-name rules (`git check-ref-format --branch`) plus the
  * URL delimiters `?`, `#` and `%`: a name outside them is `BAD_USER_INPUT`
@@ -780,7 +787,8 @@ function toDirectoryType(type: string | undefined): "file" | "dir" | undefined {
  */
 function assertBranchName(branch: string): void {
   const invalid =
-    /[\u0000-\u0020\u007f~^:?*[\\#%]/.test(branch) ||
+    ASCII_CONTROL_OR_SPACE.test(branch) ||
+    /[~^:?*[\\#%]/.test(branch) ||
     branch.includes("..") ||
     branch.includes("@{") ||
     branch.includes("//") ||

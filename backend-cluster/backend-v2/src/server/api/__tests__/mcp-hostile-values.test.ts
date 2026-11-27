@@ -71,19 +71,6 @@ function stringLeaves(root: JsonNode): string[] {
   return [...found].filter((path) => path !== "");
 }
 
-/** The smallest argument object holding `value` at `path`. */
-function argumentsAt(path: string, value: string): Record<string, unknown> {
-  const segments = path.match(/[^.[\]{}]+|\[\]|\{\}/g) ?? [];
-  const build = (index: number): unknown => {
-    if (index === segments.length) return value;
-    const segment = segments[index];
-    if (segment === "[]") return [build(index + 1)];
-    if (segment === "{}") return { k: build(index + 1) };
-    return { [segment]: build(index + 1) };
-  };
-  return build(0) as Record<string, unknown>;
-}
-
 const cases = (
   MCP_TOOLS as unknown as { name: string; inputSchema: z.ZodType }[]
 ).flatMap((tool) => {
@@ -95,7 +82,7 @@ const cases = (
 });
 type Shape = { name: string; make: (path: string) => Record<string, unknown> };
 
-/** Wraps `value` at `path`, the way {@link argumentsAt} does for a string. */
+/** The smallest argument object holding `value` at `path`. */
 const at = (path: string, value: unknown) => {
   const segments = path.match(/[^.[\]{}]+|\[\]|\{\}/g) ?? [];
   const build = (index: number): unknown => {

@@ -713,6 +713,17 @@ describe("PullRequestService", () => {
       " main",
       "\tmain\n",
       " no-such-branch-qa ",
+      "main\u0000x",
+      "main\u001fx",
+      "main x",
+      "main\u007fx",
+      "main~1",
+      "main^",
+      "a:b",
+      "a*b",
+      "a[b",
+      "a\\b",
+      "a%2fb",
     ])(
       "refuses the base branch %j as bad input before reading it",
       async (baseBranch) => {
@@ -745,6 +756,25 @@ describe("PullRequestService", () => {
         });
         expect(mockGiteaClientFactory.getUserApiClient).not.toHaveBeenCalled();
         expect(mockClient.repos.repoGetBranch).not.toHaveBeenCalled();
+      },
+    );
+
+    // The control-character class ends at DEL: git allows non-ASCII in a ref
+    // name, including the C1 range just past it.
+    it.each(["feature/café", "功能/分支", "main\u0080x", "main\u00a0x"])(
+      "accepts the non-ASCII base branch %j, as git allows",
+      async (baseBranch) => {
+        mockSuccessfulCreate();
+        await service.createPRFromPatch(identity, owner, repo, {
+          ...input,
+          baseBranch,
+        });
+        expect(mockClient.repos.repoGetBranch).toHaveBeenCalledWith(
+          owner,
+          repo,
+          baseBranch,
+          { format: "json" },
+        );
       },
     );
 
