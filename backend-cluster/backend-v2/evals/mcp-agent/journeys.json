@@ -239,7 +239,7 @@
       "facts": [
         {
           "id": "close-unpinned",
-          "description": "Accounts without a balance assertion dated on or after period end are reported as unpinned",
+          "description": "Accounts without a balance assertion dated on or after the day after period end are reported as unpinned",
           "anyTerms": [
             "unpinned",
             "not pinned",
