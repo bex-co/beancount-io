@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { BadUserInputError } from "@/shared/errors";
 import {
+  assertDashedEntryDate,
   assertEntryTokens,
   assertNoControlCharacters,
   assertNoNewControlCharacters,
@@ -412,8 +413,75 @@ describe("assertSingleEntryText", () => {
     ],
     ["; only a comment\n", "newContent holds no entry"],
     ["Assets:Cash 1 USD", "newContent must be one dated directive"],
+    // w31/110: an indented date the lexer reads is named too, not called an
+    // empty entry with advice to delete it.
+    ['  2026/08/25 * "a"', "newContent's date line is indented"],
+    ['\t2026-8-25 * "a"', "newContent's date line is indented"],
   ])("refuses %p", (text, message) => {
     expect(() => assertSingleEntryText(text, "newContent")).toThrow(message);
+  });
+
+  // w31/110: the engine serves a slash-dated entry's slice as written
+  // (w31/106), so it is one dated directive, not the indentation problem the
+  // clients reported it as.
+  it.each(["2026/08/25", "2026-8-25", "2026/8/25", "2026-08/25"])(
+    "reads %p as a dated directive",
+    (date) => {
+      expect(() =>
+        assertSingleEntryText(
+          `${date} * "Slash" "n"\n  Assets:Cash  -1.00 USD\n  Expenses:Food  1.00 USD`,
+          "newContent",
+        ),
+      ).not.toThrow();
+    },
+  );
+});
+
+// w31/110: a date spelled another way the lexer reads was refused as "must be
+// one dated directive", with nothing saying the date spelling was the problem.
+describe("assertDashedEntryDate", () => {
+  it.each([
+    ["2026/08/25", "2026-08-25"],
+    ["2026-8-25", "2026-08-25"],
+    ["2026/8/25", "2026-08-25"],
+    ["2026-08/25", "2026-08-25"],
+    ["2026/8/5", "2026-08-05"],
+  ])("refuses %p, naming the rewrite to %p", (date, dashed) => {
+    expect(() =>
+      assertDashedEntryDate(
+        `; above\n${date} * "Slash" "n"\n  Assets:Cash  -1.00 USD\n  Expenses:Food  1.00 USD`,
+        "newContent",
+      ),
+    ).toThrow(
+      new BadUserInputError(
+        `newContent dates its entry ${date}; an entry edit takes YYYY-MM-DD: write ${date} as ${dashed}`,
+        "newContent",
+      ),
+    );
+  });
+
+  it("carries the field, as every single-entry refusal does", () => {
+    let caught: unknown;
+    try {
+      assertDashedEntryDate(
+        '2026/08/29 custom "budget" A:B "monthly" 1 USD',
+        "newContent",
+      );
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toMatchObject({
+      category: "BAD_USER_INPUT",
+      metadata: { field: "newContent" },
+    });
+  });
+
+  it.each([
+    '2026-08-25 * "Dashed"\n  Assets:Cash  -1.00 USD\n  Expenses:Food  1.00 USD',
+    '2026-08-25 * "Says 2026/08/25"\n  Assets:Cash  -1.00 USD\n  Expenses:Food  1.00 USD',
+    "; 2026/08/25 in a comment\n2026-08-25 open Assets:Cash",
+  ])("accepts %p", (text) => {
+    expect(() => assertDashedEntryDate(text, "newContent")).not.toThrow();
   });
 });
 

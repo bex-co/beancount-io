@@ -1,3 +1,4 @@
+import { SOURCE_DATE, sourceDateOf } from "@/foundation/rustledger/source-date";
 import { BadUserInputError } from "@/shared/errors";
 
 /**
@@ -280,6 +281,20 @@ export function isSingleDirective(text: string): boolean {
 const CONFIGURATION_KEYWORDS = new Set(["option", "plugin", "include"]);
 
 /**
+ * A line that starts with a date as the lexer reads one: `2026-08-25`, and
+ * also `2026/08/25` or `2026-8-25`, which a ledger converted from ledger-cli is
+ * full of. The engine serves such an entry's slice since w31/106, so an edit
+ * starts from that text; reading only the dashed form refused it as no dated
+ * directive at all and the clients told the user to indent postings that
+ * already were (w31/110).
+ */
+const DATED_LINE = new RegExp(String.raw`^(${SOURCE_DATE})\s`, "u");
+const INDENTED_DATED_LINE = new RegExp(
+  String.raw`^[ \t]+${SOURCE_DATE}\s`,
+  "u",
+);
+
+/**
  * Refuse a control character in `text` unless `kept` holds it too. An entry
  * imported with one (an ESC from a CSV) could never be edited: its own slice,
  * sent back with a metadata change, was refused for a character the user can
@@ -325,7 +340,7 @@ export function assertSingleEntryText(
     // delete it would remove the transaction (w21/814).
     const indented = text
       .split("\n")
-      .find((line) => /^[ \t]+\d{4}-\d{2}-\d{2}\s/.test(line));
+      .find((line) => INDENTED_DATED_LINE.test(line));
     if (indented !== undefined) {
       throw new BadUserInputError(
         `${field}'s date line is indented; a dated directive starts at column zero: ${indented.trim()}`,
@@ -345,7 +360,7 @@ export function assertSingleEntryText(
         field,
       );
     }
-    if (!/^\d{4}-\d{2}-\d{2}\s/.test(line)) {
+    if (!DATED_LINE.test(line)) {
       throw new BadUserInputError(
         `${field} must be one dated directive: ${line.trim()}`,
         field,
@@ -357,5 +372,28 @@ export function assertSingleEntryText(
       `${field} holds ${directives.length} entries; edit them one at a time or use updateLedgerFiles`,
       field,
     );
+  }
+}
+
+/**
+ * Refuse single-entry text whose date line spells its date any way but
+ * `YYYY-MM-DD`, naming the rewrite. The spelling loads, but checks that read
+ * new entry text upstream of the engine read dashes only, so a slash-dated
+ * budget or long amount would skip them; the dashed date loads the same (the
+ * w31/106 decision). The caller applies it only to text that changes the file,
+ * so the entry's own slice sent back as served writes nothing (w31/110).
+ * backend-v2 matches this wording to attach its hint.
+ */
+export function assertDashedEntryDate(text: string, field: string): void {
+  for (const line of topLevelLines(text)) {
+    const written = DATED_LINE.exec(line)?.[1];
+    if (written === undefined) continue;
+    const dashed = sourceDateOf(written)!;
+    if (written !== dashed) {
+      throw new BadUserInputError(
+        `${field} dates its entry ${written}; an entry edit takes YYYY-MM-DD: write ${written} as ${dashed}`,
+        field,
+      );
+    }
   }
 }

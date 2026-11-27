@@ -111,6 +111,46 @@ export async function verifySlashDatedEntries(): Promise<void> {
     "✓ a slash-dated or unpadded entry has a source, a context and a delete preview by the journal's hash (w31/106)",
   );
 
+  // Every editor starts from the served slice. Sent back as served it writes
+  // nothing; an edit that keeps the spelling is told the rewrite (w31/110).
+  for (const [narration, text, written] of [
+    ["slash-dated probe", SLASHED, "2026/08/30"],
+    ["unpadded probe", UNPADDED, "2026-8-30"],
+  ] as const) {
+    const { entry_hash: entryHash, source } = row(narration);
+    const same = await journal.updateSourceSlice({
+      ...params,
+      entryHash,
+      sha256sum: source!.sha256sum,
+      newContent: text,
+    });
+    if (!same.unchanged || commits.length !== 0) {
+      fail(`${narration} resent as served is ${JSON.stringify(same)}`);
+    }
+    const refusal = await journal
+      .updateSourceSlice({
+        ...params,
+        entryHash,
+        sha256sum: source!.sha256sum,
+        newContent: text.replace(narration, `${narration} edited`),
+      })
+      .then(
+        () => undefined,
+        (error: unknown) => error,
+      );
+    const expected = `newContent dates its entry ${written}; an entry edit takes YYYY-MM-DD: write ${written} as 2026-08-30`;
+    if (
+      !(refusal instanceof Error) ||
+      refusal.message !== expected ||
+      commits.length !== 0
+    ) {
+      fail(`${narration} edited as written answered ${String(refusal)}`);
+    }
+  }
+  console.log(
+    "✓ a slash-dated or unpadded entry resent as served is unchanged, and an edit that keeps the spelling names the rewrite (w31/110)",
+  );
+
   // An edit may write the dash spelling; the entry is the same one.
   const unpadded = row("unpadded probe");
   const dashed = UNPADDED.replace("2026-8-30", "2026-08-30");

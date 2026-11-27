@@ -287,3 +287,70 @@ describe("updateSourceSlice newContent", () => {
     expect(files["main.bean"]).toContain('"Tea edit"');
   });
 });
+
+// w31/110: since w31/106 the engine slices an entry dated `2026/03/04` and
+// serves its text as written, so every edit of it starts from that text. The
+// single-entry check read only `YYYY-MM-DD` and refused it, unchanged or not.
+describe("updateSourceSlice on an entry dated 2026/03/04", () => {
+  const SLASH_OLD = TXN_OLD.replace("2026-03-04", "2026/03/04");
+  const SLASH_PRE = MAIN_PRE.replace(TXN_OLD, SLASH_OLD);
+
+  beforeEach(() => {
+    files = { "main.bean": SLASH_PRE };
+    findMock.mockImplementation(
+      async (_f: unknown, _e: unknown, hash: string) =>
+        hash === OLD_ID
+          ? {
+              file: "main.bean",
+              slice: SLASH_OLD,
+              sha256: sliceSha256(SLASH_OLD),
+              startLine: 3,
+              endLine: 6,
+              localOccurrence: 0,
+            }
+          : null,
+    );
+  });
+
+  const update = (newContent: string, dryRun?: boolean) =>
+    service().updateSourceSlice({
+      ledgerId: "alice/main",
+      userId: "user-1",
+      entryHash: OLD_ID,
+      sha256sum: sliceSha256(SLASH_OLD),
+      newContent,
+      dryRun,
+    });
+
+  it.each([true, false])(
+    "answers its own slice, sent back as served, as unchanged (dry run: %s)",
+    async (dryRun) => {
+      const same = await update(SLASH_OLD, dryRun);
+
+      expect(same.unchanged).toBe(true);
+      expect(files["main.bean"]).toBe(SLASH_PRE);
+    },
+  );
+
+  it.each(["2026/03/04", "2026-3-4", "2026/3/4", "2026-03/04"])(
+    "refuses an edit dated %s, naming the rewrite",
+    async (date) => {
+      await expect(
+        update(TXN_NEW.replace("2026-03-04", date)),
+      ).rejects.toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: `newContent dates its entry ${date}; an entry edit takes YYYY-MM-DD: write ${date} as 2026-03-04`,
+        metadata: { field: "newContent" },
+      });
+      expect(commitMock).not.toHaveBeenCalled();
+      expect(files["main.bean"]).toBe(SLASH_PRE);
+    },
+  );
+
+  it("commits the edit with its date written 2026-03-04", async () => {
+    const updated = await update(TXN_NEW);
+
+    expect(updated.unchanged).toBe(false);
+    expect(files["main.bean"]).toBe(MAIN_PRE.replace(TXN_OLD, TXN_NEW));
+  });
+});

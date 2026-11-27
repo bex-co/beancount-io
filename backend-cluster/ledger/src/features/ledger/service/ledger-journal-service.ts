@@ -22,6 +22,7 @@ import {
   type LedgerWriteAction,
 } from "@/shared/errors";
 import {
+  assertDashedEntryDate,
   assertNoNewControlCharacters,
   assertSingleEntryText,
 } from "@/features/ledger/utils/entry-tokens";
@@ -1596,6 +1597,19 @@ export class LedgerJournalService implements ILedgerJournalService {
       sha256sum,
     );
     assertNoNewControlCharacters(newContent, "newContent", found.slice);
+    // A date spelled `2026/08/25` is refused in new text, but the entry's own
+    // slice, sent back as served, writes nothing and says so (w31/110).
+    const current = files[found.file] ?? "";
+    if (
+      replaceSliceInFile(
+        current,
+        found.startLine,
+        found.endLine,
+        newContent,
+      ) !== current
+    ) {
+      assertDashedEntryDate(newContent, "newContent");
+    }
     const applied: { current?: AppliedReplace } = {};
     const transforms = new Map([
       [
