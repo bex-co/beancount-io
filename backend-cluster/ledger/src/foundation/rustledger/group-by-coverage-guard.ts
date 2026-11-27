@@ -1,4 +1,5 @@
 import type { QueryResult } from "@rustledger/wasm";
+import { splitTopLevel } from "./mixed-comparison-guard";
 
 /**
  * Bare non-grouped columns under `GROUP BY` (w23/131).
@@ -125,25 +126,6 @@ function keyListText(text: string, from: number): string {
     }
   }
   return text.slice(from);
-}
-
-/** Split on commas outside any paren level. */
-function splitTopLevel(text: string): string[] {
-  const parts: string[] = [];
-  let depth = 0;
-  let current = "";
-  for (const ch of text) {
-    if (ch === "(") depth += 1;
-    if (ch === ")") depth = Math.max(0, depth - 1);
-    if (ch === "," && depth === 0) {
-      parts.push(current.trim());
-      current = "";
-    } else {
-      current += ch;
-    }
-  }
-  if (current.trim() !== "") parts.push(current.trim());
-  return parts;
 }
 
 /** A select item split into its expression and AS alias halves. */
