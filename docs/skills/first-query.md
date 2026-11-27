@@ -58,7 +58,22 @@ Or run it without an interactive session (on Windows, use the [Windows variants]
 ```sh
 claude -p "What were my biggest expenses in June 2026? Ledger is ./ledger.beancount." \
   --allowedTools "Skill" "Read" "Bash(bea:*)"
-codex exec --sandbox read-only "What were my biggest expenses in June 2026? Ledger is ./ledger.beancount."
+```
+
+For Codex on macOS or Linux, don't use `--sandbox read-only`: it stops `bea`
+from creating the temporary files its query engine needs. This command grants
+writes only to a fresh scratch directory. The ledger stays read-only and
+network access stays off. [Codex: allow scratch files](#codex-allow-scratch-files-while-keeping-the-ledger-read-only)
+explains the profile and the older Codex settings that override it.
+
+```sh
+BEA_QUERY_TMP="$(mktemp -d)"
+TMPDIR="$BEA_QUERY_TMP" XDG_CACHE_HOME="$BEA_QUERY_TMP/cache" \
+BEA_CONFIG_DIR="$BEA_QUERY_TMP/config" \
+codex exec -c 'default_permissions="bea_query"' \
+  -c 'permissions.bea_query={filesystem={":root"="read",":tmpdir"="write"},network={enabled=false}}' \
+  "What were my biggest expenses in June 2026? Ledger is ./ledger.beancount."
+rm -rf "$BEA_QUERY_TMP"
 ```
 
 ## 4. Check the answer
@@ -94,15 +109,18 @@ In Windows PowerShell, this prints `True`:
 - **The agent doesn't use the skill or says it has none:** run `verify` from [the installation guide](installation.md#3-confirm-the-agents-see-them), then start a new session.
 - **`bea: command not found`:** install `bea` as described in the [prerequisites](installation.md#prerequisites), then open a new terminal.
 - **The agent asks permission to run `bea`:** allow it. The query only reads the ledger.
+- **Codex says `bea` found no usable temporary directory:** it ran under `--sandbox read-only`. Use the Codex command in step 3 instead.
 - **Different numbers:** make sure you asked about June 2026 and that the checksum check in step 4 passes.
 - **On Windows, Claude Code is denied `bea` or cannot read the skill's references, or Codex reports `blocked by policy`:** use the flags in [Agents on Windows](installation.md#agents-on-windows).
 
-### Linux: allow scratch files while keeping the ledger read-only
+### Codex: allow scratch files while keeping the ledger read-only
 
-On Linux with Codex 0.167.0, `--sandbox read-only` can prevent `bea` from
-creating the temporary files its query engine needs. Use a
+Codex's `--sandbox read-only` refuses every write, including the temporary
+files `bea`'s query engine creates, so `bea query` stops with
+`No usable temporary directory found`. This happens on macOS and on Linux.
+Step 3's Codex command uses a
 [named permission profile](https://developers.openai.com/codex/permissions)
-that grants writes only to a fresh scratch directory. The workspace stays
+instead. It grants writes only to a fresh scratch directory. The workspace stays
 read-only and command network access stays disabled. Before using this profile,
 remove a legacy `sandbox_mode` setting from your Codex configuration and omit
 `--sandbox`; those older settings override named profiles. Keep user configuration
@@ -110,18 +128,9 @@ loaded for a plugin install: `--ignore-user-config` also hides its registration.
 For linked or copied skills, that flag is an alternative to removing an old
 `sandbox_mode` setting.
 
-```sh
-BEA_QUERY_TMP="$(mktemp -d)"
-TMPDIR="$BEA_QUERY_TMP" XDG_CACHE_HOME="$BEA_QUERY_TMP/cache" \
-BEA_CONFIG_DIR="$BEA_QUERY_TMP/config" \
-codex exec -m gpt-6.1-sol \
-  -c 'default_permissions="bea_query"' \
-  -c 'permissions.bea_query={filesystem={":root"="read",":tmpdir"="write"},network={enabled=false}}' \
-  "What were my biggest expenses in June 2026? Ledger is ./ledger.beancount."
-rm -rf "$BEA_QUERY_TMP"
-```
-
-Check the ledger checksum after this command as in step 4.
+On native Windows, use the [Windows variant](installation.md#agents-on-windows)
+instead. Codex answered the first query there under `--sandbox read-only` with
+the unelevated Windows sandbox.
 
 ## Tested with
 
@@ -133,11 +142,6 @@ Workspace discovery was also rechecked on 2026-10-20 with the current eleven-ski
 
 On 2026-10-28 on native Windows 11 (ARM64, Windows PowerShell 5.1), Claude Code 2.1.312 and Codex 0.165.0 with a workspace install each listed the suite's fourteen skills. Each returned the figures above through `beancount-ask` and published `bea` 0.3.1, installed with `uv tool install`. The ledger checksum was unchanged. It took the corrections in [bea on Windows](installation.md#bea-on-windows) and [Agents on Windows](installation.md#agents-on-windows). User-level installs on Windows and WSL were not tested.
 
-## Continue through a first month
-
-The [first-month guide](first-month.md) starts from a fresh ledger and walks through approved imports, duplicate checks, reconciliation, read-only analysis, and a confirmed close. It includes synthetic statements, decline branches, and an independent checkpoint verifier.
-
-
 On 2026-11-08, Codex 0.167.0 (`gpt-6.1-sol`) on Linux returned the figures
 above from both a Skills CLI 1.7.6 project install and a GitHub CLI 2.96.0
 local-source project install. The installers ran on macOS and populated both
@@ -146,3 +150,17 @@ scratch-only permission profile above; native write-denial sentinels and the
 ledger checksum both passed. These are Codex answer results; the earlier
 Claude results keep their original dates. See the [channel record](suite-distribution.md#codex-first-query-completion-for-git-copy-channels--2026-11-08)
 for the remote `gh` download limits and exact rehearsal scope.
+
+On 2026-11-26 on macOS, step 4's query ran with published `bea` 0.5.0 inside
+Codex CLI 0.163.0's own sandbox (`codex sandbox`, no model turn). Under the
+`--sandbox read-only` policy it stopped with
+`No usable temporary directory found`. Under step 3's scratch-only profile it
+returned the three figures above, a write to `ledger.beancount` was refused,
+a network request failed, and the ledger checksum was unchanged. The same
+profile carried a full Codex CLI 0.171.0 answer turn on macOS on 2026-11-25 in
+the [existing-ledger guide](existing-ledger.md#tested-with). A Codex answer
+turn for this guide's question on macOS under the profile is not yet recorded.
+
+## Continue through a first month
+
+The [first-month guide](first-month.md) starts from a fresh ledger and walks through approved imports, duplicate checks, reconciliation, read-only analysis, and a confirmed close. It includes synthetic statements, decline branches, and an independent checkpoint verifier.

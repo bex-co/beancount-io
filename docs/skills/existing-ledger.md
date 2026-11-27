@@ -114,7 +114,7 @@ claude -p "How much did I spend on groceries in February 2026?" \
 For Codex, `--sandbox read-only` stops `bea` from creating the temporary
 files its query engine needs, on macOS as well as Linux. Grant writes only to
 a fresh scratch directory instead; the books stay read-only and network
-access stays off. [Allow scratch files](first-query.md#linux-allow-scratch-files-while-keeping-the-ledger-read-only)
+access stays off. [Allow scratch files](first-query.md#codex-allow-scratch-files-while-keeping-the-ledger-read-only)
 explains this profile and the older Codex settings that override it.
 
 ```sh

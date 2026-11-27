@@ -133,8 +133,8 @@ codex plugin add beancount-io@beancount-io
 codex plugin remove beancount-io@beancount-io     # remove
 ```
 
-For a Linux first query, use the [scratch-only permission profile](first-query.md#linux-allow-scratch-files-while-keeping-the-ledger-read-only)
-when the query engine cannot create temporary files under `--sandbox read-only`.
+For a Codex first query on macOS or Linux, use the [scratch-only permission profile](first-query.md#codex-allow-scratch-files-while-keeping-the-ledger-read-only)
+instead of `--sandbox read-only`, which stops the query engine from creating its temporary files.
 Keep Codex user configuration loaded so its plugin registration remains visible;
 `--ignore-user-config` hides an installed plugin as well as older sandbox settings.
 
