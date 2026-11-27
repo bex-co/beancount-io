@@ -12,6 +12,7 @@ import type {
 } from "@/features/ledger/service/ledger-repo-service";
 import type { ILedgerDataService } from "@/features/ledger/service/ledger-data-service";
 import { gateFileWrite } from "@/features/ledger/utils/file-write-gate";
+import { commitRename } from "@/features/ledger/utils/rename-write-race";
 import {
   lexesAsAccount,
   loadsAsAccount,
@@ -163,17 +164,19 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
     let commit: string | undefined;
     let mappingsUpdated = false;
     if (!dryRun) {
-      ({ commit } = await this.ledgerRepo.changeGeneratedFiles({
-        ledgerId,
-        identity,
-        operations: changed.map((file) => ({
-          operation: "update" as const,
-          path: file.path,
-          content: file.renamed.text,
-          sha: file.sha,
-        })),
-        message: `Rename ${from} to ${to}`,
-      }));
+      ({ commit } = await commitRename(() =>
+        this.ledgerRepo.changeGeneratedFiles({
+          ledgerId,
+          identity,
+          operations: changed.map((file) => ({
+            operation: "update" as const,
+            path: file.path,
+            content: file.renamed.text,
+            sha: file.sha,
+          })),
+          message: `Rename ${from} to ${to}`,
+        }),
+      ));
       this.logger.info("Renamed account", {
         ledgerId,
         files: changed.length,

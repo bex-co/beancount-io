@@ -105,6 +105,7 @@ import {
 import { assertRequestId } from "@/features/ledger/utils/entry-write-idempotency";
 import { CACHE_KEYS, TTL, type CacheHelper } from "@/shared/cache";
 import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-not-allowed-from-cause";
+import { commitRename } from "@/features/ledger/utils/rename-write-race";
 import { filterNullish } from "@/shared/tools";
 import { processBatch } from "@/shared/batch-processor";
 import { logger } from "@/shared/logger";
@@ -1702,14 +1703,16 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     };
     let changed: { commit?: string | null } | undefined;
     if (!dryRun) {
-      changed = await unwrapFavaResponse(
-        favaApiClient.ledgers.changeLedgerFiles(
-          ledgerOwner,
-          ledgerName,
-          changeOptions,
+      changed = await commitRename(() =>
+        unwrapFavaResponse(
+          favaApiClient.ledgers.changeLedgerFiles(
+            ledgerOwner,
+            ledgerName,
+            changeOptions,
+          ),
+          "rename ledger file",
+          (cause) => operationNotAllowedFromCause("rename ledger file", cause),
         ),
-        "rename ledger file",
-        (cause) => operationNotAllowedFromCause("rename ledger file", cause),
       );
     }
 
