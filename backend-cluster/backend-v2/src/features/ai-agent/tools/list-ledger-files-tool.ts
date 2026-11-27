@@ -15,7 +15,9 @@ export const listLedgerFilesInputSchema = z.object({
   dir_path: z
     .string()
     .optional()
-    .describe("Directory path to list. Omit for root; '.' is also accepted."),
+    .describe(
+      "Directory to list; omit or '.' for root. A trailing '/' is fine.",
+    ),
 });
 
 export const listLedgerFilesOutputSchema = toolOutputSchema(

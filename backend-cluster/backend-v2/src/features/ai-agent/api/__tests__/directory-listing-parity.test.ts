@@ -306,7 +306,49 @@ describe("directory listing on REST, MCP and GraphQL", () => {
       }
     });
 
-    it.each(["", "/", ".//", "..", "../", "./..", ".\\"])(
+    // w31/137: `ls -F` prints a folder as `imports/`. REST and GraphQL stay
+    // strict, but their refusal now quotes the value and names the rule.
+    it.each(["imports/", "./imports/"])(
+      "lists %p on MCP as its folder while REST and GraphQL refuse it naming the rule",
+      async (dir) => {
+        const f = await fixture();
+        try {
+          const { rest, mcp, gql } = await f.list(dir);
+          expect(mcp).toEqual(["imports/2026.bean"]);
+          const refused = {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining(
+              `File path ${JSON.stringify(dir)} `,
+            ),
+          };
+          expect(rest).toMatchObject({
+            ...refused,
+            metadata: { field: "dirPath" },
+          });
+          expect(gql).toMatchObject({
+            code: "BAD_USER_INPUT",
+            field: "dirPath",
+          });
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("refuses a missing folder with a trailing '/' as NOT_FOUND on MCP, like the folder without it", async () => {
+      const f = await fixture();
+      try {
+        const { mcp } = await f.list("Imports/");
+        expect(mcp).toMatchObject({
+          code: "NOT_FOUND",
+          message: expect.stringContaining("'Imports'"),
+        });
+      } finally {
+        await f.close();
+      }
+    });
+
+    it.each(["", "/", ".//", "..", "../", "./..", ".\\", "imports//"])(
       "still refuses %p with BAD_USER_INPUT on MCP, REST and GraphQL",
       async (dir) => {
         const f = await fixture();

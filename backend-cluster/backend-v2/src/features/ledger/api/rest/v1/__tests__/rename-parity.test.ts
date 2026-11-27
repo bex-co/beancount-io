@@ -368,13 +368,15 @@ async function fixture(
           contextValue: { identity: caller, getCurrentIdentity: () => caller },
         });
         const error = result.errors?.[0];
+        const extensions = error
+          ? formatError(error.toJSON(), error).extensions
+          : undefined;
         return {
           success: !result.errors,
           result: result.data?.renameLedgerFile,
-          code: error
-            ? formatError(error.toJSON(), error).extensions?.code
-            : undefined,
+          code: extensions?.code,
           message: error?.message,
+          ...(extensions?.field !== undefined && { field: extensions.field }),
         };
       }
       const result = await client.callTool({
@@ -1924,6 +1926,55 @@ describe("dot-prefix normalization", () => {
     try {
       const outcome = await f.call("mcp", "../old.bean", "new.bean");
       expect(outcome.success).toBe(false);
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+});
+
+/**
+ * w31/137. Both paths were refused with the bare "Invalid file path", and MCP
+ * drops the `field` REST and GraphQL carry, so an agent could not tell whether
+ * `oldPath` or `newPath` was wrong. The message now quotes the wrong one and
+ * names the rule, on every surface, and REST and GraphQL keep the field.
+ */
+describe.each(["rest", "gql", "mcp"])("a malformed path via %s", (surface) => {
+  const previewFlag = surface === "mcp" ? { dry_run: true } : { dryRun: true };
+
+  it.each([
+    [
+      "old.bean",
+      "x//y.bean",
+      "newPath",
+      'File path "x//y.bean" has an empty part: remove the doubled "/"',
+    ],
+    [
+      "old.bean/",
+      "y.bean",
+      "oldPath",
+      'File path "old.bean/" ends with "/": remove the trailing "/"',
+    ],
+    [
+      "old.bean",
+      "qa/../y.bean",
+      "newPath",
+      'File path "qa/../y.bean" has a "." or ".." part: write it relative to the ledger root',
+    ],
+  ])("refuses %j → %j naming %s", async (oldPath, newPath, field, message) => {
+    const f = await fixture();
+    try {
+      const outcome = await f.call(surface, oldPath, newPath, previewFlag);
+      expect(outcome).toMatchObject({
+        success: false,
+        code: "BAD_USER_INPUT",
+        message,
+      });
+      if (surface === "rest")
+        expect(outcome.result).toMatchObject({
+          error: { metadata: { field } },
+        });
+      if (surface === "gql") expect(outcome).toMatchObject({ field });
       expect(f.change).not.toHaveBeenCalled();
     } finally {
       await f.close();

@@ -1299,11 +1299,11 @@ describe("PlaidSyncService", () => {
       it.each([
         ["", "File path must not be empty"],
         ["   ", "File path must not be empty"],
-        ["../etc/passwd", "Invalid file path"],
+        ["../etc/passwd", '"../etc/passwd" has a "." or ".." part'],
         [".git/config", "inside .git"],
-        ["/etc/passwd", "Invalid file path"],
-        ["dir\\file.bean", "Invalid file path"],
-        ["a\0b.bean", "Invalid file path"],
+        ["/etc/passwd", '"/etc/passwd" starts with "/"'],
+        ["dir\\file.bean", 'uses "\\": separate folders with "/"'],
+        ["a\0b.bean", "contains a NUL (U+0000) character"],
       ])(
         "refuses invalid filename %j before auth, Fava, or Postgres",
         async (filename, expectedMessage) => {

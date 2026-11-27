@@ -45,6 +45,28 @@ describe("normalizeAgentDirPath", () => {
     expect(normalizeAgentDirPath("imports")).toBe("imports");
   });
 
+  // w31/137: `ls -F` and shell completion print a folder as `Reports/`.
+  it.each([
+    ["Reports/", "Reports"],
+    ["./Reports/", "Reports"],
+    ["imports/2026/", "imports/2026"],
+    [".hidden/", ".hidden"],
+    ["..x/", "..x"],
+  ])("drops the one trailing '/' of %p", (input, expected) => {
+    expect(normalizeAgentDirPath(input)).toBe(expected);
+  });
+
+  it.each(["Reports//", "a/./", "a/../", "/"])(
+    "leaves %p, which is not a folder name and a '/', for refusal",
+    (input) => {
+      expect(normalizeAgentDirPath(input)).toBe(input);
+    },
+  );
+
+  it("keeps a trailing '/' on file paths, which name no folder", () => {
+    expect(normalizeAgentRepoPath("main.bean/")).toBe("main.bean/");
+  });
+
   it("preserves explicit empty and unsafe directory paths for refusal", () => {
     expect(normalizeAgentDirPath("")).toBe("");
     expect(normalizeAgentDirPath("/")).toBe("/");

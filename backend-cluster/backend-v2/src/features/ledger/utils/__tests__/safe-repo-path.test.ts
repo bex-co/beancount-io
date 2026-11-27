@@ -29,24 +29,53 @@ describe("repository path validation", () => {
     (path) => {
       expect(() => assertSafeRepoPath(path, "dirPath")).toThrow(
         expect.objectContaining({
-          message: expect.stringContaining("inside .git"),
+          message: `File path ${JSON.stringify(path)} is inside .git, which can't be read or written`,
           metadata: expect.objectContaining({ field: "dirPath" }),
         }),
       );
     },
   );
 
+  it("refuses an empty path without quoting it", () => {
+    expect(() => assertSafeRepoPath("", "newPath")).toThrow(
+      expect.objectContaining({
+        message: "File path must not be empty",
+        metadata: expect.objectContaining({ field: "newPath" }),
+      }),
+    );
+  });
+
+  // w31/137: MCP carries the message but not the field, so a bare "Invalid
+  // file path" left an agent with two or three paths unable to tell which
+  // was wrong. Each rule quotes the value and says what to change.
   it.each([
-    "",
-    "/main.bean",
-    "dir//main.bean",
-    "./main.bean",
-    "../private/main.bean",
-    "dir/../../private/main.bean",
-    "dir\\main.bean",
-    "dir/\0main.bean",
-  ])("rejects %p", (path) => {
-    expect(() => assertSafeRepoPath(path)).toThrow(BadUserInputError);
+    ["/main.bean", '"/main.bean" starts with "/"'],
+    ["Reports/", '"Reports/" ends with "/": remove the trailing "/"'],
+    ["main.bean/", '"main.bean/" ends with "/"'],
+    ["x//y.bean", '"x//y.bean" has an empty part: remove the doubled "/"'],
+    ["./main.bean", '"./main.bean" has a "." or ".." part'],
+    ["qa/./main.bean", '"qa/./main.bean" has a "." or ".." part'],
+    ["../private/main.bean", '"../private/main.bean" has a "." or ".." part'],
+    ["dir/../../private/main.bean", 'has a "." or ".." part'],
+    [
+      "dir\\main.bean",
+      '"dir\\\\main.bean" uses "\\": separate folders with "/"',
+    ],
+    ["dir/\0main.bean", '"dir/\\u0000main.bean" contains a NUL (U+0000)'],
+  ])("refuses %j, quoting it and naming the rule", (path, rule) => {
+    let thrown: unknown;
+    try {
+      assertSafeRepoPath(path, "oldPath");
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(BadUserInputError);
+    expect(thrown).toMatchObject({
+      category: "BAD_USER_INPUT",
+      message: expect.stringMatching(/^File path "/),
+      metadata: { field: "oldPath" },
+    });
+    expect((thrown as Error).message).toContain(rule);
   });
 });
 
