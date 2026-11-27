@@ -55,7 +55,8 @@
  * Decode Beancount's string-literal escapes as its C lexer does: the recognized
  * escapes `\n \t \r \\ \"` map to their control/literal characters; any other
  * `\<char>` sequence drops the backslash and keeps the following character.
- * (Identical to the decoder in `beancount-options.ts`.)
+ * (The single shared copy: `beancount-options.ts`, `strip.ts` and
+ * `url-include-errors.ts` all decode through this.)
  */
 export function decodeStringLiteral(raw: string): string {
   let out = "";
