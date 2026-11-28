@@ -100,7 +100,6 @@
 
 ## Inbox
 
-- [657](./657.md) — Mobile Catalan catalog mixes formal and informal "you" (≤1h) ← routine `dashboard-qa` follow-up 2026-11-27
 - [650](./done/650.md) — Saving a file shows "Out of date — click to refresh" for the user's own write (≤1h) ← user report 2026-11-01 — **done** 2026-11-01 (`2ef426039`)
 - [648](./done/648.md) — Fix the web Starter copy promising an example transaction and rename the create button from Save (≤1h) ← `/pm-brainstorm w3` 2026-10-20 candidate 7, from ADR021 — **done** 2026-10-20 (`2f11faa72`)
 
@@ -130,3 +129,4 @@ Blocked milestones and inbox notes live under [`blocked/`](./blocked/) with thei
 - [484](./blocked/484.md) — Remove production verification probes from the public `open_ledger/example` showcase — **blocked:** runbook done; deleting the two files needs write access to `open_ledger/example` (the QA account is pull-only)
 - [656](./blocked/656.md) — Six legacy dashboard alias paths 404 on the website instead of redirecting — **blocked:** the hosted edge routes them to the website; needs an edge or website routing change, or an owner decision to retire the aliases
 - [645](./blocked/645.md) — Creating a pull request fails with an opaque "Gitea 500" — **blocked:** the main-only branch policy refuses the `pr-patch-*` branch; owner kept the policy 2026-11-02 (w23/m17 dropped)
+- [657](./blocked/657.md) — Mobile Catalan catalog mixes formal and informal "you" (≤1h) ← routine `dashboard-qa` follow-up 2026-11-27 — **blocked:** waits on w5/m14/t004 to record the Catalan form of address
