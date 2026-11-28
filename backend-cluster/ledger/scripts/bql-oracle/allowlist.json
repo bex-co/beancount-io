@@ -440,5 +440,66 @@
       ".pm/w31/done/161.md"
     ],
     "note": "The engine's description joins an empty payee or narration with ' | ', so the filter compares 'Shop | ' with 'Shop' and counts no row, where stock drops the empty part and counts 2. The shell strips the separator from a selected description cell only; a WHERE, GROUP BY or expression over the column still sees the engine's text until the engine joins as stock does (upstream)."
+  },
+  {
+    "id": "parent-root-equals-empty",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      ".pm/w31/done/164.md"
+    ],
+    "note": "Stock's parent() of a one-component name is '' and the engine's is NULL, so parent(parent(account)) = '' counts the 15 postings on two-component accounts in stock and none here. Use root(account, n) for roll-ups (parent-root-workaround agrees); the engine fix is upstream."
+  },
+  {
+    "id": "parent-root-is-null",
+    "differences": [
+      "row-count"
+    ],
+    "references": [
+      ".pm/w31/done/164.md"
+    ],
+    "note": "Stock's parent() of a one-component name is '' and the engine's is NULL, so IS NULL on parent(parent(account)) picks the two-component accounts here and none in stock."
+  },
+  {
+    "id": "parent-root-distinct",
+    "differences": [
+      "dtype",
+      "row-count"
+    ],
+    "references": [
+      ".pm/w31/done/164.md"
+    ],
+    "note": "Stock's parent() of a one-component name is '' and the engine's is NULL (and both read parent('') as NULL), so a three-step chain reads '' on Assets:Bank:Checking and NULL elsewhere in stock, two distinct values, but NULL everywhere here: one row, typed unknown."
+  },
+  {
+    "id": "parent-root-group",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      ".pm/w31/done/164.md"
+    ],
+    "note": "Stock's parent() of a one-component name is '' and the engine's is NULL, so the two-component accounts group under '' in stock and under NULL here."
+  },
+  {
+    "id": "parent-leaf-literals",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      ".pm/w31/done/164.md"
+    ],
+    "note": "Stock's parent() of a one-component name is '' and the engine's is NULL: parent('Assets') reads '' in stock and NULL here. leaf('') also differs (leaf-empty-literal); parent('') is NULL on both."
+  },
+  {
+    "id": "leaf-empty-literal",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      ".pm/w31/done/164.md"
+    ],
+    "note": "Stock's leaf('') is NULL and the engine's is ''; leaf('Assets') agrees. The engine fix is upstream."
   }
 ]

@@ -278,6 +278,32 @@ the groups `Shop | ` and `Shop` stay apart. Filter and group on `payee` and
 fails once an engine bump joins the parts as stock does. The stripping can go
 then (w31/161).
 
+## BQL `parent()` and `leaf()` at a root
+
+Stock's `parent()` of a one-component name is `''` (`parent('Assets')`), and
+NULL only for an empty name; its `leaf('')` is NULL. The pinned engine reverses
+both edges: `parent('Assets')` is NULL and `leaf('')` is `''`. A real account
+has two or more components, so `parent(account)` and `leaf(account)` agree
+with stock. The split shows in a `parent()` chain: on `Assets:Cash`,
+`parent(parent(account))` is `''` in stock and NULL here. So
+`WHERE parent(parent(account)) = ''` matches nothing, the two-component
+accounts group under NULL instead of `''`, and
+`DISTINCT parent(parent(parent(account)))` gives one NULL row where stock gives
+`''` and NULL. No rewrite repairs it in the shell: the engine has no `CASE`,
+and `coalesce(parent(x), '')` would turn `parent('')` into `''` where stock
+keeps NULL.
+
+Roll accounts up with `root(account, n)`, which agrees with stock for every
+`n`: `GROUP BY root(account, 1)` groups by top-level account, and
+`WHERE root(account, 2) = account` keeps the two-component accounts. Meanwhile
+`parent(parent(account)) IS NULL` matches here what `= ''` matches in stock,
+but stock reads it the other way round, so a query that must run on both uses
+`root()`. The oracle queries `parent-root-equals-empty`, `parent-root-is-null`,
+`parent-root-distinct`, `parent-root-group`, `parent-leaf-literals` and
+`leaf-empty-literal` are allowlisted for this, so `yarn verify:rustledger`
+fails once an engine bump reads the edges as stock does, and
+`parent-root-workaround` pins the `root()` spelling (w31/164).
+
 ## Validation: stock errors the engine does not raise
 
 These things stock `bean-check` refuses load without an error in the pinned

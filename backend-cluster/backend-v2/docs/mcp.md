@@ -1882,6 +1882,14 @@ refused with a message that names `cost(position)`, which keeps the sign
 (`-number * cost_number AS cost`) is unaffected. See the
 [ledger notes](../../ledger/README.md#bql-cost-column-is-refused).
 
+`parent()` of a one-component name reads NULL here where stock reads `''`, and
+`leaf('')` reads `''` where stock reads NULL. A real account has two or more
+components, so `parent(account)` agrees; a chain does not:
+`WHERE parent(parent(account)) = ''` matches no posting. Roll accounts up with
+`root(account, n)`, which agrees with stock (`GROUP BY root(account, 1)`,
+`WHERE root(account, 2) = account`). See the
+[ledger notes](../../ledger/README.md#bql-parent-and-leaf-at-a-root).
+
 ```json
 { "ok": true, "result": "tool-specific payload" }
 ```

@@ -1769,6 +1769,27 @@
       ],
       "source": "w23/165"
     },
+    "leaf-empty-literal": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "l"
+        },
+        {
+          "dtype": "str",
+          "name": "a"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT leaf('') AS l, leaf('Assets') AS a LIMIT 1",
+      "rows": [
+        [
+          null,
+          "Assets"
+        ]
+      ],
+      "source": "w31/164"
+    },
     "meta-entries": {
       "columns": [
         {
@@ -1991,6 +2012,242 @@
         ]
       ],
       "source": "w23/166"
+    },
+    "parent-leaf-literals": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "p"
+        },
+        {
+          "dtype": "str",
+          "name": "l"
+        },
+        {
+          "dtype": "str",
+          "name": "e"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT parent('Assets') AS p, leaf('') AS l, parent('') AS e",
+      "rows": [
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ],
+        [
+          "",
+          null,
+          null
+        ]
+      ],
+      "source": "w31/164"
+    },
+    "parent-root-distinct": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "p"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT DISTINCT parent(parent(parent(account))) AS p",
+      "rows": [
+        [
+          ""
+        ],
+        [
+          null
+        ]
+      ],
+      "source": "w31/164"
+    },
+    "parent-root-equals-empty": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "n"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) AS n WHERE parent(parent(account)) = ''",
+      "rows": [
+        [
+          15
+        ]
+      ],
+      "source": "w31/164"
+    },
+    "parent-root-group": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "p"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "s"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT parent(parent(account)) AS p, sum(number) AS s GROUP BY p ORDER BY p",
+      "rows": [
+        [
+          "",
+          "-5290.00"
+        ],
+        [
+          "Assets",
+          "4785.00"
+        ]
+      ],
+      "source": "w31/164"
+    },
+    "parent-root-is-null": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT DISTINCT account WHERE parent(parent(account)) IS NULL ORDER BY account",
+      "rows": [],
+      "source": "w31/164"
+    },
+    "parent-root-workaround": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "top"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "s"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT root(account, 1) AS top, sum(number) AS s WHERE root(account, 2) = account GROUP BY top ORDER BY top",
+      "rows": [
+        [
+          "Assets",
+          "41.40"
+        ],
+        [
+          "Equity",
+          "-1000.00"
+        ],
+        [
+          "Expenses",
+          "1668.60"
+        ],
+        [
+          "Income",
+          "-6000.00"
+        ]
+      ],
+      "source": "w31/164"
     },
     "pivot-three-values": {
       "columns": [
@@ -3820,5 +4077,5 @@
       "source": "w23/169"
     }
   },
-  "sourceHash": "bef605f41563584cd2c3c1ba2654188a82f1bd8d4e37a9ad39feba2a6026bdbf"
+  "sourceHash": "6d6c59ceb3fcdf1499a9c8815336358bb7d5428363b5408c15a69d8690785e45"
 }

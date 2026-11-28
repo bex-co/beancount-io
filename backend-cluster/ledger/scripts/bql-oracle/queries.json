@@ -771,5 +771,47 @@
     "ledger": "cost-sign.bean",
     "source": "w31/163",
     "query": "SELECT cost_number AS cost, sum(number) GROUP BY cost ORDER BY cost"
+  },
+  {
+    "id": "parent-root-equals-empty",
+    "ledger": "main.bean",
+    "source": "w31/164",
+    "query": "SELECT count(*) AS n WHERE parent(parent(account)) = ''"
+  },
+  {
+    "id": "parent-root-is-null",
+    "ledger": "main.bean",
+    "source": "w31/164",
+    "query": "SELECT DISTINCT account WHERE parent(parent(account)) IS NULL ORDER BY account"
+  },
+  {
+    "id": "parent-root-distinct",
+    "ledger": "main.bean",
+    "source": "w31/164",
+    "query": "SELECT DISTINCT parent(parent(parent(account))) AS p"
+  },
+  {
+    "id": "parent-root-group",
+    "ledger": "main.bean",
+    "source": "w31/164",
+    "query": "SELECT parent(parent(account)) AS p, sum(number) AS s GROUP BY p ORDER BY p"
+  },
+  {
+    "id": "parent-leaf-literals",
+    "ledger": "main.bean",
+    "source": "w31/164",
+    "query": "SELECT parent('Assets') AS p, leaf('') AS l, parent('') AS e"
+  },
+  {
+    "id": "leaf-empty-literal",
+    "ledger": "main.bean",
+    "source": "w31/164",
+    "query": "SELECT leaf('') AS l, leaf('Assets') AS a LIMIT 1"
+  },
+  {
+    "id": "parent-root-workaround",
+    "ledger": "main.bean",
+    "source": "w31/164",
+    "query": "SELECT root(account, 1) AS top, sum(number) AS s WHERE root(account, 2) = account GROUP BY top ORDER BY top"
   }
 ]
