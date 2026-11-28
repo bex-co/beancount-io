@@ -363,8 +363,20 @@ export function parseAmount(
   { decimalComma = false }: { decimalComma?: boolean } = {},
 ): AmountParseResult {
   const raw = amountStr.trim();
-  const trimmed =
-    raw === "" ? "" : (normalizeBankAmount(raw, decimalComma) ?? raw);
+  // A spelling the column's convention does not denote is refused, not
+  // re-read as the other convention: in a comma column `1.25` has no
+  // grouping reading, and the CLI twin refuses it rather than guessing
+  // (w0/007). Falling back to the raw token here resurrected exactly those
+  // foreign spellings whenever they were already plain numbers.
+  const normalized = raw === "" ? "" : normalizeBankAmount(raw, decimalComma);
+  if (normalized === null) {
+    return {
+      valid: false,
+      error: "Amount must be a valid number",
+      reason: "invalid",
+    };
+  }
+  const trimmed = normalized;
 
   if (trimmed === "") {
     return {
