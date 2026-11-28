@@ -191,7 +191,7 @@ export class LedgerMutationResolver {
   @Authenticated()
   @Mutation(() => RevertLedgerCommitResponse, {
     description:
-      "Undo one commit of a specific ledger as a new commit; refused when a later commit changed any file it touched",
+      "Undo one commit of a specific ledger as a new commit; refused when a later commit changed any file it touched. Reverting a renameLedgerAccount commit also moves back the bank mappings it moved.",
   })
   async revertLedgerCommit(
     @Arg("ledgerId", () => String) ledgerId: string,

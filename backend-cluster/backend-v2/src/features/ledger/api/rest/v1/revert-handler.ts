@@ -8,10 +8,12 @@ import {
 import {
   REVERT_MESSAGE_DESCRIPTION,
   REVERT_SHA_DESCRIPTION,
+  REVERTED_BANK_MAPPINGS_DESCRIPTION,
 } from "@/features/ledger/utils/commit-revert";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { flattenValidation } from "@/features/ledger/utils/bean-check-errors";
 import { ledgerPathSchema, ledgerIdOf, writeVerdictShape } from "./schemas";
+import { movedBankMapping } from "./rename-account-handler";
 
 export const revertCommitInput = z
   .object({
@@ -40,6 +42,9 @@ export const revertCommitResult = z.object({
       }),
     )
     .describe("Each file the commit touched, and what the revert does to it."),
+  bankMappings: z
+    .array(movedBankMapping)
+    .describe(REVERTED_BANK_MAPPINGS_DESCRIPTION),
   dryRun: z.boolean(),
   commit: z
     .string()
@@ -55,7 +60,7 @@ export const revertCommitRoute = v1Route({
   path: "/api-gateway/v1/ledgers/{owner}/{name}/revert-commit",
   summary: "Revert a commit",
   description:
-    "Undo one commit as a new commit: each file it touched is set back to its parent's contents in one atomic commit on the default branch. Refused with CONFLICT when a later commit changed any of those files, so a revert never discards newer work. A merge or root commit cannot be reverted. dryRun previews the files and writes nothing.",
+    "Undo one commit as a new commit: each file it touched is set back to its parent's contents in one atomic commit on the default branch. Refused with CONFLICT when a later commit changed any of those files, so a revert never discards newer work. A merge or root commit cannot be reverted. Reverting a rename-account commit also moves back the bank mappings it moved. dryRun previews the files and mappings and writes nothing.",
   params: ledgerPathSchema,
   query: z.object({}).strict(),
   body: revertCommitInput,

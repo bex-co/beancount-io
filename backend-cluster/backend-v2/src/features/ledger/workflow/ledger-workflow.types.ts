@@ -1,5 +1,6 @@
 import type { LedgerSetup } from "@/features/ledger/setup/build-ledger";
 import type { WriteValidation } from "@/features/ledger/utils/bean-check-errors";
+import type { MovedBankMapping } from "./account-rename-workflow.types";
 
 /**
  * Domain input/output types for the ledger workflow. These are plain,
@@ -101,6 +102,12 @@ export interface RevertLedgerCommitResult {
   message: string;
   /** What the revert does to each file the commit touched. */
   files: { path: string; change: "created" | "updated" | "deleted" }[];
+  /**
+   * The bank mappings that reverting a rename moves back (w31/150); empty for
+   * any other commit. `updated` is false on a preview, and when the update
+   * after the revert's commit failed.
+   */
+  bankMappings: MovedBankMapping[];
   dryRun: boolean;
   /** The sha of the revert commit; absent on a preview. */
   commit?: string;

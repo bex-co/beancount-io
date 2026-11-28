@@ -122,8 +122,9 @@ def sync_detailed(
 
      Undo one commit as a new commit: each file it touched is set back to its parent's contents in one
     atomic commit on the default branch. Refused with CONFLICT when a later commit changed any of those
-    files, so a revert never discards newer work. A merge or root commit cannot be reverted. dryRun
-    previews the files and writes nothing.
+    files, so a revert never discards newer work. A merge or root commit cannot be reverted. Reverting a
+    rename-account commit also moves back the bank mappings it moved. dryRun previews the files and
+    mappings and writes nothing.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -162,8 +163,9 @@ def sync(
 
      Undo one commit as a new commit: each file it touched is set back to its parent's contents in one
     atomic commit on the default branch. Refused with CONFLICT when a later commit changed any of those
-    files, so a revert never discards newer work. A merge or root commit cannot be reverted. dryRun
-    previews the files and writes nothing.
+    files, so a revert never discards newer work. A merge or root commit cannot be reverted. Reverting a
+    rename-account commit also moves back the bank mappings it moved. dryRun previews the files and
+    mappings and writes nothing.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -197,8 +199,9 @@ async def asyncio_detailed(
 
      Undo one commit as a new commit: each file it touched is set back to its parent's contents in one
     atomic commit on the default branch. Refused with CONFLICT when a later commit changed any of those
-    files, so a revert never discards newer work. A merge or root commit cannot be reverted. dryRun
-    previews the files and writes nothing.
+    files, so a revert never discards newer work. A merge or root commit cannot be reverted. Reverting a
+    rename-account commit also moves back the bank mappings it moved. dryRun previews the files and
+    mappings and writes nothing.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -235,8 +238,9 @@ async def asyncio(
 
      Undo one commit as a new commit: each file it touched is set back to its parent's contents in one
     atomic commit on the default branch. Refused with CONFLICT when a later commit changed any of those
-    files, so a revert never discards newer work. A merge or root commit cannot be reverted. dryRun
-    previews the files and writes nothing.
+    files, so a revert never discards newer work. A merge or root commit cannot be reverted. Reverting a
+    rename-account commit also moves back the bank mappings it moved. dryRun previews the files and
+    mappings and writes nothing.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

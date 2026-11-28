@@ -7,6 +7,8 @@ import { LedgerMutationResolver } from "@/features/ledger/api/resolvers/ledger-r
 import { HealthResolver } from "@/features/healthz/api/health-resolver";
 import { LedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { LedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
+import { AccountRenameWorkflow } from "@/features/ledger/workflow/account-rename-workflow";
+import type { LedgerBankMapping } from "@/features/ledger/workflow/account-rename-workflow.types";
 import {
   AuthorizationService,
   SourceBackedRelationshipEvaluator,
@@ -46,6 +48,31 @@ const FINE: Snapshot = {
 const BROKEN: Snapshot = { ...FINE, "ok.bean": "BAD\n" };
 const WORSE: Snapshot = { ...FINE, "ok.bean": "BAD\nBAD\n" };
 
+/**
+ * A ledger's bank mappings in memory, as `PlaidLedgerBankMappings` keeps them
+ * in Postgres: every member's, the caller's own by name. `failing` makes the
+ * next update throw, as a database outage would.
+ */
+function fakeBank(mappings: LedgerBankMapping[] = []) {
+  const rows = new Map(mappings.map((mapping) => [mapping.id, { ...mapping }]));
+  const bank = {
+    failing: false,
+    list: async () => [...rows.values()].map((row) => ({ ...row })),
+    remap: async (changes: Omit<LedgerBankMapping, "name">[]) => {
+      if (bank.failing) throw new Error("database is down");
+      for (const change of changes) {
+        rows.get(change.id)!.ledgerAccount = change.ledgerAccount;
+      }
+    },
+    /** Each mapping's ledger account, by id. */
+    accounts: () =>
+      Object.fromEntries(
+        [...rows.values()].map((row) => [row.id, row.ledgerAccount]),
+      ),
+  };
+  return bank;
+}
+
 let resolver: LedgerMutationResolver;
 let schema: Awaited<ReturnType<typeof buildSchema>>;
 beforeAll(async () => {
@@ -69,7 +96,11 @@ type Answer = {
   result?: Record<string, unknown>;
 };
 
-async function fixture(history: Snapshot[], caller: Identity = writer) {
+async function fixture(
+  history: Snapshot[],
+  caller: Identity = writer,
+  bank = fakeBank(),
+) {
   const ledger = createFakeLedger(history);
   const getUserApiClient = jest.spyOn(
     ledger.giteaClientFactory,
@@ -92,6 +123,7 @@ async function fixture(history: Snapshot[], caller: Identity = writer) {
   const ledgerData = {
     getErrors: jest.fn(async () => ledger.errors()),
   };
+  const ledgerRepo = new LedgerRepoService(ledger.fava as never, authorization);
   const workflow = new LedgerWorkflow(
     ledger.fava as never,
     ledger.giteaClientFactory as never,
@@ -102,9 +134,10 @@ async function fixture(history: Snapshot[], caller: Identity = writer) {
     {} as never,
     config,
     authorization,
+    undefined,
+    new AccountRenameWorkflow(ledgerRepo, ledgerData, authorization, bank),
   );
   resolver = new LedgerMutationResolver(workflow);
-  const ledgerRepo = new LedgerRepoService(ledger.fava as never, authorization);
   const rest = await startV1TestServer(
     {
       workflows: { ledger: workflow },
@@ -153,7 +186,7 @@ async function fixture(history: Snapshot[], caller: Identity = writer) {
       const response = await graphql({
         schema,
         source:
-          'mutation($sha:String!,$message:String,$dryRun:Boolean) { revertLedgerCommit(ledgerId:"alice/main",sha:$sha,message:$message,dryRun:$dryRun) { sha subject message files { path change } dryRun commit errorsBefore errorsAfter newErrors { message source } valid } }',
+          'mutation($sha:String!,$message:String,$dryRun:Boolean) { revertLedgerCommit(ledgerId:"alice/main",sha:$sha,message:$message,dryRun:$dryRun) { sha subject message files { path change } bankMappings { plaidAccount from to updated } dryRun commit errorsBefore errorsAfter newErrors { message source } valid } }',
         variableValues: args,
         contextValue: {
           identity: caller,
@@ -199,6 +232,25 @@ async function fixture(history: Snapshot[], caller: Identity = writer) {
   };
   return {
     call,
+    /** A real renameAccount commit, as any surface makes one. */
+    rename: (from: string, to: string) =>
+      workflow.renameAccount({
+        identity: caller,
+        ledgerId: "alice/main",
+        input: { from, to },
+      }),
+    /** A commit pushed some other way, with its own message. */
+    push: async (message: string, files: Snapshot) => {
+      const client = await ledger.fava.getPublicApiClient();
+      await client.ledgers.changeLedgerFiles("alice", "main", {
+        message,
+        files: Object.entries(files).map(([path, content]) => ({
+          operation: "update",
+          path,
+          content: Buffer.from(content, "utf-8").toString("base64"),
+        })),
+      });
+    },
     getUserApiClient,
     snapshot: ledger.snapshot,
     shas: ledger.shas,
@@ -215,7 +267,8 @@ async function fixture(history: Snapshot[], caller: Identity = writer) {
  * answers an absent `commit` as `null`, as it does every nullable field.
  */
 const common = (answer: Answer) => {
-  const { sha, subject, message, files, commit, ...rest } = answer.result ?? {};
+  const { sha, subject, message, files, bankMappings, commit, ...rest } =
+    answer.result ?? {};
   // MCP nests the verdict under `validation`; REST and GraphQL publish it flat
   // (w23/233).
   const validation =
@@ -235,6 +288,7 @@ const common = (answer: Answer) => {
     subject,
     message,
     files,
+    bankMappings,
     commit: commit ?? undefined,
     validation,
   };
@@ -252,6 +306,8 @@ describe.each(["rest", "gql", "mcp"])("revertCommit via %s", (surface) => {
         subject: "Commit 1",
         message: 'Revert "Commit 1"\n\nThis reverts commit c1.',
         files: [{ path: "ok.bean", change: "updated" }],
+        // Not a rename: no bank mapping moves.
+        bankMappings: [],
         commit: undefined,
         // The projection of the files the revert would leave.
         validation: {
@@ -279,6 +335,7 @@ describe.each(["rest", "gql", "mcp"])("revertCommit via %s", (surface) => {
         subject: "Commit 1",
         message: "Undo it",
         files: [{ path: "ok.bean", change: "updated" }],
+        bankMappings: [],
         commit: "c2",
         // Read back after the commit: the revert fixed the file's one error.
         validation: {
@@ -598,6 +655,196 @@ describe.each(["rest", "gql", "mcp"])("revertCommit via %s", (surface) => {
           expect(answer.status).toBe(403);
         }
         expect(f.getUserApiClient).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  });
+
+  // w31/150: a rename moves the ledger's bank mappings with the account, so
+  // undoing it puts them back, or the next sync posts to an account that no
+  // ledger file opens any more.
+  describe("reverting a renameAccount commit (w31/150)", () => {
+    const BANK: Snapshot = {
+      "main.bean":
+        'include "bank.bean"\n2026-01-01 open Assets:Bank:Checking USD\n2026-01-01 open Assets:Bank:Checking:Joint USD\n2026-01-01 open Expenses:Coffee USD\n',
+      "bank.bean": "2026-02-01 balance Assets:Bank:Checking 0 USD\n",
+    };
+    const RENAMED: Snapshot = {
+      "main.bean":
+        'include "bank.bean"\n2026-01-01 open Assets:Bank:Main USD\n2026-01-01 open Assets:Bank:Main:Joint USD\n2026-01-01 open Expenses:Coffee USD\n',
+      "bank.bean": "2026-02-01 balance Assets:Bank:Main 0 USD\n",
+    };
+    /** The caller's checking account, a member's joint one, and an unrelated card. */
+    const MAPPINGS: LedgerBankMapping[] = [
+      {
+        id: "pa_own",
+        plaidItemId: "pi_alice",
+        ledgerAccount: "Assets:Bank:Checking",
+        name: "Chase Checking ••1234",
+      },
+      {
+        id: "pa_joint",
+        plaidItemId: "pi_bob",
+        ledgerAccount: "Assets:Bank:Checking:Joint",
+        name: null,
+      },
+      {
+        id: "pa_card",
+        plaidItemId: "pi_alice",
+        ledgerAccount: "Expenses:Coffee",
+        name: "Chase Card ••9876",
+      },
+    ];
+    const BEFORE = {
+      pa_own: "Assets:Bank:Checking",
+      pa_joint: "Assets:Bank:Checking:Joint",
+      pa_card: "Expenses:Coffee",
+    };
+    const AFTER = {
+      pa_own: "Assets:Bank:Main",
+      pa_joint: "Assets:Bank:Main:Joint",
+      pa_card: "Expenses:Coffee",
+    };
+    const movedBack = (updated: boolean) => [
+      {
+        plaidAccount: "Chase Checking ••1234",
+        from: "Assets:Bank:Main",
+        to: "Assets:Bank:Checking",
+        updated,
+      },
+      {
+        plaidAccount: null,
+        from: "Assets:Bank:Main:Joint",
+        to: "Assets:Bank:Checking:Joint",
+        updated,
+      },
+    ];
+    const SUBJECT = "Rename Assets:Bank:Checking to Assets:Bank:Main";
+
+    it("previews the mappings it moves back, then moves them with the files", async () => {
+      const bank = fakeBank(MAPPINGS);
+      const f = await fixture([BANK], writer, bank);
+      try {
+        const renamed = await f.rename(
+          "Assets:Bank:Checking",
+          "Assets:Bank:Main",
+        );
+        expect(renamed.commit).toBe("c1");
+        expect(bank.accounts()).toEqual(AFTER);
+
+        const preview = await f.call(surface, { sha: "c1", dryRun: true });
+        expect(common(preview)).toMatchObject({
+          ok: true,
+          subject: SUBJECT,
+          files: [
+            { path: "main.bean", change: "updated" },
+            { path: "bank.bean", change: "updated" },
+          ],
+          bankMappings: movedBack(false),
+          commit: undefined,
+        });
+        expect(bank.accounts()).toEqual(AFTER);
+        expect(f.snapshot()).toEqual(RENAMED);
+
+        const committed = await f.call(surface, { sha: "c1" });
+        expect(common(committed)).toMatchObject({
+          ok: true,
+          subject: SUBJECT,
+          bankMappings: movedBack(true),
+          commit: "c2",
+          validation: { newErrors: [], valid: true },
+        });
+        expect(f.snapshot()).toEqual(BANK);
+        expect(bank.accounts()).toEqual(BEFORE);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("renames them again when the revert itself is reverted", async () => {
+      const bank = fakeBank(MAPPINGS);
+      const f = await fixture([BANK], writer, bank);
+      try {
+        await f.rename("Assets:Bank:Checking", "Assets:Bank:Main");
+        await f.call(surface, { sha: "c1" });
+        expect(bank.accounts()).toEqual(BEFORE);
+
+        const redone = await f.call(surface, { sha: "c2" });
+        expect(common(redone)).toMatchObject({
+          ok: true,
+          subject: `Revert "${SUBJECT}"`,
+          bankMappings: [
+            {
+              plaidAccount: "Chase Checking ••1234",
+              from: "Assets:Bank:Checking",
+              to: "Assets:Bank:Main",
+              updated: true,
+            },
+            {
+              plaidAccount: null,
+              from: "Assets:Bank:Checking:Joint",
+              to: "Assets:Bank:Main:Joint",
+              updated: true,
+            },
+          ],
+          commit: "c3",
+        });
+        expect(f.snapshot()).toEqual(RENAMED);
+        expect(bank.accounts()).toEqual(AFTER);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("keeps the revert and names each mapping it could not move back", async () => {
+      const bank = fakeBank(MAPPINGS);
+      const f = await fixture([BANK], writer, bank);
+      try {
+        await f.rename("Assets:Bank:Checking", "Assets:Bank:Main");
+        bank.failing = true;
+        const answer = await f.call(surface, { sha: "c1" });
+        expect(common(answer)).toMatchObject({
+          ok: true,
+          bankMappings: movedBack(false),
+          commit: "c2",
+        });
+        expect(f.snapshot()).toEqual(BANK);
+        expect(bank.accounts()).toEqual(AFTER);
+        if (surface === "mcp") {
+          expect(answer.result?.summary).toContain(
+            "; 2 bank mappings were not moved: map Assets:Bank:Main to Assets:Bank:Checking, Assets:Bank:Main:Joint to Assets:Bank:Checking:Joint with mapBankAccount",
+          );
+        }
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("moves no mapping for a commit whose message names a rename it did not make", async () => {
+      const bank = fakeBank(
+        MAPPINGS.map((mapping) =>
+          mapping.id === "pa_own"
+            ? { ...mapping, ledgerAccount: "Assets:Bank:Main" }
+            : mapping,
+        ),
+      );
+      const f = await fixture([BANK], writer, bank);
+      try {
+        // Opens a second account rather than renaming the first one.
+        await f.push(SUBJECT, {
+          "main.bean": `${BANK["main.bean"]}2026-01-01 open Assets:Bank:Main USD\n`,
+        });
+        for (const dryRun of [true, false]) {
+          const answer = await f.call(surface, { sha: "c1", dryRun });
+          expect(common(answer)).toMatchObject({
+            ok: true,
+            subject: SUBJECT,
+            bankMappings: [],
+          });
+        }
+        expect(f.snapshot()).toEqual(BANK);
+        expect(bank.accounts().pa_own).toBe("Assets:Bank:Main");
       } finally {
         await f.close();
       }

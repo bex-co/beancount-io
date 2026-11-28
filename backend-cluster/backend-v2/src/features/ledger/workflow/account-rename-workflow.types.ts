@@ -28,16 +28,36 @@ export interface RenameAccountResult {
    * preview, and on a commit whose mapping update failed: that mapping still
    * names the old account, and `message` says so.
    */
-  bankMappings: {
-    plaidAccount: string | null;
-    from: string;
-    to: string;
-    updated: boolean;
-  }[];
+  bankMappings: MovedBankMapping[];
   validation: WriteValidation;
   dryRun: boolean;
   /** The commit a real write made (w23/m42); absent on a preview. */
   commit?: string;
+}
+
+/** A bank mapping a rename, or the revert of one, points at another account. */
+export interface MovedBankMapping {
+  /** The caller's own bank account; null for another member's. */
+  plaidAccount: string | null;
+  from: string;
+  to: string;
+  /** False on a preview, and when the update after the commit failed. */
+  updated: boolean;
+}
+
+/** A mapping to move: which row, and the account it names now and next. */
+export interface BankMappingMove {
+  id: string;
+  plaidItemId: string;
+  plaidAccount: string | null;
+  from: string;
+  to: string;
+}
+
+/** One file a commit modified, as its parent and the commit hold it. */
+export interface CommitTextChange {
+  before: string;
+  after: string;
 }
 
 export interface IAccountRenameWorkflow {
@@ -46,6 +66,27 @@ export interface IAccountRenameWorkflow {
     ledgerId: string;
     input: RenameAccountInput;
   }): Promise<RenameAccountResult>;
+  /**
+   * The bank mappings that reverting a commit moves back (w31/150): none
+   * unless `subject` names a rename and every file the commit modified is
+   * exactly that rename of its parent. Then each mapping, every member's,
+   * that names an account the commit renamed goes back to its name before.
+   */
+  revertedBankMappings(params: {
+    identity: Identity;
+    ledgerId: string;
+    subject: string;
+    files: CommitTextChange[];
+  }): Promise<BankMappingMove[]>;
+  /**
+   * Point each mapping at its `to`, after the commit that renames its account
+   * landed. False when the update failed: the commit stands, and every
+   * mapping still names its `from`.
+   */
+  moveBankMappings(params: {
+    ledgerId: string;
+    moves: BankMappingMove[];
+  }): Promise<boolean>;
 }
 
 /**

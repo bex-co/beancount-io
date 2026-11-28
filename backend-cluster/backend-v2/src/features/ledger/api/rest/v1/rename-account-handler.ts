@@ -34,6 +34,21 @@ export const renameAccountInput = z
   })
   .strict();
 
+/** A bank mapping a rename, or the revert of one, moved (w1/m43/t003, w31/150). */
+export const movedBankMapping = z.object({
+  plaidAccount: z
+    .string()
+    .nullable()
+    .describe("The caller's own bank account; null for another member's."),
+  from: z.string(),
+  to: z.string(),
+  updated: z
+    .boolean()
+    .describe(
+      "False on a preview, and when the update after the commit failed.",
+    ),
+});
+
 export const renameAccountResult = z.object({
   message: z.string(),
   dryRun: z.boolean(),
@@ -61,25 +76,7 @@ export const renameAccountResult = z.object({
   documents: z
     .array(z.object({ from: z.string(), to: z.string() }))
     .describe(RENAMED_DOCUMENTS_DESCRIPTION),
-  bankMappings: z
-    .array(
-      z.object({
-        plaidAccount: z
-          .string()
-          .nullable()
-          .describe(
-            "The caller's own bank account; null for another member's.",
-          ),
-        from: z.string(),
-        to: z.string(),
-        updated: z
-          .boolean()
-          .describe(
-            "False on a preview, and when the update after the commit failed.",
-          ),
-      }),
-    )
-    .describe("Bank mappings moved."),
+  bankMappings: z.array(movedBankMapping).describe("Bank mappings moved."),
   commit: z.string().optional().describe(COMMIT_SHA_DESCRIPTION),
   ...writeVerdictShape,
 });

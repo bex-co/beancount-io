@@ -346,9 +346,16 @@ describe("MCP tool list", () => {
     // at 137,446 bytes (+237). The list sat 7 bytes under 134 KB, and the
     // sentence is the one place an agent that only reads tools learns why a
     // hosted rate disagrees with its local bean-query.
+    //
+    // 136 KB since w31/150 had revertCommit move a rename's bank mappings
+    // back: measured at 138,621 bytes (+571). The list sat 190 bytes under
+    // 135 KB. Nearly all of it is the bankMappings item schema, shared with
+    // renameAccount, without which an agent that only calls tools cannot tell
+    // that a mapping still names the new account after the undo. Its prose is
+    // one line, and the tool description adds none.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(135 * 1024);
+    expect(bytes).toBeLessThan(136 * 1024);
   });
 
   // w23/173: the schema keeps both spellings of an alias pair optional (the

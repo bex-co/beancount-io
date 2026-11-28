@@ -1,5 +1,6 @@
 import {
   accountTokenOffsets,
+  accountsRenamedByCommit,
   renameAccountInMessage,
   renameAccountInText,
   renamedAccounts,
@@ -299,5 +300,74 @@ describe("renameAccountInMessage", () => {
     ["a parent", "Balance failed for Assets:Bank: expected 1 USD, got 2 USD"],
   ])("leaves %s alone", (_case, message) => {
     expect(renameAccountInMessage(message, FROM, TO)).toBe(message);
+  });
+});
+
+describe("accountsRenamedByCommit (w31/150)", () => {
+  const BEFORE = [
+    "2026-01-01 open Assets:Bank:Checking USD",
+    "2026-01-01 open Assets:Bank:Checking:Joint USD",
+    '2026-02-01 * "Assets:Bank:Checking keeps its name in strings"',
+    "  Assets:Bank:Checking  -3 USD",
+    "  Expenses:Coffee",
+    "",
+  ].join("\n");
+  const AFTER = renameAccountInText(BEFORE, FROM, TO).text;
+  const SUBJECT = `Rename ${FROM} to ${TO}`;
+
+  it("maps each account the commit renamed back to its name before", () => {
+    expect(
+      accountsRenamedByCommit(SUBJECT, [{ before: BEFORE, after: AFTER }]),
+    ).toEqual(
+      new Map([
+        ["Assets:Bank:Main", "Assets:Bank:Checking"],
+        ["Assets:Bank:Main:Joint", "Assets:Bank:Checking:Joint"],
+      ]),
+    );
+  });
+
+  it.each([`Revert "${SUBJECT}"`, `Revert "Revert "${SUBJECT}""`])(
+    "reads %s as the rename it redoes or undoes",
+    (subject) => {
+      // A revert's commit holds the old names and its parent the new ones.
+      expect(
+        accountsRenamedByCommit(subject, [{ before: AFTER, after: BEFORE }]),
+      ).toEqual(
+        new Map([
+          ["Assets:Bank:Checking", "Assets:Bank:Main"],
+          ["Assets:Bank:Checking:Joint", "Assets:Bank:Main:Joint"],
+        ]),
+      );
+    },
+  );
+
+  it.each([
+    ["another subject", "Update bank.bean", [{ before: BEFORE, after: AFTER }]],
+    ["no file it modified", SUBJECT, []],
+    [
+      "a file changed besides the rename",
+      SUBJECT,
+      [{ before: BEFORE, after: `${AFTER}; and a note\n` }],
+    ],
+    [
+      "a modified file that does not name the account",
+      SUBJECT,
+      [
+        { before: BEFORE, after: AFTER },
+        { before: "; notes\n", after: "; more notes\n" },
+      ],
+    ],
+    [
+      "a rename to another name than the subject says",
+      SUBJECT,
+      [
+        {
+          before: BEFORE,
+          after: renameAccountInText(BEFORE, FROM, "Assets:Bank:Other").text,
+        },
+      ],
+    ],
+  ])("finds no rename in %s", (_case, subject, files) => {
+    expect(accountsRenamedByCommit(subject, files).size).toBe(0);
   });
 });

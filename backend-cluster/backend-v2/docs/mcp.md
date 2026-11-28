@@ -335,7 +335,7 @@ the principal inputs; inspect the schema before constructing a call.
 | `moveEntrySources`              | `entries: [{entryHash, sha256sum}]`, `toPath`, optional `includeFrom`, `allowInvalid`, `dry_run`; moves entries' source text into another file in one commit, adding its include to `includeFrom` when the ledger does not load it yet. A preview returns each moved entry's text and reports the same `validation` the commit will.                                                                                      | Write              |
 | `renameAccount`                 | `from`, `to`, optional `allowInvalid`, `dry_run`; renames an account and every account under it across the loaded files in one commit, and moves the bank mappings that name it. A preview lists every changed line and mapping and reports the same `validation` the commit will.                                                                                                                                        | Write              |
 | `renameLedgerFile`              | `oldPath`, `newPath`, optional `message`, `updateIncludes`, `dry_run`; moves a file, rewriting includes. A preview names the move plus the rewritten include lines and reports the same `validation` the commit will.                                                                                                                                                                                                     | Write              |
-| `revertCommit`                  | `sha` (a commit from the `commit` of a write result, or `main` for the latest), optional `message`, `dry_run`; undoes one commit as a new commit, setting each file it touched back to its parent's contents. A preview lists the files and reports `validation`. Refused with `CONFLICT` when a later commit changed any of them.                                                                                        | Write              |
+| `revertCommit`                  | `sha` (a commit from the `commit` of a write result, or `main` for the latest), optional `message`, `dry_run`; undoes one commit as a new commit, setting each file it touched back to its parent's contents, and moves back the bank mappings a `renameAccount` commit moved. A preview lists the files and mappings and reports `validation`. Refused with `CONFLICT` when a later commit changed any of them.          | Write              |
 | `syncBankTransactions`          | `itemId`, optional `dry_run`; pulls new transactions from a linked bank into staging.                                                                                                                                                                                                                                                                                                                                     | Write              |
 | `importStagedBankTransactions`  | `transactions: [{ transactionId, targetAccount, sourceAccount? }]`, optional `filename`, `dry_run`; writes staged transactions into the ledger.                                                                                                                                                                                                                                                                           | Write              |
 | `discardStagedBankTransactions` | `transactionIds`, optional `dry_run`; removes staged transactions.                                                                                                                                                                                                                                                                                                                                                        | Write              |
@@ -704,7 +704,7 @@ descendants included), `files` (each changed line, `before` and `after`),
 `documents` (each moved file's `from` and `to` path), `bankMappings` and
 `validation`. The message counts the moves: `1 line in 1 file, 1 document
 moved`. A commit returns the same plus `commit`; `revertCommit` on that sha
-undoes it, putting each moved file back.
+undoes it, putting each moved file back and each moved bank mapping too.
 
 Bank-account mappings that name a renamed account move with it, for every
 member of the ledger, after the files commit: otherwise the next sync would
@@ -713,6 +713,23 @@ own bank accounts; another member's mapping appears with `plaidAccount: null`.
 If updating the mappings fails, the commit stands, each mapping says
 `updated: false`, and the message names how many still point at the old
 account, to fix with `mapBankAccount`.
+
+Reverting the rename moves the mappings back the same way (w31/150).
+`revertCommit` (REST `POST …/revert-commit`, GraphQL `revertLedgerCommit`)
+returns `bankMappings` beside `files`, in the shape a rename returns: each
+mapping, every member's, that names an account the commit renamed, with
+`from` the name it holds now and `to` the name the revert gives it back. A
+preview lists them with `updated: false` and moves nothing; a commit moves them
+after the files commit. A mapping that names an account the rename did not
+touch, such as one opened under the new name later, stays where it is. If
+updating them fails, the revert stands, each says `updated: false`, and the
+MCP `summary` names each one still on the new name, to fix with
+`mapBankAccount`. Reverting that revert renames the account again, and its
+mappings with it. A commit counts as a rename when its subject is the one
+`renameAccount` writes, `Rename <from> to <to>` (or git's default
+`Revert "…"` of one), and every file it modified is exactly that rename of its
+parent, so a message alone moves nothing. Any other commit returns
+`bankMappings: []`.
 
 ### Tools renamed on 2026-10-18
 
@@ -1261,7 +1278,9 @@ previews with `dry_run`, and commits the undo as one new commit that sets each
 file the commit touched back to its parent's contents; its own result carries
 the new `commit`. It is refused with `CONFLICT` naming the file when a later
 commit changed any file the revert would touch, so an undo never discards newer
-work, and a merge or root commit cannot be reverted.
+work, and a merge or root commit cannot be reverted. Undoing a `renameAccount`
+commit also moves back the bank mappings it moved, and lists them in
+`bankMappings` ([Renaming an account](#renaming-an-account-w1m43)).
 
 ## Resources
 

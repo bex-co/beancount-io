@@ -122,6 +122,7 @@ import type {
   RenameAccountInput,
   RenameAccountResult,
 } from "@/features/ledger/workflow/account-rename-workflow.types";
+import { reportMappingMoves } from "@/features/ledger/workflow/account-rename-workflow";
 import {
   AUTHORIZATION_ACTIONS,
   anonymousPrincipal,
@@ -169,6 +170,7 @@ import { MAKE_PUBLIC_WARNING } from "@/features/ledger/utils/ledger-visibility";
 import {
   commitSubject,
   defaultRevertMessage,
+  modifiedTexts,
   planRevert,
   revertChanges,
   revertedStatus,
@@ -1876,12 +1878,22 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     const message =
       input.message?.trim() || defaultRevertMessage(commitSha, subject);
     const dryRun = input.dryRun === true;
+    // A rename moved the ledger's bank mappings with the account, so its
+    // revert moves them back after the files (w31/150).
+    const mappingMoves =
+      (await this.accountRename?.revertedBankMappings({
+        identity,
+        ledgerId,
+        subject,
+        files: modifiedTexts(files, atRevisions),
+      })) ?? [];
     onProjectedFiles?.(overlaysOf(plan.operations));
     const summary = {
       sha: commitSha,
       subject,
       message,
       files: revertChanges(plan.operations),
+      bankMappings: reportMappingMoves(mappingMoves, false),
       dryRun,
     };
     if (dryRun) return summary;
@@ -1894,7 +1906,16 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       "revert commit",
       (cause) => operationNotAllowedFromCause("revert commit", cause),
     );
-    return { ...summary, ...(changed?.commit && { commit: changed.commit }) };
+    const moved =
+      (await this.accountRename?.moveBankMappings({
+        ledgerId,
+        moves: mappingMoves,
+      })) ?? true;
+    return {
+      ...summary,
+      bankMappings: reportMappingMoves(mappingMoves, moved),
+      ...(changed?.commit && { commit: changed.commit }),
+    };
   }
 
   /**

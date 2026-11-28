@@ -11803,7 +11803,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/revert-commit": {
       "post": {
         "summary": "Revert a commit",
-        "description": "Undo one commit as a new commit: each file it touched is set back to its parent's contents in one atomic commit on the default branch. Refused with CONFLICT when a later commit changed any of those files, so a revert never discards newer work. A merge or root commit cannot be reverted. dryRun previews the files and writes nothing.",
+        "description": "Undo one commit as a new commit: each file it touched is set back to its parent's contents in one atomic commit on the default branch. Refused with CONFLICT when a later commit changed any of those files, so a revert never discards newer work. A merge or root commit cannot be reverted. Reverting a rename-account commit also moves back the bank mappings it moved. dryRun previews the files and mappings and writes nothing.",
         "tags": [
           "Ledger v1"
         ],
@@ -11918,6 +11918,36 @@
                       },
                       "description": "Each file the commit touched, and what the revert does to it."
                     },
+                    "bankMappings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "plaidAccount": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "The caller's own bank account; null for another member's."
+                          },
+                          "from": {
+                            "type": "string"
+                          },
+                          "to": {
+                            "type": "string"
+                          },
+                          "updated": {
+                            "type": "boolean",
+                            "description": "False on a preview, and when the update after the commit failed."
+                          }
+                        },
+                        "required": [
+                          "plaidAccount",
+                          "from",
+                          "to",
+                          "updated"
+                        ]
+                      },
+                      "description": "Bank mappings moved back, when the commit renamed an account (renameAccount); empty otherwise."
+                    },
                     "dryRun": {
                       "type": "boolean"
                     },
@@ -11969,6 +11999,7 @@
                     "subject",
                     "message",
                     "files",
+                    "bankMappings",
                     "dryRun",
                     "errorsBefore",
                     "errorsAfter",

@@ -143,7 +143,14 @@ function fixture(
     allowInvalid?: boolean;
   }) =>
     workflow.renameAccount({ identity: IDENTITY, ledgerId: LEDGER_ID, input });
-  return { ledgerRepo, ledgerData, bankMappings, rename };
+  return {
+    ledgerRepo,
+    ledgerData,
+    bankMappings,
+    authorization,
+    workflow,
+    rename,
+  };
 }
 
 describe("AccountRenameWorkflow (w1/m43)", () => {
@@ -625,6 +632,125 @@ describe("AccountRenameWorkflow (w1/m43)", () => {
 
   // w31/149: a documents folder moves with its account, but a ledger file
   // inside it stays where its include names it.
+  describe("reverting a rename (w31/150)", () => {
+    const MAPPINGS = [
+      {
+        id: "pacc_1",
+        plaidItemId: "pi_1",
+        ledgerAccount: "Assets:Bank:Main",
+        name: "Chase Checking ••1234",
+      },
+      {
+        id: "pacc_2",
+        plaidItemId: "pi_2",
+        ledgerAccount: "Assets:Bank:Main:Joint",
+        name: null,
+      },
+      {
+        id: "pacc_3",
+        plaidItemId: "pi_1",
+        ledgerAccount: "Assets:Bank:Main:Later",
+        name: "Opened after the rename",
+      },
+    ];
+    const renameCommit = {
+      subject: "Rename Assets:Bank:Checking to Assets:Bank:Main",
+      files: [
+        {
+          before: MAIN,
+          after: MAIN.replaceAll("Assets:Bank:Checking", "Assets:Bank:Main"),
+        },
+      ],
+    };
+    const revert = (
+      workflow: ReturnType<typeof fixture>["workflow"],
+      commit: { subject: string; files: { before: string; after: string }[] },
+    ) =>
+      workflow.revertedBankMappings({
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+        ...commit,
+      });
+
+    it("moves back each mapping that names an account the commit renamed", async () => {
+      const { workflow, authorization } = fixture({ mappings: MAPPINGS });
+      expect(await revert(workflow, renameCommit)).toEqual([
+        {
+          id: "pacc_1",
+          plaidItemId: "pi_1",
+          plaidAccount: "Chase Checking ••1234",
+          from: "Assets:Bank:Main",
+          to: "Assets:Bank:Checking",
+        },
+        {
+          id: "pacc_2",
+          plaidItemId: "pi_2",
+          plaidAccount: null,
+          from: "Assets:Bank:Main:Joint",
+          to: "Assets:Bank:Checking:Joint",
+        },
+      ]);
+      expect(authorization.authorizeOrThrow).toHaveBeenCalledTimes(1);
+    });
+
+    it("reads no mapping and decides nothing for a commit that renamed no account", async () => {
+      const { workflow, authorization, bankMappings } = fixture({
+        mappings: MAPPINGS,
+      });
+      expect(
+        await revert(workflow, {
+          subject: "Commit 1",
+          files: renameCommit.files,
+        }),
+      ).toEqual([]);
+      expect(bankMappings.list).not.toHaveBeenCalled();
+      expect(authorization.authorizeOrThrow).not.toHaveBeenCalled();
+    });
+
+    it("answers FORBIDDEN before reading the mappings", async () => {
+      const { workflow, bankMappings } = fixture({
+        mappings: MAPPINGS,
+        forbidden: true,
+      });
+      await expect(revert(workflow, renameCommit)).rejects.toThrow(
+        ForbiddenError,
+      );
+      expect(bankMappings.list).not.toHaveBeenCalled();
+    });
+
+    it("says whether the moves landed", async () => {
+      const moves = [
+        {
+          id: "pacc_1",
+          plaidItemId: "pi_1",
+          plaidAccount: null,
+          from: "Assets:Bank:Main",
+          to: "Assets:Bank:Checking",
+        },
+      ];
+      const ok = fixture();
+      expect(
+        await ok.workflow.moveBankMappings({ ledgerId: LEDGER_ID, moves }),
+      ).toBe(true);
+      expect(ok.bankMappings.remap).toHaveBeenCalledWith([
+        {
+          id: "pacc_1",
+          plaidItemId: "pi_1",
+          ledgerAccount: "Assets:Bank:Checking",
+        },
+      ]);
+      expect(
+        await ok.workflow.moveBankMappings({ ledgerId: LEDGER_ID, moves: [] }),
+      ).toBe(true);
+      expect(ok.bankMappings.remap).toHaveBeenCalledTimes(1);
+
+      const down = fixture({ remapFails: true });
+      expect(
+        await down.workflow.moveBankMappings({ ledgerId: LEDGER_ID, moves }),
+      ).toBe(false);
+    });
+  });
+
   describe("documents folders", () => {
     const ROOTED = [
       'option "documents" "."',

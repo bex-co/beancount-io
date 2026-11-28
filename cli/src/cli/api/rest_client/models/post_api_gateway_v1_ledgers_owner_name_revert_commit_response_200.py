@@ -9,6 +9,9 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200_bank_mappings_item import (
+        PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200BankMappingsItem,
+    )
     from ..models.post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200_files_item import (
         PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItem,
     )
@@ -29,6 +32,8 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
         message (str): The revert's own commit message.
         files (list[PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItem]): Each file the commit touched,
             and what the revert does to it.
+        bank_mappings (list[PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200BankMappingsItem]): Bank mappings
+            moved back, when the commit renamed an account (renameAccount); empty otherwise.
         dry_run (bool):
         errors_before (int):
         errors_after (int):
@@ -46,6 +51,7 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
     subject: str
     message: str
     files: list[PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItem]
+    bank_mappings: list[PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200BankMappingsItem]
     dry_run: bool
     errors_before: int
     errors_after: int
@@ -67,6 +73,11 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
         for files_item_data in self.files:
             files_item = files_item_data.to_dict()
             files.append(files_item)
+
+        bank_mappings = []
+        for bank_mappings_item_data in self.bank_mappings:
+            bank_mappings_item = bank_mappings_item_data.to_dict()
+            bank_mappings.append(bank_mappings_item)
 
         dry_run = self.dry_run
 
@@ -95,6 +106,7 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
                 "subject": subject,
                 "message": message,
                 "files": files,
+                "bankMappings": bank_mappings,
                 "dryRun": dry_run,
                 "errorsBefore": errors_before,
                 "errorsAfter": errors_after,
@@ -113,6 +125,9 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200_bank_mappings_item import (
+            PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200BankMappingsItem,  # noqa: PLC0415
+        )
         from ..models.post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200_files_item import (
             PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItem,  # noqa: PLC0415
         )
@@ -133,6 +148,15 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
             files_item = PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItem.from_dict(files_item_data)
 
             files.append(files_item)
+
+        bank_mappings = []
+        _bank_mappings = d.pop("bankMappings")
+        for bank_mappings_item_data in _bank_mappings:
+            bank_mappings_item = PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200BankMappingsItem.from_dict(
+                bank_mappings_item_data
+            )
+
+            bank_mappings.append(bank_mappings_item)
 
         dry_run = d.pop("dryRun")
 
@@ -162,6 +186,7 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
             subject=subject,
             message=message,
             files=files,
+            bank_mappings=bank_mappings,
             dry_run=dry_run,
             errors_before=errors_before,
             errors_after=errors_after,

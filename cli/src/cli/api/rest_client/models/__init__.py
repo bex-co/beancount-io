@@ -427,6 +427,9 @@ from .post_api_gateway_v1_ledgers_owner_name_revert_commit_body import PostApiGa
 from .post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200 import (
     PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200,
 )
+from .post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200_bank_mappings_item import (
+    PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200BankMappingsItem,
+)
 from .post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200_files_item import (
     PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItem,
 )
@@ -758,6 +761,7 @@ __all__ = (
     "PostApiGatewayV1LedgersOwnerNameRenameFileResponse200PreviewItem",
     "PostApiGatewayV1LedgersOwnerNameRevertCommitBody",
     "PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200",
+    "PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200BankMappingsItem",
     "PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItem",
     "PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItemChange",
     "PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200NewErrorsItem",

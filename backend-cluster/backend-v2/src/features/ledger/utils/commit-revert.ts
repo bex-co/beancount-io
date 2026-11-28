@@ -1,3 +1,5 @@
+import { isUtf8 } from "buffer";
+
 /**
  * Reverting one commit as a single new commit (w23/m42).
  *
@@ -109,6 +111,31 @@ export function planRevert(
   return { operations, conflicts };
 }
 
+/**
+ * Each file the commit modified, as text at its parent and at the commit, for
+ * telling whether the commit renamed an account (w31/150). None when one of
+ * them is not UTF-8 text: a rename rewrites text files only.
+ */
+export function modifiedTexts(
+  files: readonly CommitFile[],
+  revisions: readonly { atCommit: GitBlob; atParent: GitBlob }[],
+): { before: string; after: string }[] {
+  const texts: { before: string; after: string }[] = [];
+  for (const [index, { status }] of files.entries()) {
+    if (status !== "modified") continue;
+    const { atCommit, atParent } = revisions[index];
+    if (!atCommit || !atParent) return [];
+    const before = Buffer.from(atParent.content, "base64");
+    const after = Buffer.from(atCommit.content, "base64");
+    if (!isUtf8(before) || !isUtf8(after)) return [];
+    texts.push({
+      before: before.toString("utf-8"),
+      after: after.toString("utf-8"),
+    });
+  }
+  return texts;
+}
+
 /** The first line of a commit message. */
 export function commitSubject(message: string | undefined): string {
   return (message ?? "").split("\n")[0]!.trim();
@@ -141,3 +168,7 @@ export const REVERT_SHA_DESCRIPTION =
 
 export const REVERT_MESSAGE_DESCRIPTION =
   'The revert commit\'s message; defaults to `Revert "<subject>"` and the sha it reverts.';
+
+/** The revert result's `bankMappings`, as REST, GraphQL and MCP publish it (w31/150). */
+export const REVERTED_BANK_MAPPINGS_DESCRIPTION =
+  "Bank mappings moved back, when the commit renamed an account (renameAccount); empty otherwise.";

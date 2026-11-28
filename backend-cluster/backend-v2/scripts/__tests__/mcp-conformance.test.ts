@@ -149,6 +149,7 @@ beforeEach(() => {
     subject: "Add groceries",
     message: 'Revert "Add groceries"',
     files: [{ path: "main.bean", change: "updated" }],
+    bankMappings: [],
     dryRun: input.dryRun === true,
     validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [], valid: true },
   }));
@@ -383,6 +384,7 @@ describe("MCP conformance checks", () => {
       subject: "Add groceries",
       message: 'Revert "Add groceries"',
       files: [{ path: "main.bean", change: "updated" }],
+      bankMappings: [],
       dryRun: false,
       commit: "f00dfeedf00dfeedf00dfeedf00dfeedf00dfeed",
       validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [], valid: true },

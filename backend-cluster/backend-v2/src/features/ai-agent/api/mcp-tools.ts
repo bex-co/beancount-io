@@ -329,6 +329,19 @@ function withoutFlatVerdict<
   return rest;
 }
 
+/**
+ * What a revert's summary adds when bank mappings it should have moved still
+ * name the old accounts (w31/150): which, and where each belongs.
+ */
+function mappingsLeftBehind(
+  mappings: readonly { from: string; to: string; updated: boolean }[],
+): string {
+  const left = mappings.filter((mapping) => !mapping.updated);
+  if (left.length === 0) return "";
+  const moves = [...new Set(left.map(({ from, to }) => `${from} to ${to}`))];
+  return `; ${left.length} bank mapping${left.length === 1 ? " was" : "s were"} not moved: map ${moves.join(", ")} with mapBankAccount`;
+}
+
 const addLedgerEntriesInput = entriesBodySchema
   .omit({ dryRun: true, requestId: true })
   .extend({ ledger: ledgerSelection, ...dryRunInput, requestId: mcpRequestId })
@@ -891,7 +904,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
         ok: true,
         result: {
           summary: summarizeWrite(
-            `${dryRun ? "Would revert" : "Reverted"} ${written.sha.slice(0, 12)} "${written.subject}" (${written.files.map((file) => `${file.change} ${file.path}`).join(", ")})`,
+            `${dryRun ? "Would revert" : "Reverted"} ${written.sha.slice(0, 12)} "${written.subject}" (${written.files.map((file) => `${file.change} ${file.path}`).join(", ")})${dryRun ? "" : mappingsLeftBehind(written.bankMappings)}`,
             validation,
           ),
           ...result,

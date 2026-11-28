@@ -27,12 +27,16 @@ import {
   accountNamesAt,
   accountNamesUnder,
   accountTokenOffsets,
+  accountsRenamedByCommit,
   renameAccountAt,
   renameAccountName,
 } from "@/features/ledger/utils/account-rename";
 import type {
+  BankMappingMove,
+  CommitTextChange,
   IAccountRenameWorkflow,
   ILedgerBankMappings,
+  MovedBankMapping,
   RenameAccountInput,
   RenameAccountResult,
 } from "./account-rename-workflow.types";
@@ -63,7 +67,7 @@ type DocumentMove = { from: string; to: string; sha: string };
  * Read, rename, gate the projection on new bean-check errors, then commit with
  * each file's sha, so a file changed since the read refuses the whole rename.
  * The account's documents folders move in the same commit (w31/149); bank
- * mappings move after it.
+ * mappings move after it, and back after a revert of it (w31/150).
  */
 export class AccountRenameWorkflow implements IAccountRenameWorkflow {
   private readonly logger = logger.child({ module: "account-rename" });
@@ -160,7 +164,7 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
     // A preview reports new errors; only a commit is refused for them (w23/219).
     // An error the ledger had that names the account is the same error under
     // its new name, not a new one (w31/114).
-    const [validation, allMappings] = await Promise.all([
+    const [validation, mappings] = await Promise.all([
       gateFileWrite(
         { ledgerRepo: this.ledgerRepo, ledgerData: this.ledgerData },
         identity,
@@ -172,12 +176,10 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
         dryRun || allowInvalid,
         { account: { from, to } },
       ),
-      this.bankMappings.list({ ledgerId, identity }),
+      this.mappingMoves(ledgerId, identity, (account) =>
+        renameAccountName(account, from, to),
+      ),
     ]);
-    const mappings = allMappings.flatMap((mapping) => {
-      const renamed = renameAccountName(mapping.ledgerAccount, from, to);
-      return renamed === undefined ? [] : [{ ...mapping, renamed }];
-    });
     const lines = changed.reduce(
       (count, file) => count + file.renamed.changes.length,
       0,
@@ -217,25 +219,10 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
         lines,
         documents: documents.length,
       });
-      try {
-        if (mappings.length > 0) {
-          await this.bankMappings.remap(
-            mappings.map(({ id, plaidItemId, renamed }) => ({
-              id,
-              plaidItemId,
-              ledgerAccount: renamed,
-            })),
-          );
-        }
-        mappingsUpdated = true;
-      } catch (error) {
-        // The commit stands; the result says which mappings it left behind,
-        // so the next bank sync does not post to an account that is gone.
-        this.logger.error("Bank mappings not updated after rename", {
-          ledgerId,
-          error,
-        });
-      }
+      mappingsUpdated = await this.moveBankMappings({
+        ledgerId,
+        moves: mappings,
+      });
     }
     const leftBehind =
       !dryRun && !mappingsUpdated
@@ -251,16 +238,77 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
         changes: file.renamed.changes,
       })),
       documents: documents.map((move) => ({ from: move.from, to: move.to })),
-      bankMappings: mappings.map((mapping) => ({
-        plaidAccount: mapping.name,
-        from: mapping.ledgerAccount,
-        to: mapping.renamed,
-        updated: mappingsUpdated,
-      })),
+      bankMappings: reportMappingMoves(mappings, mappingsUpdated),
       validation,
       dryRun,
       ...(commit !== undefined && { commit }),
     };
+  }
+
+  async revertedBankMappings({
+    identity,
+    ledgerId,
+    subject,
+    files,
+  }: {
+    identity: Identity;
+    ledgerId: string;
+    subject: string;
+    files: CommitTextChange[];
+  }): Promise<BankMappingMove[]> {
+    const renamed = accountsRenamedByCommit(subject, files);
+    if (renamed.size === 0) return [];
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+      resource: ledgerResource(ledgerId),
+    });
+    return this.mappingMoves(ledgerId, identity, (account) =>
+      renamed.get(account),
+    );
+  }
+
+  async moveBankMappings({
+    ledgerId,
+    moves,
+  }: {
+    ledgerId: string;
+    moves: BankMappingMove[];
+  }): Promise<boolean> {
+    if (moves.length === 0) return true;
+    try {
+      await this.bankMappings.remap(
+        moves.map(({ id, plaidItemId, to }) => ({
+          id,
+          plaidItemId,
+          ledgerAccount: to,
+        })),
+      );
+      return true;
+    } catch (error) {
+      // The commit stands; the result says which mappings it left behind,
+      // so the next bank sync does not post to an account that is gone.
+      this.logger.error("Bank mappings not updated after the commit", {
+        ledgerId,
+        error,
+      });
+      return false;
+    }
+  }
+
+  /** Every member's mappings whose account `rename` gives another name. */
+  private async mappingMoves(
+    ledgerId: string,
+    identity: Identity,
+    rename: (account: string) => string | undefined,
+  ): Promise<BankMappingMove[]> {
+    const mappings = await this.bankMappings.list({ ledgerId, identity });
+    return mappings.flatMap(({ id, plaidItemId, name, ledgerAccount }) => {
+      const to = rename(ledgerAccount);
+      return to === undefined
+        ? []
+        : [{ id, plaidItemId, plaidAccount: name, from: ledgerAccount, to }];
+    });
   }
 
   /**
@@ -343,6 +391,19 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
     }
     return files;
   }
+}
+
+/** Each mapping as a result reports it, without the rows it names. */
+export function reportMappingMoves(
+  moves: readonly BankMappingMove[],
+  updated: boolean,
+): MovedBankMapping[] {
+  return moves.map(({ plaidAccount, from, to }) => ({
+    plaidAccount,
+    from,
+    to,
+    updated,
+  }));
 }
 
 /** The rule a refused name breaks, as stock Beancount loads an account. */

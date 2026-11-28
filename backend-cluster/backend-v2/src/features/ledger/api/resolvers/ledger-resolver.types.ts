@@ -25,6 +25,7 @@ import {
 import {
   REVERT_MESSAGE_DESCRIPTION,
   REVERT_SHA_DESCRIPTION,
+  REVERTED_BANK_MAPPINGS_DESCRIPTION,
   COMMIT_SHA_DESCRIPTION,
 } from "@/features/ledger/utils/commit-revert";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
@@ -971,6 +972,11 @@ export class RevertLedgerCommitResponse extends WriteVerdict {
       "Each file the commit touched, and what the revert does to it.",
   })
   files: RevertedFile[];
+
+  @Field(() => [AccountRenameBankMapping], {
+    description: REVERTED_BANK_MAPPINGS_DESCRIPTION,
+  })
+  bankMappings: AccountRenameBankMapping[];
 
   @Field(() => Boolean)
   dryRun: boolean;

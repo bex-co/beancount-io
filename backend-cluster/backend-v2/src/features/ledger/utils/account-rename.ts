@@ -208,3 +208,47 @@ export function renamedAccounts(
     to: renameAccountName(name, from, to)!,
   }));
 }
+
+/**
+ * The subject renameAccount gives its commit, `Rename <from> to <to>`, or
+ * git's default for a revert of one (`Revert "…"`), any number of times over.
+ */
+const RENAME_SUBJECT = /^(?:Revert ")*Rename (\S+) to ([^\s"]+)"*$/u;
+
+/**
+ * The accounts a commit renamed, each by its name at the commit to its name
+ * at the parent: the names reverting the commit gives them back (w31/150).
+ * Empty unless `subject` names a rename and every file the commit modified
+ * (`before` at the parent, `after` at the commit) is exactly that rename of
+ * its parent, in either direction, so a revert of a revert counts too. The
+ * subject alone is not enough: anyone who can push can write it.
+ */
+export function accountsRenamedByCommit(
+  subject: string,
+  files: readonly { before: string; after: string }[],
+): Map<string, string> {
+  const named = RENAME_SUBJECT.exec(subject);
+  if (!named || files.length === 0) return new Map();
+  const [, first, second] = named;
+  for (const [from, to] of [
+    [first, second],
+    [second, first],
+  ]) {
+    const offsets = files.map((file) => accountTokenOffsets(file.before, from));
+    const exact = files.every(
+      (file, index) =>
+        offsets[index].length > 0 &&
+        renameAccountAt(file.before, offsets[index], from, to).text ===
+          file.after,
+    );
+    if (!exact) continue;
+    return new Map(
+      files
+        .flatMap((file, index) =>
+          accountNamesAt(file.before, offsets[index], from),
+        )
+        .map((name) => [renameAccountName(name, from, to)!, name]),
+    );
+  }
+  return new Map();
+}
