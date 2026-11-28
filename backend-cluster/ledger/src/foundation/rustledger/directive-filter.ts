@@ -372,6 +372,8 @@ type TokenType =
 interface FilterToken {
   type: TokenType;
   value: string;
+  /** Offset of the token's first character in the filter text. */
+  start: number;
 }
 
 /**
@@ -424,6 +426,57 @@ const LEX_RULES: Array<{ type: TokenType; regex: RegExp }> = [
 const IGNORE = new Set([" ", "\t"]);
 const LITERALS = new Set(["-", ",", "(", ")"]);
 
+// What ends the word a refusal quotes back: blanks, the grammar's own `,`,
+// `(` and `)`, and the quotes.
+const WORD_BOUNDARY = /[\s,()"']/u;
+// A word the lexer reads as `key:value`, or as a `key>number` comparison
+// (the KEY rule, with no blank before the operator inside one word).
+const KEY_PREFIX = /^([a-z][a-zA-Z0-9\-_]+):/;
+const COMPARISON_WORD = /^(?:[a-z][a-zA-Z0-9\-_]+)?[=<>]/;
+
+/** The word that runs on from `start` to the next boundary. */
+function wordFrom(data: string, start: number): string {
+  let end = start;
+  while (end < data.length && !WORD_BOUNDARY.test(data[end])) end += 1;
+  return data.slice(start, end);
+}
+
+/**
+ * Fava raises FilterIllegalCharError; we fail the whole parse (keep-all) and
+ * name the fix (w1/215, w31/162): quote the whole word that holds the
+ * character, keeping a `key:` outside the quotes. Quoting only the character,
+ * as the hint once did, splits the word into two terms.
+ */
+function illegalCharacterError(
+  data: string,
+  pos: number,
+): AdvancedFilterParseError {
+  const char = String.fromCodePoint(data.codePointAt(pos) ?? 0);
+  const refusal = `Illegal character "${char}" in filter`;
+  if (/\s/u.test(char)) {
+    return new AdvancedFilterParseError(
+      `${refusal} — separate terms with plain spaces`,
+    );
+  }
+  let start = pos;
+  while (start > 0 && !WORD_BOUNDARY.test(data[start - 1])) start -= 1;
+  // A leading `-` negates the word; it is not part of the value.
+  while (start < pos && data[start] === "-") start += 1;
+  const word = wordFrom(data, start);
+  if (COMPARISON_WORD.test(word)) {
+    return new AdvancedFilterParseError(
+      `${refusal} — a comparison takes a plain number, e.g. >100`,
+    );
+  }
+  const key = KEY_PREFIX.exec(word);
+  const example = key
+    ? `${key[1]}:"${word.slice(key[0].length)}"`
+    : `"${word}"`;
+  return new AdvancedFilterParseError(
+    `${refusal} — quote the whole value, e.g. ${example}`,
+  );
+}
+
 /** Port of `FilterSyntaxLexer.lex` — yields tokens, tag/link stripped of sigil. */
 function lex(data: string): FilterToken[] {
   const tokens: FilterToken[] = [];
@@ -440,15 +493,15 @@ function lex(data: string): FilterToken[] {
       const result = rule.regex.exec(data);
       if (result && result.index === pos) {
         const raw = result[0];
+        tokens.push(makeToken(rule.type, raw, pos));
         pos += raw.length;
-        tokens.push(makeToken(rule.type, raw));
         matched = true;
         break;
       }
     }
     if (matched) continue;
     if (LITERALS.has(char)) {
-      tokens.push({ type: char as TokenType, value: char });
+      tokens.push({ type: char as TokenType, value: char, start: pos });
       pos += 1;
       continue;
     }
@@ -460,34 +513,26 @@ function lex(data: string): FilterToken[] {
         `Unterminated or misplaced quote — wrap the whole value in matching quotes, e.g. key:"a:b"`,
       );
     }
-    // Fava raises FilterIllegalCharError; we fail the whole parse (keep-all).
-    // A letter-like character the bare rule cannot take is still searchable
-    // in quotes, so say so (w1/215).
-    throw new AdvancedFilterParseError(
-      /[\p{L}\p{M}\p{N}\p{S}]/u.test(char)
-        ? `Illegal character "${char}" — quote the value to search for it, e.g. "${char}"`
-        : `Illegal character "${char}"`,
-    );
+    throw illegalCharacterError(data, pos);
   }
   return tokens;
 }
 
-function makeToken(type: TokenType, raw: string): FilterToken {
+function makeToken(type: TokenType, raw: string, start: number): FilterToken {
   // TAG/LINK: drop the leading sigil (Fava's LINK/TAG token functions).
   if (type === "LINK" || (type as string) === "TAG") {
-    return { type, value: raw.slice(1) };
+    return { type, value: raw.slice(1), start };
   }
   if (type === "ALL" || type === "ANY") {
-    return { type, value: type };
+    return { type, value: type, start };
   }
   if (type === "STRING") {
     const first = raw[0];
     if (first === '"' || first === "'") {
-      return { type, value: raw.slice(1, -1) };
+      return { type, value: raw.slice(1, -1), start };
     }
-    return { type, value: raw };
   }
-  return { type, value: raw };
+  return { type, value: raw, start };
 }
 
 /**
@@ -510,7 +555,10 @@ function makeToken(type: TokenType, raw: string): FilterToken {
 class FilterParser {
   private pos = 0;
 
-  public constructor(private readonly tokens: FilterToken[]) {}
+  public constructor(
+    private readonly tokens: FilterToken[],
+    private readonly source: string,
+  ) {}
 
   public parse(): EntryPredicate {
     const expr = this.parseOr();
@@ -666,8 +714,10 @@ class FilterParser {
   /**
    * Refuse a `key:` value that lexed as something a lookup cannot take, naming
    * the fix: a `#tag`/`^link` after the colon (w23/m2/t002) or a value starting
-   * with a digit, which lexes as NUMBER (w23/m2/t005). Anything else falls
-   * through to the generic `expect("STRING")` refusal.
+   * with a digit, which lexes as NUMBER (w23/m2/t005). The example quotes the
+   * whole value (w31/162): the NUMBER token is only its digits, and quoting
+   * those alone (`payee:"7"eleven`) parses as a different filter. Anything
+   * else falls through to the generic `expect("STRING")` refusal.
    */
   private throwForMistakableValue(key: string): void {
     const upcoming = this.peek();
@@ -684,9 +734,10 @@ class FilterParser {
       );
     }
     if (upcoming !== undefined && upcomingType === "NUMBER") {
+      const value = wordFrom(this.source, upcoming.start);
       throw new AdvancedFilterParseError(
-        `Unexpected ${upcoming.value} after "${key}:" — ` +
-          `quote values starting with a digit, e.g. ${key}:"${upcoming.value}"`,
+        `Unexpected ${upcoming.value} after "${key}:" in filter — ` +
+          `quote the whole value when it starts with a digit, e.g. ${key}:"${value}"`,
       );
     }
   }
@@ -1057,7 +1108,7 @@ function applyAdvancedFilter(
   // 400) rather than silently returning every entry, which would masquerade as a
   // filter that matched everything.
   const tokens = lex(value);
-  const predicate = new FilterParser(tokens).parse();
+  const predicate = new FilterParser(tokens, value).parse();
   return directives.filter((directive) =>
     predicate({ kind: "directive", directive }),
   );

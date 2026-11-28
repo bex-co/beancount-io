@@ -258,7 +258,88 @@ describe("filterDirectives — AdvancedFilter parity", () => {
       // A leading combining mark has no letter to attach to.
       expect(() =>
         filterDirectives([narrated("x")], { filter: "\u0301x" }),
-      ).toThrow(/quote the value to search for it/);
+      ).toThrow('quote the whole value, e.g. "\u0301x"');
+    });
+  });
+
+  // w31/162: punctuation in a bare word (`Amazon.com`, `AT&T`, the `!` flag)
+  // was refused with no fix, and the hints that did exist quoted only the
+  // character or the digits — `payee:"7"eleven` then parses as `payee:"7"`
+  // AND a bare `eleven`, a different filter accepted without a word.
+  describe("refusals quote the whole value they name", () => {
+    const paid = (payee: string, narration = "x"): DirectiveJson =>
+      ({
+        type: "transaction",
+        date: "2026-01-02",
+        flag: "!",
+        payee,
+        narration,
+        tags: [],
+        links: [],
+        postings: [],
+      }) as unknown as DirectiveJson;
+    const entries = [
+      paid("ACME.CORP", "first"),
+      paid("ACME.CORP", "second"),
+      paid("AT&T"),
+      paid("TRADER.JOES"),
+      paid("7eleven", "3M.Co tape"),
+      paid("other"),
+    ];
+    const refusal = (filter: string): string => {
+      try {
+        filterDirectives(entries, { filter });
+      } catch (error) {
+        expect(error).toBeInstanceOf(AdvancedFilterParseError);
+        return (error as Error).message;
+      }
+      throw new Error(`${filter} was accepted`);
+    };
+    const matched = (filter: string): number =>
+      filterDirectives(entries, { filter }).length;
+
+    it.each([
+      ["ACME.CORP", '"."', '"ACME.CORP"', 2],
+      ["payee:TRADER.JOES", '"."', 'payee:"TRADER.JOES"', 1],
+      ["narration:3M.Co", '"."', 'narration:"3M.Co"', 1],
+      ["AT&T", '"&"', '"AT&T"', 1],
+      ["flag:!", '"!"', 'flag:"!"', 6],
+      ["Rent$", '"$"', '"Rent$"', 0],
+      ["-AT&T", '"&"', '"AT&T"', 1],
+      ["(ACME.CORP)", '"."', '"ACME.CORP"', 2],
+      ["other,H&M", '"&"', '"H&M"', 0],
+      ["account:Assets:Bank.X", '"."', 'account:"Assets:Bank.X"', 0],
+      ["🍕", '"🍕"', '"🍕"', 0],
+    ])(
+      "refuses %p naming filter, with an example that runs",
+      (filter, char, example, count) => {
+        expect(refusal(filter)).toBe(
+          `Illegal character ${char} in filter — quote the whole value, e.g. ${example}`,
+        );
+        expect(matched(example)).toBe(count);
+      },
+    );
+
+    it("echoes a digit-led value whole, key outside the quotes", () => {
+      expect(refusal("payee:7eleven")).toBe(
+        'Unexpected 7 after "payee:" in filter — quote the whole value when it starts with a digit, e.g. payee:"7eleven"',
+      );
+      expect(matched('payee:"7eleven"')).toBe(1);
+      expect(refusal("date:2026-01")).toMatch(/e\.g\. date:"2026-01"$/);
+    });
+
+    it("does not tell a comparison to quote its number", () => {
+      for (const filter of ["amount>$5", ">$5"]) {
+        expect(refusal(filter)).toBe(
+          'Illegal character "$" in filter — a comparison takes a plain number, e.g. >100',
+        );
+      }
+    });
+
+    it("asks for a plain space instead of quoting a stray blank", () => {
+      expect(refusal("Whole\u00a0Foods")).toBe(
+        'Illegal character "\u00a0" in filter — separate terms with plain spaces',
+      );
     });
   });
 

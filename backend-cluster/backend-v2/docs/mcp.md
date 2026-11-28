@@ -1353,11 +1353,12 @@ or `"quoted"` words match narration/payee (transactions) or comment (notes);
 and bare `>100` matches posting units; both compare the absolute value, so
 thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a
 test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group.
-Quote values holding a colon, a space, or a leading digit —
-`account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
-sequences. An unparseable filter is refused with `BAD_USER_INPUT` naming the
-fix (quote the value, drop a stray `#`/`^` after a colon), never silently
-treated as match-all or match-none.
+Quote a value that starts with a digit or holds anything but letters, digits,
+`_` and `-` (a colon, a space, `.`, `&`, `!`) — `account:"Assets:Bank:Checking"`,
+`"AT&T"`, `date:"2026"` — there are no escape sequences. An unparseable filter
+is refused with `BAD_USER_INPUT` naming the fix (quote the whole value, with a
+`key:` outside the quotes, or drop a stray `#`/`^` after a colon), never
+silently treated as match-all or match-none.
 Plaintext journal's text holds the ledger's transactions, balance assertions and
 pads only, the same text the dashboard's Export journal downloads: no `open`,
 `close`, `commodity`, `price`, `event`, `note`, `document` or `custom`

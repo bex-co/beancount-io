@@ -143,9 +143,10 @@ def sync_detailed(
             `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100`
             matches posting units; both compare the absolute value, so thresholds are non-negative
             (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,`
-            is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or
-            a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
-            sequences. Example: #travel.
+            is OR, juxtaposition is AND, parentheses group. Quote a value that starts with a digit or
+            holds anything but letters, digits, `_` and `-` (a colon, a space, `.`, `&`, `!`) —
+            `account:"Assets:Bank:Checking"`, `"AT&T"`, `date:"2026"` — there are no escape sequences.
+            Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
         conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
             `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
@@ -210,9 +211,10 @@ def sync(
             `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100`
             matches posting units; both compare the absolute value, so thresholds are non-negative
             (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,`
-            is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or
-            a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
-            sequences. Example: #travel.
+            is OR, juxtaposition is AND, parentheses group. Quote a value that starts with a digit or
+            holds anything but letters, digits, `_` and `-` (a colon, a space, `.`, `&`, `!`) —
+            `account:"Assets:Bank:Checking"`, `"AT&T"`, `date:"2026"` — there are no escape sequences.
+            Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
         conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
             `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
@@ -272,9 +274,10 @@ async def asyncio_detailed(
             `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100`
             matches posting units; both compare the absolute value, so thresholds are non-negative
             (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,`
-            is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or
-            a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
-            sequences. Example: #travel.
+            is OR, juxtaposition is AND, parentheses group. Quote a value that starts with a digit or
+            holds anything but letters, digits, `_` and `-` (a colon, a space, `.`, `&`, `!`) —
+            `account:"Assets:Bank:Checking"`, `"AT&T"`, `date:"2026"` — there are no escape sequences.
+            Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
         conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
             `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`
@@ -337,9 +340,10 @@ async def asyncio(
             `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100`
             matches posting units; both compare the absolute value, so thresholds are non-negative
             (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,`
-            is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or
-            a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
-            sequences. Example: #travel.
+            is OR, juxtaposition is AND, parentheses group. Quote a value that starts with a digit or
+            holds anything but letters, digits, `_` and `-` (a colon, a space, `.`, `&`, `!`) —
+            `account:"Assets:Bank:Checking"`, `"AT&T"`, `date:"2026"` — there are no escape sequences.
+            Example: #travel.
         time (str | Unset): Fava time expression Example: 2026.
         conversion (str | Unset): Value amounts as: a currency code; `units` (unconverted);
             `at_cost` (booked cost); `at_value` (market price, else cost); or `units_by_cost`

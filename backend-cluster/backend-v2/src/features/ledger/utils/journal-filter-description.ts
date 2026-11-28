@@ -16,6 +16,7 @@ export const JOURNAL_FILTER_DESCRIPTION =
   "thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` " +
   "scope a test to " +
   "postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. " +
-  "Quote values holding a colon, a space, or a leading digit — " +
-  '`account:"Assets:Bank:Checking"`, `date:"2026"` — ' +
+  "Quote a value that starts with a digit or holds anything but letters, " +
+  "digits, `_` and `-` (a colon, a space, `.`, `&`, `!`) — " +
+  '`account:"Assets:Bank:Checking"`, `"AT&T"`, `date:"2026"` — ' +
   "there are no escape sequences.";

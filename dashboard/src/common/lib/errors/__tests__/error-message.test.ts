@@ -160,7 +160,14 @@ describe("header filter diagnostics (w0/020)", () => {
   it.each([
     'Unterminated or misplaced quote — wrap the whole value in matching quotes, e.g. key:"a:b"',
     'Unexpected #trip after "payee:" — write payee:trip or a bare #trip term',
-    'Unexpected 7 after "payee:" — quote values starting with a digit, e.g. payee:"7"',
+    // w31/162: the refusals name `filter` and quote the whole value.
+    'Unexpected 7 after "payee:" in filter — quote the whole value when it starts with a digit, e.g. payee:"7eleven"',
+    'Illegal character "." in filter — quote the whole value, e.g. "ACME.CORP"',
+    'Illegal character "&" in filter — quote the whole value, e.g. "AT&T"',
+    'Illegal character "!" in filter — quote the whole value, e.g. flag:"!"',
+    'Illegal character "." in filter — quote the whole value, e.g. narration:"3M.Co"',
+    'Illegal character "$" in filter — a comparison takes a plain number, e.g. >100',
+    'Illegal character "\u00a0" in filter — separate terms with plain spaces',
   ])("names newer filter diagnostics: %s", (message) => {
     expect(getErrorMessageKey(badInput(message))).toBe(
       "common.errors.invalidFilterExpression",
