@@ -1851,6 +1851,17 @@ query: `WHERE payee IS NULL` counts the missing ones. REST JSON, GraphQL
 `queryShell` and `runBqlQueryStructured` share the same producer metadata and
 this [known type limitation](../../ledger/README.md#bql-column-types).
 
+An inventory cell, such as `sum(position)` or the running `balance` (also
+`JOURNAL`'s), holds the lots still held. The text table lists each lot's units
+(`5 VTI, 3 VTI`), and the structured result sums them per currency
+(`{"VTI": "8"}`). A lot that a sale emptied is left out, as stock leaves it
+out: after the 5 VTI lot is sold, the cell reads `3 VTI`, not `0 VTI, 3 VTI`.
+An inventory with nothing left is blank (`{}` structured). Neither form shows
+a lot's cost, because the engine's inventory cell carries none, where stock
+prints `3 VTI {110.00 USD}`. For costs, select `position` per posting (each
+lot with its cost and date, `3 VTI {110.00 USD, 2026-01-03}`), or
+`cost(sum(position))` for the total cost (`330.00 USD`).
+
 ```json
 { "ok": true, "result": "tool-specific payload" }
 ```

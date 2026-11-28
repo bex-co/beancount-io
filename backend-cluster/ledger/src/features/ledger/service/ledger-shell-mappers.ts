@@ -346,7 +346,9 @@ function toShellCell(cell: CellValue): ShellCell {
   }
   if (Array.isArray(cell)) return formatArrayCell(cell);
   if (isInventoryCell(cell)) {
-    return unitsToCurrencyMap(cell.positions.map((position) => position.units));
+    return unitsToCurrencyMap(
+      heldPositions(cell.positions).map((position) => position.units),
+    );
   }
   // Order matters: a Position also has `units`, so check it before Amount and
   // after Inventory. A bare Amount is treated as a one-position inventory.
@@ -404,19 +406,32 @@ function formatTextCell(cell: CellValue): string {
 }
 
 /**
- * An inventory in the text table, with the structured cell's zero rule: a
- * currency whose positions net to zero is not held, so an all-zero running
- * balance is blank like the `{}` the structured result and stock show, not an
- * invented `0 USD` (w23/200). Positions of currencies that remain print as
- * the engine wrote them.
+ * The lots a Beancount `Inventory` holds. A sale that empties a lot leaves it
+ * in the engine's inventory as a zero-unit position (rustledger 0.24.0), where
+ * stock removes it: `0 VTI, 3 VTI` is one lot, `3 VTI`. Neither renderer shows
+ * one, and its scale does not widen the structured sum (w31/160).
+ */
+function heldPositions<P extends { units: AmountValue }>(positions: P[]): P[] {
+  return positions.filter(
+    (position) => !new BigNumber(position.units.number).isZero(),
+  );
+}
+
+/**
+ * An inventory in the text table, with the structured cell's zero rules: an
+ * emptied lot is not held, and neither is a currency whose positions net to
+ * zero, so an all-zero running balance is blank like the `{}` the structured
+ * result and stock show, not an invented `0 USD` (w23/200). Positions of
+ * currencies that remain print as the engine wrote them.
  */
 function formatInventoryText(cell: {
   positions: { units: AmountValue }[];
 }): string {
+  const lots = heldPositions(cell.positions);
   const held = new Set(
-    Object.keys(unitsToCurrencyMap(cell.positions.map((p) => p.units))),
+    Object.keys(unitsToCurrencyMap(lots.map((p) => p.units))),
   );
-  const positions = cell.positions.filter((position) =>
+  const positions = lots.filter((position) =>
     held.has(position.units.currency),
   );
   return positions.length === 0 ? "" : formatCellValue({ positions });
