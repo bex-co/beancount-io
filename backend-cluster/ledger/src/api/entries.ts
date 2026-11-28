@@ -237,6 +237,35 @@ function assertNonNegativePrices(rows: BulkEntryWire[]): void {
   });
 }
 
+/**
+ * Refuse a posting whose cost and price are in two currencies before a file is
+ * read, naming the posting: Beancount's parser refuses one (`Cost and price
+ * currencies must match`), and the engine booked `{100.00 USD} @ 90.00 EUR`
+ * clean (w31/148).
+ */
+function assertCostPriceCurrencies(rows: BulkEntryWire[]): void {
+  rows.forEach((row, idx) => {
+    const postings = (row.item as { postings?: unknown } | undefined)?.postings;
+    if (!Array.isArray(postings)) return;
+    postings.forEach((posting: Record<string, unknown> | null, index) => {
+      const currencyOf = (key: string) => {
+        const amount = posting?.[key] as { currency?: unknown } | undefined;
+        return typeof amount?.currency === "string" ? amount.currency : null;
+      };
+      const cost = currencyOf("cost");
+      if (cost === null) return;
+      for (const key of ["price", "totalPrice"]) {
+        const price = currencyOf(key);
+        if (price === null || price === cost) continue;
+        throw new BadUserInputError(
+          `entry ${idx}: postings[${index}].${key}.currency ${JSON.stringify(price)} differs from postings[${index}].cost.currency ${JSON.stringify(cost)}; Beancount requires a cost and a price in the same currency`,
+          `postings[${index}].${key}.currency`,
+        );
+      }
+    });
+  });
+}
+
 export function setEntriesHandler(router: Router): void {
   // operationId: addBulkEntries — POST /entries/{o}/{r}/bulk →
   // success({entry_hashes})
@@ -264,6 +293,7 @@ export function setEntriesHandler(router: Router): void {
       }
       assertDecimalAmounts(rows);
       assertNonNegativePrices(rows);
+      assertCostPriceCurrencies(rows);
       assertEntryTokens(rows);
       assertNoControlCharacters(rows);
 

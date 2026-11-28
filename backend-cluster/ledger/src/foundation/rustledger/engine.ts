@@ -69,7 +69,7 @@ import { sellGainsErrors } from "./sell-gains";
 import { reconcileLeafOnlyErrors } from "./leafonly";
 import { duplicateEntryErrors, locateDuplicateErrors } from "./noduplicates";
 import { midCurrencyToleranceErrors } from "./balance-tolerance-syntax";
-import { stockSyntaxErrors } from "./stock-syntax-errors";
+import { ENGINE_PIPE_ERROR, stockSyntaxErrors } from "./stock-syntax-errors";
 import { SOURCE_DATE } from "./source-date";
 import { reconcileNounusedErrors } from "./nounused";
 import { reconcileOneCommodityErrors } from "./one-commodity";
@@ -870,9 +870,14 @@ async function parseLedgerFilesUncached(
   errors = [...errors, ...duplicateEntryErrors(files, entryPoint)];
   errors = [...errors, ...midCurrencyToleranceErrors(files, entryPoint)];
   // Stock refuses an unquoted booking method, a second commodity directive, a
-  // metadata key repeated on a transaction or posting, and a posting's negative
-  // price, merge cost or repeated cost component; rustledger loads them.
-  errors = [...errors, ...stockSyntaxErrors(files, entryPoint)];
+  // metadata key repeated on a transaction or posting, a posting's negative
+  // price, merge cost, repeated cost component, or cost and price in two
+  // currencies, a tags line after a posting, and a header's `|`; rustledger
+  // loads them. The scan's pipe errors replace the engine's (w31/148).
+  errors = [
+    ...errors.filter((error) => !ENGINE_PIPE_ERROR.test(error.message)),
+    ...stockSyntaxErrors(files, entryPoint),
+  ];
   // Beancount's coherent_cost refuses any uncosted use of a currency held at
   // cost, on its line; the engine's only a priced one, unlocated (w31/129).
   errors = reconcileCoherentCostErrors(errors, directives, files, entryPoint);

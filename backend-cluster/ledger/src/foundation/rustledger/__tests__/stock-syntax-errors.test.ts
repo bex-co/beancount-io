@@ -701,3 +701,262 @@ describe("what stock drops after a syntax error", () => {
     ]);
   });
 });
+
+/**
+ * w31/148: a line of tags or links after a transaction's first posting, and a
+ * `|` between its header's strings. Stock 3.2.3 refuses both on the
+ * transaction's line (and does not apply the late tags); rustledger 0.24.0
+ * loads them clean and files the transaction under the late tag.
+ */
+const LATE = (tags: string, links: string) =>
+  `TAGS_AFTER_POSTING Tags or links not allowed after first Posting: TagsLinks(tags=${tags}, links=${links})`;
+const PIPE = "P0024 Pipe symbol is deprecated.";
+const block = (header: string, ...body: string[]) =>
+  [header, ...body, ""].join("\n");
+
+describe("a tags or links line after the first posting", () => {
+  it("is reported on the transaction's line, once per line", () => {
+    expect(
+      check(
+        [
+          "2026-08-30 open Assets:Cash",
+          "",
+          '2026-08-30 * "tags after posting"',
+          "  Assets:Cash  -1.00 USD",
+          "  #qa-late",
+          "  Expenses:Food:Coffee  1.00 USD",
+          "  ^qa-link",
+          "",
+        ].join("\n"),
+      ),
+    ).toEqual([
+      `main.bean:3 ${LATE("{'qa-late'}", "set()")}`,
+      `main.bean:3 ${LATE("set()", "{'qa-link'}")}`,
+    ]);
+  });
+
+  // Stock prints a set in its hash order, which changes from run to run; the
+  // written order is one of the orders it prints.
+  it.each([
+    ["  #a#b^c ; comment", LATE("{'a', 'b'}", "{'c'}")],
+    ["  #t.a-g_/x", LATE("{'t.a-g_/x'}", "set()")],
+    ["\t^only-link", LATE("set()", "{'only-link'}")],
+    ["  #late #late ^l", LATE("{'late'}", "{'l'}")],
+  ])("reads %p as stock's lexer does", (line, reported) => {
+    expect(
+      check(
+        block(
+          '2026-08-30 * "x"',
+          "  Assets:Cash  -1.00 USD",
+          line,
+          "  Equity:E",
+        ),
+      ),
+    ).toEqual([`main.bean:1 ${reported}`]);
+  });
+
+  it("counts a line below a posting's metadata, and a #-flagged posting", () => {
+    expect(
+      check(
+        block(
+          '2026-08-30 * "x"',
+          "  Assets:Cash  -1.00 USD",
+          '    note: "x"',
+          "    #under-meta",
+          "  Equity:E",
+        ),
+      ),
+    ).toEqual([`main.bean:1 ${LATE("{'under-meta'}", "set()")}`]);
+    expect(
+      check(
+        block(
+          '2026-08-30 * "x"',
+          "  # Assets:Cash  -1.00 USD",
+          "  #after-flagged",
+          "  Equity:E",
+        ),
+      ),
+    ).toEqual([`main.bean:1 ${LATE("{'after-flagged'}", "set()")}`]);
+  });
+
+  it("leaves tags before the first posting, on the header and in comments alone", () => {
+    expect(
+      check(
+        block(
+          '2026-08-30 * "x" #header ^hl',
+          "  #early",
+          '  key: "v"',
+          "  #early2 ^l1",
+          "  Assets:Cash  -1.00 USD",
+          "  ; #not-a-tag",
+          "  Equity:E",
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  it("does not read a line inside a multi-line narration as tags", () => {
+    expect(
+      check(
+        block(
+          '2026-08-30 * "x" "first',
+          "  Assets:Cash  -1.00 USD",
+          '  #inside"',
+          "  Assets:Cash  -1.00 USD",
+          "  Equity:E",
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  it("reports nothing from a directive stock drops at a tags line it cannot read", () => {
+    expect(
+      check(
+        block(
+          '2026-08-30 * "x"',
+          "  Assets:Cash  -1.00 USD @@ -1 EUR",
+          "  #late",
+          "  #late2 Assets:Cash",
+          "  Expenses:Food:Coffee  @@ 1 USD",
+        ),
+      ),
+    ).toEqual([
+      // The posting above the bad line was read, and its error stays.
+      "main.bean:2 NEGATIVE_PRICE Negative prices are not allowed: -1 EUR (see http://furius.ca/beancount/doc/bug-negative-prices for workaround)",
+    ]);
+  });
+});
+
+describe("a pipe between the header's strings", () => {
+  it("is reported on the header's line, at the pipe", () => {
+    const [found] = stockSyntaxErrors(
+      {
+        "main.bean": block(
+          '2026-08-30 * "payee" | "narration"',
+          "  Assets:Cash  -1.00 USD",
+          "  Equity:E",
+        ),
+      },
+      "main.bean",
+    );
+    expect(found).toMatchObject({
+      code: "P0024",
+      message: "Pipe symbol is deprecated.",
+      line: 1,
+      column: 22,
+    });
+  });
+
+  it.each([
+    ['2026-08-30 * | "a" | |', 3],
+    ['2026-08-30 txn "x"|"z"', 1],
+    ['2026-08-30 ! "x" "y" | "z"', 1],
+    ['2026-08-30 * "q\\"|" | "z" #t ^l ; c', 1],
+    ['2026/8/30 P "x" | "z"', 1],
+    ['2026-08-30 * "x" ; | "z"', 0],
+    ['2026-08-30 * "x | y"', 0],
+    ['2026-08-30 * "x" "y" #t', 0],
+  ])("%s: %d", (header, count) => {
+    expect(
+      check(block(header, "  Assets:Cash  -1.00 USD", "  Equity:E")),
+    ).toEqual(Array<string>(count).fill(`main.bean:1 ${PIPE}`));
+  });
+
+  it("is reported on the header's first line when a string spans lines", () => {
+    expect(
+      check(
+        block('2026-08-30 * "multi', 'line" | "b"', "  Assets:Cash  -1.00 USD"),
+      ),
+    ).toEqual([`main.bean:1 ${PIPE}`]);
+  });
+
+  it("honours allow_pipe_separator from its line on, in its own file only", () => {
+    const pipe = (date: string) =>
+      block(`${date} * "a" | "b"`, "  Assets:Cash  -1.00 USD", "  Equity:E");
+    expect(
+      check(
+        [
+          pipe("2026-08-01"),
+          'option "allow_pipe_separator" "TRUE"',
+          'include "other.bean"',
+          pipe("2026-08-02"),
+          'option "allow_pipe_separator" "yes"',
+          pipe("2026-08-03"),
+          'option "allow_pipe_separator" "FALSE"',
+          pipe("2026-08-04"),
+        ].join("\n"),
+        { "other.bean": pipe("2026-08-05") },
+      ),
+    ).toEqual([
+      `main.bean:1 ${PIPE}`,
+      `main.bean:17 ${PIPE}`,
+      `other.bean:1 ${PIPE}`,
+    ]);
+  });
+
+  const PIPE_AFTER_TAGS =
+    "P0012 syntax error, unexpected PIPE, expecting end of file or EOL or TAG or LINK: a | stands only between the payee and the narration, before any tag or link";
+
+  // A pipe after the tags, or an account in the header, is a syntax error that
+  // drops the directive; a pipe before it was already reported.
+  it.each([
+    ['2026-08-30 * "x" | "z" #tag |', [PIPE, PIPE_AFTER_TAGS]],
+    ['2026-08-30 * "x" | "z" Assets:Cash', [PIPE]],
+  ])(
+    "stops at the header's syntax error, and nothing below it is reported: %s",
+    (header, reported) => {
+      expect(
+        check(
+          block(
+            header,
+            "  Assets:Cash  -1.00 USD",
+            "  #late",
+            "  Equity:E  @@ 1 USD",
+          ),
+        ),
+      ).toEqual(reported.map((message) => `main.bean:1 ${message}`));
+    },
+  );
+
+  it("reads a header of many pipes in linear time", () => {
+    // A run of pipes that fails to match took exponential time to refuse, and
+    // each pipe's line was counted from the header's start.
+    const started = Date.now();
+    const backtracking = check(
+      block(
+        `2026-08-30 * "x" #t |${" |".repeat(16)} X`,
+        "  Assets:Cash  1 USD",
+      ),
+    );
+    const many = check(
+      block(`2026-08-30 * "x"${" |".repeat(20000)}`, "  Assets:Cash  1 USD"),
+    );
+    expect(Date.now() - started).toBeLessThan(1000);
+    expect(backtracking).toEqual([]);
+    expect(many).toHaveLength(20000);
+  });
+
+  // The engine loads a pipe after the tags clean, and refuses the rest.
+  it.each([
+    ['2026-08-30 * "x" #tag |', true],
+    ['2026-08-30 * "x" ^l #t | ; c', true],
+    ['2026-08-30 * "x" #t | |#u', true],
+    ['2026-08-30 * "x" #t | "z"', false],
+    ['2026-08-30 * "x" #t "z"', false],
+  ])(
+    "reports a pipe after the tags as stock's syntax error: %s",
+    (header, reported) => {
+      const found = stockSyntaxErrors(
+        {
+          "main.bean": block(header, "  Assets:Cash  -1.00 USD", "  Equity:E"),
+        },
+        "main.bean",
+      );
+      expect(
+        found.map((e) => `${e.line}:${e.column} ${e.code} ${e.message}`),
+      ).toEqual(
+        reported ? [`1:${header.indexOf("|") + 1} ${PIPE_AFTER_TAGS}`] : [],
+      );
+    },
+  );
+});

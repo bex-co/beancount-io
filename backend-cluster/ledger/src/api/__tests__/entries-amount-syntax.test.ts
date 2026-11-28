@@ -388,6 +388,52 @@ describe("bulk entries refuse amounts that are not decimals (w3/641)", () => {
     expect(committed).toHaveLength(1);
   });
 
+  // w31/148: stock refuses a cost and a price in two currencies, and the
+  // engine booked `10 QAXR {100.00 USD} @ 90.00 EUR` clean.
+  const costed = (key: "price" | "totalPrice", currency: string) => ({
+    type: "transaction",
+    item: {
+      date: "2026-09-01",
+      flag: "*",
+      postings: [
+        {
+          account: "Assets:Cash",
+          units: { number: "10", currency: "QAXR" },
+          cost: { number: "100.00", currency: "USD" },
+          [key]: {
+            number: key === "price" ? "90.00" : "900.00",
+            currency,
+          },
+        },
+        { account: "Equity:Opening" },
+      ],
+    },
+  });
+
+  it.each(["price", "totalPrice"] as const)(
+    "refuses a %s in another currency than the cost before reading a file, naming the posting",
+    async (key) => {
+      const response = await post([transaction("1", "-1"), costed(key, "EUR")]);
+      const body = (await response.json()) as Record<string, any>;
+      expect(response.status).toBe(400);
+      expect(body.error).toBe(
+        `entry 1: postings[0].${key}.currency "EUR" differs from postings[0].cost.currency "USD"; Beancount requires a cost and a price in the same currency`,
+      );
+      expect(reads).toEqual([]);
+      expect(committed).toEqual([]);
+    },
+  );
+
+  it.each(["price", "totalPrice"] as const)(
+    "still writes a %s in the cost's currency",
+    async (key) => {
+      const response = await post([costed(key, "USD")]);
+
+      expect(response.status).toBe(200);
+      expect(committed).toHaveLength(1);
+    },
+  );
+
   // w21/997: the engine holds 28 digits. At 29 it raises P0012, and a fraction
   // past 28 places is cut off, so neither is written.
   // It is a decimal number, so the refusal names the digits (w2/129).

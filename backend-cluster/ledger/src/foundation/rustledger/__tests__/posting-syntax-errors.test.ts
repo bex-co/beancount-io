@@ -277,3 +277,219 @@ describe("a second amount, date or label in one cost spec", () => {
     expect(posting(`  Assets:Broker  10 HOOL ${spec}`)).toEqual([]);
   });
 });
+
+describe("a negative price with no currency", () => {
+  it("is refused, the currency printed as stock prints a missing one", () => {
+    expect(posting("  Assets:Wallet  10 EUR @ -10")).toEqual([
+      NEGATIVE(`-10 ${MISSING}`),
+    ]);
+  });
+});
+
+/**
+ * w31/148: three more posting spellings stock 3.2.3's parser refuses and
+ * rustledger 0.24.0 loads clean. The engine booked `{{100 # 5 USD}}` at 100.50
+ * per unit, a weight of 1005 USD, where stock keeps only the 5 USD total.
+ */
+const MISMATCH = (cost: string, price: string) =>
+  `Cost and price currencies must match: ${cost} != ${price}`;
+const PER_UNIT = (amount: string) =>
+  `Per-unit cost may not be specified using total cost syntax: '${amount}'; ignoring per-unit cost`;
+const NO_UNITS = (price: string) =>
+  `Total price on a posting without units: ${price}.`;
+
+describe("each refusal on its posting's line", () => {
+  it("reports the three spellings where stock does", () => {
+    expect(
+      check(
+        [
+          "2026-08-30 open Assets:Broker",
+          '2026-08-30 * "cost price mismatch"',
+          "  Assets:Broker  10 QAXR {100.00 USD} @ 90.00 EUR",
+          "  Assets:Cash  -1000.00 USD",
+          "",
+          '2026-08-30 * "per-unit cost in total cost"',
+          "  Assets:Total  10 QAXT {{100 # 5 USD}}",
+          "  Assets:Cash",
+          "",
+          '2026-08-30 * "total price without units"',
+          "  Assets:Cash  -10.00 USD",
+          "  Expenses:Food:Coffee  @@ 10.00 USD",
+          "",
+        ].join("\n"),
+      ),
+    ).toEqual([
+      `main.bean:3 COST_PRICE_CURRENCY ${MISMATCH("USD", "EUR")}`,
+      `main.bean:7 TOTAL_COST_PER_UNIT ${PER_UNIT("CompoundAmount(number_per=Decimal('100'), number_total=Decimal('5'), currency='USD')")}`,
+      `main.bean:12 TOTAL_PRICE_WITHOUT_UNITS ${NO_UNITS("10.00 USD")}`,
+    ]);
+  });
+});
+
+describe("a cost and a price in two currencies", () => {
+  it.each([
+    ["10 QAXR {100.00 USD} @ 90.00 EUR", [MISMATCH("USD", "EUR")]],
+    ["10 QAXR {100.00 USD} @@ 900 EUR", [MISMATCH("USD", "EUR")]],
+    ["10 QAXR {100 # 5 USD} @ 90 EUR", [MISMATCH("USD", "EUR")]],
+    ["10 QAXR {# 5 USD} @ 90 EUR", [MISMATCH("USD", "EUR")]],
+    ["10 QAXR {{1005 USD}} @@ 900 EUR", [MISMATCH("USD", "EUR")]],
+    ['10 QAXR {100 USD, 2026-01-01, "lot"} @ 90 EUR', [MISMATCH("USD", "EUR")]],
+    [
+      "10 QAXR {100 USD} @ -90 EUR",
+      [NEGATIVE("-90 EUR"), MISMATCH("USD", "EUR")],
+    ],
+    // The first amount is the cost stock keeps, and the one it compares.
+    [
+      "10 QAXR {100 USD, 200 EUR} @ 90 EUR",
+      [
+        "Duplicate cost: 'CompoundAmount(number_per=Decimal('200'), number_total=None, currency='EUR')'.",
+        MISMATCH("USD", "EUR"),
+      ],
+    ],
+    [
+      "10 QAXR {100 USD, 200 EUR} @ 90 USD",
+      [
+        "Duplicate cost: 'CompoundAmount(number_per=Decimal('200'), number_total=None, currency='EUR')'.",
+      ],
+    ],
+  ])("%s", (amount, messages) => {
+    expect(posting(`  Assets:Broker  ${amount}`)).toEqual(messages);
+  });
+
+  it.each([
+    "10 QAXR {100 USD} @ 110 USD",
+    "10 QAXR {100.00 USD} @@ 1100 USD",
+    "10 QAXR {} @ 90 EUR",
+    "10 QAXR {100} @ 90 EUR",
+    "10 QAXR {100 USD} @ 90",
+    "10 QAXR {2026-01-01} @ 90 EUR",
+    "10 EUR @ 1.10 USD",
+  ])("accepts %s, as stock does", (amount) => {
+    expect(posting(`  Assets:Broker  ${amount}`)).toEqual([]);
+  });
+
+  it("reports only the merge cost of a {*}, which has no currency", () => {
+    expect(posting("  Assets:Broker  10 QAXR {*} @ 90 EUR")).toEqual([
+      "Cost merging is not supported yet",
+    ]);
+  });
+});
+
+describe("a per-unit cost inside a total cost", () => {
+  it.each([
+    [
+      "{{100 # 5 USD}}",
+      [
+        PER_UNIT(
+          "CompoundAmount(number_per=Decimal('100'), number_total=Decimal('5'), currency='USD')",
+        ),
+      ],
+    ],
+    [
+      "{{# 5 USD}}",
+      [
+        PER_UNIT(
+          `CompoundAmount(number_per=${MISSING}, number_total=Decimal('5'), currency='USD')`,
+        ),
+      ],
+    ],
+    [
+      "{{100 # USD}}",
+      [
+        PER_UNIT(
+          `CompoundAmount(number_per=Decimal('100'), number_total=${MISSING}, currency='USD')`,
+        ),
+      ],
+    ],
+    [
+      "{{(1+2) # 1/3 USD, 2026-01-01}}",
+      [
+        PER_UNIT(
+          "CompoundAmount(number_per=Decimal('3'), number_total=Decimal('0.3333333333333333333333333333'), currency='USD')",
+        ),
+      ],
+    ],
+    // The component errors come first, and the cost kept is the first one.
+    [
+      "{{100 # 5 USD, 1 # 6 USD}}",
+      [
+        "Duplicate cost: 'CompoundAmount(number_per=Decimal('1'), number_total=Decimal('6'), currency='USD')'.",
+        PER_UNIT(
+          "CompoundAmount(number_per=Decimal('100'), number_total=Decimal('5'), currency='USD')",
+        ),
+      ],
+    ],
+    [
+      "{{100 # 5 USD, *}}",
+      [
+        "Cost merging is not supported yet",
+        PER_UNIT(
+          "CompoundAmount(number_per=Decimal('100'), number_total=Decimal('5'), currency='USD')",
+        ),
+      ],
+    ],
+    [
+      "{{100 # 5 USD}} @ -90 EUR",
+      [
+        PER_UNIT(
+          "CompoundAmount(number_per=Decimal('100'), number_total=Decimal('5'), currency='USD')",
+        ),
+        NEGATIVE("-90 EUR"),
+        MISMATCH("USD", "EUR"),
+      ],
+    ],
+  ])("10 QAXT %s", (spec, messages) => {
+    expect(posting(`  Assets:Total  10 QAXT ${spec}`)).toEqual(messages);
+  });
+
+  it("is refused on a posting with no units too", () => {
+    expect(posting("  Assets:Total  {{100 # 5 USD}}")).toEqual([
+      PER_UNIT(
+        "CompoundAmount(number_per=Decimal('100'), number_total=Decimal('5'), currency='USD')",
+      ),
+    ]);
+  });
+
+  it.each([
+    "{{1005 USD}}",
+    "{100 # 5 USD}",
+    "{{}}",
+    "{{1005 USD, 2026-01-01}}",
+  ])("accepts %s, as stock does", (spec) => {
+    expect(posting(`  Assets:Total  10 QAXT ${spec}`)).toEqual([]);
+  });
+
+  it("reports only the duplicate when the first amount has no #", () => {
+    expect(posting("  Assets:Total  10 QAXT {{100 USD, 1 # 5 USD}}")).toEqual([
+      "Duplicate cost: 'CompoundAmount(number_per=Decimal('1'), number_total=Decimal('5'), currency='USD')'.",
+    ]);
+  });
+});
+
+describe("a total price on a posting with no units", () => {
+  it.each([
+    ["@@ 10.00 USD", [NO_UNITS("10.00 USD")]],
+    ["USD @@ 10 USD", [NO_UNITS("10 USD")]],
+    ["@@ 10", [NO_UNITS(`10 ${MISSING}`)]],
+    ["@@ USD", [NO_UNITS(" USD")]],
+    ["@@", [NO_UNITS(` ${MISSING}`)]],
+    ["@@ (1+2) USD", [NO_UNITS("3 USD")]],
+    ["@@ 1/3 USD", [NO_UNITS("0.3333333333333333333333333333 USD")]],
+    ["@@ 1,000.00 USD", [NO_UNITS("1000.00 USD")]],
+    ["@@ 0.0000001 USD", [NO_UNITS("0.0000001 USD")]],
+    ["@@ -0 USD", [NO_UNITS("0 USD")]],
+    // Stock prints the price with its sign dropped.
+    ["@@ -10 USD", [NEGATIVE("-10 USD"), NO_UNITS("10 USD")]],
+    // It drops the price, so it compares no currency with the cost.
+    ["{100 USD} @@ 90 EUR", [NO_UNITS("90 EUR")]],
+  ])("Expenses:Food:Coffee  %s", (amount, messages) => {
+    expect(posting(`  Expenses:Food:Coffee  ${amount}`)).toEqual(messages);
+  });
+
+  it.each(["10.00 USD @@ 10.00 USD", "@ 10 USD", "10 EUR @@ 11 USD"])(
+    "accepts %s, as stock does",
+    (amount) => {
+      expect(posting(`  Expenses:Food:Coffee  ${amount}`)).toEqual([]);
+    },
+  );
+});

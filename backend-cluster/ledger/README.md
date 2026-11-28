@@ -239,7 +239,7 @@ These things stock `bean-check` refuses load without an error in the pinned
 engine (`@rustledger/wasm` 0.24.0), so the ledger reports them at their line, in
 the same error list `checkLedger`, the post-write report and the write gates
 read. Two scans in `src/foundation/rustledger/` read the source text for them:
-`stock-syntax-errors.ts` (w23/240, w31/120, w31/121), which reads a posting's
+`stock-syntax-errors.ts` (w23/240, w31/120, w31/121, w31/148), which reads a posting's
 cost and price with `posting-syntax-errors.ts`, and `balance-tolerance-syntax.ts`
 (w23/197). One rule reads the booked stream instead: `zero-units-at-cost.ts`
 (w31/140). Each row names the file whose rule finds it:
@@ -252,9 +252,15 @@ cost and price with `posting-syntax-errors.ts`, and `balance-tolerance-syntax.ts
 | `NEGATIVE_PRICE` | a negative per-unit or total price (`10 EUR @ -1.10 USD`), on the posting's line | `Negative prices are not allowed: -1.10 USD (see …)` | `posting-syntax-errors.ts` |
 | `COST_MERGE` | a merge cost (`-5 HOOL {*}`), on the posting's line | `Cost merging is not supported yet`, `Duplicate merge-cost spec` | `posting-syntax-errors.ts` |
 | `DUPLICATE_COST_COMPONENT` | a second amount, date or label in one `{…}`, on the posting's line | `Duplicate cost: …`, `Duplicate date: '2026-01-05'.`, `Duplicate label: 'b'.` | `posting-syntax-errors.ts` |
+| `COST_PRICE_CURRENCY` | a cost and a price in two currencies (`10 QAXR {100.00 USD} @ 90.00 EUR`, also `@@`), on the posting's line; `{}`, a cost with no currency and `{100 USD} @ 110 USD` stay clean, as in stock | `Cost and price currencies must match: USD != EUR` | `posting-syntax-errors.ts` |
+| `TOTAL_COST_PER_UNIT` | a per-unit cost inside a total cost (`{{100 # 5 USD}}`), on the posting's line; `{{1005 USD}}` and `{100 # 5 USD}` stay clean | `Per-unit cost may not be specified using total cost syntax: 'CompoundAmount(…)'; ignoring per-unit cost` | `posting-syntax-errors.ts` |
+| `TOTAL_PRICE_WITHOUT_UNITS` | a total price on a posting with no units (`Expenses:Food  @@ 10.00 USD`), on the posting's line | `Total price on a posting without units: 10.00 USD.` | `posting-syntax-errors.ts` |
+| `TAGS_AFTER_POSTING` | a line of tags or links after a transaction's first posting, once per line, on the transaction's line; one before the first posting stays clean | `Tags or links not allowed after first Posting: TagsLinks(tags={'late'}, links=set())` | `stock-syntax-errors.ts` |
+| `P0024` | a `\|` between a transaction header's strings (`* "payee" \| "narration"`), once per pipe, on the header's line, unless the same file set `option "allow_pipe_separator"` true above it | `Pipe symbol is deprecated.` | `stock-syntax-errors.ts` |
 | `P0012` | an account with a colon after it (`Assets:Cash:`), on a posting, an `open`, `close`, `pad`, `balance`, `note`, `document` or `custom` line, or a metadata value | `syntax error, unexpected COLON, expecting …` (the tokens stock expected there) | `stock-syntax-errors.ts` |
 | `P0012` | a string where a dated line's flag goes (`2026-09-02 "x"`) | `syntax error, unexpected STRING` | `stock-syntax-errors.ts` |
 | `P0012` | a number with no leading digit (`.50 USD`), at each one | `Invalid token: '.50'` | `stock-syntax-errors.ts` |
+| `P0012` | a `\|` after a transaction header's tags or links (`* "x" #tag \|`) | `syntax error, unexpected PIPE, expecting end of file or EOL or TAG or LINK` | `stock-syntax-errors.ts` |
 | `TOLERANCE` | a currency before a balance tolerance's `~` (`balance Assets:Cash 49.75 USD ~ 0.05 USD`, where the grammar wants `49.75 ~ 0.05 USD`), on the `balance` line | `syntax error, unexpected TILDE, expecting end of file or EOL` | `balance-tolerance-syntax.ts` |
 | `ZERO_UNITS_AT_COST` | a posting of zero units at a cost with a number (`0 VTI {5 USD}`, `0.00 VTI {0 USD}`), on the posting's line; `0 VTI {}`, a date or a label alone, and `0 EUR @ 1.1 USD` stay clean, as in stock | `Amount is zero: "0 VTI"` | `zero-units-at-cost.ts` |
 
@@ -276,6 +282,20 @@ The engine keeps a negative price's sign, so `10 EUR @ -1.10 USD` weighed
 as an empty cost. Structured `addLedgerEntries` refuses a negative `price` or
 `totalPrice` before it reads a file (`src/api/entries.ts`).
 
+The engine reads `{{100 # 5 USD}}` as 100 per unit plus 5 in total, so
+`10 QAXT {{100 # 5 USD}}` weighs 1005 USD where stock keeps only the 5 USD
+total, and an elided cash leg moved 1000 USD more. It keeps a total price on a
+posting with no units, which stock drops, and files a transaction under a tag
+written after its first posting, which stock does not apply. The errors change
+no figure: they keep each entry from counting as clean. Structured
+`addLedgerEntries` refuses a `cost` whose currency differs from its `price` or
+`totalPrice` before it reads a file. Stock prints a set of tags in hash order,
+which changes from run to run; the error lists them as written. The engine
+raises its own pipe error only when a file fails to parse, and then for some
+pipes and not others, past `allow_pipe_separator` too, so the scan's errors
+take its place. Stock reads that option per file, from its line on: an
+included file gets no pass from the option in `main.bean`.
+
 The engine books `Assets:Cash:` to `Assets:Cash`, so a balance assertion that
 holds only with that posting counted passed, and reads the flagless header as a
 `*` transaction. It would read `.50` as 50; `withLeadingZeros`
@@ -289,7 +309,10 @@ directive's later errors (a repeated key, a posting error below the bad line, a
 second commodity it would have been), and, like stock's parser, stays quiet
 about a flagless header on the line straight after a failed directive. Checked
 against stock 3.2.3 on 14,500 random ledgers and the 126 tracked ledger fixtures
-with no difference.
+with no difference. A tags line that holds more than tags (`#late Assets:Cash`)
+and a token after a header's tags end the directive the same way. The engine
+raises those itself, except a `|` after the tags, which the scan reports with
+stock's message and what is wrong.
 
 The scan is syntactic and abstains on doubt: it reads one block's own lines (a
 line inside a multi-line string is never a key), and a line that does not have a
@@ -309,7 +332,11 @@ posting grammar, and evaluate a price or cost expression (`@ (1-2.1) USD`) the
 way Python's `Decimal` does, so each message prints the number stock prints. A
 line stock refuses as a syntax error, or a label that spans lines, is left
 alone. Checked against stock 3.2.3 on 1,800 random postings and the 126 tracked
-ledger fixtures with no difference.
+ledger fixtures with no difference. The w31/148 rules (cost and price
+currencies, a per-unit cost in a total cost, a total price with no units, a late
+tags line, a header's `|`) were checked against stock 3.2.3's parser on 14,000
+random transactions, where it reported 21,257 errors, and on the same fixtures,
+with no difference.
 
 The tolerance rule (`balance-tolerance-syntax.ts`) reads a `balance` line that
 starts with a date, in any spelling stock's lexer reads, and has a currency

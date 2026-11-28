@@ -17,7 +17,19 @@ import { utcDate } from "./utc-date";
  *  - a merge cost (`{*}`): `Cost merging is not supported yet`, and
  *    `Duplicate merge-cost spec` for a second `*`;
  *  - a second amount, date or label in one `{…}`: `Duplicate cost`,
- *    `Duplicate date`, `Duplicate label`. The engine keeps the first.
+ *    `Duplicate date`, `Duplicate label`. The engine keeps the first;
+ *  - a cost and a price in two currencies (`{100.00 USD} @ 90.00 EUR`):
+ *    `Cost and price currencies must match: USD != EUR` (w31/148). The engine
+ *    books the lot at its cost and keeps the price. A `{}` or a cost with no
+ *    currency is no mismatch, and the first amount of the cost spec is the one
+ *    stock compares;
+ *  - a per-unit cost inside a total cost (`{{100 # 5 USD}}`): `Per-unit cost
+ *    may not be specified using total cost syntax`. The engine books 100 per
+ *    unit plus 5 in total, where stock keeps only the 5, so the elided leg
+ *    moved 1000 USD more than stock books;
+ *  - a total price on a posting with no units (`Expenses:Food  @@ 10.00 USD`):
+ *    `Total price on a posting without units`. Stock drops the price; the
+ *    engine keeps one.
  *
  * The line is read with stock's lexer rules (a `1,000.00` number, a
  * `2026/1/5` date, a string with `\"` in it is one label, a comma inside one is
@@ -326,8 +338,24 @@ function incompleteAmount(
 /** How stock's messages print a number or currency the text leaves out. */
 const MISSING = "<class 'beancount.core.number.MISSING'>";
 
-/** Stock's `CompoundAmount` repr, as its `Duplicate cost` message prints it. */
-function compoundAmount(tokens: readonly Token[]): string | null {
+/** Stock's `str(Amount)`: the number in fixed point (`-20`, not `-2E+1`), or nothing, then the currency. */
+function amountText(number: Decimal | undefined, currency: string | undefined) {
+  const digits =
+    number === undefined
+      ? ""
+      : number.value.toFixed(Math.max(0, -number.exponent));
+  return `${digits} ${currency ?? MISSING}`;
+}
+
+/** One amount of a cost spec: its `CompoundAmount` repr, its currency, and whether it has a `#`. */
+interface CompoundAmount {
+  text: string;
+  currency: string | undefined;
+  hashed: boolean;
+}
+
+/** Stock's `CompoundAmount`, with the repr its messages print. */
+function compoundAmount(tokens: readonly Token[]): CompoundAmount | null {
   const reader = new Reader(tokens);
   const per = reader.numberExpression();
   if (per === null) return null;
@@ -338,7 +366,11 @@ function compoundAmount(tokens: readonly Token[]): string | null {
   if (!reader.done || (hashed && currency === undefined)) return null;
   const decimal = (number: Decimal | undefined) =>
     number === undefined ? MISSING : `Decimal('${decimalText(number)}')`;
-  return `CompoundAmount(number_per=${decimal(per)}, number_total=${hashed ? decimal(total) : "None"}, currency=${currency === undefined ? MISSING : `'${currency}'`})`;
+  return {
+    text: `CompoundAmount(number_per=${decimal(per)}, number_total=${hashed ? decimal(total) : "None"}, currency=${currency === undefined ? MISSING : `'${currency}'`})`,
+    currency,
+    hashed,
+  };
 }
 
 /** A lexer date as Python's `date` prints it, or `null` when it is no calendar date. */
@@ -365,16 +397,24 @@ function isoDate(text: string): string | null {
   ].join("-");
 }
 
-/** The errors stock's `cost_spec` adds for `{…}`'s components, in their order. */
-function costSpecErrors(tokens: readonly Token[]): PostingSyntaxError[] | null {
-  if (tokens.length === 0) return [];
+/**
+ * What stock's `cost_spec` reads in a `{…}` (`total`: a `{{…}}`): the errors
+ * it adds for the components, in their order, and the first amount, which is
+ * the cost it keeps.
+ */
+function costSpec(
+  tokens: readonly Token[],
+  total: boolean,
+): { errors: PostingSyntaxError[]; cost?: CompoundAmount } | null {
+  if (tokens.length === 0) return { errors: [] };
   const components: Token[][] = [[]];
   for (const token of tokens) {
     if (token.kind === "op" && token.op === ",") components.push([]);
     else components.at(-1)!.push(token);
   }
   const errors: PostingSyntaxError[] = [];
-  const seen = { cost: false, date: false, label: false, merge: false };
+  let cost: CompoundAmount | undefined;
+  const seen = { date: false, label: false, merge: false };
   for (const component of components) {
     const [only, ...rest] = component;
     if (only === undefined) return null; // `{5 USD,}` is a syntax error
@@ -409,16 +449,22 @@ function costSpecErrors(tokens: readonly Token[]): PostingSyntaxError[] | null {
     } else {
       const amount = compoundAmount(component);
       if (amount === null) return null;
-      if (seen.cost) {
+      if (cost !== undefined) {
         errors.push({
           code: "DUPLICATE_COST_COMPONENT",
-          message: `Duplicate cost: '${amount}'.`,
+          message: `Duplicate cost: '${amount.text}'.`,
         });
       }
-      seen.cost = true;
+      cost ??= amount;
     }
   }
-  return errors;
+  if (total && cost?.hashed === true) {
+    errors.push({
+      code: "TOTAL_COST_PER_UNIT",
+      message: `Per-unit cost may not be specified using total cost syntax: '${cost.text}'; ignoring per-unit cost`,
+    });
+  }
+  return { errors, cost };
 }
 
 /** An account as stock's lexer reads one: `{ACCOUNTTYPE}(:{ACCOUNTNAME})+`. */
@@ -449,18 +495,21 @@ export function postingSyntaxErrors(line: string): PostingSyntaxError[] {
   if (tokens === null) return [];
   let at = tokens.findIndex((token) => isOp(token, "{", "{{", "@", "@@"));
   if (at < 0) at = tokens.length;
-  if (incompleteAmount(tokens.slice(0, at)) === null) return [];
+  const units = incompleteAmount(tokens.slice(0, at));
+  if (units === null) return [];
 
   const errors: PostingSyntaxError[] = [];
+  let cost: CompoundAmount | undefined;
   if (isOp(tokens[at], "{", "{{")) {
-    const close = isOp(tokens[at], "{") ? "}" : "}}";
+    const total = isOp(tokens[at], "{{");
     const end = tokens.findIndex(
       (token, index) => index > at && isOp(token, "{", "{{", "}", "}}"),
     );
-    if (end < 0 || !isOp(tokens[end], close)) return [];
-    const found = costSpecErrors(tokens.slice(at + 1, end));
+    if (end < 0 || !isOp(tokens[end], total ? "}}" : "}")) return [];
+    const found = costSpec(tokens.slice(at + 1, end), total);
     if (found === null) return [];
-    errors.push(...found);
+    errors.push(...found.errors);
+    cost = found.cost;
     at = end + 1;
   }
   if (isOp(tokens[at], "@", "@@")) {
@@ -470,14 +519,30 @@ export function postingSyntaxErrors(line: string): PostingSyntaxError[] {
     // `-0` is not below zero, so stock accepts it.
     if (
       number !== undefined &&
-      currency !== undefined &&
       number.value.isNegative() &&
       !number.value.isZero()
     ) {
       errors.push({
         code: "NEGATIVE_PRICE",
-        // An `Amount` prints its number in fixed point (`-20`, not `-2E+1`).
-        message: `Negative prices are not allowed: ${number.value.toFixed(Math.max(0, -number.exponent))} ${currency} (see http://furius.ca/beancount/doc/bug-negative-prices for workaround)`,
+        message: `Negative prices are not allowed: ${amountText(number, currency)} (see http://furius.ca/beancount/doc/bug-negative-prices for workaround)`,
+      });
+    }
+    if (isOp(tokens[at], "@@") && units.number === undefined) {
+      // Stock prints the price with its sign dropped, then drops the price,
+      // so it compares no currency with the cost.
+      const unsigned = number && { ...number, value: number.value.abs() };
+      errors.push({
+        code: "TOTAL_PRICE_WITHOUT_UNITS",
+        message: `Total price on a posting without units: ${amountText(unsigned, currency)}.`,
+      });
+    } else if (
+      cost?.currency !== undefined &&
+      currency !== undefined &&
+      cost.currency !== currency
+    ) {
+      errors.push({
+        code: "COST_PRICE_CURRENCY",
+        message: `Cost and price currencies must match: ${cost.currency} != ${currency}`,
       });
     }
   } else if (at < tokens.length) {

@@ -21,8 +21,19 @@ import { endsInsideString, loadedFiles } from "./source-slice";
  *    on the transaction's line). Stock checks transactions only: a duplicate
  *    key on an `open` or `commodity` is accepted there, so it is here;
  *  - a posting's negative price, merge cost `{*}`, or second amount, date or
- *    label in one cost spec (w31/120), on the posting's line: see
- *    `posting-syntax-errors.ts`;
+ *    label in one cost spec (w31/120), and its cost and price in two
+ *    currencies, per-unit cost inside a total cost, or total price with no
+ *    units (w31/148), on the posting's line: see `posting-syntax-errors.ts`;
+ *  - a line of tags or links after a transaction's first posting
+ *    (`Tags or links not allowed after first Posting`, on the transaction's
+ *    line, w31/148). Stock does not apply them; the engine files the
+ *    transaction under them;
+ *  - a `|` between a transaction header's strings (`Pipe symbol is
+ *    deprecated.`, on the header's line, w31/148), unless the file has set
+ *    `option "allow_pipe_separator"` true above it. Stock reads that option
+ *    per file, in order, so an included file gets no such pass. A `|` after
+ *    the header's tags is stock's syntax error instead (`syntax error,
+ *    unexpected PIPE`), which the engine loads clean;
  *  - three spellings stock's lexer and grammar refuse (w31/121): an account
  *    with a colon after it (`Assets:Cash:`, `syntax error, unexpected COLON`,
  *    with the tokens stock expected there), which the engine books to
@@ -69,7 +80,20 @@ const TRANSACTION = new RegExp(
 );
 /** A key line: `key:` then a space, a quote or the end of the line (`k:"v"` is a key). */
 const META_KEY = /^[ \t]+([a-z][A-Za-z0-9_-]*):(?=[ \t"]|$)/u;
-const TAGS_LINE = /^[ \t]+[#^]/u;
+/** A line that starts with a tag or a link: `#` alone is a posting's flag. */
+const TAGS_LINE = /^[ \t]+[#^][A-Za-z0-9_/.-]/u;
+/** A line of tags and links only, as stock's lexer reads them (`#a#b ^c ; x`). */
+const TAGS_LINKS_ONLY = /^[ \t]+((?:[#^][A-Za-z0-9_/.-]+[ \t\r]*)+)(?:;.*)?$/u;
+const TAG_OR_LINK = /([#^])([A-Za-z0-9_/.-]+)/gu;
+/**
+ * The engine's own error for a header's `|` (`P0024`). It is raised only when
+ * the file fails to parse, then for some pipes and not others, and past
+ * `allow_pipe_separator`; the scan's pipe errors take its place.
+ */
+export const ENGINE_PIPE_ERROR = /^Pipe symbol is deprecated$/u;
+/** `option "allow_pipe_separator" "<value>"`, which turns the pipe's error off. */
+const ALLOW_PIPE =
+  /^option[ \t]+"allow_pipe_separator"[ \t]+"([^"\\]*)"[ \t\r]*(?:;.*)?$/u;
 /** A dated line whose next token is a string: no flag, `txn` or keyword. */
 const FLAGLESS_HEADER = new RegExp(String.raw`^${SOURCE_DATE}[ \t]*"`, "u");
 
@@ -193,14 +217,13 @@ const error = (
 });
 
 /**
- * A block's own body lines that hold a key or a posting, with their index: a
- * line inside a multi-line string, a blank line, a comment and a tags line are
- * neither. `key` is the key line's match, `null` on a posting.
+ * A block's own body lines with their index: not a line inside a multi-line
+ * string, a blank line or a comment.
  */
-function* bodyLines(
+function* ownLines(
   lines: readonly string[],
   firstBodyLine: number,
-): Generator<{ index: number; line: string; key: RegExpExecArray | null }> {
+): Generator<{ index: number; line: string }> {
   let inString = false;
   for (let index = firstBodyLine; index < lines.length; index += 1) {
     const line = lines[index]!;
@@ -208,9 +231,130 @@ function* bodyLines(
     inString = endsInsideString(line, inString);
     if (startedInString) continue;
     const text = line.trim();
-    if (text === "" || text.startsWith(";") || TAGS_LINE.test(line)) continue;
-    yield { index, line, key: META_KEY.exec(line) };
+    if (text === "" || text.startsWith(";")) continue;
+    yield { index, line };
   }
+}
+
+/**
+ * A block's own body lines that hold a key or a posting, with their index: a
+ * tags line is neither. `key` is the key line's match, `null` on a posting.
+ */
+function* bodyLines(
+  lines: readonly string[],
+  firstBodyLine: number,
+): Generator<{ index: number; line: string; key: RegExpExecArray | null }> {
+  for (const { index, line } of ownLines(lines, firstBodyLine)) {
+    if (!TAGS_LINE.test(line)) yield { index, line, key: META_KEY.exec(line) };
+  }
+}
+
+/** A Python set of strings as `repr` prints it; a set's own order is a hash's, so this keeps the written one. */
+const pythonSet = (items: readonly string[]) =>
+  items.length === 0
+    ? "set()"
+    : `{${[...new Set(items)].map((item) => `'${item}'`).join(", ")}}`;
+
+/**
+ * Stock's `TagsLinks` repr for each line of tags and links a transaction
+ * block writes after its first posting, which stock refuses and does not
+ * apply. A tags line stock's lexer would not read as tags alone is left alone.
+ */
+function lateTagsLinks(
+  lines: readonly string[],
+  firstBodyLine: number,
+): string[] {
+  const late: string[] = [];
+  let posted = false;
+  for (const { line } of ownLines(lines, firstBodyLine)) {
+    if (!TAGS_LINE.test(line)) {
+      posted ||= !META_KEY.test(line);
+      continue;
+    }
+    const written = TAGS_LINKS_ONLY.exec(line)?.[1];
+    if (!posted || written === undefined) continue;
+    const tags: string[] = [];
+    const links: string[] = [];
+    for (const [, sigil, name] of written.matchAll(TAG_OR_LINK)) {
+      (sigil === "#" ? tags : links).push(name!);
+    }
+    late.push(`TagsLinks(tags=${pythonSet(tags)}, links=${pythonSet(links)})`);
+  }
+  return late;
+}
+
+/** The tags and links after a header's strings. */
+const HEADER_TAGS_LINKS = /^(?:[#^][A-Za-z0-9_/.-]+|[ \t\r])*/u;
+/** A `|` after them with nothing but more of the same, which the engine loads. */
+const PIPE_AFTER_TAGS = /^\|(?:[#^][A-Za-z0-9_/.-]+|[ \t\r|])*(?:;.*)?$/u;
+
+/** Where a header stops reading as stock's grammar, and whether the engine misses it. */
+interface Unread extends Place {
+  /** A `|` after the tags and links: the engine loads it, so it is reported. */
+  pipe: boolean;
+}
+
+/**
+ * A transaction header as stock's grammar reads it after the flag: strings
+ * and `|` (`* "payee" | "narration"`, `* | "x"`), then tags and links. Returns
+ * where each `|` stands, and where the first token stock cannot take there is
+ * (`* "x" #tag |`, `* "x" Assets:Cash`), the syntax error that drops the
+ * directive. `header` is the header's lines, which a multi-line string spans;
+ * a string that does not close there is left alone (`null`).
+ */
+function readHeader(
+  header: string,
+  flagEnd: number,
+): { pipes: Place[]; unread?: Unread } | null {
+  // Only a string spans lines, so the line is counted as each one is read.
+  let index = 0;
+  let lineStart = 0;
+  const placeOf = (at: number): Place => ({ index, column: at - lineStart });
+  const pipes: Place[] = [];
+  let at = flagEnd;
+  for (; at < header.length; at += 1) {
+    const char = header[at]!;
+    if (char === "|") {
+      pipes.push(placeOf(at));
+    } else if (char === '"') {
+      const string = /"(?:[^\\"]|\\[\s\S])*"/uy;
+      string.lastIndex = at;
+      const found = string.exec(header)?.[0];
+      if (found === undefined) return null;
+      const lastNewline = found.lastIndexOf("\n");
+      if (lastNewline >= 0) {
+        index += found.split("\n").length - 1;
+        lineStart = at + lastNewline + 1;
+      }
+      at += found.length - 1;
+    } else if (char !== " " && char !== "\t" && char !== "\r") {
+      break;
+    }
+  }
+  at += HEADER_TAGS_LINKS.exec(header.slice(at))![0].length;
+  const rest = header.slice(at);
+  if (rest === "" || rest.startsWith(";")) return { pipes };
+  return {
+    pipes,
+    unread: { ...placeOf(at), pipe: PIPE_AFTER_TAGS.test(rest) },
+  };
+}
+
+/**
+ * The first body line stock's lexer starts with a tag or a link and that holds
+ * more than tags and links (`#late Assets:Cash`): a syntax error that drops
+ * the directive. The engine raises it too, so it is not reported here.
+ */
+function unreadTagsLine(
+  lines: readonly string[],
+  firstBodyLine: number,
+): Place | undefined {
+  for (const { index, line } of ownLines(lines, firstBodyLine)) {
+    if (TAGS_LINE.test(line) && !TAGS_LINKS_ONLY.test(line)) {
+      return { index, column: 0 };
+    }
+  }
+  return undefined;
 }
 
 /** The duplicate keys a transaction block's own lines repeat, with their owner. */
@@ -414,6 +558,8 @@ export function stockSyntaxErrors(
       if (!invalidColumn.has(line)) invalidColumn.set(line, column);
     }
     let previous: { endLine: number; failed: boolean } | undefined;
+    // Stock reads options per file, as it meets them.
+    let allowPipe = false;
     for (const block of index.blocks(file)) {
       const lines = block.text.split("\n");
       let lexed: Place | undefined;
@@ -426,12 +572,17 @@ export function stockSyntaxErrors(
       }
       if (!block.isDated) {
         previous = { endLine: block.endLine, failed: lexed !== undefined };
+        const allow = ALLOW_PIPE.exec(lines[0]!)?.[1];
+        if (allow !== undefined) {
+          allowPipe = ["1", "true", "yes"].includes(allow.toLowerCase());
+        }
         continue;
       }
       const header = lines[0]!;
       const line = block.startLine + 1;
       const firstBodyLine = block.headerEndLine - block.startLine + 1;
-      const transaction = TRANSACTION.test(header);
+      const flag = TRANSACTION.exec(header);
+      const transaction = flag !== null;
 
       const syntax = firstSyntaxError(
         block.text,
@@ -439,7 +590,35 @@ export function stockSyntaxErrors(
         firstBodyLine,
         transaction,
       );
-      const failed = earlier(syntax, lexed);
+      const read =
+        flag === null
+          ? null
+          : readHeader(
+              lines.slice(0, firstBodyLine).join("\n"),
+              flag[0].length,
+            );
+      // Syntax errors that end what stock reads of the directive. The engine
+      // raises them itself, except a `|` after the header's tags.
+      const unread = transaction
+        ? (read?.unread ?? unreadTagsLine(lines, firstBodyLine))
+        : undefined;
+      const failed = earlier(earlier(syntax, lexed), unread);
+      if (
+        read?.unread !== undefined &&
+        failed === read.unread &&
+        read.unread.pipe
+      ) {
+        fileErrors.push(
+          error(
+            "syntax error, unexpected PIPE, expecting end of file or EOL or TAG or LINK: a | stands only between the payee and the narration, before any tag or link",
+            "P0012",
+            "parse",
+            file,
+            block.startLine + read.unread.index + 1,
+            read.unread.column + 1,
+          ),
+        );
+      }
       const quiet =
         syntax?.flagless === true &&
         previous?.failed === true &&
@@ -457,6 +636,22 @@ export function stockSyntaxErrors(
         );
       }
       previous = { endLine: block.endLine, failed: failed !== undefined };
+
+      // Stock reports each pipe as it reads it, so one before the directive's
+      // syntax error is reported too.
+      for (const pipe of allowPipe ? [] : (read?.pipes ?? [])) {
+        if (failed !== undefined && earlier(failed, pipe) !== pipe) break;
+        fileErrors.push(
+          error(
+            "Pipe symbol is deprecated.",
+            "P0024",
+            "parse",
+            file,
+            line,
+            pipe.index === 0 ? pipe.column + 1 : 1,
+          ),
+        );
+      }
 
       const commodity = COMMODITY.exec(header);
       if (commodity !== null) {
@@ -476,7 +671,8 @@ export function stockSyntaxErrors(
       }
 
       if (transaction) {
-        // Stock checks a transaction's keys once it has read all of it.
+        // Stock checks a transaction's keys and tags lines once it has read
+        // all of it.
         const keys =
           failed === undefined
             ? duplicateMetadataKeys(lines, firstBodyLine)
@@ -486,6 +682,19 @@ export function stockSyntaxErrors(
             error(
               `${posting ? "Duplicate posting metadata field" : "Duplicate metadata field on entry"}: ${key}`,
               "DUPLICATE_METADATA",
+              "parse",
+              file,
+              line,
+            ),
+          );
+        }
+        const late =
+          failed === undefined ? lateTagsLinks(lines, firstBodyLine) : [];
+        for (const tagsLinks of late) {
+          fileErrors.push(
+            error(
+              `Tags or links not allowed after first Posting: ${tagsLinks}`,
+              "TAGS_AFTER_POSTING",
               "parse",
               file,
               line,

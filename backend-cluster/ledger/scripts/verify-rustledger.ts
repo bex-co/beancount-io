@@ -2746,6 +2746,172 @@ async function main(): Promise<void> {
     postingAccepted.valid,
     `what stock accepts stays clean: a positive, zero or -0 price, a full cost spec, a compound cost (got ${JSON.stringify(postingAccepted.errors.map((e) => `${e.line} ${e.message}`))})`,
   );
+  // w31/148: stock refuses a cost and a price in two currencies, a per-unit
+  // cost inside a total cost, a total price on a posting with no units, a
+  // tags or links line after the first posting, and a `|` between a header's
+  // strings. The engine (0.24.0) loads each clean, and books
+  // `10 QAXT {{100 # 5 USD}}` at 1005 USD where stock keeps the 5 USD total.
+  // The raw-engine assertion says when it catches up: delete that rule.
+  const parserLedger = (...lines: string[]): Record<string, string> => ({
+    "main.beancount": [
+      "2026-01-01 open Assets:Cash",
+      "2026-01-01 open Assets:Broker",
+      "2026-01-01 open Expenses:Food:Coffee",
+      "",
+      ...lines,
+      "",
+    ].join("\n"),
+  });
+  const parserRefused: Array<[string, string[], number, string, string]> = [
+    [
+      "a cost and a price in two currencies",
+      [
+        '2026-09-02 * "qa"',
+        "  Assets:Broker  10 QAXR {100.00 USD} @ 90.00 EUR",
+        "  Assets:Cash  -1000.00 USD",
+      ],
+      6,
+      "COST_PRICE_CURRENCY",
+      "Cost and price currencies must match: USD != EUR",
+    ],
+    [
+      "a per-unit cost inside a total cost",
+      [
+        '2026-09-02 * "qa"',
+        "  Assets:Broker  10 QAXT {{100 # 5 USD}}",
+        "  Assets:Cash",
+      ],
+      6,
+      "TOTAL_COST_PER_UNIT",
+      "Per-unit cost may not be specified using total cost syntax: 'CompoundAmount(number_per=Decimal('100'), number_total=Decimal('5'), currency='USD')'; ignoring per-unit cost",
+    ],
+    [
+      "a total price with no units",
+      [
+        '2026-09-02 * "qa"',
+        "  Assets:Cash  -10.00 USD",
+        "  Expenses:Food:Coffee  @@ 10.00 USD",
+      ],
+      7,
+      "TOTAL_PRICE_WITHOUT_UNITS",
+      "Total price on a posting without units: 10.00 USD.",
+    ],
+    [
+      "a tag line after the first posting",
+      [
+        '2026-09-02 * "qa"',
+        "  Assets:Cash  -1.00 USD",
+        "  #qa-late",
+        "  Expenses:Food:Coffee  1.00 USD",
+      ],
+      5,
+      "TAGS_AFTER_POSTING",
+      "Tags or links not allowed after first Posting: TagsLinks(tags={'qa-late'}, links=set())",
+    ],
+    [
+      "a link line after the first posting",
+      [
+        '2026-09-02 * "qa"',
+        "  Assets:Cash  -1.00 USD",
+        "  ^qa-link",
+        "  Expenses:Food:Coffee  1.00 USD",
+      ],
+      5,
+      "TAGS_AFTER_POSTING",
+      "Tags or links not allowed after first Posting: TagsLinks(tags=set(), links={'qa-link'})",
+    ],
+    [
+      "a pipe between the header's strings",
+      [
+        '2026-09-02 * "payee" | "narration"',
+        "  Assets:Cash  -1.00 USD",
+        "  Expenses:Food:Coffee  1.00 USD",
+      ],
+      5,
+      "P0024",
+      "Pipe symbol is deprecated.",
+    ],
+  ];
+  for (const [label, lines, line, code, message] of parserRefused) {
+    const files = parserLedger(...lines);
+    const raw = await rawValidate(files, "main.beancount");
+    assert(
+      raw.valid,
+      `the raw engine still loads ${label}, so the rule is load-bearing (got ${JSON.stringify(raw.errors.map((e) => e.message))})`,
+    );
+    const reported = await parseLedgerFiles(files, "main.beancount");
+    assert(
+      !reported.valid &&
+        reported.errors.some(
+          (e) =>
+            e.code === code &&
+            e.line === line &&
+            e.message === message &&
+            e.severity === "error",
+        ),
+      `${label} is reported on line ${line}, as stock refuses it (got ${JSON.stringify(reported.errors.map((e) => `${e.line} ${e.message}`))})`,
+    );
+  }
+  const totalCostWeight = await queryLedgerFiles(
+    parserLedger(
+      '2026-09-02 * "qa"',
+      "  Assets:Broker  10 QAXT {{100 # 5 USD}}",
+      "  Assets:Cash",
+    ),
+    "main.beancount",
+    "SELECT position WHERE account = 'Assets:Cash'",
+  );
+  assert(
+    JSON.stringify(totalCostWeight.rows).includes("-1005"),
+    `the engine still books {{100 # 5 USD}} at 1005 USD, which the error flags (got ${JSON.stringify(totalCostWeight.rows)})`,
+  );
+  const parserAccepted = await parseLedgerFiles(
+    parserLedger(
+      '2026-09-02 * "controls"',
+      "  Assets:Broker  10 QAXR {100 USD} @ 110 USD",
+      "  Assets:Broker  10 QAXT {{1005 USD}}",
+      "  Assets:Broker  10 QAXT {100 # 5 USD}",
+      "  Assets:Cash  -3010.00 USD",
+      "",
+      '2026-09-02 * "empty cost"',
+      "  Assets:Broker  10 QAXR {} @ 90 EUR",
+      "  Assets:Cash  -900.00 EUR",
+      "",
+      '2026-09-02 * "early tag"',
+      "  #early",
+      "  Assets:Cash  -10.00 USD",
+      "  Expenses:Food:Coffee  10.00 USD @@ 10.00 USD",
+    ),
+    "main.beancount",
+  );
+  assert(
+    parserAccepted.valid,
+    `what stock accepts stays clean: a cost and price in one currency, an empty cost, a total cost, a compound cost, a total price on units, a tag before the first posting (got ${JSON.stringify(parserAccepted.errors.map((e) => `${e.line} ${e.message}`))})`,
+  );
+  // On a load that fails to parse, the engine raises its own pipe error for
+  // some pipes and past `allow_pipe_separator`; the scan's replace it.
+  const pipeAfterParseError = await parseLedgerFiles(
+    parserLedger(
+      '2026-09-02 * "a" | "b"',
+      "  Assets:Cash  -1.00 USD",
+      "  Expenses:Food:Coffee  1.00 USD",
+      '2026-09-03 * "x" Assets:Cash',
+      "  Assets:Cash  -1.00 USD",
+      "  Expenses:Food:Coffee  1.00 USD",
+      'option "allow_pipe_separator" "TRUE"',
+      '2026-09-04 * "c" | "d"',
+      "  Assets:Cash  -1.00 USD",
+      "  Expenses:Food:Coffee  1.00 USD",
+    ),
+    "main.beancount",
+  );
+  deepStrictEqual(
+    pipeAfterParseError.errors
+      .filter((e) => /^Pipe symbol/u.test(e.message))
+      .map((e) => `${e.line} ${e.code} ${e.message}`),
+    ["5 P0024 Pipe symbol is deprecated."],
+    "a load that fails to parse reports each pipe stock does, once",
+  );
   // w31/121: stock refuses an account with a colon after it, a string where a
   // dated line's flag goes, and a number with no leading digit. The engine
   // (0.24.0) books `Assets:Cash:` to `Assets:Cash`, reads the flagless header
