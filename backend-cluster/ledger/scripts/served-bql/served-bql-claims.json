@@ -9,7 +9,7 @@
     "account",
     "number",
     "currency",
-    "cost",
+    "cost(position)",
     "weight",
     "balance",
     "position",

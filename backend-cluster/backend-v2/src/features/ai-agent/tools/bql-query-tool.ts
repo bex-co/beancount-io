@@ -12,7 +12,7 @@ const toolLogger = logger.child({ module: "tool:bql-query" });
 export const description =
   "Execute a BQL (Beancount Query Language) query against the user's ledger and return results. " +
   "BQL: SELECT cols [WHERE expr] [GROUP BY] [ORDER BY] [LIMIT n] | JOURNAL | BALANCES. " +
-  "Columns: date, year, month, flag, payee, narration, account, number, currency, cost, weight, " +
+  "Columns: date, year, month, flag, payee, narration, account, number, currency, cost(position), weight, " +
   "balance, position, tags, links, meta. " +
   "An unaggregated query returns one row per posting, not per transaction, so LIMIT 5 can span 3 transactions; GROUP BY and DISTINCT return one row per group or value. LIMIT bounds the returned rows. " +
   "Unlike bean-query, getprice() and convert() chain one hop through a third currency when the pair has no price either way: with VTI and EUR priced in USD, getprice('VTI', 'EUR') answers a rate, not NULL, and convert() turns VTI into EUR. " +

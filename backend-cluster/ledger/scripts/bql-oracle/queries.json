@@ -735,5 +735,41 @@
     "ledger": "description.bean",
     "source": "w31/161",
     "query": "SELECT count(*) WHERE description = 'Shop'"
+  },
+  {
+    "id": "cost-sign-per-posting",
+    "ledger": "cost-sign.bean",
+    "source": "w31/163",
+    "query": "SELECT date, account, number, cost(position), weight WHERE cost_number IS NOT NULL"
+  },
+  {
+    "id": "cost-sign-sum",
+    "ledger": "cost-sign.bean",
+    "source": "w31/163",
+    "query": "SELECT account, sum(cost(position)), sum(weight) WHERE cost_number IS NOT NULL GROUP BY account ORDER BY account"
+  },
+  {
+    "id": "cost-column-reduction",
+    "ledger": "cost-sign.bean",
+    "source": "w31/163",
+    "query": "SELECT date, number, cost, cost(position) WHERE account = 'Assets:Broker:VTI'"
+  },
+  {
+    "id": "cost-column-sum",
+    "ledger": "cost-sign.bean",
+    "source": "w31/163",
+    "query": "SELECT account, sum(cost) WHERE cost_number IS NOT NULL GROUP BY account"
+  },
+  {
+    "id": "cost-alias-order",
+    "ledger": "cost-sign.bean",
+    "source": "w31/163",
+    "query": "SELECT date, -number * cost_number AS cost WHERE number < 0 AND cost_number IS NOT NULL ORDER BY cost"
+  },
+  {
+    "id": "cost-alias-group",
+    "ledger": "cost-sign.bean",
+    "source": "w31/163",
+    "query": "SELECT cost_number AS cost, sum(number) GROUP BY cost ORDER BY cost"
   }
 ]

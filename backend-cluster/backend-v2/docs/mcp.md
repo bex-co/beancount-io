@@ -1872,6 +1872,16 @@ transaction. Filter on `payee` and `narration`, which match exactly
 (`WHERE payee = 'Shop'`). See the
 [ledger notes](../../ledger/README.md#bql-description-with-an-empty-payee-or-narration).
 
+BQL has no bare `cost` column here, as stock has none. The engine had one that
+read a sale's cost without its minus sign (`-2 VTI {100.00 USD}` read
+`200.00 USD`), so `sum(cost)` added sales to the cost basis. The query is now
+refused with a message that names `cost(position)`, which keeps the sign
+(`-200.00 USD`), and `number * cost_number` for the signed cost number.
+`cost(position)` reads a posting held without cost as its units, so add
+`WHERE cost_number IS NOT NULL` to keep only the lots. An alias named `cost`
+(`-number * cost_number AS cost`) is unaffected. See the
+[ledger notes](../../ledger/README.md#bql-cost-column-is-refused).
+
 ```json
 { "ok": true, "result": "tool-specific payload" }
 ```

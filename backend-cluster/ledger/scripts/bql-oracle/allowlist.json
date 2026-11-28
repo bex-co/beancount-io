@@ -321,16 +321,6 @@
     "note": "The engine implements window functions that stock 0.2.0 refuses."
   },
   {
-    "id": "cost-column",
-    "differences": [
-      "outcome"
-    ],
-    "references": [
-      ".pm/w23/done/022.md"
-    ],
-    "note": "The engine accepts a cost column that stock 0.2.0 does not have."
-  },
-  {
     "id": "amount-from-balances",
     "differences": [
       "outcome"

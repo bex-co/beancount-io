@@ -170,11 +170,180 @@
       ],
       "source": "w23/154"
     },
+    "cost-alias-group": {
+      "columns": [
+        {
+          "dtype": "Decimal",
+          "name": "cost"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "sum(number)"
+        }
+      ],
+      "ledger": "cost-sign.bean",
+      "query": "SELECT cost_number AS cost, sum(number) GROUP BY cost ORDER BY cost",
+      "rows": [
+        [
+          null,
+          "0.00"
+        ],
+        [
+          "100.00",
+          "0"
+        ]
+      ],
+      "source": "w31/163"
+    },
+    "cost-alias-order": {
+      "columns": [
+        {
+          "dtype": "date",
+          "name": "date"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "cost"
+        }
+      ],
+      "ledger": "cost-sign.bean",
+      "query": "SELECT date, -number * cost_number AS cost WHERE number < 0 AND cost_number IS NOT NULL ORDER BY cost",
+      "rows": [
+        [
+          "2026-02-05",
+          "200.00"
+        ],
+        [
+          "2026-03-01",
+          "300.00"
+        ]
+      ],
+      "source": "w31/163"
+    },
     "cost-column": {
       "error": "compile",
       "ledger": "main.bean",
       "query": "SELECT cost WHERE currency = 'STOCK'",
       "source": "w23/169"
+    },
+    "cost-column-reduction": {
+      "error": "compile",
+      "ledger": "cost-sign.bean",
+      "query": "SELECT date, number, cost, cost(position) WHERE account = 'Assets:Broker:VTI'",
+      "source": "w31/163"
+    },
+    "cost-column-sum": {
+      "error": "compile",
+      "ledger": "cost-sign.bean",
+      "query": "SELECT account, sum(cost) WHERE cost_number IS NOT NULL GROUP BY account",
+      "source": "w31/163"
+    },
+    "cost-sign-per-posting": {
+      "columns": [
+        {
+          "dtype": "date",
+          "name": "date"
+        },
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "number"
+        },
+        {
+          "dtype": "Amount",
+          "name": "cost(position)"
+        },
+        {
+          "dtype": "Amount",
+          "name": "weight"
+        }
+      ],
+      "ledger": "cost-sign.bean",
+      "query": "SELECT date, account, number, cost(position), weight WHERE cost_number IS NOT NULL",
+      "rows": [
+        [
+          "2026-01-05",
+          "Assets:Broker:VTI",
+          "5",
+          [
+            "500.00",
+            "USD"
+          ],
+          [
+            "500.00",
+            "USD"
+          ]
+        ],
+        [
+          "2026-02-05",
+          "Assets:Broker:VTI",
+          "-2",
+          [
+            "-200.00",
+            "USD"
+          ],
+          [
+            "-200.00",
+            "USD"
+          ]
+        ],
+        [
+          "2026-03-01",
+          "Liabilities:Short",
+          "-3",
+          [
+            "-300.00",
+            "USD"
+          ],
+          [
+            "-300.00",
+            "USD"
+          ]
+        ]
+      ],
+      "source": "w31/163"
+    },
+    "cost-sign-sum": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "sum(cost(position))"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "sum(weight)"
+        }
+      ],
+      "ledger": "cost-sign.bean",
+      "query": "SELECT account, sum(cost(position)), sum(weight) WHERE cost_number IS NOT NULL GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Broker:VTI",
+          [
+            "300.00 USD"
+          ],
+          [
+            "300.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Short",
+          [
+            "-300.00 USD"
+          ],
+          [
+            "-300.00 USD"
+          ]
+        ]
+      ],
+      "source": "w31/163"
     },
     "date-minus-date": {
       "columns": [
@@ -3651,5 +3820,5 @@
       "source": "w23/169"
     }
   },
-  "sourceHash": "5a1e92442a3cc763c3067ee9df60aff3bc830f79d7152c9b86da11d3b7d2eea7"
+  "sourceHash": "bef605f41563584cd2c3c1ba2654188a82f1bd8d4e37a9ad39feba2a6026bdbf"
 }

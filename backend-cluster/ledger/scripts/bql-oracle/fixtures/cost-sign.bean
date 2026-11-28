@@ -1,0 +1,25 @@
+; w31/163: a purchase, a sale and a short opening, all held at cost.
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Broker:VTI VTI
+2026-01-01 open Assets:Broker:Cash USD
+2026-01-01 open Liabilities:Short VTI
+2026-01-01 open Income:Gains USD
+2026-01-01 open Equity:Opening USD
+
+2026-01-02 * "Fund"
+  Assets:Broker:Cash   1000.00 USD
+  Equity:Opening
+
+2026-01-05 * "Buy VTI"
+  Assets:Broker:VTI    5 VTI {100.00 USD}
+  Assets:Broker:Cash
+
+2026-02-05 * "Sell VTI"
+  Assets:Broker:VTI   -2 VTI {100.00 USD} @ 110.00 USD
+  Assets:Broker:Cash   220.00 USD
+  Income:Gains
+
+2026-03-01 * "Short VTI"
+  Liabilities:Short   -3 VTI {100.00 USD}
+  Assets:Broker:Cash

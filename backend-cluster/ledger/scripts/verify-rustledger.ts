@@ -350,6 +350,111 @@ async function verifyPostingCostFilters(): Promise<void> {
 }
 
 /**
+ * The engine's `cost` column (w31/163). On a reduction it reads the lot's
+ * cost without its sign, so the query path refuses the bare column and names
+ * `cost(position)`, which keeps the sign. The raw check turns red once the
+ * engine signs the column: then `cost-column-guard.ts` can go.
+ */
+async function verifyCostColumnSign(): Promise<void> {
+  const source = `option "operating_currency" "USD"
+2026-01-01 open Assets:Broker:VTI VTI
+2026-01-01 open Assets:Broker:Cash USD
+2026-01-01 open Liabilities:Short VTI
+2026-01-01 open Income:Gains USD
+2026-01-01 open Equity:Opening USD
+
+2026-01-02 * "Fund"
+  Assets:Broker:Cash   1000.00 USD
+  Equity:Opening
+
+2026-01-05 * "Buy VTI"
+  Assets:Broker:VTI    5 VTI {100.00 USD}
+  Assets:Broker:Cash
+
+2026-02-05 * "Sell VTI"
+  Assets:Broker:VTI   -2 VTI {100.00 USD} @ 110.00 USD
+  Assets:Broker:Cash   220.00 USD
+  Income:Gains
+
+2026-03-01 * "Short VTI"
+  Liabilities:Short   -3 VTI {100.00 USD}
+  Assets:Broker:Cash
+`;
+  const files = { "main.bean": source };
+  const raw = await withLedger(files, "main.bean", (ledger) =>
+    ledger.query(
+      "SELECT account, cost, cost(position) WHERE number < 0 AND cost_number IS NOT NULL",
+    ),
+  );
+  deepStrictEqual(
+    JSON.stringify(raw.rows),
+    JSON.stringify([
+      [
+        "Assets:Broker:VTI",
+        { number: "200.00", currency: "USD" },
+        { number: "-200.00", currency: "USD" },
+      ],
+      [
+        "Liabilities:Short",
+        { number: "300.00", currency: "USD" },
+        { number: "-300.00", currency: "USD" },
+      ],
+    ]),
+    "the raw engine still reads a reduction's and a short's cost column without its sign, so the cost column guard is load-bearing",
+  );
+  const service = new LedgerShellService(
+    singleFileRepoFactory(source) as never,
+    {} as never,
+  );
+  const shell = (query: string) =>
+    service.queryShell({ ledgerId: "synthetic/cost", userId: undefined, query });
+  for (const query of [
+    "SELECT date, number, cost, cost(position), weight WHERE account = 'Assets:Broker:VTI'",
+    "SELECT sum(cost), sum(cost(position)) WHERE account = 'Assets:Broker:VTI'",
+    "SELECT account, sum(cost) GROUP BY account",
+    "SELECT Cost WHERE number < 0",
+    "SELECT sum(cost) AS cost GROUP BY account",
+  ]) {
+    await rejects(
+      shell(query),
+      (error: Error) =>
+        error instanceof BadUserInputError &&
+        error.message.includes("The `cost` column is not supported") &&
+        error.message.includes("Use cost(position)"),
+      `the query path refuses ${query}`,
+    );
+  }
+  const signed = await shell(
+    "SELECT account, sum(cost(position)), sum(weight) WHERE cost_number IS NOT NULL GROUP BY account ORDER BY account",
+  );
+  deepStrictEqual(
+    signed.table?.rows,
+    [
+      ["Assets:Broker:VTI", { USD: "300.00" }, { USD: "300.00" }],
+      ["Liabilities:Short", { USD: "-300.00" }, { USD: "-300.00" }],
+    ],
+    "cost(position) keeps a reduction's and a short's sign",
+  );
+  const aliased = await shell(
+    "SELECT -number * cost_number AS cost WHERE number < 0 AND cost_number IS NOT NULL ORDER BY cost",
+  );
+  deepStrictEqual(
+    aliased.table?.rows,
+    [["200.00"], ["300.00"]],
+    "an alias named cost still answers, and ORDER BY reads it",
+  );
+  const atCost = await shell("BALANCES AT cost WHERE account ~ 'VTI'");
+  deepStrictEqual(
+    atCost.table?.rows,
+    [["Assets:Broker:VTI", { USD: "300.00" }]],
+    "BALANCES AT cost still answers",
+  );
+  console.log(
+    "✓ the bare cost column is refused (the engine drops a reduction's sign); cost(position), an alias named cost and AT cost answer",
+  );
+}
+
+/**
  * RAW WASM validity — deliberately BYPASSES the sanitization pre-pass
  * (`neutralizeIncludedOptionsAndPlugins` + fava-plugin stripping) that the
  * production `parseLedgerFiles` pipeline applies. Used below to CONTRAST raw
@@ -4775,12 +4880,12 @@ async function main(): Promise<void> {
       ["Amount", "Decimal", "Amount"],
     ],
     // w23/169: `weight` was Decimal-ruled against Amount values;
-    // MCP-only `cost` (default scope) and `account_balance` had no rule.
+    // MCP-only `account_balance` had no rule. (The MCP-only `cost` column
+    // had none either; it is refused now, w31/163.)
     [
       "SELECT weight, account_balance FROM postings WHERE FALSE",
       ["Amount", "Inventory"],
     ],
-    ["SELECT cost WHERE FALSE", ["Amount"]],
     // w23/170: `meta` is object-typed on both tables at every endpoint —
     // postings serves it pre-stringified, entries as the dict. This
     // fixture carries no custom metadata, so LIMIT 1 pins the blank
@@ -7402,6 +7507,8 @@ poptag #qa-pushed
   );
 
   await verifyPostingCostFilters();
+  // w31/163: the engine's cost column drops a reduction's sign.
+  await verifyCostColumnSign();
   // w23/m20: replay the stock beanquery oracle through the shell service.
   await verifyFilteredPrint();
   await verifyBqlOracle();

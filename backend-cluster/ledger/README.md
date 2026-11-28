@@ -179,6 +179,29 @@ The refusal goes once the engine books the transfer; `yarn verify:rustledger`
 fails its "raw engine still ignores FROM … CLEAR" check when it does. Engine
 gaps are tracked upstream (w23/blocked/022).
 
+## BQL `cost` column is refused
+
+Stock beanquery has no `cost` column. The pinned engine has one, and on a sale
+or a short opening it reads the lot's cost without its minus sign:
+`-2 VTI {100.00 USD}` reads `200.00 USD`, where `cost(position)` and `weight`
+read `-200.00 USD`. So `sum(cost)` added every sale to the cost basis (10710.40
+USD on an account whose basis is 4559.80). The shell refuses the bare column
+before the query runs (`The cost column is not supported …`, w31/163) and names
+`cost(position)`, which keeps the sign, and `number * cost_number` for the
+signed cost number. It does not rewrite `cost` to `cost(position)`: that call
+reads a posting held without cost as its units, where the column reads NULL,
+so `WHERE cost IS NOT NULL` would quietly match every posting. Add
+`WHERE cost_number IS NOT NULL` to keep only the postings held at cost.
+
+An alias named `cost` still works (`-number * cost_number AS cost`), and
+`GROUP BY`, `ORDER BY`, `HAVING` and `PIVOT BY` read it, as the engine does.
+So do `cost(…)` calls, `BALANCES AT cost` and `JOURNAL … AT cost`, and an outer
+query's `cost` read from `FROM (SELECT … AS cost …)`. `FROM payee` and the other
+column folds no longer expose the column to the outer query. The refusal goes
+once the engine signs the column; `yarn verify:rustledger` fails its "raw engine
+still reads a reduction's and a short's cost column without its sign" check when
+it does.
+
 ## BQL `balances.discrepancy`
 
 The pinned engine leaves `balances.discrepancy` NULL even for a failing

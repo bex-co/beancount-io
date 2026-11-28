@@ -76,12 +76,13 @@ export const FOLD_COLUMNS: ReadonlySet<string> = new Set([
  * Every projectable postings column, for the wrap's inner select list.
  *
  * The inner query must expose what the outer query may project — including
- * the columns `SELECT *` hides (`balance`, `cost`, …) — or a hidden-column
+ * the columns `SELECT *` hides (`balance`, `weight`, …) — or a hidden-column
  * projection would fail wrapped while working bare. `transaction` is not
  * projectable (the engine rejects it in both spots) and stays out; `id`
  * stays out too (w23/153) — any outer `id` projection refuses at the id
  * guard before the engine runs, so the inner list never needs to expose
- * it, and listing it would trip that guard on every wrapped query.
+ * it, and listing it would trip that guard on every wrapped query. `cost`
+ * stays out for the same reason (w31/163, `cost-column-guard.ts`).
  * Order: the engine's `SELECT *` order first, then the hidden columns
  * alphabetically; the order is unobservable (a star outer keeps a star
  * inner, and anything else names its columns).
@@ -95,7 +96,6 @@ const INNER_COLUMNS = [
   "position",
   "accounts",
   "balance",
-  "cost",
   "cost_currency",
   "cost_date",
   "cost_label",

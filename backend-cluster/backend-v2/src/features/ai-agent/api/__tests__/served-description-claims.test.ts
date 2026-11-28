@@ -45,8 +45,10 @@ beforeAll(async () => {
 
 it("lists only BQL columns the engine has", () => {
   const bql = served.tools.get("runBqlQuery")!;
-  expect(bql).toContain("cost, weight, balance");
+  expect(bql).toContain("cost(position), weight, balance");
   expect(bql).not.toMatch(/\bchange\b/);
+  // w31/163: the engine's bare `cost` column drops a sale's sign and is refused.
+  expect(bql).not.toMatch(/\bcost\b(?!\()/);
 });
 
 it("says where the directives addLedgerEntries excludes go", () => {
