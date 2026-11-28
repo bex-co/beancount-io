@@ -265,6 +265,36 @@ describe("csv-validator", () => {
       }
     });
 
+    it("refuses point decimals in a comma column, as the CLI importer does (w0/007)", () => {
+      // The column's comma is the decimal mark, so a dot can only be EU
+      // grouping: `1.25` has no grouping reading and the CLI refuses it
+      // rather than guessing. Each token below is refused by
+      // `bea_engine.csv_mapper._parse_amount_cell` with decimal_comma=True.
+      for (const token of [
+        "1.25",
+        "100.00",
+        "12.",
+        ".5",
+        "1.2500",
+        "-0.0",
+        "0.00",
+        "00.50",
+      ]) {
+        const result = parseAmount(token, { decimalComma: true });
+        expect(result.valid, token).toBe(false);
+        expect(result.reason, token).toBe("invalid");
+      }
+      // The column's own spellings keep working.
+      expect(parseAmount("1.000,00", { decimalComma: true })).toMatchObject({
+        valid: true,
+        decimal: "1000.00",
+      });
+      expect(parseAmount("-1.000", { decimalComma: true })).toMatchObject({
+        valid: true,
+        decimal: "-1000",
+      });
+    });
+
     it("refuses an amount marked negative twice", () => {
       for (const token of ["(-5.00)", "-5.00-", "(5.00-)"]) {
         expect(parseAmount(token).valid, token).toBe(false);
