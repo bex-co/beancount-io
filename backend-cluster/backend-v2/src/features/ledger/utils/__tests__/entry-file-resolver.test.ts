@@ -67,3 +67,84 @@ describe("resolveEntryFile empty-option fallback", () => {
     expect(resolveEntryFile("Transaction", DATE, opts())).toBe("main.bean");
   });
 });
+
+// w31/152: Beancount reads a routing option's `./txns/{year}.bean` as
+// `txns/{year}.bean`, as it reads that include. Used as written, the `./`
+// failed the repository path check, which blamed the call's `paths[0]`.
+describe("resolveEntryFile path normalization", () => {
+  it.each([
+    ["./main.bean", "main.bean"],
+    ["./txns/{year}.bean", "txns/2026.bean"],
+    ["././txns//{year}/./{month}.bean", "txns/2026/03.bean"],
+    ["txns/old/../{year}.bean", "txns/2026.bean"],
+  ])("routes %j to %j", (route, path) => {
+    expect(
+      resolveEntryFile("Transaction", DATE, opts({ transaction_file: route })),
+    ).toBe(path);
+  });
+
+  it.each([
+    ["Price", { price_file: "./prices.bean" }, "prices.bean"],
+    ["Document", { document_file: "./docs/{year}.bean" }, "docs/2026.bean"],
+    ["Custom", { default_file: "./books/main.bean" }, "books/main.bean"],
+  ] as const)(
+    "normalizes the %s route and the default_file fallback",
+    (type, overrides, path) => {
+      expect(resolveEntryFile(type, DATE, opts(overrides))).toBe(path);
+    },
+  );
+
+  function refusal(overrides: Partial<BcioOptionsPublic>) {
+    try {
+      resolveEntryFile("Transaction", DATE, opts(overrides));
+    } catch (error) {
+      return error as {
+        category: string;
+        message: string;
+        metadata?: { field?: string; hint?: string };
+      };
+    }
+    throw new Error("expected a refusal");
+  }
+
+  it.each([
+    ["../x.bean", '"../x.bean", which is outside the ledger'],
+    ["./../x.bean", '("./../x.bean") routes this entry to "../x.bean"'],
+    ["txns/../../{year}.bean", '"../2026.bean", which is outside the ledger'],
+    ["/x.bean", '"/x.bean", which is outside the ledger'],
+  ])("refuses %j as outside the ledger, naming the option", (route, quoted) => {
+    const error = refusal({ transaction_file: route });
+    expect(error.category).toBe("BAD_USER_INPUT");
+    expect(error.message).toContain("The ledger's `transaction_file` option");
+    expect(error.message).toContain(quoted);
+    expect(error.metadata?.field).toBeUndefined();
+    expect(error.metadata?.hint).toContain(
+      'custom "beancountio-option" "transaction_file"',
+    );
+    expect(error.metadata?.hint).toContain("`path` on `appendLedgerText`");
+  });
+
+  it.each([
+    ["txns/{year}/", 'ends with "/"'],
+    ["txns\\{year}.bean", 'uses "\\"'],
+    [".git/{year}.bean", "is inside .git"],
+    ["{year}/..", 'has a "." or ".." part'],
+  ])(
+    "refuses %j for the path rule it breaks, naming the option",
+    (route, rule) => {
+      const error = refusal({ transaction_file: route });
+      expect(error.category).toBe("BAD_USER_INPUT");
+      expect(error.message).toContain("`transaction_file`");
+      expect(error.message).toContain(`which ${rule}`);
+      expect(error.metadata?.field).toBeUndefined();
+    },
+  );
+
+  it("names default_file when the fallback is at fault", () => {
+    const error = refusal({ default_file: "../main.bean" });
+    expect(error.message).toContain("The ledger's `default_file` option");
+    expect(error.metadata?.hint).toContain(
+      'custom "beancountio-option" "default_file"',
+    );
+  });
+});

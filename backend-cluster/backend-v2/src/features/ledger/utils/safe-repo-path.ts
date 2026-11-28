@@ -26,19 +26,29 @@ export function assertSafeRepoPath(
   if (typeof path !== "string" || path.length === 0) {
     throw new BadUserInputError("File path must not be empty", field);
   }
-  const refuse = (rule: string) => refusePath(path, field, rule);
-  if (path.includes("\0")) refuse("contains a NUL (U+0000) character");
-  if (path.includes("\\")) refuse('uses "\\": separate folders with "/"');
+  const rule = unsafeRepoPathRule(path);
+  if (rule) refusePath(path, field, rule);
+}
+
+/**
+ * The rule a non-empty `path` breaks under {@link assertSafeRepoPath}, worded
+ * to follow the quoted path, or `undefined` when it breaks none. A path that
+ * came from the ledger rather than the call is refused with its own message
+ * (w31/152), so the rules are readable apart from the throw.
+ */
+export function unsafeRepoPathRule(path: string): string | undefined {
+  if (path.includes("\0")) return "contains a NUL (U+0000) character";
+  if (path.includes("\\")) return 'uses "\\": separate folders with "/"';
   if (path.startsWith("/"))
-    refuse('starts with "/": write it relative to the ledger root');
-  if (path.endsWith("/")) refuse('ends with "/": remove the trailing "/"');
+    return 'starts with "/": write it relative to the ledger root';
+  if (path.endsWith("/")) return 'ends with "/": remove the trailing "/"';
   const segments = path.split("/");
-  if (segments.includes(""))
-    refuse('has an empty part: remove the doubled "/"');
+  if (segments.includes("")) return 'has an empty part: remove the doubled "/"';
   if (segments.some((segment) => segment === "." || segment === ".."))
-    refuse('has a "." or ".." part: write it relative to the ledger root');
+    return 'has a "." or ".." part: write it relative to the ledger root';
   if (segments.some((segment) => segment.toLowerCase() === ".git"))
-    refuse("is inside .git, which can't be read or written");
+    return "is inside .git, which can't be read or written";
+  return undefined;
 }
 
 /** Windows device names, with or without an extension. */

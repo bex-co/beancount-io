@@ -1,4 +1,8 @@
+import { posix } from "path";
 import { type BcioOptionsPublic } from "@/foundation/fava/Api";
+import { BadUserInputError } from "@/shared/errors";
+import { LEDGER_ENTRY_POINT } from "./ledger-entry-point";
+import { unsafeRepoPathRule } from "./safe-repo-path";
 
 type EntryType =
   | "Transaction"
@@ -13,6 +17,25 @@ type EntryType =
   | "Commodity"
   | "Custom"
   | "Event";
+
+/** A `custom "beancountio-option"` that names the file entries go to. */
+type RoutingOption = Extract<keyof BcioOptionsPublic, `${string}_file`>;
+
+/** The option each entry type is routed by ahead of `default_file`. */
+const TYPE_OPTION: Record<EntryType, RoutingOption | null> = {
+  Transaction: "transaction_file",
+  Open: "account_file",
+  Close: "account_file",
+  Price: "price_file",
+  Balance: "balance_file",
+  Note: "note_file",
+  Pad: "pad_file",
+  Document: "document_file",
+  Budget: "budget_file",
+  Commodity: null,
+  Custom: null,
+  Event: null,
+};
 
 /**
  * Interpolates date-based template variables in a file path template.
@@ -39,35 +62,63 @@ function interpolateFilePath(template: string, date: Date): string {
 }
 
 /**
+ * The repository file an option's interpolated value names. The value is a
+ * path from the ledger root, which Beancount reads the way it reads an
+ * `include` in the entry point: `./txns/2026.bean` is `txns/2026.bean`. Used
+ * as written, the `./` failed the repository path check, which then blamed
+ * the call's `paths[0]` although no caller sent a path (w31/152). Normalized
+ * here, the existing-file lookup, the include check and the include line all
+ * see the file the ledger loads. A value that still leads outside the ledger,
+ * or breaks another path rule, is the option's fault, so the refusal names
+ * the option and not an argument.
+ */
+function routedPath(
+  option: RoutingOption,
+  value: string,
+  interpolated: string,
+): string {
+  const path = interpolated.startsWith("/")
+    ? interpolated
+    : posix.normalize(
+        posix.join(posix.dirname(LEDGER_ENTRY_POINT), interpolated),
+      );
+  const outside =
+    path.startsWith("/") || path === ".." || path.startsWith("../");
+  const rule = outside ? "is outside the ledger" : unsafeRepoPathRule(path);
+  if (!rule) return path;
+  const written = value === path ? "" : ` (${JSON.stringify(value)})`;
+  throw new BadUserInputError(
+    `The ledger's \`${option}\` option${written} routes this entry to ${JSON.stringify(path)}, which ${rule}`,
+    undefined,
+    `Fix the ledger's \`custom "beancountio-option" "${option}"\` line so it names a file inside the ledger, as a path from the ledger root, or pass \`path\` on \`appendLedgerText\` to write to a file the ledger already loads.`,
+  );
+}
+
+/**
  * Resolves the target file path for a given entry type and date, based on
  * the beancountio-option routing configuration.
  *
  * Resolution order: entry-type-specific file → default_file → "main.bean"
- * The resolved path is then interpolated with date-based template variables.
+ * The resolved path is then interpolated with date-based template variables
+ * and normalized to the repository path the ledger loads.
  */
 export function resolveEntryFile(
   entryType: EntryType,
   entryDate: Date,
   opts: BcioOptionsPublic,
 ): string {
-  const typeMap: Record<EntryType, string | null> = {
-    Transaction: opts.transaction_file,
-    Open: opts.account_file,
-    Close: opts.account_file,
-    Price: opts.price_file,
-    Balance: opts.balance_file,
-    Note: opts.note_file,
-    Pad: opts.pad_file,
-    Document: opts.document_file,
-    Budget: opts.budget_file,
-    Commodity: null,
-    Custom: null,
-    Event: null,
-  };
   // An option set to the empty string (a valueless `custom
   // "beancountio-option" "transaction_file"` stores `""`, mirroring Python)
   // is unset, not a file named "": fall through at each level so the order
   // above holds.
-  const template = typeMap[entryType] || opts.default_file || "main.bean";
-  return interpolateFilePath(template, entryDate);
+  const typeOption = TYPE_OPTION[entryType];
+  const option =
+    typeOption && opts[typeOption]
+      ? typeOption
+      : opts.default_file
+        ? "default_file"
+        : null;
+  if (!option) return LEDGER_ENTRY_POINT;
+  const value = opts[option]!;
+  return routedPath(option, value, interpolateFilePath(value, entryDate));
 }

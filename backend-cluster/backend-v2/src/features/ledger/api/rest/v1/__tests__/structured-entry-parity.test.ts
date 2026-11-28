@@ -2474,6 +2474,119 @@ describe.each(["rest", "gql", "mcp"])(
   },
 );
 
+// w31/152: Beancount reads a routing option's `./txns/{year}.bean` as
+// `txns/{year}.bean`. Sent as written, each entry's `filename` failed the
+// ledger service's path check, so every routed transaction was refused.
+describe.each(["rest", "gql", "mcp"])(
+  "a routing option written with a leading ./ via %s",
+  (surface) => {
+    const previewOpts = () =>
+      surface === "mcp" ? { dry_run: true } : { dryRun: true };
+    const coffee = [
+      {
+        type: "transaction",
+        entry: {
+          date: "2026-09-02",
+          flag: "*",
+          payee: "CAFE",
+          narration: "coffee",
+          postings: [
+            {
+              account: "Expenses:Food",
+              units: { number: "4.50", currency: "USD" },
+            },
+            { account: "Assets:Cash" },
+          ],
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+
+    it("previews and commits to the file Beancount reads", async () => {
+      const f = await fixture();
+      f.state.transactionFile = "./txns/{year}.bean";
+      f.state.missingFiles.add("txns/2026.bean");
+      try {
+        const dry = await f.call(surface, coffee, previewOpts());
+        expect(dry.success).toBe(true);
+        expect(
+          (dry.result as { preview: { path: string }[] }).preview.map(
+            ({ path }) => path,
+          ),
+        ).toEqual(["txns/2026.bean"]);
+        expect(f.createFile).not.toHaveBeenCalled();
+        expect(f.committed).toEqual([]);
+
+        expect((await f.call(surface, coffee)).success).toBe(true);
+        expect(f.committed).toEqual([
+          expect.objectContaining({ filename: "txns/2026.bean" }),
+        ]);
+        expect(f.createFile).toHaveBeenCalledTimes(1);
+        expect(f.createFile.mock.calls[0]?.[2]).toMatchObject({
+          path: "txns/2026.bean",
+        });
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("updates an existing txns/2026.bean without creating it again", async () => {
+      const f = await fixture();
+      f.state.transactionFile = "./txns/{year}.bean";
+      try {
+        expect((await f.call(surface, coffee)).success).toBe(true);
+        expect(f.committed).toEqual([
+          expect.objectContaining({ filename: "txns/2026.bean" }),
+        ]);
+        expect(f.createFile).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("refuses an option that leads outside the ledger, naming the option", async () => {
+      const f = await fixture();
+      f.state.transactionFile = "../x.bean";
+      try {
+        for (const opts of [previewOpts(), {}]) {
+          const result = await f.call(surface, coffee, opts);
+          expect(result.success).toBe(false);
+          const message =
+            'The ledger\'s `transaction_file` option routes this entry to "../x.bean", which is outside the ledger';
+          if (surface === "gql") {
+            const gqlError = result.errors![0];
+            const formatted = formatError(gqlError.toJSON(), gqlError);
+            expect(formatted).toMatchObject({
+              message,
+              extensions: { code: "BAD_USER_INPUT" },
+            });
+            expect(formatted.extensions).not.toHaveProperty("field");
+          } else {
+            const { error } = (
+              surface === "rest" ? result.result : result.full
+            ) as {
+              error: {
+                code: string;
+                message: string;
+                hint?: string;
+                metadata?: { field?: string; hint?: string };
+              };
+            };
+            expect(error).toMatchObject({ code: "BAD_USER_INPUT", message });
+            expect(error.metadata?.field).toBeUndefined();
+            expect(error.hint ?? error.metadata?.hint).toContain(
+              'custom "beancountio-option" "transaction_file"',
+            );
+          }
+        }
+        expect(f.write).not.toHaveBeenCalled();
+        expect(f.createFile).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
 const overCapBatch = Array.from({ length: MAX_BULK_ENTRIES + 1 }, () => ({
   type: "note",
   entry: { date, account: "Assets:Cash", content: "bulk" },

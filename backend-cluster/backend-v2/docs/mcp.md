@@ -820,8 +820,12 @@ anywhere else would never appear in a report. Create and `include` a new file
 first. A file the routing rules pick that nothing includes — a new year's file
 under per-year includes — gains an `include` in `main.bean` in the same commit,
 and the message says so ("main.bean now includes txns/2027.bean"); a glob
-include that already covers it needs nothing (w23/062). The same applies to
-`addLedgerEntries`. A file whose own directives are out of date order gets
+include that already covers it needs nothing (w23/062). An option's file is a
+path from the ledger root, read the way Beancount reads an `include` in
+`main.bean`, so `./txns/{year}.bean` routes to `txns/2026.bean`. One that
+leads outside the ledger (`../x.bean`, `/x.bean`) is refused as
+`BAD_USER_INPUT` naming the option, whose `custom "beancountio-option"` line
+is what to fix (w31/152). The same applies to `addLedgerEntries`. A file whose own directives are out of date order gets
 them appended, and says so in `appendedUnsorted`.
 
 Before committing, it bean-checks the projected ledger. The ledger's check is

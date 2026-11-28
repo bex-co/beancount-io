@@ -1187,6 +1187,160 @@ describe("appending Beancount text through the real adapters", () => {
     );
   });
 
+  // w31/152: Beancount reads a routing option's `./txns/{year}.bean` as
+  // `txns/{year}.bean`. Used as written, the `./` failed the repository path
+  // check, which named the call's `paths[0]` though no caller sent a path.
+  describe("a routing option written with a leading ./", () => {
+    /** The refusal as each surface reports it: code, message, field, hint. */
+    const refusal = (surface: "rest" | "gql" | "mcp", result: unknown) => {
+      const { ok, error } = result as { ok: boolean; error: never };
+      expect(ok).toBe(false);
+      if (surface === "gql") {
+        const gqlError = error as {
+          toJSON: () => { message: string };
+        };
+        const formatted = formatError(gqlError.toJSON(), gqlError as never);
+        const extensions = (formatted.extensions ?? {}) as Record<
+          string,
+          unknown
+        >;
+        return {
+          code: extensions.code,
+          message: formatted.message,
+          field: extensions.field,
+          hint: extensions.hint,
+        };
+      }
+      const { code, message, hint, metadata } = error as Record<
+        string,
+        never
+      > & { metadata?: Record<string, unknown> };
+      return {
+        code,
+        message,
+        field: metadata?.field,
+        hint: hint ?? metadata?.hint,
+      };
+    };
+
+    it.each(["rest", "gql", "mcp"] as const)(
+      "routes to the file Beancount reads, including it, on preview and commit via %s",
+      async (surface) => {
+        const f = await fixture();
+        f.state.routeTransactionsTo = "./txns/{year}.bean";
+        f.state.sourceFiles = ["main.bean"];
+        try {
+          const dry = await f.call(surface, { text: TXN, dryRun: true });
+          expect(dry.ok).toBe(true);
+          const preview = dry.ok ? (dry.data as Record<string, never>) : {};
+          expect(JSON.stringify(preview)).toContain(
+            "Would add 1 directive to txns/2026.bean; main.bean would include txns/2026.bean",
+          );
+          expect(
+            (preview.diff as { path: string }[]).map(({ path }) => path),
+          ).toEqual(["txns/2026.bean", "main.bean"]);
+          expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+
+          const result = await f.call(surface, { text: TXN });
+          expect(result.ok).toBe(true);
+          const data = result.ok ? (result.data as Record<string, never>) : {};
+          expect(data.wrote).toEqual([{ path: "txns/2026.bean", line: 1 }]);
+          expect(f.commits).toHaveLength(1);
+          expect(f.commits[0].files).toEqual([
+            expect.objectContaining({
+              operation: "create",
+              path: "txns/2026.bean",
+            }),
+            expect.objectContaining({ operation: "update", path: "main.bean" }),
+          ]);
+          expect(f.state.files.get("main.bean")).toBe(
+            `${EXISTING.trimEnd()}\ninclude "txns/2026.bean"\n`,
+          );
+          expect([...f.state.files.keys()]).not.toContain("./txns/2026.bean");
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it.each(["rest", "gql", "mcp"] as const)(
+      "updates an existing txns/2026.bean in place, adding no second include, via %s",
+      async (surface) => {
+        const f = await fixture();
+        const included = `${EXISTING.trimEnd()}\ninclude "./txns/2026.bean"\n`;
+        f.state.files.set("main.bean", included);
+        f.state.files.set("txns/2026.bean", "");
+        f.state.routeTransactionsTo = "./txns/{year}.bean";
+        f.state.sourceFiles = ["main.bean", "txns/2026.bean"];
+        try {
+          const dry = await f.call(surface, { text: TXN, dryRun: true });
+          expect(dry.ok).toBe(true);
+          const preview = dry.ok ? (dry.data as Record<string, never>) : {};
+          expect(
+            (preview.diff as { path: string }[]).map(({ path }) => path),
+          ).toEqual(["txns/2026.bean"]);
+
+          const result = await f.call(surface, { text: TXN });
+          expect(result.ok).toBe(true);
+          expect(f.commits).toHaveLength(1);
+          expect(f.commits[0].files).toEqual([
+            expect.objectContaining({
+              operation: "update",
+              path: "txns/2026.bean",
+            }),
+          ]);
+          expect(f.state.files.get("main.bean")).toBe(included);
+          expect(f.state.files.get("txns/2026.bean")!.split("\n")[0]).toBe(
+            '2026-02-05 * "Cafe" "Coffee"',
+          );
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it.each(["rest", "gql", "mcp"] as const)(
+      "refuses an option that leads outside the ledger, naming the option and no argument, via %s",
+      async (surface) => {
+        const f = await fixture();
+        f.state.routeTransactionsTo = "../x.bean";
+        try {
+          for (const dryRun of [true, false]) {
+            const refused = refusal(
+              surface,
+              await f.call(surface, { text: TXN, dryRun }),
+            );
+            expect(refused.code).toBe("BAD_USER_INPUT");
+            expect(refused.message).toBe(
+              'The ledger\'s `transaction_file` option routes this entry to "../x.bean", which is outside the ledger',
+            );
+            expect(refused.field).toBeUndefined();
+            expect(refused.hint).toContain(
+              'custom "beancountio-option" "transaction_file"',
+            );
+            expect(refused.hint).not.toContain("named argument");
+          }
+          expect(f.checkProjectedErrors).not.toHaveBeenCalled();
+          expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("still writes where an explicit path says, whatever the option holds", async () => {
+      const f = await fixture();
+      f.state.routeTransactionsTo = "../x.bean";
+      try {
+        const result = await f.call("rest", { text: TXN, path: "main.bean" });
+        expect(result.ok).toBe(true);
+        expect(f.commits[0].files[0]).toMatchObject({ path: "main.bean" });
+      } finally {
+        await f.close();
+      }
+    });
+  });
+
   // w1/197: an append rewrote a Windows-authored file to LF, so every append
   // to one was a whole-file diff.
   it.each(["rest", "gql", "mcp"] as const)(
