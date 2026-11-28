@@ -25,6 +25,8 @@
 
 - [x] **m13** — [Install the ledger skills and reach a first query on native Windows](./done/m13/README.md) (8 tasks, ~5½h) ← `/pm-brainstorm for w5`, both proposals approved with `$pm for all for w5` on 2026-09-28
 
+- [ ] **m14** — [Use one form of address per locale in the dashboard](./m14/README.md) (8 tasks, ~4h) ← routine dashboard-qa 2026-11-27; dashboard half of [w21/012](../w21/done/012.md)
+
 ## Dropped
 
 - ~~**032**~~ — Catalog search `private` filter validated but inert — dropped 2026-10-02: the finding reads an include flag as an only filter. The upstream search takes `private` (include private ledgers the caller can see, on by default) and `is_private` (only private ones) as separate parameters, and the three transcripts — `private=true`, `private=false`, no filter — are each consistent with that. Mapping `private` onto `is_private`, or rejecting it, would break a working parameter. Re-file as a documentation note if the two names prove confusing in practice.
