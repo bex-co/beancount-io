@@ -42,6 +42,26 @@ describe("parseDirectiveText", () => {
     ]);
   });
 
+  // w31/151: `budget_file` routes a budget, and a budget is the custom type.
+  it('classifies a custom "budget" as a budget and every other custom as custom', () => {
+    const directives = parseDirectiveText(
+      [
+        '2026-09-01 custom "budget" Expenses:Food "monthly" 400.00 USD',
+        '2026-09-01 custom\t"budget" Expenses:Food "yearly" 4800.00 USD',
+        '2026-09-01 custom "budgets" Expenses:Food "monthly" 1 USD',
+        '2026-09-01 custom "other" "budget" Expenses:Food',
+        '2026-09-01 query "budget" "SELECT account"',
+      ].join("\n"),
+    );
+    expect(directives.map((d) => d.kind)).toEqual([
+      "Budget",
+      "Budget",
+      "Custom",
+      "Custom",
+      "Custom",
+    ]);
+  });
+
   it("carries a comment above a directive along with it", () => {
     const [directive] = parseDirectiveText(
       `; groceries\n${txn("2026-03-01", "Shop")}`,

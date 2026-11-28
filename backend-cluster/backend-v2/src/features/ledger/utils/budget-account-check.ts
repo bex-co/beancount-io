@@ -67,7 +67,7 @@ export function extractDirectiveBudgetAccounts(
   const budgets: BudgetAccountRef[] = [];
   const openedInCall: string[] = [];
   directives.forEach((directive, index) => {
-    if (directive.kind !== "Custom" && directive.kind !== "Open") return;
+    if (directive.kind !== "Budget" && directive.kind !== "Open") return;
     const header = headerLineOf(directive.text);
     if (!header) return;
     if (directive.kind === "Open") {

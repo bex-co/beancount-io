@@ -801,9 +801,10 @@ enclosed directive's header, so a key pushed again holds until its own
 themselves are not written, because each entry moves to its date position; a
 push that is never popped, or a pop with no push left to close, is refused
 naming the line. Each directive goes to the file the
-ledger's own `bcio` options assign its type and date, unless `path` names one,
-and is inserted after the last directive dated on or before it rather than at
-the end of the file. When that directive is of another kind and org headings
+ledger's own `bcio` options assign its type and date, unless `path` names one
+(a `custom "budget"` is a budget, so `budget_file` routes it, while any other
+`custom` goes to `default_file`), and is inserted after the last directive
+dated on or before it rather than at the end of the file. When that directive is of another kind and org headings
 follow it, the new one goes under them, so the starter ledger's first
 transaction lands under `* Transactions`, not among the opens (w23/076). The
 target file's own `pushtag` and `pushmeta` apply by position, so an entry is

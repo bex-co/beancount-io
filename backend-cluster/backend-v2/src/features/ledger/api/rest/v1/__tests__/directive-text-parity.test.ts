@@ -24,6 +24,7 @@ import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import { fakeRedisIdempotencyState } from "@/foundation/redis/__tests__/fake-redis-idempotency";
+import { clearRateLimitShadows } from "@/server/api/rate-limit";
 
 jest.mock(
   "@/foundation/redis/redis-idempotency",
@@ -70,6 +71,11 @@ const EXISTING = [
   "",
 ].join("\n");
 
+// Every fixture is a fresh client of one process-wide limiter. Without a
+// reset, the whole file's MCP commits as alice share a single minute's write
+// budget, and whichever test runs past it is refused as RATE_LIMITED.
+beforeEach(() => clearRateLimitShadows());
+
 let resolver: LedgerEntryMutationResolver;
 let schema: Awaited<ReturnType<typeof buildSchema>>;
 beforeAll(async () => {
@@ -85,6 +91,8 @@ beforeAll(async () => {
     validate: true,
   });
 });
+
+type BulkBody = { entries: { filename?: string }[] };
 
 type Commit = {
   files: { operation: string; path: string; content?: string | null }[];
@@ -110,6 +118,8 @@ async function fixture(caller = identity) {
           source: { filename: string; lineno: number };
         }[]),
     routeTransactionsTo: null as string | null,
+    /** The ledger's `budget_file` option (w31/151). */
+    routeBudgetsTo: null as string | null,
     /** The ledger's include closure; every fixture file unless narrowed. */
     sourceFiles: undefined as string[] | undefined,
     /** Opened accounts in the ledger, for custom "budget" checks (w31/094). */
@@ -182,6 +192,19 @@ async function fixture(caller = identity) {
       }),
   );
 
+  // The typed path's write, previewed as the ledger service would answer one
+  // that adds no errors; what it was asked to write is under test (w31/151).
+  const addBulkEntries = jest.fn(async (_o, _n, _body: BulkBody) =>
+    envelope({
+      entry_hashes: [],
+      included_files: [],
+      preview: [],
+      errors_before: 0,
+      errors_after: 0,
+      new_errors: [],
+    }),
+  );
+
   const fava = {
     getAdminClient: () => ({
       ledgers: { getLedger: async () => envelope({ id: 42, private: true }) },
@@ -195,13 +218,14 @@ async function fixture(caller = identity) {
       },
     }),
     getPublicApiClient: async () => ({
-      entries: { addBulkEntries: jest.fn() },
+      entries: { addBulkEntries },
       reports: {
         getLedgerAccounts,
         getLedgerBcioOptions: async () =>
           envelope({
             default_file: "main.bean",
             transaction_file: state.routeTransactionsTo,
+            budget_file: state.routeBudgetsTo,
           }),
         checkProjectedErrors,
         getProjectedEntryIds,
@@ -294,6 +318,8 @@ async function fixture(caller = identity) {
   return {
     state,
     commits,
+    service,
+    addBulkEntries,
     changeLedgerFiles,
     checkProjectedErrors,
     getProjectedEntryIds,
@@ -1049,6 +1075,117 @@ describe("appending Beancount text through the real adapters", () => {
       }
     },
   );
+
+  // w31/151: a budget is a `custom "budget"` directive, and `budget_file`
+  // routes one. The text path read every `custom` as "Custom" and wrote the
+  // budget to `default_file`, while addLedgerEntries sent the same budget to
+  // the budget file.
+  describe("budget_file", () => {
+    const BUDGET =
+      '2026-09-01 custom "budget" Expenses:Food:Groceries "monthly" 400.00 USD';
+
+    it.each(["rest", "gql", "mcp"] as const)(
+      'routes a custom "budget" to the budget file, including it, on preview and commit via %s',
+      async (surface) => {
+        const f = await fixture();
+        f.state.routeBudgetsTo = "budgets.bean";
+        f.state.sourceFiles = ["main.bean"];
+        try {
+          const dry = await f.call(surface, { text: BUDGET, dryRun: true });
+          expect(dry.ok).toBe(true);
+          const preview = dry.ok ? (dry.data as Record<string, never>) : {};
+          expect(JSON.stringify(preview)).toContain(
+            "Would add 1 directive to budgets.bean; main.bean would include budgets.bean",
+          );
+          const diffs = preview.diff as { path: string; diff: string }[];
+          expect(diffs.map(({ path }) => path)).toEqual([
+            "budgets.bean",
+            "main.bean",
+          ]);
+          expect(diffs[0].diff).toContain(`+${BUDGET}`);
+          expect(diffs[1].diff).not.toContain("custom");
+          expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+
+          const result = await f.call(surface, { text: BUDGET });
+          expect(result.ok).toBe(true);
+          const data = result.ok ? (result.data as Record<string, never>) : {};
+          expect(JSON.stringify(data)).toContain(
+            "Added 1 directive to budgets.bean; main.bean now includes budgets.bean",
+          );
+          expect(data.wrote).toEqual([{ path: "budgets.bean", line: 1 }]);
+          expect(f.commits).toHaveLength(1);
+          expect(f.commits[0].files.map(({ path }) => path)).toEqual([
+            "budgets.bean",
+            "main.bean",
+          ]);
+          expect(f.state.files.get("budgets.bean")).toBe(`${BUDGET}\n`);
+          expect(f.state.files.get("main.bean")).toBe(
+            `${EXISTING.trimEnd()}\ninclude "budgets.bean"\n`,
+          );
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("picks the file addLedgerEntries picks for the same budget", async () => {
+      const f = await fixture();
+      f.state.routeBudgetsTo = "budgets/{year}.bean";
+      try {
+        await f.service.addBulkEntries(
+          identity,
+          "alice",
+          "main",
+          [
+            {
+              type: "budget",
+              entry: {
+                date: "2026-09-01",
+                account: "Expenses:Food:Groceries",
+                interval: "monthly",
+                amount: { number: "400.00", currency: "USD" },
+              },
+            },
+          ] as never,
+          "web",
+          false,
+          true,
+        );
+        const [, , typed] = f.addBulkEntries.mock.calls[0]!;
+        expect(typed.entries[0].filename).toBe("budgets/2026.bean");
+
+        const result = await f.call("mcp", { text: BUDGET, dryRun: true });
+        expect(result.ok).toBe(true);
+        const data = result.ok ? (result.data as Record<string, never>) : {};
+        expect(
+          (data.diff as { path: string }[]).map(({ path }) => path),
+        ).toEqual(["budgets/2026.bean"]);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it.each(["rest", "gql", "mcp"] as const)(
+      "keeps every other custom directive in default_file via %s",
+      async (surface) => {
+        const f = await fixture();
+        f.state.routeBudgetsTo = "budgets.bean";
+        try {
+          const result = await f.call(surface, {
+            text: '2026-09-01 custom "other" "budget" Expenses:Food:Groceries',
+          });
+          expect(result.ok).toBe(true);
+          expect(f.commits).toHaveLength(1);
+          expect(f.commits[0].files.map(({ path }) => path)).toEqual([
+            "main.bean",
+          ]);
+          expect(f.state.files.has("budgets.bean")).toBe(false);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+  });
 
   // w1/197: an append rewrote a Windows-authored file to LF, so every append
   // to one was a whole-file diff.

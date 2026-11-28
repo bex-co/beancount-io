@@ -249,6 +249,8 @@ class TagStack {
  * Dated directive keywords, mapped to the file-routing type
  * `resolveEntryFile` understands. Anything else after a date is a transaction
  * flag — `*`, `!`, `txn`, and the other flag characters Beancount allows.
+ * Beancount has no `budget` keyword: a budget is a `custom` whose type is
+ * `"budget"` ({@link BUDGET_TYPE}).
  */
 const DATED_KEYWORDS: Record<string, DirectiveKind> = {
   open: "Open",
@@ -261,9 +263,16 @@ const DATED_KEYWORDS: Record<string, DirectiveKind> = {
   document: "Document",
   event: "Event",
   custom: "Custom",
-  budget: "Budget",
   query: "Custom",
 };
+
+/**
+ * What follows `custom` on a budget's header. A `custom "budget"` is the
+ * "Budget" kind, so `budget_file` routes it as it routes the same budget sent
+ * to `addLedgerEntries`; reading every `custom` as "Custom" sent it to
+ * `default_file` instead (w31/151). Any other custom type stays "Custom".
+ */
+const BUDGET_TYPE = /^[ \t]+"budget"/;
 
 type DirectiveKind =
   | "Transaction"
@@ -310,11 +319,14 @@ interface DirectiveHead {
 function directiveHead(line: string): DirectiveHead | null {
   const dated = DATE_LINE.exec(line);
   if (dated) {
-    const [, written, year, month, day, keyword] = dated;
+    const [head, written, year, month, day, keyword] = dated;
     return {
       date: `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`,
       written,
-      kind: DATED_KEYWORDS[keyword] ?? "Transaction",
+      kind:
+        keyword === "custom" && BUDGET_TYPE.test(line.slice(head.length))
+          ? "Budget"
+          : (DATED_KEYWORDS[keyword] ?? "Transaction"),
     };
   }
   const keyword = /^([a-z]+)\b/.exec(line)?.[1];
