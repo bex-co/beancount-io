@@ -1,7 +1,12 @@
 import type { BeancountError, FileMap } from "@rustledger/wasm";
 import { indexBlocks } from "./block-index";
 import { commentSkippedLines, leadingDotOffsets } from "./parseable-files";
-import { postingSyntaxErrors, STOCK_ACCOUNT } from "./posting-syntax-errors";
+import {
+  postingCurrencyMinus,
+  postingSyntaxErrors,
+  STOCK_ACCOUNT,
+  STOCK_CURRENCY,
+} from "./posting-syntax-errors";
 import { SOURCE_DATE, sourceDateOf } from "./source-date";
 import { endsInsideString, loadedFiles } from "./source-slice";
 
@@ -41,7 +46,19 @@ import { endsInsideString, loadedFiles } from "./source-slice";
  *    `syntax error, unexpected STRING`), which the engine reads as a `*`
  *    transaction; and a number with no leading digit (`.50`,
  *    `Invalid token: '.50'`), which `withLeadingZeros` reads as 0.50 so the
- *    figure stays right while the error says the text is wrong.
+ *    figure stays right while the error says the text is wrong;
+ *  - a currency that ends in `.`, `_`, `'` or `-` (`1 QAB.`, `commodity
+ *    QAB-`, w31/154). Stock's currency ends in a capital or a digit, so its
+ *    lexer reads `QAB` and then `Invalid token: '.'` (the token runs to the
+ *    next whitespace, as with `.50`), or a `-` its grammar cannot take
+ *    (`syntax error, unexpected MINUS`, with the tokens stock expected there,
+ *    at a posting's units, cost or price, an `open` currency list, a
+ *    `commodity`, a `price`'s quoted currency, a `balance` or a metadata
+ *    value). A `custom` value reads the `-` as the next value's sign, so the
+ *    error is at the token after it, and `price QAB- 1.00 USD` is `price QAB
+ *    -1.00 USD`, clean. A lone capital is a currency only before whitespace:
+ *    `X.` and `X-` are one invalid token each. The engine reads one currency
+ *    named `QAB.` and books it.
  *
  * Stock drops a directive at its first syntax error and reports nothing more
  * from it: no later syntax error in it, no repeated key on it, no posting
@@ -147,6 +164,83 @@ const POSTING_COLON_RULES = [
     "expecting end of file or EOL or ATAT or AT",
   ),
 ];
+/** A number as stock's lexer reads one, and an expression of them (loosely: the engine refuses a malformed one). */
+const NUMBER = String.raw`(?:\d[\d,]*\d|\d)(?:\.\d*)?`;
+const NUMBER_EXPR = String.raw`(?:[-+(][ \t]*)*${NUMBER}(?:[ \t]*(?:[-+*/][ \t]*(?:[-+(][ \t]*)*${NUMBER}|\)))*`;
+/**
+ * Not one of stock's keywords where a currency could stand: `TRUE` and
+ * `TRUE-` are a bool (and a `-`), `TRUEX` and `TRUE-1` are currencies.
+ */
+const keywordless = (keywords: string) =>
+  String.raw`(?!(?:${keywords})(?![A-Z0-9'._-]*[A-Z0-9]))`;
+const NOT_KEYWORD = keywordless("TRUE|FALSE|NULL");
+const CURRENCY_TOKEN = String.raw`${NOT_KEYWORD}(?:${STOCK_CURRENCY})`;
+/**
+ * A currency stock's lexer ends before a `-` that the engine reads as part of
+ * it: `QAB-` is `QAB` and then a `-`, `QAB-1` and `QAB-.X` are currencies, and
+ * `AB-:Cash` is an account. `VALUE_THEN_MINUS` takes a keyword too, for the
+ * places a bool or `NULL` is a value (`ref: TRUE-` is refused at the `-`).
+ */
+const VALUE_THEN_MINUS = String.raw`(${STOCK_CURRENCY})(?=-[-'._]*(?![\w'.:-]|[^\x00-\x7f]))`;
+const CURRENCY_THEN_MINUS = NOT_KEYWORD + VALUE_THEN_MINUS;
+/** What stock expects after a currency that ends a directive's amounts or a metadata value. */
+const AT_EOL = "expecting end of file or EOL";
+const minusRule = (
+  before: string,
+  expecting: string,
+  value = CURRENCY_THEN_MINUS,
+) => ({
+  pattern: new RegExp(String.raw`^(?:${before})${value}`, "u"),
+  expecting,
+});
+const HEADER_MINUS_RULES = [
+  minusRule(
+    String.raw`${SOURCE_DATE}[ \t]+open[ \t]+${STOCK_ACCOUNT}[ \t]+(?:${CURRENCY_TOKEN}[ \t]*,[ \t]*)*`,
+    AT_EOL,
+  ),
+  minusRule(String.raw`${SOURCE_DATE}[ \t]+commodity[ \t]+`, AT_EOL),
+  // The quoted currency only: a `-` after the base is the price's sign.
+  minusRule(
+    String.raw`${SOURCE_DATE}[ \t]+price[ \t]+${CURRENCY_TOKEN}[ \t]*${NUMBER_EXPR}[ \t]*`,
+    AT_EOL,
+  ),
+  minusRule(
+    String.raw`${SOURCE_DATE}[ \t]+balance[ \t]+${STOCK_ACCOUNT}[ \t]+${NUMBER_EXPR}(?:[ \t]*~[ \t]*${NUMBER_EXPR})?[ \t]*`,
+    AT_EOL,
+  ),
+];
+// A value alone may be a keyword; after a number, `TRUE` is stock's bool
+// where a currency goes, its other syntax error.
+const KEY_VALUE = String.raw`[ \t]+[a-z][A-Za-z0-9_-]+:[ \t]+`;
+const KEY_VALUE_MINUS_RULES = [
+  minusRule(KEY_VALUE, AT_EOL, VALUE_THEN_MINUS),
+  minusRule(String.raw`${KEY_VALUE}${NUMBER_EXPR}[ \t]*`, AT_EOL),
+];
+/**
+ * An amount among a `custom` directive's values whose currency runs into a
+ * `-`; not a date's digits. After the number, `TRUE` is a bool value of its
+ * own and the `-` the next value's sign all the same; `NULL` is no value there.
+ */
+const CUSTOM_AMOUNT_MINUS = new RegExp(
+  String.raw`^${SOURCE_DATE}[ \t]+custom[ \t]+"[^"]*".*?[ \t](?!\d{4,}[-/]\d+[-/]\d+)${NUMBER_EXPR}[ \t]*${keywordless("NULL")}${VALUE_THEN_MINUS}`,
+  "u",
+);
+/**
+ * The token after that `-` stock refuses, since a custom value's `-` is the
+ * next number's sign: a number there is a negative value and clean.
+ */
+const CUSTOM_AFTER_MINUS: ReadonlyArray<readonly [RegExp, string]> = [
+  [/^"[^"]*"/u, "STRING"],
+  [/^\d{4,}[-/]\d+[-/]\d+/u, "DATE"],
+  [/^(?:TRUE|FALSE)(?![A-Z0-9'._-])/u, "BOOL"],
+  [new RegExp(`^${STOCK_ACCOUNT}`, "u"), "ACCOUNT"],
+];
+const CUSTOM_EXPECTING = "expecting PLUS or MINUS or LPAREN or NUMBER";
+/** A capital or a digit that a `-` follows, not into a currency: the cheap test before a block's lines are read. */
+const MAYBE_CURRENCY_MINUS = /[A-Z0-9]-[-'._]*(?![\w'.:-]|\P{ASCII})/u;
+const minusMessage = (unexpected: string, expecting: string, written: string) =>
+  `syntax error, unexpected ${unexpected}, ${expecting}: "${written}" is not a currency; a currency ends in a capital letter or a digit`;
+
 /** An account's last component with that colon after it: the cheap test before a block's lines are read. */
 const MAYBE_TRAILING_COLON = new RegExp(
   String.raw`:(?:[A-Z0-9]|[^\x00-\x7f])(?:[A-Za-z0-9-]|[^\x00-\x7f])*${COLON_AFTER_ACCOUNT}`,
@@ -154,6 +248,29 @@ const MAYBE_TRAILING_COLON = new RegExp(
 );
 /** Where stock's lexer ends an invalid token: at whitespace, nothing else. */
 const INVALID_TOKEN = /[^ \t\r\n]+/uy;
+
+/**
+ * What may stand before a currency in stock's grammar: a line's start,
+ * whitespace, `{`, `,`, `@`, `~` or a `)`, or a number or an expression written
+ * against it (`1QAB`, `2*3QAB`, `10/4/QAB`, where `/QAB` is a futures
+ * currency). Not a letter, digit, `:` or `-'._/` otherwise, where the capital
+ * is inside an account or a tag (`#a1/QAB.`), nor `#` or `^`, which start one.
+ */
+const CURRENCY_START = String.raw`(?=[A-Z/])(?<=^|[ \t\r\n{,@~)]|(?:^|[ \t\r\n{,@~])${NUMBER_EXPR})`;
+/**
+ * A currency as the engine reads it (`/?[A-Z][A-Z0-9'._-]*`, a futures one
+ * with a digit or `'._-` before its first capital too) that ends in one of
+ * `-'._`, after strings and `;` comments, which are matched first and skipped.
+ */
+const CURRENCY_RUN_OR_TOKEN_RE = new RegExp(
+  String.raw`"(?:[^"\\]|\\.)*"|;[^\n]*|${CURRENCY_START}(?:\/[A-Z0-9'._-]*[A-Z]|[A-Z])[A-Z0-9'._-]*(?<=[-'._])(?![A-Z0-9'._-])`,
+  "gu",
+);
+/** A capital or a digit that a currency's `.`, `_` or `'` follows, after any `-`: the cheap test before a file is read. */
+const MAYBE_CURRENCY_TAIL =
+  /[A-Z0-9]-*['._][-'._]*(?![A-Z0-9])|(?<![A-Z0-9'._-])[A-Z]-+(?![A-Z0-9'._-])/u;
+/** What continues an account after a run of `-` (`X-:Cash`, `X-y:Cash`). */
+const ACCOUNT_CHARACTER = /[\p{L}\p{N}:]/u;
 const ACCOUNT = /^\p{Lu}[\p{L}\p{N}-]*(?::[\p{L}\p{N}][\p{L}\p{N}-]*)+$/u;
 
 /** A value stock cannot tell apart from an equal one; see {@link valueIdentity}. */
@@ -428,19 +545,110 @@ function trailingColon(
   return undefined;
 }
 
+/** The currency as the engine reads it, from where stock's starts (`QAB-`, `QAB-.`). */
+const WRITTEN_CURRENCY = /\/?[A-Z0-9'._-]+/uy;
+const writtenAt = (tokens: string, at: number) => {
+  WRITTEN_CURRENCY.lastIndex = at;
+  return WRITTEN_CURRENCY.exec(tokens)![0];
+};
+
+/** The first currency `line` runs into a `-` where one of `rules` places it. */
+function currencyMinus(
+  line: string,
+  rules: readonly ReturnType<typeof minusRule>[],
+): Omit<StockSyntaxError, "index"> | undefined {
+  const tokens = tokensOf(line);
+  for (const { pattern, expecting } of rules) {
+    const found = pattern.exec(tokens);
+    if (found === null) continue;
+    return {
+      column: found[0].length,
+      code: "P0012",
+      message: minusMessage(
+        "MINUS",
+        expecting,
+        writtenAt(tokens, found[0].length - found[1]!.length),
+      ),
+      flagless: false,
+    };
+  }
+  return undefined;
+}
+
+/** A posting's currency that runs into a `-`, as `posting-syntax-errors.ts` reads it. */
+function postingMinus(
+  line: string,
+): Omit<StockSyntaxError, "index"> | undefined {
+  const found = postingCurrencyMinus(line);
+  return (
+    found && {
+      column: found.column,
+      code: "P0012",
+      message: minusMessage(
+        "MINUS",
+        `expecting ${found.expecting}`,
+        found.written,
+      ),
+      flagless: false,
+    }
+  );
+}
+
+/**
+ * A `custom` amount whose currency runs into a `-` (`custom "budget" 1 QAB-`).
+ * Stock reads the `-` as the next value's sign, so its error is the token
+ * after it: the end of the line (which stock places on the next line), the end
+ * of the file, a string, a date, a bool or an account. A number there is a
+ * negative value, stock reads it clean, and so does this; a token the engine
+ * refuses itself (a bare currency, a tag) is left alone.
+ */
+function customCurrencyMinus(
+  header: string,
+  endsFile: () => boolean,
+): StockSyntaxError | undefined {
+  const tokens = tokensOf(header);
+  const found = CUSTOM_AMOUNT_MINUS.exec(tokens);
+  if (found === null) return undefined;
+  const start = found[0].length - found[1]!.length;
+  let at = found[0].length;
+  while (tokens[at] === "-") at += 1;
+  // A `.` there is the lexer's invalid token instead, which no token below
+  // starts with.
+  const next = tokens.slice(at).replace(/^[ \t\r]+/u, "");
+  const written = tokens.slice(start, at);
+  const column = tokens.length - next.length;
+  const refused = (place: Place, unexpected: string) => ({
+    ...place,
+    code: "P0012",
+    message: minusMessage(unexpected, CUSTOM_EXPECTING, written),
+    flagless: false,
+  });
+  if (next === "") {
+    return endsFile()
+      ? refused({ index: 0, column }, "end of file")
+      : refused({ index: 1, column: 0 }, "EOL");
+  }
+  const token = CUSTOM_AFTER_MINUS.find(([pattern]) => pattern.test(next));
+  return token && refused({ index: 0, column }, token[1]);
+}
+
 /**
  * The first syntax error stock's parser meets in a dated block's own lines,
  * the one that drops the directive: a bare booking method, a string where the
- * flag goes, or an account with a colon after it.
+ * flag goes, an account with a colon after it, or a currency that runs into a
+ * `-`. `endsFile` says whether the header is the file's last line with no line
+ * break after it.
  */
 function firstSyntaxError(
   text: string,
   lines: readonly string[],
   firstBodyLine: number,
   transaction: boolean,
+  endsFile: () => boolean,
 ): StockSyntaxError | undefined {
   const header = lines[0]!;
   const maybeColon = MAYBE_TRAILING_COLON.test(text);
+  const maybeMinus = MAYBE_CURRENCY_MINUS.test(text);
   const onHeader: StockSyntaxError[] = [];
   const flagless = FLAGLESS_HEADER.exec(header);
   if (flagless !== null) {
@@ -467,38 +675,99 @@ function firstSyntaxError(
     ? trailingColon(header, HEADER_COLON_RULES)
     : undefined;
   if (colon !== undefined) onHeader.push({ index: 0, ...colon });
-  if (onHeader.length > 0) {
-    return onHeader.reduce((a, b) => (b.column < a.column ? b : a));
+  if (maybeMinus) {
+    const minus = currencyMinus(header, HEADER_MINUS_RULES);
+    if (minus !== undefined) onHeader.push({ index: 0, ...minus });
+    const custom = customCurrencyMinus(header, endsFile);
+    if (custom !== undefined) onHeader.push(custom);
   }
-  if (!maybeColon) return undefined;
+  if (onHeader.length > 0) {
+    return onHeader.reduce((a, b) => earlier(a, b)!);
+  }
+  if (!maybeColon && !maybeMinus) return undefined;
   for (const { index, line, key } of bodyLines(lines, firstBodyLine)) {
-    const found = trailingColon(
-      line,
-      key !== null
-        ? KEY_VALUE_COLON_RULES
+    const colon = maybeColon
+      ? trailingColon(
+          line,
+          key !== null
+            ? KEY_VALUE_COLON_RULES
+            : transaction
+              ? POSTING_COLON_RULES
+              : [],
+        )
+      : undefined;
+    const minus = !maybeMinus
+      ? undefined
+      : key !== null
+        ? currencyMinus(line, KEY_VALUE_MINUS_RULES)
         : transaction
-          ? POSTING_COLON_RULES
-          : [],
+          ? postingMinus(line)
+          : undefined;
+    const found = earlier(
+      colon && { index, ...colon },
+      minus && { index, ...minus },
     );
-    if (found !== undefined) return { index, ...found };
+    if (found !== undefined) return found;
   }
   return undefined;
 }
 
 /**
- * Each number `source` writes with no leading digit (`.50`, `-.5`), as stock's
- * lexer refuses it: the token runs from the dot to the next whitespace
- * (`(.5+1)` is `.5+1)`). These are the dots `withLeadingZeros` gives a zero,
- * so none is read clean. Lines are counted from 0.
+ * Where stock's lexer starts an invalid token in a currency the engine reads
+ * whole: at the first `.`, `_` or `'` after its last capital or digit and any
+ * `-` (`QAB.`, `QAB-.`), or at the capital itself when it is a lone one
+ * (`X.`, `X-`), since a lone capital is a currency only before whitespace. A
+ * `-` alone after the currency is a token of its own, refused by the grammar
+ * instead (see `currencyMinus`), and a lone capital's `-` that an account goes
+ * on from (`X-:Cash`) is left alone.
+ */
+function currencyTailOffsets(text: string): number[] {
+  if (!MAYBE_CURRENCY_TAIL.test(text)) return [];
+  const offsets: number[] = [];
+  for (const match of text.matchAll(CURRENCY_RUN_OR_TOKEN_RE)) {
+    const run = match[0];
+    if (run.startsWith('"') || run.startsWith(";")) continue;
+    let last = run.length - 1;
+    while (last > 0 && !/[A-Z0-9]/u.test(run[last]!)) last -= 1;
+    if (last === run.length - 1) continue;
+    if (last === 0) {
+      const next = text[match.index + run.length];
+      const continuesAccount =
+        /^[A-Z]-+$/u.test(run) &&
+        next !== undefined &&
+        ACCOUNT_CHARACTER.test(next);
+      if (!continuesAccount) offsets.push(match.index);
+      continue;
+    }
+    let at = last + 1;
+    while (run[at] === "-") at += 1;
+    if (at < run.length) offsets.push(match.index + at);
+  }
+  return offsets;
+}
+
+/**
+ * Each invalid token stock's lexer reads in `source`: a number with no leading
+ * digit (`.50`, `-.5`), at the dots `withLeadingZeros` gives a zero so none is
+ * read clean, and a currency that ends in `.`, `_` or `'` (`QAB.`), or a lone
+ * capital before one of `-'._` (`X.`). The token runs to the next whitespace
+ * (`(.5+1)` is `.5+1)`, `{1 QAB.}` is `.}`), and the lexer skips all of it, so
+ * a dot or a currency inside one starts no other. Lines are counted from 0.
  */
 function invalidTokens(
   source: string,
 ): Array<{ line: number; column: number; token: string }> {
   const text = commentSkippedLines(source);
   const found: Array<{ line: number; column: number; token: string }> = [];
+  const tails = currencyTailOffsets(text);
+  const dots = leadingDotOffsets(text);
+  const offsets =
+    tails.length === 0 ? dots : [...dots, ...tails].sort((a, b) => a - b);
   let line = 0;
   let lineStart = 0;
-  for (const offset of leadingDotOffsets(text)) {
+  let tokenEnd = 0;
+  for (const offset of offsets) {
+    if (offset < tokenEnd) continue;
     for (
       let newline = text.indexOf("\n", lineStart);
       newline !== -1 && newline < offset;
@@ -508,11 +777,9 @@ function invalidTokens(
       lineStart = newline + 1;
     }
     INVALID_TOKEN.lastIndex = offset;
-    found.push({
-      line,
-      column: offset - lineStart,
-      token: INVALID_TOKEN.exec(text)![0],
-    });
+    const token = INVALID_TOKEN.exec(text)![0];
+    tokenEnd = offset + token.length;
+    found.push({ line, column: offset - lineStart, token });
   }
   return found;
 }
@@ -542,7 +809,11 @@ export function stockSyntaxErrors(
     seq: number;
   }[] = [];
   for (const file of loadedFiles(files, entryPoint)) {
-    const invalid = invalidTokens(files[file]!);
+    const source = files[file]!;
+    // The 0-based index of the file's last line, counted when a rule asks.
+    let lastLine: number | undefined;
+    const lastLineIndex = () => (lastLine ??= source.split("\n").length - 1);
+    const invalid = invalidTokens(source);
     const fileErrors = invalid.map(({ line, column, token }) =>
       error(
         `Invalid token: '${token}'`,
@@ -589,6 +860,7 @@ export function stockSyntaxErrors(
         lines,
         firstBodyLine,
         transaction,
+        () => block.startLine === lastLineIndex(),
       );
       const read =
         flag === null

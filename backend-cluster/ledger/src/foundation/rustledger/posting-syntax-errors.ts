@@ -39,6 +39,11 @@ import { utcDate } from "./utc-date";
  * the message shows the number stock shows. A line that does not read as a
  * posting in that grammar is left alone: stock refuses it as a syntax error,
  * and so does the engine.
+ *
+ * One syntax error is read here too, for `stock-syntax-errors.ts`: a currency
+ * that runs into a `-` (`1 QAB-`, w31/154). Stock's currency ends in a capital
+ * or a digit, so it reads `QAB` and then a `-` its grammar cannot take; the
+ * engine reads one currency named `QAB-`. See {@link postingCurrencyMinus}.
  */
 
 export interface PostingSyntaxError {
@@ -62,19 +67,26 @@ type Op =
   | "("
   | ")";
 
-type Token =
+/** A token and where it stands in the text read: from `start`, up to `end`. */
+type Token = (
   | { kind: "number"; text: string }
   | { kind: "date"; text: string }
   | { kind: "string"; value: string }
   | { kind: "currency"; text: string }
-  | { kind: "op"; op: Op };
+  | { kind: "op"; op: Op }
+) & { start: number; end: number };
 
 const WHITESPACE = /[ \t\r]+/y;
 const STRING = /"((?:[^\\"]|\\.)*)"/y;
 const DATE = /\d{4,}[-/]\d+[-/]\d+/y;
 const NUMBER = /(?:\d[\d,]*\d|\d)(?:\.\d*)?/y;
-const CURRENCY =
-  /(?:[A-Z][A-Z0-9'._-]*[A-Z0-9]|\/[A-Z0-9'._-]*[A-Z](?:[A-Z0-9'._-]*[A-Z0-9])?)/y;
+/**
+ * A currency as stock's lexer reads one: a capital, then capitals, digits and
+ * `'._-`, ending in a capital or a digit, or a futures contract (`/` and a run
+ * with a capital in it). `QAB.` is `QAB` and then a `.` (w31/154).
+ */
+export const STOCK_CURRENCY = String.raw`[A-Z][A-Z0-9'._-]*[A-Z0-9]|\/[A-Z0-9'._-]*[A-Z](?:[A-Z0-9'._-]*[A-Z0-9])?`;
+const CURRENCY = new RegExp(`(?:${STOCK_CURRENCY})`, "y");
 /** A lone capital is a currency only before whitespace, as stock's lexer reads it. */
 const CAPITAL = /[A-Z](?=[ \t\r]|$)/y;
 const OPS: readonly Op[] = [
@@ -100,10 +112,15 @@ function matchAt(pattern: RegExp, text: string, at: number): string | null {
   return pattern.exec(text)?.[0] ?? null;
 }
 
-/** The tokens of `text` up to a comment, or `null` at one stock's lexer would refuse. */
-function tokenize(text: string): Token[] | null {
+/**
+ * The tokens of `text` up to a comment, and whether stock's lexer reads all of
+ * it: `whole` is false at a character it refuses, and `tokens` are the ones
+ * before it.
+ */
+function lex(text: string): { tokens: Token[]; whole: boolean } {
   const tokens: Token[] = [];
   let at = 0;
+  const stop = () => ({ tokens, whole: false });
   while (at < text.length) {
     const space = matchAt(WHITESPACE, text, at);
     if (space !== null) {
@@ -114,12 +131,14 @@ function tokenize(text: string): Token[] | null {
     if (text[at] === '"') {
       STRING.lastIndex = at;
       const found = STRING.exec(text);
-      if (found === null) return null; // the string goes on past this line
+      if (found === null) return stop(); // the string goes on past this line
       tokens.push({
         kind: "string",
         value: found[1]!.replace(/\\(.)/gu, (_, char: string) =>
           Object.hasOwn(ESCAPES, char) ? ESCAPES[char]! : char,
         ),
+        start: at,
+        end: at + found[0].length,
       });
       at += found[0].length;
       continue;
@@ -128,33 +147,54 @@ function tokenize(text: string): Token[] | null {
     const date = matchAt(DATE, text, at);
     const number = matchAt(NUMBER, text, at);
     if (date !== null && date.length >= (number?.length ?? 0)) {
-      tokens.push({ kind: "date", text: date });
+      tokens.push({
+        kind: "date",
+        text: date,
+        start: at,
+        end: at + date.length,
+      });
       at += date.length;
       continue;
     }
     if (number !== null) {
-      tokens.push({ kind: "number", text: number });
+      tokens.push({
+        kind: "number",
+        text: number,
+        start: at,
+        end: at + number.length,
+      });
       at += number.length;
       continue;
     }
     const currency = matchAt(CURRENCY, text, at) ?? matchAt(CAPITAL, text, at);
     if (currency !== null) {
       // These are stock's keywords before they are currencies.
-      if (["TRUE", "FALSE", "NULL"].includes(currency)) return null;
-      tokens.push({ kind: "currency", text: currency });
+      if (["TRUE", "FALSE", "NULL"].includes(currency)) return stop();
+      tokens.push({
+        kind: "currency",
+        text: currency,
+        start: at,
+        end: at + currency.length,
+      });
       at += currency.length;
       continue;
     }
     // `#tag` is a tag, never a `#` between two cost numbers.
     if (text[at] === "#" && /[A-Za-z0-9_/.-]/u.test(text[at + 1] ?? "")) {
-      return null;
+      return stop();
     }
     const op = OPS.find((candidate) => text.startsWith(candidate, at));
-    if (op === undefined) return null;
-    tokens.push({ kind: "op", op });
+    if (op === undefined) return stop();
+    tokens.push({ kind: "op", op, start: at, end: at + op.length });
     at += op.length;
   }
-  return tokens;
+  return { tokens, whole: true };
+}
+
+/** The tokens of `text` up to a comment, or `null` at one stock's lexer would refuse. */
+function tokenize(text: string): Token[] | null {
+  const { tokens, whole } = lex(text);
+  return whole ? tokens : null;
 }
 
 /** A `Decimal` as Python holds it: a value and its exponent (`1.10` is 110e-2). */
@@ -549,4 +589,85 @@ export function postingSyntaxErrors(line: string): PostingSyntaxError[] {
     return [];
   }
   return errors;
+}
+
+/** Where stock's parser stands after a currency, and the tokens it lists as expected there. */
+const AFTER_UNITS = "end of file or EOL or ATAT or AT";
+const AFTER_COST = "RCURL or COMMA";
+const AFTER_TOTAL_COST = "RCURLCURL or COMMA";
+const AFTER_PRICE = "end of file or EOL";
+
+/**
+ * What stock's grammar expects after `read`, a posting's tokens that end in a
+ * currency: after its units, in a `{…}` or `{{…}}` cost, or after its price.
+ * `undefined` when `read` does not read as the start of a posting, since
+ * stock's syntax error is then an earlier one.
+ */
+function expectedAfterCurrency(read: readonly Token[]): string | undefined {
+  let at = read.findIndex((token) => isOp(token, "{", "{{", "@", "@@"));
+  if (at < 0) return incompleteAmount(read) === null ? undefined : AFTER_UNITS;
+  if (incompleteAmount(read.slice(0, at)) === null) return undefined;
+  if (isOp(read[at], "{", "{{")) {
+    const total = isOp(read[at], "{{");
+    const end = read.findIndex(
+      (token, index) => index > at && isOp(token, "{", "{{", "}", "}}"),
+    );
+    if (end < 0) {
+      // The currency is in the cost spec: each component before it must read.
+      const inner = read.slice(at + 1);
+      let comma = inner.length - 1;
+      while (comma >= 0 && !isOp(inner[comma], ",")) comma -= 1;
+      if (comma >= 0 && costSpec(inner.slice(0, comma), total) === null) {
+        return undefined;
+      }
+      if (compoundAmount(inner.slice(comma + 1)) === null) return undefined;
+      return total ? AFTER_TOTAL_COST : AFTER_COST;
+    }
+    if (!isOp(read[end], total ? "}}" : "}")) return undefined;
+    if (costSpec(read.slice(at + 1, end), total) === null) return undefined;
+    at = end + 1;
+  }
+  if (!isOp(read[at], "@", "@@")) return undefined;
+  return incompleteAmount(read.slice(at + 1)) === null
+    ? undefined
+    : AFTER_PRICE;
+}
+
+/** The `-'._` run the engine reads as the rest of a currency (`QAB-`, `QAB-.`). */
+const CURRENCY_TAIL = /^[-'._]*/u;
+
+/**
+ * A posting line's currency that runs into a `-` (`1 QAB-`, `{1 QAB-}`,
+ * `@ 1 QAB-`, w31/154): stock's lexer ends the currency at its last capital or
+ * digit, and its grammar takes no `-` there, so the posting is the syntax
+ * error `unexpected MINUS` at the `-`. The engine reads one currency named
+ * `QAB-` and loads it clean. Returns the `-`'s column (from 0), the currency
+ * as the engine reads it, and the tokens stock expected; `undefined` when no
+ * currency runs into a `-`, or when the line before it does not read as a
+ * posting (stock's error is then an earlier one).
+ */
+export function postingCurrencyMinus(
+  line: string,
+): { column: number; written: string; expecting: string } | undefined {
+  const account = POSTING.exec(line);
+  if (account === null) return undefined;
+  const offset = account[0].length;
+  const text = line.slice(offset);
+  const { tokens } = lex(text);
+  const at = tokens.findIndex(
+    (token, index) =>
+      token.kind === "currency" &&
+      isOp(tokens[index + 1], "-") &&
+      tokens[index + 1]!.start === token.end,
+  );
+  if (at < 0) return undefined;
+  const currency = tokens[at]!;
+  const expecting = expectedAfterCurrency(tokens.slice(0, at + 1));
+  if (expecting === undefined) return undefined;
+  const tail = CURRENCY_TAIL.exec(text.slice(currency.end))![0];
+  return {
+    column: offset + currency.end,
+    written: text.slice(currency.start, currency.end + tail.length),
+    expecting,
+  };
 }

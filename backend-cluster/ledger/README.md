@@ -239,7 +239,7 @@ These things stock `bean-check` refuses load without an error in the pinned
 engine (`@rustledger/wasm` 0.24.0), so the ledger reports them at their line, in
 the same error list `checkLedger`, the post-write report and the write gates
 read. Two scans in `src/foundation/rustledger/` read the source text for them:
-`stock-syntax-errors.ts` (w23/240, w31/120, w31/121, w31/148), which reads a posting's
+`stock-syntax-errors.ts` (w23/240, w31/120, w31/121, w31/148, w31/154), which reads a posting's
 cost and price with `posting-syntax-errors.ts`, and `balance-tolerance-syntax.ts`
 (w23/197). One rule reads the booked stream instead: `zero-units-at-cost.ts`
 (w31/140). Each row names the file whose rule finds it:
@@ -260,6 +260,9 @@ cost and price with `posting-syntax-errors.ts`, and `balance-tolerance-syntax.ts
 | `P0012` | an account with a colon after it (`Assets:Cash:`), on a posting, an `open`, `close`, `pad`, `balance`, `note`, `document` or `custom` line, or a metadata value | `syntax error, unexpected COLON, expecting …` (the tokens stock expected there) | `stock-syntax-errors.ts` |
 | `P0012` | a string where a dated line's flag goes (`2026-09-02 "x"`) | `syntax error, unexpected STRING` | `stock-syntax-errors.ts` |
 | `P0012` | a number with no leading digit (`.50 USD`), at each one | `Invalid token: '.50'` | `stock-syntax-errors.ts` |
+| `P0012` | a currency that ends in `.`, `_` or `'` (`1 QAB.`, `commodity QAB_`), or a lone capital before one of `-'._` (`1 X.`), wherever it stands | `Invalid token: '.'` (the token runs to the next whitespace: `{1 QAB.}` is `.}`) | `stock-syntax-errors.ts` |
+| `P0012` | a currency that ends in `-` (`1 QAB-`), on a posting's units, cost or price, an `open`, `commodity`, `price` (the quoted currency) or `balance` line, or a metadata value; `price QAB- 1.00 USD` stays clean, since stock reads `price QAB -1.00 USD` | `syntax error, unexpected MINUS, expecting …` (the tokens stock expected there) | `stock-syntax-errors.ts`, `posting-syntax-errors.ts` |
+| `P0012` | a `custom` amount whose currency ends in `-` (`custom "budget" 1 QAB-`), where stock reads the `-` as the next value's sign and refuses the token after it; a line's end is reported on the next line, as stock does, and a number after it stays clean | `syntax error, unexpected EOL, expecting PLUS or MINUS or LPAREN or NUMBER` (or `STRING`, `DATE`, `BOOL`, `ACCOUNT`, `end of file`) | `stock-syntax-errors.ts` |
 | `P0012` | a `\|` after a transaction header's tags or links (`* "x" #tag \|`) | `syntax error, unexpected PIPE, expecting end of file or EOL or TAG or LINK` | `stock-syntax-errors.ts` |
 | `TOLERANCE` | a currency before a balance tolerance's `~` (`balance Assets:Cash 49.75 USD ~ 0.05 USD`, where the grammar wants `49.75 ~ 0.05 USD`), on the `balance` line | `syntax error, unexpected TILDE, expecting end of file or EOL` | `balance-tolerance-syntax.ts` |
 | `ZERO_UNITS_AT_COST` | a posting of zero units at a cost with a number (`0 VTI {5 USD}`, `0.00 VTI {0 USD}`), on the posting's line; `0 VTI {}`, a date or a label alone, and `0 EUR @ 1.1 USD` stay clean, as in stock | `Amount is zero: "0 VTI"` | `zero-units-at-cost.ts` |
@@ -313,6 +316,23 @@ with no difference. A tags line that holds more than tags (`#late Assets:Cash`)
 and a token after a header's tags end the directive the same way. The engine
 raises those itself, except a `|` after the tags, which the scan reports with
 stock's message and what is wrong.
+
+The engine books a currency named `QAB.` or `QAB-` (BQL reads `units(position)`
+as `{"QAB.": "1"}`), where stock's lexer ends a currency at its last capital or
+digit (`beancount/parser/lexer.l`), the rule the structured entries route
+already applies (`entry-tokens.ts`). The scan finds the currency where stock's
+lexer would start one: after whitespace, `{`, `,`, `@`, `~` or `)`, or a number
+or an expression written against it (`1QAB.`, `10/4/QAB.`), never inside an
+account or a tag (`#a-QAB.`). A `.`, `_` or `'` is the lexer's error wherever it
+is, like a `.50`, and a `-` is the grammar's, with stock's expected tokens for
+where the currency stands; the errors change no figure. Two neighboring refusals
+are left alone: a keyword where a currency goes (`1 TRUE-`, stock's `unexpected
+BOOL`), so a later error in that directive can still be reported, and a lone
+capital that ends a file with no line break (`1 X`). Checked against stock
+3.2.3's parser on 14,500 random ledgers, where it reported about 37,600 invalid
+tokens besides the `.50` kind, 8,000 `unexpected MINUS` errors and 110 errors
+after a `custom` amount's `-`, and on the 126 tracked ledger fixtures; those two
+were the only differences.
 
 The scan is syntactic and abstains on doubt: it reads one block's own lines (a
 line inside a multi-line string is never a key), and a line that does not have a

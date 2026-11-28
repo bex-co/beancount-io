@@ -3006,6 +3006,134 @@ async function main(): Promise<void> {
     spellingAccepted.valid,
     `what stock accepts stays clean: Assets:Cash- and Assets:9Cash, 0.50, 1. and 1,000.00, txn and a P flag, a key line, a colon in a string, a comment or an org-mode line (got ${JSON.stringify(spellingAccepted.errors.map((e) => `${e.line} ${e.message}`))})`,
   );
+  // w31/154: stock's currency ends in a capital or a digit, so it refuses
+  // `QAB.`, `QAB_` and `QAB'` as an invalid token after `QAB`, and `QAB-` as
+  // a `-` its grammar cannot take. The engine (0.24.0) books a currency named
+  // `QAB.` and loads each clean. The raw-engine assertion says when it
+  // catches up: delete those rules from `stock-syntax-errors.ts`.
+  const currencyLedger = (...lines: string[]): Record<string, string> => ({
+    "main.beancount": [
+      "2026-01-01 open Assets:QaCur",
+      "2026-01-01 open Assets:Broker",
+      "",
+      ...lines,
+      "",
+    ].join("\n"),
+  });
+  const twoPostings = (currency: string) => [
+    '2026-08-30 * "qa"',
+    `  Assets:QaCur  1 ${currency}`,
+    `  Assets:QaCur  -1 ${currency}`,
+  ];
+  const minusMessage = (expecting: string) =>
+    `syntax error, unexpected MINUS, expecting ${expecting}: "QAB-" is not a currency; a currency ends in a capital letter or a digit`;
+  const currencyRefused: Array<[string, string[], number, string]> = [
+    ["a posting's QAB.", twoPostings("QAB."), 5, "Invalid token: '.'"],
+    ["a posting's QAB'", twoPostings("QAB'"), 5, "Invalid token: '''"],
+    ["a posting's QAB_", twoPostings("QAB_"), 5, "Invalid token: '_'"],
+    ["a posting's /QAB.", twoPostings("/QAB."), 5, "Invalid token: '.'"],
+    [
+      "a posting's QAB-",
+      twoPostings("QAB-"),
+      5,
+      minusMessage("end of file or EOL or ATAT or AT"),
+    ],
+    [
+      "an open's QAB.",
+      ["2026-08-30 open Assets:QaX QAB."],
+      4,
+      "Invalid token: '.'",
+    ],
+    ["a commodity QAB.", ["2026-08-30 commodity QAB."], 4, "Invalid token: '.'"],
+    [
+      "a price of QAB.",
+      ["2026-08-30 price QAB. 1.00 USD"],
+      4,
+      "Invalid token: '.'",
+    ],
+    [
+      "a balance in QAB.",
+      ["2026-08-30 balance Assets:QaCur 0 QAB."],
+      4,
+      "Invalid token: '.'",
+    ],
+    [
+      "a custom amount in QAB.",
+      ['2026-08-30 custom "qa" 1 QAB.'],
+      4,
+      "Invalid token: '.'",
+    ],
+    [
+      "an open's QAB-",
+      ["2026-08-30 open Assets:QaX QAB-"],
+      4,
+      minusMessage("end of file or EOL"),
+    ],
+    [
+      "a commodity QAB-",
+      ["2026-08-30 commodity QAB-"],
+      4,
+      minusMessage("end of file or EOL"),
+    ],
+    [
+      "a balance in QAB-",
+      ["2026-08-30 balance Assets:QaCur 0 QAB-"],
+      4,
+      minusMessage("end of file or EOL"),
+    ],
+  ];
+  for (const [label, lines, line, message] of currencyRefused) {
+    const files = currencyLedger(...lines);
+    const raw = await rawValidate(files, "main.beancount");
+    assert(
+      raw.valid,
+      `the raw engine still loads ${label}, so its rule is load-bearing (got ${JSON.stringify(raw.errors.map((e) => e.message))})`,
+    );
+    const reported = await parseLedgerFiles(files, "main.beancount");
+    assert(
+      !reported.valid &&
+        reported.errors.some(
+          (e) =>
+            e.code === "P0012" &&
+            e.line === line &&
+            e.message === message &&
+            e.severity === "error",
+        ),
+      `${label} is reported at line ${line}, as stock refuses it (got ${JSON.stringify(reported.errors.map((e) => `${e.line} ${e.message}`))})`,
+    );
+  }
+  const bookedTrailingDot = await queryLedgerFiles(
+    currencyLedger(...twoPostings("QAB.")),
+    "main.beancount",
+    "SELECT units(position) WHERE account = 'Assets:QaCur'",
+  );
+  assert(
+    JSON.stringify(bookedTrailingDot.rows).includes("QAB."),
+    `the engine still books a currency named QAB., which the error flags (got ${JSON.stringify(bookedTrailingDot.rows)})`,
+  );
+  const currencyAccepted = await parseLedgerFiles(
+    currencyLedger(
+      '2026-08-30 * "controls"',
+      "  Assets:QaCur  1 QA.B",
+      "  Assets:QaCur  1 QA..B",
+      "  Assets:QaCur  1 /QAB",
+      "  Assets:QaCur  1 ABCDEFGHIJKLMNOPQRSTUVWX",
+      "  Assets:QaCur  1 ABCDEFGHIJKLMNOPQRSTUVWXY",
+      "  Assets:QaCur  1 X",
+      "  Assets:QaCur  -1 QA.B",
+      "  Assets:QaCur  -1 QA..B",
+      "  Assets:QaCur  -1 /QAB",
+      "  Assets:QaCur  -1 ABCDEFGHIJKLMNOPQRSTUVWX",
+      "  Assets:QaCur  -1 ABCDEFGHIJKLMNOPQRSTUVWXY",
+      "  Assets:QaCur  -1 X",
+      "2026-08-30 price QAB- 1.00 USD",
+    ),
+    "main.beancount",
+  );
+  assert(
+    currencyAccepted.valid,
+    `what stock accepts stays clean: QA.B, QA..B, /QAB, a 24- or 25-character currency, X, and price QAB- 1.00 USD, which stock reads as price QAB -1.00 USD (got ${JSON.stringify(currencyAccepted.errors.map((e) => `${e.line} ${e.message}`))})`,
+  );
   // w23/199: a run of trailing terminators is empty statements stock
   // tolerates; every `;` has to go or the bare `FROM postings` tail resolves
   // as a column.
