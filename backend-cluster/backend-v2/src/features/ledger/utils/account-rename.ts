@@ -18,7 +18,11 @@ import { isSkippedLine } from "./skipped-line";
 
 /** What the rename does, as REST, GraphQL and MCP describe it; each adds its own preview and undo names. */
 export const RENAME_ACCOUNT_DESCRIPTION =
-  "Rename an account and every account under it across the ledger's loaded files in one commit: account tokens outside strings and comments, whole names only. Bank mappings move with it. Refused for an invalid name, another root, or a name the ledger already uses; new bean-check errors refuse the commit unless allowInvalid.";
+  'Rename an account and every account under it across the ledger\'s loaded files in one commit: account tokens outside strings and comments, whole names only. Its folders under each option "documents" root move in the same commit, and bank mappings move with it. Refused for an invalid name, another root, a name the ledger already uses, or a documents folder of the new name that already holds files; new bean-check errors refuse the commit unless allowInvalid.';
+
+/** The rename result's `documents`, as REST, GraphQL and MCP publish it (w31/149). */
+export const RENAMED_DOCUMENTS_DESCRIPTION =
+  "Each file moved from a renamed account's folder under an option \"documents\" root to the same place under the new name's folder, so its statements stay documents of the account.";
 
 export interface AccountRenameChange {
   /** 1-based line of the source text. */

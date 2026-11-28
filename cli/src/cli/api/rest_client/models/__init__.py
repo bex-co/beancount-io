@@ -401,6 +401,9 @@ from .post_api_gateway_v1_ledgers_owner_name_rename_account_response_200_account
 from .post_api_gateway_v1_ledgers_owner_name_rename_account_response_200_bank_mappings_item import (
     PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200BankMappingsItem,
 )
+from .post_api_gateway_v1_ledgers_owner_name_rename_account_response_200_documents_item import (
+    PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200DocumentsItem,
+)
 from .post_api_gateway_v1_ledgers_owner_name_rename_account_response_200_files_item import (
     PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200FilesItem,
 )
@@ -745,6 +748,7 @@ __all__ = (
     "PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200",
     "PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200AccountsItem",
     "PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200BankMappingsItem",
+    "PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200DocumentsItem",
     "PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200FilesItem",
     "PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200FilesItemChangesItem",
     "PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200NewErrorsItem",

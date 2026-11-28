@@ -15,6 +15,9 @@ if TYPE_CHECKING:
     from ..models.post_api_gateway_v1_ledgers_owner_name_rename_account_response_200_bank_mappings_item import (
         PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200BankMappingsItem,
     )
+    from ..models.post_api_gateway_v1_ledgers_owner_name_rename_account_response_200_documents_item import (
+        PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200DocumentsItem,
+    )
     from ..models.post_api_gateway_v1_ledgers_owner_name_rename_account_response_200_files_item import (
         PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200FilesItem,
     )
@@ -38,6 +41,9 @@ class PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200:
             descendants included.
         files (list[PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200FilesItem]): Each loaded file the rename
             changes, with every line it rewrites.
+        documents (list[PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200DocumentsItem]): Each file moved from a
+            renamed account's folder under an option "documents" root to the same place under the new name's folder, so its
+            statements stay documents of the account.
         bank_mappings (list[PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200BankMappingsItem]): Bank mappings
             moved.
         errors_before (int):
@@ -57,6 +63,7 @@ class PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200:
     to: str
     accounts: list[PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200AccountsItem]
     files: list[PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200FilesItem]
+    documents: list[PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200DocumentsItem]
     bank_mappings: list[PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200BankMappingsItem]
     errors_before: int
     errors_after: int
@@ -85,6 +92,11 @@ class PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200:
         for files_item_data in self.files:
             files_item = files_item_data.to_dict()
             files.append(files_item)
+
+        documents = []
+        for documents_item_data in self.documents:
+            documents_item = documents_item_data.to_dict()
+            documents.append(documents_item)
 
         bank_mappings = []
         for bank_mappings_item_data in self.bank_mappings:
@@ -118,6 +130,7 @@ class PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200:
                 "to": to,
                 "accounts": accounts,
                 "files": files,
+                "documents": documents,
                 "bankMappings": bank_mappings,
                 "errorsBefore": errors_before,
                 "errorsAfter": errors_after,
@@ -141,6 +154,9 @@ class PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200:
         )
         from ..models.post_api_gateway_v1_ledgers_owner_name_rename_account_response_200_bank_mappings_item import (
             PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200BankMappingsItem,  # noqa: PLC0415
+        )
+        from ..models.post_api_gateway_v1_ledgers_owner_name_rename_account_response_200_documents_item import (
+            PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200DocumentsItem,  # noqa: PLC0415
         )
         from ..models.post_api_gateway_v1_ledgers_owner_name_rename_account_response_200_files_item import (
             PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200FilesItem,  # noqa: PLC0415
@@ -173,6 +189,15 @@ class PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200:
             files_item = PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200FilesItem.from_dict(files_item_data)
 
             files.append(files_item)
+
+        documents = []
+        _documents = d.pop("documents")
+        for documents_item_data in _documents:
+            documents_item = PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200DocumentsItem.from_dict(
+                documents_item_data
+            )
+
+            documents.append(documents_item)
 
         bank_mappings = []
         _bank_mappings = d.pop("bankMappings")
@@ -211,6 +236,7 @@ class PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200:
             to=to,
             accounts=accounts,
             files=files,
+            documents=documents,
             bank_mappings=bank_mappings,
             errors_before=errors_before,
             errors_after=errors_after,

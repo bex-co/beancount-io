@@ -1539,4 +1539,124 @@ describe("LedgerRepoService", () => {
       ).toBe(text);
     });
   });
+
+  // w31/149: an account rename moves the statements in its documents folder,
+  // PDFs included, in the commit that rewrites the ledger files.
+  describe("changeGeneratedFiles with a move", () => {
+    const PDF = Buffer.from([0x25, 0x50, 0x44, 0x46, 0xff, 0x00, 0xfe, 0x0a]);
+    const FROM = "docs/Assets/Bank/Checking/2026-08-15.statement.pdf";
+    const TO = "docs/Assets/Bank/Main/2026-08-15.statement.pdf";
+    const move = {
+      operation: "move" as const,
+      path: TO,
+      from_path: FROM,
+      sha: "a".repeat(40),
+    };
+
+    beforeEach(() => {
+      // An empty tree: no includer can stop the delete.
+      mockGetLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+      mockChangeLedgerFiles.mockResolvedValue({
+        data: { success: true, data: { commit: "c0ffee" } },
+      });
+    });
+
+    const sourceRead = (sha: string) =>
+      mockGetLedgerFilesContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            {
+              path: FROM,
+              type: "file",
+              content: PDF.toString("base64"),
+              encoding: "base64",
+              sha,
+            },
+          ],
+        },
+      });
+
+    it("creates the new path from the bytes read and deletes the old one at its sha, beside the text updates", async () => {
+      sourceRead(move.sha);
+      const result = await service.changeGeneratedFiles({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        operations: [
+          {
+            operation: "update",
+            path: "main.bean",
+            content: "2026-01-01 open Assets:Bank:Main\n",
+            sha: "b".repeat(40),
+          },
+          move,
+        ],
+        message: "Rename Assets:Bank:Checking to Assets:Bank:Main",
+      });
+      expect(result).toEqual({ commit: "c0ffee" });
+      expect(mockGetLedgerFilesContent).toHaveBeenCalledWith(
+        "testowner",
+        "testledger",
+        { files: [FROM] },
+      );
+      const sent = mockChangeLedgerFiles.mock.calls.at(-1)![2];
+      expect(sent.files).toEqual([
+        {
+          operation: "update",
+          path: "main.bean",
+          content: Buffer.from(
+            "2026-01-01 open Assets:Bank:Main\n",
+            "utf8",
+          ).toString("base64"),
+          sha: "b".repeat(40),
+        },
+        { operation: "create", path: TO, content: PDF.toString("base64") },
+        { operation: "delete", path: FROM, sha: move.sha },
+      ]);
+      expect(Buffer.from(sent.files[1].content, "base64")).toEqual(PDF);
+    });
+
+    it.each([
+      ["changed since it was listed", () => sourceRead("c".repeat(40))],
+      [
+        "gone",
+        () =>
+          mockGetLedgerFilesContent.mockResolvedValue({
+            data: { success: true, data: [] },
+          }),
+      ],
+    ])(
+      "refuses the whole batch when the source is %s, writing nothing",
+      async (_case, arrange) => {
+        arrange();
+        await expect(
+          service.changeGeneratedFiles({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            operations: [move],
+            message: "Rename",
+          }),
+        ).rejects.toMatchObject({
+          category: "CONFLICT",
+          message: expect.stringContaining(`${FROM} changed since it was read`),
+        });
+        expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+      },
+    );
+
+    it("refuses moving the entry point before reading anything", async () => {
+      await expect(
+        service.changeGeneratedFiles({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          operations: [{ ...move, from_path: "main.bean" }],
+          message: "Rename",
+        }),
+      ).rejects.toBeInstanceOf(BadUserInputError);
+      expect(mockGetLedgerFilesContent).not.toHaveBeenCalled();
+      expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+    });
+  });
 });

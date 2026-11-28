@@ -29,6 +29,7 @@ import {
 } from "@/features/ledger/utils/commit-revert";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { MAKE_PUBLIC_FIELD } from "@/features/ledger/utils/ledger-visibility";
+import { RENAMED_DOCUMENTS_DESCRIPTION } from "@/features/ledger/utils/account-rename";
 
 registerEnumType(LedgerTemplate, {
   name: "LedgerTemplate",
@@ -610,6 +611,15 @@ export class AccountRenameFile {
 }
 
 @ObjectType()
+export class AccountRenameDocument {
+  @Field(() => String, { description: "The file's path before the rename." })
+  from: string;
+
+  @Field(() => String, { description: "Its path under the new name's folder." })
+  to: string;
+}
+
+@ObjectType()
 export class AccountRenameBankMapping {
   @Field(() => String, {
     nullable: true,
@@ -884,6 +894,11 @@ export class RenameLedgerAccountResponse extends WriteVerdict {
 
   @Field(() => [AccountRenameFile])
   files: AccountRenameFile[];
+
+  @Field(() => [AccountRenameDocument], {
+    description: RENAMED_DOCUMENTS_DESCRIPTION,
+  })
+  documents: AccountRenameDocument[];
 
   @Field(() => [AccountRenameBankMapping])
   bankMappings: AccountRenameBankMapping[];

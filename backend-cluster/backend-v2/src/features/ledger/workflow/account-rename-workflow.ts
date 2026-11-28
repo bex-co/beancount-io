@@ -9,10 +9,16 @@ import {
 import type {
   ILedgerGeneratedFileWriter,
   ILedgerRepoService,
+  LedgerFileEntry,
 } from "@/features/ledger/service/ledger-repo-service";
 import type { ILedgerDataService } from "@/features/ledger/service/ledger-data-service";
 import { gateFileWrite } from "@/features/ledger/utils/file-write-gate";
 import { commitRename } from "@/features/ledger/utils/rename-write-race";
+import { LEDGER_ENTRY_POINT } from "@/features/ledger/utils/ledger-entry-point";
+import {
+  accountFolder,
+  documentRoots,
+} from "@/features/ledger/utils/document-folders";
 import {
   lexesAsAccount,
   loadsAsAccount,
@@ -41,16 +47,23 @@ const NOT_UTF8_HINT =
 
 type RepoDeps = Pick<
   ILedgerRepoService,
-  "getFilesContent" | "checkProjectedFiles" | "projectedSourceFiles"
+  | "getFilesContent"
+  | "checkProjectedFiles"
+  | "projectedSourceFiles"
+  | "listDirContent"
 > &
   ILedgerGeneratedFileWriter;
+
+/** A file a rename moves out of an account's documents folder, at the sha it was listed with. */
+type DocumentMove = { from: string; to: string; sha: string };
 
 /**
  * Rename one account, and every account under it, across a hosted ledger's
  * loaded files in one commit (w1/m43; contract in `.pm/w1/m43/done/t001.md`).
  * Read, rename, gate the projection on new bean-check errors, then commit with
  * each file's sha, so a file changed since the read refuses the whole rename.
- * Bank mappings move after the commit.
+ * The account's documents folders move in the same commit (w31/149); bank
+ * mappings move after it.
  */
 export class AccountRenameWorkflow implements IAccountRenameWorkflow {
   private readonly logger = logger.child({ module: "account-rename" });
@@ -134,6 +147,15 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
           renamed: renameAccountAt(file.content, file.offsets, from, to),
         };
       });
+    const documents = await this.documentMoves({
+      ledgerId,
+      identity,
+      entryPoint: files.find((file) => file.path === LEDGER_ENTRY_POINT)
+        ?.content,
+      loaded: new Set(paths),
+      from,
+      to,
+    });
     // Independent reads: the mappings need only the ledger, not the verdict.
     // A preview reports new errors; only a commit is refused for them (w23/219).
     // An error the ledger had that names the account is the same error under
@@ -160,7 +182,11 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
       (count, file) => count + file.renamed.changes.length,
       0,
     );
-    const summary = `${from} to ${to}: ${lines} line${lines === 1 ? "" : "s"} in ${changed.length} file${changed.length === 1 ? "" : "s"}`;
+    const moved =
+      documents.length === 0
+        ? ""
+        : `, ${documents.length} document${documents.length === 1 ? "" : "s"} moved`;
+    const summary = `${from} to ${to}: ${lines} line${lines === 1 ? "" : "s"} in ${changed.length} file${changed.length === 1 ? "" : "s"}${moved}`;
     let commit: string | undefined;
     let mappingsUpdated = false;
     if (!dryRun) {
@@ -168,12 +194,20 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
         this.ledgerRepo.changeGeneratedFiles({
           ledgerId,
           identity,
-          operations: changed.map((file) => ({
-            operation: "update" as const,
-            path: file.path,
-            content: file.renamed.text,
-            sha: file.sha,
-          })),
+          operations: [
+            ...changed.map((file) => ({
+              operation: "update" as const,
+              path: file.path,
+              content: file.renamed.text,
+              sha: file.sha,
+            })),
+            ...documents.map((move) => ({
+              operation: "move" as const,
+              path: move.to,
+              from_path: move.from,
+              sha: move.sha,
+            })),
+          ],
           message: `Rename ${from} to ${to}`,
         }),
       ));
@@ -181,6 +215,7 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
         ledgerId,
         files: changed.length,
         lines,
+        documents: documents.length,
       });
       try {
         if (mappings.length > 0) {
@@ -215,6 +250,7 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
         path: file.path,
         changes: file.renamed.changes,
       })),
+      documents: documents.map((move) => ({ from: move.from, to: move.to })),
       bankMappings: mappings.map((mapping) => ({
         plaidAccount: mapping.name,
         from: mapping.ledgerAccount,
@@ -225,6 +261,87 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
       dryRun,
       ...(commit !== undefined && { commit }),
     };
+  }
+
+  /**
+   * The moves that keep `from`'s documents with it (w31/149): every file
+   * under its folder in each `option "documents"` root the entry point
+   * declares, its descendants' folders included, to the same place under
+   * `to`'s folder. Without them the folder names an account no entry uses,
+   * and discovery drops every statement in it without a word, as stock
+   * Beancount does. A file the ledger loads stays, since an include names it
+   * where it is. Refused when `to`'s folder already holds a file, so two
+   * folders never merge.
+   */
+  private async documentMoves({
+    ledgerId,
+    identity,
+    entryPoint,
+    loaded,
+    from,
+    to,
+  }: {
+    ledgerId: string;
+    identity: Identity;
+    entryPoint: string | undefined;
+    loaded: ReadonlySet<string>;
+    from: string;
+    to: string;
+  }): Promise<DocumentMove[]> {
+    const moves: DocumentMove[] = [];
+    if (entryPoint === undefined) return moves;
+    const moving = new Set<string>();
+    for (const root of documentRoots(entryPoint, LEDGER_ENTRY_POINT)) {
+      const source = accountFolder(root, from);
+      const target = accountFolder(root, to);
+      const leaving = (
+        await this.filesUnder(ledgerId, identity, source)
+      ).filter((file) => !loaded.has(file.path) && !moving.has(file.path));
+      if (leaving.length === 0) continue;
+      const arriving = leaving.map((file) => ({
+        from: file.path,
+        to: `${target}${file.path.slice(source.length)}`,
+        sha: file.sha,
+      }));
+      const left = new Set(leaving.map((file) => file.path));
+      const landing = new Set(arriving.map((move) => move.to));
+      const held = (await this.filesUnder(ledgerId, identity, target)).find(
+        (file) => !left.has(file.path) || landing.has(file.path),
+      );
+      if (held) {
+        throw new BadUserInputError(
+          `${held.path} is already in ${target}, the documents folder of ${to}; moving ${source} there would merge two folders. Move or remove the files in ${target} first, or rename to another account.`,
+          "to",
+        );
+      }
+      for (const move of arriving) moving.add(move.from);
+      moves.push(...arriving);
+    }
+    return moves;
+  }
+
+  /** Every file under `folder`, at any depth; none when there is no such folder. */
+  private async filesUnder(
+    ledgerId: string,
+    identity: Identity,
+    folder: string,
+  ): Promise<LedgerFileEntry[]> {
+    const files: LedgerFileEntry[] = [];
+    const pending = [folder];
+    while (pending.length > 0) {
+      // Git keeps no empty folder, so a missing one lists as NOT_FOUND (w23/014).
+      const entries = await this.ledgerRepo
+        .listDirContent({ ledgerId, identity, dirPath: pending.pop() })
+        .catch((error: unknown) => {
+          if (error instanceof NotFoundError) return [];
+          throw error;
+        });
+      for (const entry of entries) {
+        if (entry.type === "dir") pending.push(entry.path);
+        else files.push(entry);
+      }
+    }
+    return files;
   }
 }
 

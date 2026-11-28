@@ -18,6 +18,12 @@ export interface RenameAccountResult {
   /** Each loaded file the rename changes, with every line it rewrites. */
   files: { path: string; changes: AccountRenameChange[] }[];
   /**
+   * Each file moved from a renamed account's folder under an
+   * `option "documents"` root to the same place under the new name's folder,
+   * in the same commit (w31/149).
+   */
+  documents: { from: string; to: string }[];
+  /**
    * Each bank mapping that named a renamed account. `updated` is false on a
    * preview, and on a commit whose mapping update failed: that mapping still
    * names the old account, and `message` says so.

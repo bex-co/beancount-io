@@ -741,7 +741,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     name: "renameAccount",
     title: "Rename Account",
     annotations: DESTRUCTIVE,
-    description: `${RENAME_ACCOUNT_DESCRIPTION} Pinned credentials can omit ledger. dry_run previews without committing: the changed lines and bank mappings. revertCommit undoes the commit.`,
+    description: `${RENAME_ACCOUNT_DESCRIPTION} Pinned credentials can omit ledger. dry_run previews without committing: the changed lines, moved documents and bank mappings. revertCommit undoes the commit.`,
     inputSchema: renameAccountToolInput,
     outputSchema: mcpOutputSchema(
       toolOutputSchema(
@@ -767,7 +767,14 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
           ...result,
           // The workflow spells the echo dryRun; MCP publishes dry_run (w23/m7/t004).
           dry_run: dryRun,
-          wrote: dryRun ? [] : result.files.map(({ path }) => ({ path })),
+          // Every path the commit changed: each rewritten file, then both
+          // ends of each document move, as renameLedgerFile lists its own.
+          wrote: dryRun
+            ? []
+            : [
+                ...result.files.map(({ path }) => path),
+                ...result.documents.flatMap((move) => [move.to, move.from]),
+              ].map((path) => ({ path })),
           entryHashes: [],
           validation,
         },

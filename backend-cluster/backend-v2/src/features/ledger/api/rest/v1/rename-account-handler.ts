@@ -5,7 +5,10 @@ import { writeFlagsInput } from "@/features/ledger/utils/flag-alias";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { flattenValidation } from "@/features/ledger/utils/bean-check-errors";
 import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
-import { RENAME_ACCOUNT_DESCRIPTION } from "@/features/ledger/utils/account-rename";
+import {
+  RENAME_ACCOUNT_DESCRIPTION,
+  RENAMED_DOCUMENTS_DESCRIPTION,
+} from "@/features/ledger/utils/account-rename";
 import { ledgerPathSchema, ledgerIdOf, writeVerdictShape } from "./schemas";
 
 export const renameAccountInput = z
@@ -55,6 +58,9 @@ export const renameAccountResult = z.object({
     .describe(
       "Each loaded file the rename changes, with every line it rewrites.",
     ),
+  documents: z
+    .array(z.object({ from: z.string(), to: z.string() }))
+    .describe(RENAMED_DOCUMENTS_DESCRIPTION),
   bankMappings: z
     .array(
       z.object({
@@ -82,7 +88,7 @@ export const renameAccountRoute = v1Route({
   method: "post",
   path: "/api-gateway/v1/ledgers/{owner}/{name}/rename-account",
   summary: "Rename an account",
-  description: `${RENAME_ACCOUNT_DESCRIPTION} dryRun previews without committing: the changed lines and bank mappings. POST …/revert-commit undoes the commit.`,
+  description: `${RENAME_ACCOUNT_DESCRIPTION} dryRun previews without committing: the changed lines, moved documents and bank mappings. POST …/revert-commit undoes the commit.`,
   params: ledgerPathSchema,
   query: z.object({}).strict(),
   body: renameAccountInput,

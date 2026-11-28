@@ -651,6 +651,17 @@ is not touched. A comment is a `;` comment or a line Beancount skips whole: one
 that starts with `*`, `#`, `:`, `!`, `&`, `?` or `%`, where a `"` opens no
 string.
 
+The account's statements move with it (w31/149). Beancount's
+`option "documents"` names a folder whose subfolders are named for accounts: a
+file in `<root>/Assets/Bank/Checking/` named `YYYY-MM-DD.<anything>` is a
+document of `Assets:Bank:Checking`, but only while some entry names that
+account, so a folder left under the old name drops every statement in it
+without an error. For each documents root `main.bean` declares, the rename
+moves every file under the folder of `from`, its descendants' folders included,
+to the same place under the folder of `to`, bytes unchanged, in the same
+commit. A file the ledger loads stays where its `include` names it, and a root
+with no folder for the account changes nothing.
+
 `to` may be any name stock Beancount loads, and that includes non-Latin
 components after the first: `Expenses:Food:日本` renames to
 `Expenses:Food:食品` or `Expenses:Food:Japan` and back. The root is a capital
@@ -672,6 +683,9 @@ It refuses, writing nothing:
   the account, not a rename;
 - a `to`, or any name a descendant would take, that the ledger already uses
   (`BAD_USER_INPUT`), because renaming onto it would merge two accounts;
+- a `to` whose documents folder already holds a file, when the rename has
+  files to move there (`BAD_USER_INPUT`, naming the file), because the move
+  would merge two folders;
 - a `from` no loaded file names (`NOT_FOUND`, with a hint to read the ledger's
   accounts first);
 - a credential that cannot write the ledger's files (`FORBIDDEN`);
@@ -687,8 +701,10 @@ It refuses, writing nothing:
 
 `dry_run` returns what the commit would do: `accounts` (each `from`/`to` pair,
 descendants included), `files` (each changed line, `before` and `after`),
-`bankMappings` and `validation`. A commit returns the same plus `commit`;
-`revertCommit` on that sha undoes it.
+`documents` (each moved file's `from` and `to` path), `bankMappings` and
+`validation`. The message counts the moves: `1 line in 1 file, 1 document
+moved`. A commit returns the same plus `commit`; `revertCommit` on that sha
+undoes it, putting each moved file back.
 
 Bank-account mappings that name a renamed account move with it, for every
 member of the ledger, after the files commit: otherwise the next sync would

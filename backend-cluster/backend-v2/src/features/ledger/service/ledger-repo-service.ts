@@ -33,6 +33,7 @@ import { assertExplicitFileContentSize } from "@/features/ledger/utils/explicit-
 import { assertBlobShaFormat } from "@/features/ledger/utils/blob-sha";
 import {
   BadUserInputError,
+  ConflictError,
   InternalServerError,
   NotFoundError,
 } from "@/shared/errors";
@@ -86,9 +87,30 @@ type FileChangesParams = {
   dryRun?: boolean;
 };
 
+/**
+ * Moves the file at `from_path` to `path` with its bytes unchanged: a create
+ * and a delete at `sha` in the same commit, so a binary statement in an
+ * account's documents folder moves with the account (w31/149).
+ */
+type GeneratedFileMove = {
+  operation: "move";
+  path: string;
+  from_path: string;
+  sha: string;
+};
+
+type GeneratedFileChangesParams = Omit<FileChangesParams, "operations"> & {
+  operations: (LedgerChangeFileOperation | GeneratedFileMove)[];
+};
+
+/** An operation as committed; `encoded` content is already base64. */
+type CommitOperation = LedgerChangeFileOperation & { encoded?: true };
+
 /** Internal commits of generated/merged ledger text, not explicit file uploads. */
 export interface ILedgerGeneratedFileWriter {
-  changeGeneratedFiles(params: FileChangesParams): Promise<FileChangesResult>;
+  changeGeneratedFiles(
+    params: GeneratedFileChangesParams,
+  ): Promise<FileChangesResult>;
 }
 
 /**
@@ -425,7 +447,7 @@ export class LedgerRepoService
     >,
     ledgerOwner: string,
     ledgerName: string,
-    operations: LedgerChangeFileOperation[],
+    operations: CommitOperation[],
   ): Promise<void> {
     // Net effect in batch order: a path the batch deletes and recreates
     // survives, while create-then-delete ends gone.
@@ -440,7 +462,12 @@ export class LedgerRepoService
       } else {
         deleted.delete(operation.path);
         if (operation.content !== undefined && operation.content !== null)
-          projected.set(operation.path, operation.content);
+          projected.set(
+            operation.path,
+            operation.encoded
+              ? Buffer.from(operation.content, "base64").toString("utf8")
+              : operation.content,
+          );
       }
     }
     if (deleted.size === 0) return;
@@ -457,13 +484,68 @@ export class LedgerRepoService
   // the service layer's typed `ledgerRepo`. Generated merges retain all other
   // write guards; only the explicit-upload size and path checks are skipped.
   async changeGeneratedFiles(
-    params: FileChangesParams,
+    params: GeneratedFileChangesParams,
   ): Promise<FileChangesResult> {
     await this.authorizeFileChanges(params);
-    return this.commitFileChanges(params);
+    return this.commitFileChanges({
+      ...params,
+      operations: await this.withMovesExpanded(params),
+    });
   }
 
-  private async authorizeFileChanges(params: FileChangesParams): Promise<void> {
+  /**
+   * Each move as the create and the delete that make it, the create carrying
+   * the source's bytes as the repository holds them. A source that is gone,
+   * or changed since its `sha` was read, refuses the whole batch as a lost
+   * race: nothing is written.
+   */
+  private async withMovesExpanded(
+    params: GeneratedFileChangesParams,
+  ): Promise<CommitOperation[]> {
+    const { ledgerId, identity, operations } = params;
+    const sources = operations.flatMap((operation) =>
+      operation.operation === "move" ? [operation.from_path] : [],
+    );
+    if (sources.length === 0) return operations as CommitOperation[];
+    const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    const favaApiClient = await this.favaClientFactory.getPublicApiClient(
+      ledgerId,
+      identity.userId,
+    );
+    const read = await unwrapFavaResponse(
+      favaApiClient.ledgers.getLedgerFilesContent(ledgerOwner, ledgerName, {
+        files: [...new Set(sources)],
+      }),
+      "read moved files",
+    );
+    const files = new Map(read.map((file) => [file.path, file]));
+    return operations.flatMap((operation): CommitOperation[] => {
+      if (operation.operation !== "move") return [operation];
+      const source = files.get(operation.from_path);
+      if (!source || source.type === "dir" || source.sha !== operation.sha) {
+        throw new ConflictError(
+          "Ledger file",
+          `${operation.from_path} changed since it was read; nothing was written`,
+        );
+      }
+      return [
+        {
+          operation: "create",
+          path: operation.path,
+          content:
+            source.encoding === "base64"
+              ? (source.content ?? "").replace(/\s/g, "")
+              : Buffer.from(source.content ?? "", "utf8").toString("base64"),
+          encoded: true,
+        },
+        { operation: "delete", path: operation.from_path, sha: operation.sha },
+      ];
+    });
+  }
+
+  private async authorizeFileChanges(
+    params: GeneratedFileChangesParams,
+  ): Promise<void> {
     const { ledgerId, identity, operations } = params;
     await authorizeLedger(
       identity,
@@ -490,6 +572,12 @@ export class LedgerRepoService
           "deleted",
           `operations[${index}].path`,
         );
+      if (operation.operation === "move")
+        assertKeepsEntryPoint(
+          operation.from_path,
+          "renamed",
+          `operations[${index}].from_path`,
+        );
       if (operation.from_path !== null && operation.from_path !== undefined) {
         assertSafeRepoPath(
           operation.from_path,
@@ -500,7 +588,9 @@ export class LedgerRepoService
   }
 
   private async commitFileChanges(
-    params: FileChangesParams,
+    params: Omit<FileChangesParams, "operations"> & {
+      operations: CommitOperation[];
+    },
   ): Promise<FileChangesResult> {
     const { ledgerId, identity, operations, message, dryRun = false } = params;
     // An authorization-only call (no changes) has nothing to preview.
@@ -585,9 +675,12 @@ export class LedgerRepoService
         // and writes it back never has to know. It was the one caller that
         // *didn't* know that broke: REST `PUT …/files/{path}` forwarded the
         // request body verbatim and Gitea refused it as illegal base64, while
-        // the MCP edit tool encoded first and worked (w2/011).
-        files: operations.map((operation) =>
-          operation.content === null || operation.content === undefined
+        // the MCP edit tool encoded first and worked (w2/011). A moved file's
+        // bytes were read as base64 and go as they are (w31/149).
+        files: operations.map(({ encoded, ...operation }) =>
+          encoded ||
+          operation.content === null ||
+          operation.content === undefined
             ? operation
             : {
                 ...operation,

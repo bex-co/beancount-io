@@ -1,6 +1,6 @@
 import { AccountRenameWorkflow } from "../account-rename-workflow";
 import type { Identity } from "@/server/api/identity";
-import { ConflictError, ForbiddenError } from "@/shared/errors";
+import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors";
 
 /** w1/m43/t002 — the rename reads the loaded files, gates the projection, and commits once. */
 
@@ -53,6 +53,8 @@ function fixture(
     forbidden?: boolean;
     /** A file changed between the read and the commit. */
     stale?: boolean;
+    /** Repository files the ledger does not load, such as statements. */
+    repoFiles?: string[];
   } = {},
 ) {
   const files = new Map(
@@ -79,6 +81,22 @@ function fixture(
         })),
     ),
     checkProjectedFiles: jest.fn(async () => options.projectedErrors ?? []),
+    // One level, as the repo service lists it: a missing folder is NOT_FOUND.
+    listDirContent: jest.fn(async ({ dirPath }: { dirPath?: string }) => {
+      const prefix = dirPath ? `${dirPath}/` : "";
+      const entries = new Map<string, "file" | "dir">();
+      for (const path of [...files.keys(), ...(options.repoFiles ?? [])]) {
+        if (!path.startsWith(prefix)) continue;
+        const [name, ...below] = path.slice(prefix.length).split("/");
+        entries.set(`${prefix}${name}`, below.length > 0 ? "dir" : "file");
+      }
+      if (entries.size === 0) throw new NotFoundError(`Directory '${dirPath}'`);
+      return [...entries].map(([path, type]) => ({
+        path,
+        type,
+        sha: `sha-${path}`,
+      }));
+    }),
     changeGeneratedFiles: jest.fn(
       async (_params: {
         operations: {
@@ -602,6 +620,52 @@ describe("AccountRenameWorkflow (w1/m43)", () => {
         category: "VALIDATION_FAILED",
       });
       expect(bankMappings.remap).not.toHaveBeenCalled();
+    });
+  });
+
+  // w31/149: a documents folder moves with its account, but a ledger file
+  // inside it stays where its include names it.
+  describe("documents folders", () => {
+    const ROOTED = [
+      'option "documents" "."',
+      'include "Assets/Bank/Checking/2026.bean"',
+      "2026-01-01 open Assets:Bank:Checking USD",
+      "2026-01-01 open Expenses:Coffee USD",
+      "",
+    ].join("\n");
+    const STATEMENT = "Assets/Bank/Checking/2026-08-15.statement.pdf";
+
+    it("moves the statements and leaves a file the ledger loads in place", async () => {
+      const { ledgerRepo, rename } = fixture({
+        files: {
+          "main.bean": ROOTED,
+          "Assets/Bank/Checking/2026.bean": YEAR,
+        },
+        repoFiles: [STATEMENT],
+      });
+      const result = await rename({
+        from: "Assets:Bank:Checking",
+        to: "Assets:Bank:Main",
+      });
+      expect(result.documents).toEqual([
+        { from: STATEMENT, to: "Assets/Bank/Main/2026-08-15.statement.pdf" },
+      ]);
+      const { operations } = ledgerRepo.changeGeneratedFiles.mock.calls[0][0];
+      expect(operations.map((op) => op.path)).toEqual([
+        "main.bean",
+        "Assets/Bank/Checking/2026.bean",
+        "Assets/Bank/Main/2026-08-15.statement.pdf",
+      ]);
+    });
+
+    it("lists nothing when the entry point declares no documents root", async () => {
+      const { ledgerRepo, rename } = fixture();
+      const result = await rename({
+        from: "Assets:Bank:Checking",
+        to: "Assets:Bank:Main",
+      });
+      expect(result.documents).toEqual([]);
+      expect(ledgerRepo.listDirContent).not.toHaveBeenCalled();
     });
   });
 });

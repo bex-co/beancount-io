@@ -173,7 +173,7 @@ export class LedgerMutationResolver {
 
   @Authenticated()
   @Mutation(() => RenameLedgerAccountResponse, {
-    description: `${RENAME_ACCOUNT_DESCRIPTION} dryRun previews without committing: the changed lines and bank mappings. revertLedgerCommit undoes the commit.`,
+    description: `${RENAME_ACCOUNT_DESCRIPTION} dryRun previews without committing: the changed lines, moved documents and bank mappings. revertLedgerCommit undoes the commit.`,
   })
   async renameLedgerAccount(
     @Arg("ledgerId", () => String) ledgerId: string,

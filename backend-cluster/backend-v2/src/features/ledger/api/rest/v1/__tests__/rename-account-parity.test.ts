@@ -11,7 +11,7 @@ import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import { formatError } from "@/server/graphql/format-error";
-import { ForbiddenError } from "@/shared/errors";
+import { ForbiddenError, NotFoundError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
@@ -81,6 +81,15 @@ const missingUsd = (account: string) => ({
 });
 const SAVINGS = "2026-01-01 open Assets:Bank:Savings USD\n";
 
+/**
+ * A documents root, as Fava files an uploaded statement: each file in
+ * `docs/Assets/Bank/Checking/` is a document of that account while an entry
+ * names it (w31/149).
+ */
+const DOCS_OPTION = 'option "documents" "docs"\n';
+const STATEMENT = "docs/Assets/Bank/Checking/2026-08-15.statement.pdf";
+const JOINT = "docs/Assets/Bank/Checking/Joint/2026-08-16.joint.pdf";
+
 async function fixture(
   options: {
     newErrors?: boolean;
@@ -89,10 +98,18 @@ async function fixture(
     failing?: boolean;
     /** The ledger declares no USD, and opens Assets:Bank:Savings in it. */
     undeclaredUsd?: boolean;
+    /** main.bean declares the `docs` documents root, holding these files. */
+    documents?: string[];
   } = {},
 ) {
   const files = new Map([
-    ["main.bean", { content: MAIN, sha: "sha-main" }],
+    [
+      "main.bean",
+      {
+        content: options.documents ? `${DOCS_OPTION}${MAIN}` : MAIN,
+        sha: "sha-main",
+      },
+    ],
     ["2026.bean", { content: YEAR, sha: "sha-year" }],
     ["food.bean", { content: FOOD, sha: "sha-food" }],
     ["skipped.bean", { content: SKIPPED, sha: "sha-skipped" }],
@@ -101,12 +118,37 @@ async function fixture(
       : []),
   ]);
   const commits: {
+    operation: string;
     path: string;
     content?: string | null;
+    from_path?: string;
     sha?: string | null;
   }[][] = [];
   const ledgerRepo = {
     projectedSourceFiles: async () => [...files.keys()],
+    // One level, as the repo service lists it: a folder Git does not have is
+    // NOT_FOUND.
+    listDirContent: async ({ dirPath }: { dirPath?: string }) => {
+      const prefix = dirPath ? `${dirPath}/` : "";
+      const entries = new Map<string, { path: string; type: string }>();
+      for (const path of [...files.keys(), ...(options.documents ?? [])]) {
+        if (!path.startsWith(prefix)) continue;
+        const [name, ...below] = path.slice(prefix.length).split("/");
+        const child = `${prefix}${name}`;
+        entries.set(child, {
+          path: child,
+          type: below.length > 0 ? "dir" : "file",
+        });
+      }
+      if (entries.size === 0) throw new NotFoundError(`Directory '${dirPath}'`);
+      return [...entries.values()].map((entry) => ({
+        ...entry,
+        name: entry.path.split("/").pop(),
+        size: 1,
+        sha: `sha-${entry.path}`,
+        lastCommitSha: null,
+      }));
+    },
     getFilesContent: async ({ paths }: { paths: string[] }) =>
       paths.map((path) => ({ path, ...files.get(path)! })),
     checkProjectedFiles: async ({ overlays }: { overlays: unknown[] }) => [
@@ -218,7 +260,7 @@ async function fixture(
       const result = await graphql({
         schema,
         source:
-          'mutation($from:String!,$to:String!,$dryRun:Boolean,$allowInvalid:Boolean) { renameLedgerAccount(ledgerId:"alice/main",from:$from,to:$to,dryRun:$dryRun,allowInvalid:$allowInvalid) { message dryRun from to commit valid newErrors { message } accounts { from to } files { path changes { line before after } } bankMappings { plaidAccount from to updated } } }',
+          'mutation($from:String!,$to:String!,$dryRun:Boolean,$allowInvalid:Boolean) { renameLedgerAccount(ledgerId:"alice/main",from:$from,to:$to,dryRun:$dryRun,allowInvalid:$allowInvalid) { message dryRun from to commit valid newErrors { message } accounts { from to } files { path changes { line before after } } documents { from to } bankMappings { plaidAccount from to updated } } }',
         variableValues: args,
         contextValue: { identity, getCurrentIdentity: () => identity },
       });
@@ -287,6 +329,7 @@ describe.each(SURFACES)("renameAccount on %s (w1/m43)", (surface) => {
         to: "Assets:Bank:Main",
         commit: "c1",
         accounts: [{ from: "Assets:Bank:Checking", to: "Assets:Bank:Main" }],
+        documents: [],
         bankMappings: [],
       });
       expect(
@@ -551,6 +594,140 @@ describe.each(SURFACES)("renameAccount on %s (w1/m43)", (surface) => {
       };
       expect(verdict.valid ?? verdict.validation?.valid).toBe(true);
       expect(env.commits).toHaveLength(0);
+    } finally {
+      await env.close();
+    }
+  });
+
+  it("moves the account's documents folder in the same commit and lists each move (w31/149)", async () => {
+    const env = await fixture({ documents: [STATEMENT, JOINT] });
+    const moves = [
+      {
+        from: STATEMENT,
+        to: "docs/Assets/Bank/Main/2026-08-15.statement.pdf",
+      },
+      { from: JOINT, to: "docs/Assets/Bank/Main/Joint/2026-08-16.joint.pdf" },
+    ];
+    try {
+      const preview = await env.call(surface, { ...RENAME, dryRun: true });
+      expect(preview.success).toBe(true);
+      expect(preview.result).toMatchObject({
+        message:
+          "Would rename Assets:Bank:Checking to Assets:Bank:Main: 2 lines in 2 files, 2 documents moved",
+        documents: moves,
+      });
+      expect(env.commits).toHaveLength(0);
+      const renamed = await env.call(surface, RENAME);
+      expect(renamed.success).toBe(true);
+      expect(renamed.result).toMatchObject({
+        message:
+          "Renamed Assets:Bank:Checking to Assets:Bank:Main: 2 lines in 2 files, 2 documents moved",
+        documents: moves,
+        commit: "c1",
+      });
+      // One commit: the rewritten files, then each move at its listed sha.
+      expect(env.commits).toHaveLength(1);
+      expect(env.commits[0].map((op) => [op.operation, op.path])).toEqual([
+        ["update", "main.bean"],
+        ["update", "2026.bean"],
+        ["move", moves[0].to],
+        ["move", moves[1].to],
+      ]);
+      expect(env.commits[0].slice(2)).toEqual([
+        {
+          operation: "move",
+          path: moves[0].to,
+          from_path: STATEMENT,
+          sha: `sha-${STATEMENT}`,
+        },
+        {
+          operation: "move",
+          path: moves[1].to,
+          from_path: JOINT,
+          sha: `sha-${JOINT}`,
+        },
+      ]);
+      if (surface === "mcp") {
+        expect(renamed.result?.summary).toMatch(/, 2 documents moved\./);
+        expect(renamed.result?.wrote).toEqual(
+          [
+            "main.bean",
+            "2026.bean",
+            moves[0].to,
+            STATEMENT,
+            moves[1].to,
+            JOINT,
+          ].map((path) => ({ path })),
+        );
+      }
+    } finally {
+      await env.close();
+    }
+  });
+
+  it("moves the folders of every account under a renamed parent (w31/149)", async () => {
+    const env = await fixture({ documents: [STATEMENT, JOINT] });
+    try {
+      const renamed = await env.call(surface, {
+        from: "Assets:Bank",
+        to: "Assets:Vault",
+      });
+      expect(renamed.success).toBe(true);
+      expect(renamed.result).toMatchObject({
+        accounts: [
+          { from: "Assets:Bank:Checking", to: "Assets:Vault:Checking" },
+        ],
+        documents: [
+          {
+            from: STATEMENT,
+            to: "docs/Assets/Vault/Checking/2026-08-15.statement.pdf",
+          },
+          {
+            from: JOINT,
+            to: "docs/Assets/Vault/Checking/Joint/2026-08-16.joint.pdf",
+          },
+        ],
+      });
+      expect(env.commits).toHaveLength(1);
+    } finally {
+      await env.close();
+    }
+  });
+
+  it("refuses a rename onto a documents folder that already holds a file, committing nothing (w31/149)", async () => {
+    const held = "docs/Assets/Bank/Main/2025-12-31.old.pdf";
+    const env = await fixture({ documents: [STATEMENT, held] });
+    try {
+      for (const dryRun of [true, false]) {
+        const refused = await env.call(surface, { ...RENAME, dryRun });
+        expect(refused).toMatchObject({
+          success: false,
+          code: "BAD_USER_INPUT",
+        });
+        expect(refused.message).toContain(
+          `${held} is already in docs/Assets/Bank/Main, the documents folder of Assets:Bank:Main`,
+        );
+      }
+      expect(env.commits).toHaveLength(0);
+    } finally {
+      await env.close();
+    }
+  });
+
+  it("renames as before when the documents root has no folder for the account (w31/149)", async () => {
+    const env = await fixture({ documents: [STATEMENT] });
+    try {
+      const renamed = await env.call(surface, {
+        from: "Expenses:Coffee",
+        to: "Expenses:Cafe",
+      });
+      expect(renamed.success).toBe(true);
+      expect(renamed.result).toMatchObject({ documents: [] });
+      expect(renamed.result!.message).not.toContain("moved");
+      expect(env.commits).toHaveLength(1);
+      expect(env.commits[0].every((op) => op.operation === "update")).toBe(
+        true,
+      );
     } finally {
       await env.close();
     }
