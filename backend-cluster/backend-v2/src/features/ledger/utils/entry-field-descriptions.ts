@@ -30,7 +30,9 @@ export const DIRECTIVE_META_DESCRIPTION =
 export const UNCHANGED_EDIT_DESCRIPTION =
   "True when the edit leaves the entry's text as it was: nothing was written and no commit was made.";
 
-export const OPEN_BOOKING_DESCRIPTION = "Booking method for the account";
+/** The `booking` of an `open` (w31/146); the same words on each surface. */
+export const OPEN_BOOKING_DESCRIPTION =
+  "Booking method for the account: STRICT, STRICT_WITH_SIZE, NONE, FIFO, LIFO or HIFO. AVERAGE is refused: beancount cannot reduce a position booked that way";
 
 export const BALANCE_TOLERANCE_DESCRIPTION =
   "Explicit balance tolerance as a plain decimal";

@@ -1519,29 +1519,112 @@ describe.each(["rest", "gql", "mcp"])(
       }
     });
 
-    // w23/m6/t009: the booking enum refuses unknown methods on every surface.
-    it("refuses an unknown booking method before committing", async () => {
-      const batch = [
-        {
-          type: "open",
-          entry: {
-            date,
-            account: "Assets:Broker",
-            currencies: ["HOOLI"],
-            booking: "AVERAGE",
+    // w31/146: every method beancount books with is accepted, not only the
+    // four the first enum listed; a preview reaches the ledger, which renders
+    // and checks the quoted method, and the commit carries it.
+    it.each(["HIFO", "STRICT_WITH_SIZE"])(
+      "previews and writes an open booked %s",
+      async (booking) => {
+        const batch = [
+          {
+            type: "open",
+            entry: {
+              date,
+              account: "Assets:Broker",
+              currencies: ["VTI"],
+              booking,
+            },
           },
-        },
-      ] as unknown as LedgerEntryInput[];
-      const f = await fixture();
-      try {
-        const result = await f.call(surface, batch);
-        expect(result.success).toBe(false);
-        expect(f.write).not.toHaveBeenCalled();
-        expect(f.committed).toEqual([]);
-      } finally {
-        await f.close();
-      }
-    });
+        ] as unknown as LedgerEntryInput[];
+        const f = await fixture();
+        try {
+          const preview = await f.call(
+            surface,
+            batch,
+            surface === "mcp" ? { dry_run: true } : { dryRun: true },
+          );
+          expect(preview.success).toBe(true);
+          expect(f.committed).toEqual([]);
+          expect(f.write.mock.calls[0]?.[2]).toMatchObject({
+            dryRun: true,
+            entries: [{ type: "open", item: { booking } }],
+          });
+          const body = preview.result as Record<string, any>;
+          expect(surface === "mcp" ? body.validation : body).toMatchObject({
+            valid: true,
+          });
+          const result = await f.call(surface, batch);
+          expect(result.success).toBe(true);
+          expect(f.committed).toHaveLength(1);
+          expect(f.committed[0]).toMatchObject({ item: { booking } });
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    // w23/m6/t009, w31/146: the booking enum refuses any other method on every
+    // surface, AVERAGE included (stock cannot reduce a position booked that
+    // way), and the refusal names the six it takes.
+    it.each(["AVERAGE", "BOGUS"])(
+      "refuses booking %s before committing",
+      async (booking) => {
+        const batch = [
+          {
+            type: "open",
+            entry: {
+              date,
+              account: "Assets:Broker",
+              currencies: ["HOOLI"],
+              booking,
+            },
+          },
+        ] as unknown as LedgerEntryInput[];
+        const f = await fixture();
+        try {
+          const result = await f.call(surface, batch);
+          expect(result.success).toBe(false);
+          expect(f.write).not.toHaveBeenCalled();
+          expect(f.committed).toEqual([]);
+          const accepted = [
+            "STRICT",
+            "STRICT_WITH_SIZE",
+            "NONE",
+            "FIFO",
+            "LIFO",
+            "HIFO",
+          ];
+          if (surface === "gql") {
+            // GraphQL names the six through its enum, which a client reads
+            // by introspection; Apollo marks a variable it cannot coerce
+            // BAD_USER_INPUT, which raw `graphql()` leaves out.
+            expect(String(result.errors?.[0]?.message)).toContain(
+              `invalid value "${booking}" at "entries[0].open.booking"; Value "${booking}" does not exist in "BookingMethod" enum`,
+            );
+            const enumType = schema.getType("BookingMethod");
+            expect(
+              enumType && "getValues" in enumType
+                ? enumType.getValues().map(({ value }) => value)
+                : [],
+            ).toEqual(accepted);
+            return;
+          }
+          const refusal = (
+            surface === "rest" ? result.result : result.full
+          ) as {
+            error: { code: string; message: string };
+          };
+          expect(refusal.error.code).toBe(
+            surface === "rest" ? "VALIDATION_FAILED" : "BAD_USER_INPUT",
+          );
+          expect(refusal.error.message).toContain("entries.0.entry.booking");
+          for (const method of accepted)
+            expect(refusal.error.message).toContain(`"${method}"`);
+        } finally {
+          await f.close();
+        }
+      },
+    );
   },
 );
 

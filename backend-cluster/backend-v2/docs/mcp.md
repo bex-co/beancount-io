@@ -2476,10 +2476,12 @@ the parser reserves such as `filename` or `lineno`, or a key shorter than two
 characters such as `k`, is refused naming it). That
 is what lets an agent record the keys other tools read, such as a commodity's
 `price:` for bean-price or an open's `account:` for importers, without writing
-raw text. Posting `tags` and `links` are refused (w23/171). An `open` takes `booking` (`STRICT`,
-`FIFO`, `LIFO`, `NONE`); anything else is refused. A `balance` takes
-`tolerance`, a plain-decimal slack rendered `~`. A `pad` takes
-`sourceAccount`.
+raw text. Posting `tags` and `links` are refused (w23/171). An `open` takes
+`booking`, one of the six methods beancount books with (`STRICT`,
+`STRICT_WITH_SIZE`, `NONE`, `FIFO`, `LIFO`, `HIFO`); anything else is refused,
+`AVERAGE` included, because stock beancount cannot reduce a position booked
+that way (w31/146). A `balance` takes `tolerance`, a plain-decimal slack
+rendered `~`. A `pad` takes `sourceAccount`.
 A budget's account must be one the ledger opens, a parent of one (a budget on
 `Expenses:Food` covers its children), or one the same call opens. bean-check
 never reads a `custom "budget"` account, so otherwise the budget would match no

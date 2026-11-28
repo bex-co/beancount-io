@@ -711,12 +711,14 @@
                           "nullable": true,
                           "enum": [
                             "STRICT",
+                            "STRICT_WITH_SIZE",
+                            "NONE",
                             "FIFO",
                             "LIFO",
-                            "NONE",
+                            "HIFO",
                             null
                           ],
-                          "description": "Booking method for the account"
+                          "description": "Booking method for the account: STRICT, STRICT_WITH_SIZE, NONE, FIFO, LIFO or HIFO. AVERAGE is refused: beancount cannot reduce a position booked that way"
                         },
                         "meta": {
                           "type": "object",

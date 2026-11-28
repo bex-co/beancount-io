@@ -73,9 +73,11 @@ registerEnumType(LedgerEntryType, {
 
 enum BookingMethod {
   STRICT = "STRICT",
+  STRICT_WITH_SIZE = "STRICT_WITH_SIZE",
+  NONE = "NONE",
   FIFO = "FIFO",
   LIFO = "LIFO",
-  NONE = "NONE",
+  HIFO = "HIFO",
 }
 
 registerEnumType(BookingMethod, {

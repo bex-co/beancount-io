@@ -2297,7 +2297,7 @@ export interface Open {
    * Booking
    * Booking method for the account
    */
-  booking?: "STRICT" | "FIFO" | "LIFO" | "NONE";
+  booking?: "STRICT" | "STRICT_WITH_SIZE" | "NONE" | "FIFO" | "LIFO" | "HIFO";
 }
 
 /**

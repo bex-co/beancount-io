@@ -739,6 +739,25 @@ describe("entryInputToText — Fava-exact serialization parity", () => {
     expect(out).toContain('"FIFO"');
   });
 
+  // w31/146: the two methods the first enum left out render quoted too.
+  it.each(["HIFO", "STRICT_WITH_SIZE"] as const)(
+    "renders booking %s on an open directive",
+    (booking) => {
+      const out = entryInputToText({
+        type: "open",
+        entry: {
+          date: "2026-01-02",
+          account: "Assets:Broker",
+          currencies: ["VTI"],
+          booking,
+        },
+      });
+      expect(out.split("\n")[0]).toMatch(
+        new RegExp(`^2026-01-02 open Assets:Broker +VTI "${booking}"$`),
+      );
+    },
+  );
+
   // w23/m6/t009: tolerance renders number-first, the spelling beancount
   // parses (currency-first is a syntax error). The double space after `~`
   // is fava's align output, byte-verified against to_string above.

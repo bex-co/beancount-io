@@ -12706,9 +12706,11 @@
           "booking": {
             "enum": [
               "STRICT",
+              "STRICT_WITH_SIZE",
+              "NONE",
               "FIFO",
               "LIFO",
-              "NONE"
+              "HIFO"
             ],
             "type": "string",
             "title": "Booking",

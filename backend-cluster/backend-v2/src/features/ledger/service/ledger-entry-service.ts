@@ -102,7 +102,11 @@ type BalanceInput = {
   meta?: Record<string, string>;
 };
 
-/** The booking methods beancount parses on `open`; tracks the IDL enum. */
+/**
+ * The booking methods an `open` may name: the six beancount books with.
+ * `AVERAGE` parses but stock refuses it on a reduction (w31/146). Tracks the
+ * IDL enum.
+ */
 type BookingMethod = NonNullable<Open["booking"]>;
 
 type OpenInput = {

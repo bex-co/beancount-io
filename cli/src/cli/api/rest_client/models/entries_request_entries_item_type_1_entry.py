@@ -33,7 +33,9 @@ class EntriesRequestEntriesItemType1Entry:
         account (str):
         currencies (list[str] | None | Unset): Valid currencies for the account; omit for a bare open line
         booking (EntriesRequestEntriesItemType1EntryBookingType1 | EntriesRequestEntriesItemType1EntryBookingType2Type1
-            | EntriesRequestEntriesItemType1EntryBookingType3Type1 | None | Unset): Booking method for the account
+            | EntriesRequestEntriesItemType1EntryBookingType3Type1 | None | Unset): Booking method for the account: STRICT,
+            STRICT_WITH_SIZE, NONE, FIFO, LIFO or HIFO. AVERAGE is refused: beancount cannot reduce a position booked that
+            way
         meta (EntriesRequestEntriesItemType1EntryMetaType0 | None | Unset): Metadata written beneath the directive;
             every value is a string, written quoted as given
     """

@@ -72,8 +72,12 @@ type BalanceInput = {
   meta?: Record<string, string>;
 };
 
-/** The booking methods beancount parses on `open` (w23/m6/t009). */
-type BookingMethod = "STRICT" | "FIFO" | "LIFO" | "NONE";
+/**
+ * The booking methods an `open` may name (w23/m6/t009): the six beancount
+ * books with. `AVERAGE` parses but stock refuses it on a reduction (w31/146).
+ */
+type BookingMethod =
+  "STRICT" | "STRICT_WITH_SIZE" | "NONE" | "FIFO" | "LIFO" | "HIFO";
 
 type OpenInput = {
   date: string;

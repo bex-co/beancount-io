@@ -41,7 +41,7 @@ const amountSchema = z.strictObject({
 const dateSchema = z.string().openapi({ example: "2026-08-23" });
 
 const bookingSchema = z
-  .enum(["STRICT", "FIFO", "LIFO", "NONE"])
+  .enum(["STRICT", "STRICT_WITH_SIZE", "NONE", "FIFO", "LIFO", "HIFO"])
   .openapi({ description: OPEN_BOOKING_DESCRIPTION });
 
 const costSchema = z.strictObject({

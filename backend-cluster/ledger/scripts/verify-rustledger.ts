@@ -108,7 +108,9 @@ import {
 import {
   accountBalanceSeries,
   accountHierarchy,
+  bookedCostPerUnit,
   buildPriceMap,
+  entryInputToText,
 } from "@/foundation/rustledger";
 
 function assert(condition: boolean, message: string): asserts condition {
@@ -1300,6 +1302,66 @@ async function verifyQueryDirectiveJournal(): Promise<void> {
       context.entry.name === "qa-q" &&
       context.slice.startsWith('2026-01-05 query "qa-q"'),
     `Entry Context reads the same Query entry (got ${JSON.stringify(context.entry)})`,
+  );
+}
+
+/**
+ * w31/146: a typed `open` booked HIFO or STRICT_WITH_SIZE renders text the
+ * engine parses and books as stock does: HIFO sells the 300 and 200 USD lots,
+ * and STRICT_WITH_SIZE takes the one lot whose size matches the sale.
+ */
+async function verifyTypedOpenBooking(): Promise<void> {
+  const open = (account: string, booking: "HIFO" | "STRICT_WITH_SIZE") =>
+    entryInputToText({
+      type: "open",
+      entry: { date: "2026-01-02", account, currencies: ["VTI"], booking },
+    });
+  const source = [
+    open("Assets:Hifo", "HIFO"),
+    open("Assets:Sized", "STRICT_WITH_SIZE"),
+    "2026-01-02 open Equity:Opening",
+    "2026-01-02 open Income:Gains USD",
+    '2026-01-03 * "buys"',
+    "  Assets:Hifo   1 VTI {100 USD}",
+    "  Assets:Hifo   1 VTI {300 USD}",
+    "  Assets:Hifo   1 VTI {200 USD}",
+    "  Assets:Sized  2 VTI {100 USD}",
+    "  Assets:Sized  1 VTI {200 USD}",
+    "  Equity:Opening",
+    '2026-01-04 * "sells"',
+    "  Assets:Hifo  -2 VTI {}",
+    "  Assets:Sized -1 VTI {}",
+    "  Equity:Opening  800 USD",
+    "  Income:Gains",
+    "",
+  ].join("\n");
+  const snapshot = await parseLedgerFiles(
+    { "main.beancount": source },
+    "main.beancount",
+  );
+  deepStrictEqual(snapshot.errors, []);
+  const sells = snapshot.directives.find(
+    (directive) =>
+      directive.type === "transaction" && directive.narration === "sells",
+  );
+  const lots =
+    sells?.type === "transaction"
+      ? sells.postings
+          .filter((posting) => posting.units?.currency === "VTI")
+          .map((posting) => [
+            posting.account,
+            posting.units?.number,
+            bookedCostPerUnit(posting)?.number.toFixed(),
+          ])
+      : [];
+  lots.sort((a, b) => String(a).localeCompare(String(b)));
+  deepStrictEqual(lots, [
+    ["Assets:Hifo", "-1", "200"],
+    ["Assets:Hifo", "-1", "300"],
+    ["Assets:Sized", "-1", "200"],
+  ]);
+  console.log(
+    "✓ a typed open booked HIFO or STRICT_WITH_SIZE parses and books as stock does",
   );
 }
 
@@ -6070,6 +6132,7 @@ async function main(): Promise<void> {
   await verifyDocumentDiscovery();
   await verifyWrittenReservedFlags();
   await verifyQueryDirectiveJournal();
+  await verifyTypedOpenBooking();
   await verifyLoneElidedPosting();
   await verifyStockOptionSpellings();
   await verifyZeroUnitsAtCost();
