@@ -31,6 +31,8 @@ const UNIT_COST = new RegExp(String.raw`\{\s*(${NUMBER})\s+([^\s,}#]+)`, "u");
 const IMPLICIT_PRICES = new Set([
   "beancount.plugins.implicit_prices",
   "implicit_prices",
+  // `auto` runs it, after auto_accounts (w31/155).
+  "beancount.plugins.auto",
 ]);
 const UNIQUE_PRICES = new Set([
   "beancount.plugins.unique_prices",

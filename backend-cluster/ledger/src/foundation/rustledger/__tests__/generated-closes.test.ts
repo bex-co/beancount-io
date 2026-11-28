@@ -230,6 +230,17 @@ describe("openAutoAccounts", () => {
       openAutoAccounts(stream, [neverOpened("Assets:Broker")], "").errors,
     ).toEqual([neverOpened("Assets:Broker")]);
   });
+
+  // w31/155: `auto` runs auto_accounts.
+  it("opens it under auto too", () => {
+    expect(
+      openAutoAccounts(
+        stream,
+        [neverOpened("Assets:Broker")],
+        'plugin "beancount.plugins.auto"\n',
+      ).errors,
+    ).toEqual([]);
+  });
 });
 
 // w21/756: after a close Beancount allows only balances, documents and notes;

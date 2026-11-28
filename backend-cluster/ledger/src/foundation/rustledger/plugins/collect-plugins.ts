@@ -133,23 +133,29 @@ export function collectLedgerPluginDeclarations(
   return plugins;
 }
 
-/** The plugins `beancount.plugins.pedantic` runs, each with no config. */
-const PEDANTIC_PLUGINS = new Set([
-  "check_commodity",
-  "coherent_cost",
-  "leafonly",
-  "noduplicates",
-  "nounused",
-  "onecommodity",
-  "sellgains",
-  "unique_prices",
-  "check_drained",
+/** The plugins each of Beancount's bundles runs. */
+const BUNDLES = new Map([
+  ["beancount.plugins.auto", new Set(["auto_accounts", "implicit_prices"])],
+  [
+    "beancount.plugins.pedantic",
+    new Set([
+      "check_commodity",
+      "coherent_cost",
+      "leafonly",
+      "noduplicates",
+      "nounused",
+      "onecommodity",
+      "sellgains",
+      "unique_prices",
+      "check_drained",
+    ]),
+  ],
 ]);
 
 /**
  * The config of each run of Beancount's `beancount.plugins.<name>` the entry
  * point declares (`null` without one): its own declarations, and one with no
- * config per `pedantic`, which runs its plugins with none.
+ * config per bundle that runs it (`auto` or `pedantic`).
  */
 export function beancountPluginRuns(
   entryPointSource: string | undefined,
@@ -157,9 +163,6 @@ export function beancountPluginRuns(
 ): (string | null)[] {
   return collectLedgerPluginDeclarations(entryPointSource).flatMap((plugin) => {
     if (plugin.name === `beancount.plugins.${name}`) return [plugin.config];
-    return plugin.name === "beancount.plugins.pedantic" &&
-      PEDANTIC_PLUGINS.has(name)
-      ? [null]
-      : [];
+    return BUNDLES.get(plugin.name)?.has(name) === true ? [null] : [];
   });
 }

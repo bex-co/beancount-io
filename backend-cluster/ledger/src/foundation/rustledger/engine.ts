@@ -41,7 +41,10 @@ import {
   stripFavaPlugins,
   type DirectiveSourceLocation,
 } from "./plugins";
-import { stripUnavailablePlugins } from "./plugins/strip";
+import {
+  runPluginBundlesAsMembers,
+  stripUnavailablePlugins,
+} from "./plugins/strip";
 import { reconcileDocumentErrors } from "./document-validation";
 import { averageBookingErrors } from "./average-booking";
 import { zeroUnitsAtCostErrors } from "./zero-units-at-cost";
@@ -691,20 +694,20 @@ async function parseLedgerFilesUncached(
   const stripResult = applyTs
     ? stripFavaPlugins(scoped, entryPoint)
     : undefined;
-  const raw = await withLedger(
+  // The source the engine reads: Beancount's plugin bundles run as their
+  // plugins (w31/155).
+  const engineFiles = runPluginBundlesAsMembers(
     stripResult?.strippedFiles ?? scoped,
     entryPoint,
-    snapshotOf,
   );
+  const raw = await withLedger(engineFiles, entryPoint, snapshotOf);
   // An entry's own key wins over an open `pushmeta` of it in Beancount; the
   // engine lets the push win (w31/028).
-  if (sourceMayShadowPushedMeta(stripResult?.strippedFiles ?? scoped)) {
+  if (sourceMayShadowPushedMeta(engineFiles)) {
     keepOwnMetaOverPushed(
       raw.directives,
-      await withLedger(
-        withoutMetaStacks(stripResult?.strippedFiles ?? scoped),
-        entryPoint,
-        (ledger) => ledger.getDirectives(),
+      await withLedger(withoutMetaStacks(engineFiles), entryPoint, (ledger) =>
+        ledger.getDirectives(),
       ),
     );
   }
@@ -715,18 +718,14 @@ async function parseLedgerFilesUncached(
   // (w21/187).
   const located = locateParseErrors(
     raw.errors,
-    parseableFiles(stripResult?.strippedFiles ?? scoped, entryPoint),
+    parseableFiles(engineFiles, entryPoint),
     entryPoint,
     await loadRustledger(),
   );
   let directives = dropUnparsedTransactions(
-    restoreEntrySortOrder(
-      raw.directives,
-      stripResult?.strippedFiles ?? scoped,
-      entryPoint,
-    ),
+    restoreEntrySortOrder(raw.directives, engineFiles, entryPoint),
     located,
-    stripResult?.strippedFiles ?? scoped,
+    engineFiles,
   );
   let errors = [...located, ...unavailablePlugins];
   let paddingTransactions = raw.paddingTransactions;
@@ -752,10 +751,7 @@ async function parseLedgerFilesUncached(
   ) {
     const needsCompleteSourceIndex =
       options.includeSourceDetails === true || hasHandledPlugin;
-    const sourceProbe = buildSourceDetailsProbe(
-      stripResult?.strippedFiles ?? scoped,
-      files,
-    );
+    const sourceProbe = buildSourceDetailsProbe(engineFiles, files);
     const probedDirectives = await withLedger(
       sourceProbe.files,
       entryPoint,
@@ -918,7 +914,7 @@ async function parseLedgerFilesUncached(
   const padding = dropPaddingWithinTolerance(
     directives,
     paddingTransactions,
-    stripResult?.strippedFiles ?? scoped,
+    engineFiles,
   );
   errors = [
     ...errors,
@@ -927,16 +923,15 @@ async function parseLedgerFilesUncached(
     ...paddingCurrencyErrors(
       directives,
       padding.paddingTransactions,
-      stripResult?.strippedFiles ?? scoped,
+      engineFiles,
     ),
   ];
   if (!isRawPluginProcessing(files, entryPoint)) {
-    const scopedFiles = stripResult?.strippedFiles ?? scoped;
     const transformed = directives;
     const hidden = await errorsHiddenByUnusedPads(
       transformed,
       padding.paddingTransactions,
-      scopedFiles,
+      engineFiles,
       errors,
       // Checked again as the first pass was: the blanked source has no
       // amortize_over or forecast copies, so every balance on an account a
@@ -969,7 +964,7 @@ async function parseLedgerFilesUncached(
     padding.paddingTransactions,
   );
 
-  errors = withBalanceErrorDates(errors, stripResult?.strippedFiles ?? scoped);
+  errors = withBalanceErrorDates(errors, engineFiles);
   // The engine's meta is a hash map; show it as written (w21/778).
   orderMetaAsWritten(directives, files, entryPoint);
 
@@ -1074,7 +1069,10 @@ export async function queryLedgerFilesResultInProcess(
     neutralizeIncludedOptionsAndPlugins(files, entryPoint),
     entryPoint,
   );
-  const { strippedFiles } = stripFavaPlugins(scoped, entryPoint);
+  const strippedFiles = runPluginBundlesAsMembers(
+    stripFavaPlugins(scoped, entryPoint).strippedFiles,
+    entryPoint,
+  );
   const declared = collectLedgerPlugins(files[entryPoint]);
   const needsTsPluginStream = declared.some((name) =>
     HANDLED_PLUGIN_NAMES.has(name),

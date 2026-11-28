@@ -209,4 +209,12 @@ describe("reconcileUniquePriceErrors and plugin order", () => {
       ["main.bean", 3, "Disagreeing price entries"],
     ]);
   });
+
+  // w31/155: `auto` runs implicit_prices at its place.
+  it("reads auto as implicit_prices", () => {
+    expect(run("auto", "unique_prices")).toEqual([
+      ["main.bean", 3, "Disagreeing price entries"],
+    ]);
+    expect(run("unique_prices", "auto")).toEqual([]);
+  });
 });

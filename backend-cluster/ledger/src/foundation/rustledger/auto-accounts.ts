@@ -1,7 +1,6 @@
 import type { BeancountError, DirectiveJson } from "@rustledger/wasm";
-import { collectLedgerPlugins } from "./plugins/collect-plugins";
+import { beancountPluginRuns } from "./plugins/collect-plugins";
 
-const PLUGIN = "beancount.plugins.auto_accounts";
 /** The engine's two ways of saying an account was never opened. */
 const UNOPENED = [
   /^Account (\S+) was never opened$/u,
@@ -35,7 +34,7 @@ export function directiveAccounts(directive: DirectiveJson): string[] {
  * parent `close_tree` closes, say), so it reported each as never opened,
  * where bean-check passes (w21/737). With the plugin declared, each such
  * account is opened before its first use, as Beancount does, and the engine's
- * error about it is dropped.
+ * error about it is dropped. `auto` runs it too (w31/155).
  */
 export function openAutoAccounts(
   directives: readonly DirectiveJson[],
@@ -49,7 +48,7 @@ export function openAutoAccounts(
         )
       : undefined;
   if (
-    !collectLedgerPlugins(entryPointSource).includes(PLUGIN) ||
+    beancountPluginRuns(entryPointSource, "auto_accounts").length === 0 ||
     !errors.some((error) => unopened(error) !== undefined)
   ) {
     return { directives: [...directives], errors: [...errors] };

@@ -66,6 +66,61 @@ export function stripUnavailablePlugins(
   };
 }
 
+/**
+ * What the engine runs for each of Beancount's two plugin bundles: `auto` is
+ * `auto_accounts` then `implicit_prices`, and `pedantic` ends with
+ * `check_drained`, which the engine's own `pedantic` leaves out.
+ */
+const BUNDLE_MEMBERS = new Map([
+  [
+    "beancount.plugins.auto",
+    ["beancount.plugins.auto_accounts", "beancount.plugins.implicit_prices"],
+  ],
+  [
+    "beancount.plugins.pedantic",
+    ["beancount.plugins.pedantic", "beancount.plugins.check_drained"],
+  ],
+]);
+
+/**
+ * Run Beancount's `auto` and `pedantic` bundles as their plugins. The engine
+ * has no `auto`, so it refused the plugin with E8005 and opened no account,
+ * and its `pedantic` runs no `check_drained`, so closing an account that
+ * still held money read clean (w31/155). Each member gets the bundle's
+ * config, as Beancount passes it to every member.
+ *
+ * Plugins run in the order declared, and every other line must keep its
+ * number, so the bundle and each plugin line after it are blanked in place
+ * and written again, in order and with the bundle expanded, after the file's
+ * last line. A file that ends inside a string is left as it is.
+ */
+export function runPluginBundlesAsMembers(
+  files: FileMap,
+  entryPoint: string,
+): FileMap {
+  const source = files[entryPoint];
+  if (source === undefined) return files;
+  const lines = source.split(/\r\n|\r|\n/u);
+  const moved: string[] = [];
+  let inString = false;
+  lines.forEach((line, index) => {
+    if (!inString && isSkippedLine(line)) return;
+    const startsInsideString = inString;
+    inString = endsInsideString(line, inString);
+    const match = startsInsideString ? null : PLUGIN_LINE_RE.exec(line);
+    if (match === null) return;
+    const members = BUNDLE_MEMBERS.get(decodeStringLiteral(match[1]));
+    if (members === undefined && moved.length === 0) return;
+    const config = match[2] === undefined ? "" : ` "${match[2]}"`;
+    moved.push(
+      ...(members?.map((name) => `plugin "${name}"${config}`) ?? [line]),
+    );
+    lines[index] = "";
+  });
+  if (moved.length === 0 || inString) return files;
+  return { ...files, [entryPoint]: [...lines, ...moved].join("\n") };
+}
+
 function stripPluginLines(
   files: FileMap,
   entryPoint: string,

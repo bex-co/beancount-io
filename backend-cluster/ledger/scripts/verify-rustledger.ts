@@ -5824,6 +5824,98 @@ async function main(): Promise<void> {
       `${first} then ${second} matches bean-check (got ${JSON.stringify(ordered)})`,
     );
   }
+  // w31/155: Beancount's two bundles did not run their plugins. The engine
+  // refused `auto` with E8005 and opened no account, and its `pedantic` ran
+  // no check_drained, so closing an account that held money read clean.
+  const bundle = async (plugins: string[], body: string[]) => {
+    const snapshot = await parseLedgerFiles(
+      {
+        "main.beancount": [
+          ...plugins.map((name) => `plugin "beancount.plugins.${name}"`),
+          ...body,
+        ].join("\n"),
+      },
+      "main.beancount",
+      { today: "2099-01-01" },
+    );
+    return {
+      // Placed against the first body line, so both spellings compare.
+      errors: snapshot.errors.map(
+        (e) =>
+          `${e.severity} ${e.line === null ? null : e.line - plugins.length} ${e.message.split("\n")[0]}`,
+      ),
+      directives: JSON.stringify(
+        snapshot.directives.map(({ meta: _meta, ...rest }) => rest),
+      ),
+    };
+  };
+  const autoBody = [
+    "2024-01-01 open Assets:Cash USD",
+    "2024-01-01 open Equity:Opening",
+    "2024-10-20 price QAVTI 101.00 USD",
+    '2024-10-20 * "Buy"',
+    "  Assets:Broker  1 QAVTI {100.00 USD}",
+    "  Assets:Cash  -100.00 USD",
+    '2024-10-21 * "qa-auto"',
+    "  Assets:Cash  -1.00 USD",
+    "  Expenses:QaAutoNew  1.00 USD",
+  ];
+  for (const after of [[], ["unique_prices"]]) {
+    const auto = await bundle(["auto", ...after], autoBody);
+    const spelled = await bundle(
+      ["auto_accounts", "implicit_prices", ...after],
+      autoBody,
+    );
+    assert(
+      JSON.stringify(auto.errors) ===
+        JSON.stringify(
+          after.length === 0 ? [] : ["error 3 Disagreeing price entries"],
+        ) &&
+        JSON.stringify(auto) === JSON.stringify(spelled) &&
+        auto.directives.includes('"account":"Expenses:QaAutoNew"') &&
+        (auto.directives.match(/"type":"price"/gu) ?? []).length === 2,
+      `auto runs as auto_accounts then implicit_prices (${after.join(", ")}: got ${JSON.stringify(auto.errors)}, spelled out ${JSON.stringify(spelled.errors)})`,
+    );
+  }
+  const drainedBody = (drained: boolean, closed: string) => [
+    "2024-01-01 commodity USD",
+    "2024-01-01 open Assets:Broker USD",
+    "2024-01-01 open Assets:Broker:VTI USD",
+    "2024-01-01 open Equity:Opening USD",
+    '2024-01-02 * "Open"',
+    "  Assets:Broker:VTI  49.75 USD",
+    "  Equity:Opening",
+    ...(drained
+      ? ['2024-08-29 * "Out"', "  Assets:Broker:VTI  -49.75 USD", "  Equity:Opening"]
+      : []),
+    `2024-08-30 close ${closed}`,
+  ];
+  const failed = (account: string) =>
+    `error null Balance failed for ${account}: expected 0 USD, got 49.75 USD`;
+  // An engine whose own pedantic runs check_drained (w31/020) reports the
+  // first case twice: then drop the check_drained that pedantic adds.
+  for (const [plugins, drained, closed, expected] of [
+    [["pedantic"], false, "Assets:Broker:VTI", [failed("Assets:Broker:VTI")]],
+    [["check_drained"], false, "Assets:Broker:VTI", [failed("Assets:Broker:VTI")]],
+    [["pedantic"], true, "Assets:Broker:VTI", []],
+    // check_drained runs at pedantic's place: before close_tree it checks
+    // only the written close, after it the child's generated one too.
+    [["pedantic", "close_tree"], false, "Assets:Broker", [failed("Assets:Broker")]],
+    [
+      ["close_tree", "pedantic"],
+      false,
+      "Assets:Broker",
+      [failed("Assets:Broker"), failed("Assets:Broker:VTI")],
+    ],
+  ] as const) {
+    const balances = (await bundle([...plugins], drainedBody(drained, closed)))
+      .errors.filter((e) => e.includes("Balance failed"))
+      .sort();
+    assert(
+      JSON.stringify(balances) === JSON.stringify(expected),
+      `${plugins.join(", ")} closing ${drained ? "a drained" : "a funded"} ${closed} matches bean-check (got ${JSON.stringify(balances)})`,
+    );
+  }
   // w21/757: nounused counted close_tree's closes as uses whatever the order.
   for (const [first, second, unused] of [
     ["nounused", "close_tree", true],

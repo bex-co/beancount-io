@@ -204,6 +204,15 @@ describe("pedantic's other checks", () => {
       ),
     ).toEqual([null, "Assets"]);
     expect(beancountPluginRuns(PEDANTIC, "implicit_prices")).toEqual([]);
+    expect(beancountPluginRuns(PEDANTIC, "check_drained")).toEqual([null]);
+  });
+
+  // w31/155: Beancount's other bundle.
+  it("reads auto as auto_accounts and implicit_prices", () => {
+    const AUTO = 'plugin "beancount.plugins.auto"\n';
+    expect(beancountPluginRuns(AUTO, "auto_accounts")).toEqual([null]);
+    expect(beancountPluginRuns(AUTO, "implicit_prices")).toEqual([null]);
+    expect(beancountPluginRuns(AUTO, "nounused")).toEqual([]);
   });
 
   it("holds onecommodity and unique_prices to Beancount's rules", () => {

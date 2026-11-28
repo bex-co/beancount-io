@@ -1,6 +1,7 @@
 import type { FileMap } from "@rustledger/wasm";
 import {
   neutralizeIncludedOptionsAndPlugins,
+  runPluginBundlesAsMembers,
   stripFavaPlugins,
   stripUnavailablePlugins,
 } from "../strip";
@@ -115,6 +116,75 @@ describe("stripUnavailablePlugins", () => {
     const result = stripUnavailablePlugins(files, "main.bean");
     expect(result.strippedFiles).toBe(files);
     expect(result.errors).toEqual([]);
+  });
+});
+
+// w31/155: the engine has no `auto`, and its `pedantic` runs no check_drained.
+describe("runPluginBundlesAsMembers", () => {
+  const rewrite = (...lines: string[]) =>
+    runPluginBundlesAsMembers({ "main.bean": lines.join("\n") }, "main.bean")[
+      "main.bean"
+    ]!.split("\n");
+
+  it("runs auto as auto_accounts then implicit_prices, keeping every line", () => {
+    expect(
+      rewrite('plugin "beancount.plugins.auto"', "2026-01-01 open Assets:Cash"),
+    ).toEqual([
+      "",
+      "2026-01-01 open Assets:Cash",
+      'plugin "beancount.plugins.auto_accounts"',
+      'plugin "beancount.plugins.implicit_prices"',
+    ]);
+  });
+
+  it("adds check_drained after pedantic, before the plugins declared after it", () => {
+    expect(
+      rewrite(
+        'plugin "beancount.plugins.leafonly"',
+        'plugin "beancount.plugins.pedantic"',
+        "2026-01-01 open Assets:Cash",
+        '  plugin "beancount.plugins.close_tree" ; closes children',
+        "2026-01-02 open Assets:Bank",
+      ),
+    ).toEqual([
+      'plugin "beancount.plugins.leafonly"',
+      "",
+      "2026-01-01 open Assets:Cash",
+      "",
+      "2026-01-02 open Assets:Bank",
+      'plugin "beancount.plugins.pedantic"',
+      'plugin "beancount.plugins.check_drained"',
+      '  plugin "beancount.plugins.close_tree" ; closes children',
+    ]);
+  });
+
+  it("gives each member the bundle's config, as Beancount does", () => {
+    expect(rewrite('plugin "beancount.plugins.auto" "a\\"b"')).toEqual([
+      "",
+      'plugin "beancount.plugins.auto_accounts" "a\\"b"',
+      'plugin "beancount.plugins.implicit_prices" "a\\"b"',
+    ]);
+  });
+
+  it("leaves a ledger without a bundle, or one in a string or comment, as it is", () => {
+    for (const source of [
+      'plugin "beancount.plugins.auto_accounts"\n',
+      '; plugin "beancount.plugins.auto"\n',
+      '2026-01-01 note Assets:Cash "a\nplugin "beancount.plugins.auto"\nb"\n',
+      // Appended inside the open string, the members would not run.
+      'plugin "beancount.plugins.pedantic"\n2026-01-01 note Assets:Cash "open\n',
+    ]) {
+      const files: FileMap = { "main.bean": source };
+      expect(runPluginBundlesAsMembers(files, "main.bean")).toBe(files);
+    }
+  });
+
+  it("reads plugins only from the entry point", () => {
+    const files: FileMap = {
+      "main.bean": 'include "other.bean"\n',
+      "other.bean": 'plugin "beancount.plugins.auto"\n',
+    };
+    expect(runPluginBundlesAsMembers(files, "main.bean")).toBe(files);
   });
 });
 
