@@ -636,6 +636,20 @@ describe("a balance assertion that was already failing", () => {
       ),
     ).toHaveLength(1);
   });
+
+  // w31/156: check_drained's zero balance on a close, in Beancount's words.
+  it("is not new when a drained close's accumulated figure changed", () => {
+    const drained = (accumulated: string, account = "Assets:Cash") =>
+      at(
+        `Balance failed for '${account}': expected 0 USD != accumulated ${accumulated} USD (${accumulated} too much)`,
+        "main.bean",
+        90,
+      );
+    expect(newLedgerErrors([drained("49.75")], [drained("29.75")])).toEqual([]);
+    expect(
+      newLedgerErrors([drained("49.75")], [drained("29.75", "Assets:Bank")]),
+    ).toHaveLength(1);
+  });
 });
 
 // w31/116: a refusal and a preview name each new error at its line in the

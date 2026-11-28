@@ -174,6 +174,9 @@ const placedAcrossFiles = (message: string) =>
  * already had (w31/113). The assertion is the same one: matching keeps its
  * account and expected amount and ignores "got", as the ledger service's
  * `newLedgerErrors` does (w21/618, w21/681).
+ * `check_drained`'s zero balance on a close is in Beancount's words
+ * ("expected 0 USD != accumulated 49.75 USD (49.75 too much)"), so its
+ * accumulated figure is ignored the same way (w31/156).
  *
  * A lot-booking error quotes the account's lots the same way: "Not enough
  * units in A: requested 10, available 5" and "Ambiguous lot match for HOOL: 2
@@ -196,6 +199,10 @@ function withoutEntryTag(message: string): string {
     .replace(/ \(\d{4}-\d{2}-\d{2}, ".*"\)$/s, "")
     .replace(
       /^(Balance (?:failed|exceeds explicit tolerance) for [^:]+:.*?expected [^,]*), got .*$/s,
+      "$1",
+    )
+    .replace(
+      /^(Balance failed for '[^']*': expected \S+ \S+) != accumulated .*$/s,
       "$1",
     )
     .replace(

@@ -70,6 +70,9 @@ const placedAcrossFiles = (message: string) =>
  * The explicit-tolerance wording ("Balance exceeds explicit tolerance for A:
  * expected 100 USD ~ 0.01, got 0 USD (difference: 100)") also quotes the
  * reached figure and its difference, so it is trimmed the same way (w21/681).
+ * `check_drained`'s zero balance on a close is in Beancount's words
+ * ("Balance failed for 'A': expected 0 USD != accumulated 49.75 USD (49.75
+ * too much)"), so its accumulated figure is trimmed too (w31/156).
  *
  * A lot-booking error quotes the account's lots: "Not enough units in A:
  * requested 10, available 5" and "Ambiguous lot match for HOOL: 2 lots match
@@ -93,6 +96,10 @@ function withoutEntryTag(message: string): string {
     .replace(/ \(\d{4}-\d{2}-\d{2}, ".*"\)$/s, "")
     .replace(
       /^(Balance (?:failed|exceeds explicit tolerance) for [^:]+:.*?expected [^,]*), got .*$/s,
+      "$1",
+    )
+    .replace(
+      /^(Balance failed for '[^']*': expected \S+ \S+) != accumulated .*$/s,
       "$1",
     )
     .replace(

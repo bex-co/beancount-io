@@ -1,5 +1,7 @@
 import type { BeancountError, DirectiveJson } from "@rustledger/wasm";
+import { locateCheckDrainedErrors } from "../check-drained";
 import { reconcileCoherentCostErrors } from "../coherent-cost";
+import { reconcileCommodityAttrErrors } from "../commodity-attr";
 import { reconcileLeafOnlyErrors } from "../leafonly";
 import { locateDuplicateErrors } from "../noduplicates";
 
@@ -230,5 +232,202 @@ describe("reconcileCoherentCostErrors", () => {
         "main.bean",
       ),
     ).toEqual([other]);
+  });
+});
+
+// w31/156: check_drained's and commodity_attr's errors were unlocated, in the
+// engine's words; bean-check 3.2.3 puts them on the close or commodity line.
+describe("locateCheckDrainedErrors", () => {
+  const source = [
+    'plugin "beancount.plugins.check_drained"',
+    'include "other.bean"',
+    "2024-01-01 open Assets:Cash",
+    "2024-08-30 close Assets:Cash",
+  ].join("\n");
+  const files = { "main.bean": source, "other.bean": "" };
+  const close: DirectiveJson = {
+    type: "close",
+    date: "2024-08-30",
+    account: "Assets:Cash",
+  };
+  const engine = (got: string, account = "Assets:Cash"): BeancountError => ({
+    ...pluginError(
+      `Balance failed for ${account}: expected 0 USD, got ${got} USD\n  note: directive was synthesized by a plugin (no source location in your files)`,
+    ),
+    code: "E2001",
+    phase: "validate",
+  });
+  const locate = (
+    errors: BeancountError[],
+    text = source,
+    directives = [close],
+  ) =>
+    placed(
+      locateCheckDrainedErrors(
+        errors,
+        directives,
+        { ...files, "main.bean": text },
+        "main.bean",
+      ),
+    );
+
+  it("puts each failure on its close line, in bean-check's words", () => {
+    expect(locate([engine("49.75"), engine("-10.500")])).toEqual([
+      [
+        4,
+        "Balance failed for 'Assets:Cash': expected 0 USD != accumulated 49.75 USD (49.75 too much)",
+      ],
+      [
+        4,
+        "Balance failed for 'Assets:Cash': expected 0 USD != accumulated -10.500 USD (10.500 too little)",
+      ],
+    ]);
+  });
+
+  it("runs under pedantic, and finds a close in an included file", () => {
+    const pedantic = source.replace("check_drained", "pedantic");
+    expect(locate([engine("1")], pedantic)).toEqual([
+      [
+        4,
+        "Balance failed for 'Assets:Cash': expected 0 USD != accumulated 1 USD (1 too much)",
+      ],
+    ]);
+    const moved = source.replace("2024-08-30 close Assets:Cash", "");
+    const errors = locateCheckDrainedErrors(
+      [engine("1")],
+      [close],
+      { "main.bean": moved, "other.bean": "\n2024-08-30 close Assets:Cash" },
+      "main.bean",
+    );
+    expect(errors.map((error) => [error.file, error.line])).toEqual([
+      ["other.bean", 2],
+    ]);
+  });
+
+  it("leaves a close close_tree made unlocated, as stock does", () => {
+    const child: DirectiveJson = { ...close, account: "Assets:Cash:Sub" };
+    expect(
+      locate([engine("1", "Assets:Cash:Sub")], source, [close, child]),
+    ).toEqual([
+      [
+        null,
+        "Balance failed for 'Assets:Cash:Sub': expected 0 USD != accumulated 1 USD (1 too much)",
+      ],
+    ]);
+  });
+
+  it("leaves a written balance, an open account and an undeclared plugin alone", () => {
+    const written = { ...engine("49.75"), file: "main.bean", line: 3 };
+    const open = engine("49.75", "Assets:Bank");
+    expect(
+      locateCheckDrainedErrors([written, open], [close], files, "main.bean"),
+    ).toEqual([written, open]);
+    const undeclared = source.split("\n").slice(1).join("\n");
+    expect(locate([engine("49.75")], undeclared)).toEqual([
+      [null, engine("49.75").message],
+    ]);
+  });
+});
+
+describe("reconcileCommodityAttrErrors", () => {
+  const config = "{'name': None, 'sector': ['Tech', 'Energy'], 'tier': []}";
+  const source = [
+    `plugin "beancount.plugins.commodity_attr" "${config}"`,
+    "2024-01-01 commodity QAX",
+    '  sector: "Other"',
+    "2024-01-01 commodity QAY",
+    "  sector: 5.10",
+    "  tier: TRUE",
+    "2024-01-01 commodity QAZ",
+    "  sector:",
+  ].join("\n");
+  const commodity = (
+    currency: string,
+    meta: Record<string, string | boolean | null>,
+  ): DirectiveJson => ({
+    type: "commodity",
+    date: "2024-01-01",
+    currency,
+    meta,
+  });
+  const stream = [
+    commodity("QAX", { sector: "Other" }),
+    commodity("QAY", { sector: "5.10", tier: true }),
+    commodity("QAZ", { sector: null }),
+  ];
+  const missing = (currency: string, attribute: string) =>
+    pluginError(
+      `Commodity '${currency}' missing required attribute '${attribute}'`,
+    );
+  const invalid = (
+    currency: string,
+    attribute: string,
+    value: string,
+    allowed: string,
+  ) =>
+    pluginError(
+      `Commodity '${currency}' attribute '${attribute}' has invalid value '${value}' (allowed: ${allowed})`,
+    );
+  const reconcile = (errors: BeancountError[], text = source) =>
+    placed(
+      reconcileCommodityAttrErrors(
+        errors,
+        stream,
+        { "main.bean": text },
+        "main.bean",
+      ),
+    );
+
+  it("puts each finding on its commodity line, in bean-check's words", () => {
+    expect(
+      reconcile([
+        missing("QAX", "name"),
+        invalid("QAX", "sector", "Other", '["Tech", "Energy"]'),
+        invalid("QAY", "sector", 'Number("5.10")', '["Tech", "Energy"]'),
+        invalid("QAY", "tier", "Bool(true)", "[]"),
+        invalid("QAZ", "sector", "", '["Tech", "Energy"]'),
+      ]),
+    ).toEqual([
+      [2, "Missing attribute 'name' for Commodity directive QAX"],
+      [
+        2,
+        "Invalid value 'Other' for attribute sector, Commodity directive QAX; valid options: Tech, Energy",
+      ],
+      [
+        4,
+        "Invalid value '5.10' for attribute sector, Commodity directive QAY; valid options: Tech, Energy",
+      ],
+      // An empty list checks nothing, and an empty value is missing.
+      [7, "Missing attribute 'sector' for Commodity directive QAZ"],
+    ]);
+  });
+
+  it("reports a config that is not a dict, unlocated", () => {
+    const CONFIG = "Invalid configuration for commodity_attr plugin; skipping.";
+    for (const [written, refused] of [
+      ["[1, 2]", true],
+      ["None", true],
+      ["'abc'", true],
+      ["{'name', 'sector'}", true],
+      ["{'name': ", true],
+      ["{}", false],
+      // A None inside a string is text; a trailing comma reads.
+      ["{'note': 'None (True)', 'name': None,}", false],
+      ["{'sector': ('Tech', 'Energy'), 'listed': True}", false],
+    ] as const) {
+      const text = source.replace(config, written);
+      expect([written, reconcile([], text)]).toEqual([
+        written,
+        refused ? [[null, CONFIG]] : [],
+      ]);
+    }
+  });
+
+  it("leaves other errors, and an undeclared plugin's, alone", () => {
+    const other = pluginError("Some other plugin error");
+    expect(reconcile([other])).toEqual([[null, other.message]]);
+    const undeclared = source.split("\n").slice(1).join("\n");
+    const engine = missing("QAX", "name");
+    expect(reconcile([engine], undeclared)).toEqual([[null, engine.message]]);
   });
 });

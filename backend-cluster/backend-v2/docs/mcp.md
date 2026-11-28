@@ -457,7 +457,8 @@ message and file, not line, so an error the write merely moves is not new,
 while a second copy of a known message is. The match leaves out the parts of
 a message that a write can change without causing the error: the entry's
 `(date, "narration")` tag, the figure a failing balance assertion reached
-(`got …`), and a lot error's available units (`available …`) or number of
+(`got …`, or `accumulated …` for the zero balance `check_drained` checks on
+a close), and a lot error's available units (`available …`) or number of
 matching lots (`… lots match`). A changed account, expected amount or
 requested amount still makes the error new. The commodity plugins' errors
 match on what they are about. `check_commodity`'s missing-commodity error

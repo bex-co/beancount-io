@@ -90,6 +90,7 @@ import {
   projectNewLedgerErrors,
   refuseProjectedErrors,
 } from "@/features/ledger/utils/new-ledger-errors";
+import { verifyDrainedAndCommodityAttrErrors } from "./drained-and-attr-errors";
 import { verifyKnownCommodityErrors } from "./known-commodity-errors";
 import { verifyKnownLotErrors } from "./known-lot-errors";
 import { verifyKnownPlacedErrors } from "./known-placed-errors";
@@ -5890,8 +5891,10 @@ async function main(): Promise<void> {
       : []),
     `2024-08-30 close ${closed}`,
   ];
-  const failed = (account: string) =>
-    `error null Balance failed for ${account}: expected 0 USD, got 49.75 USD`;
+  // w31/156: on the close line, in bean-check's words; a close close_tree
+  // made has no line in stock either (`<beancount.plugins.close_tree>:0`).
+  const failed = (account: string, line: number | null = 8) =>
+    `error ${line} Balance failed for '${account}': expected 0 USD != accumulated 49.75 USD (49.75 too much)`;
   // An engine whose own pedantic runs check_drained (w31/020) reports the
   // first case twice: then drop the check_drained that pedantic adds.
   for (const [plugins, drained, closed, expected] of [
@@ -5905,7 +5908,7 @@ async function main(): Promise<void> {
       ["close_tree", "pedantic"],
       false,
       "Assets:Broker",
-      [failed("Assets:Broker"), failed("Assets:Broker:VTI")],
+      [failed("Assets:Broker"), failed("Assets:Broker:VTI", null)],
     ],
   ] as const) {
     const balances = (await bundle([...plugins], drainedBody(drained, closed)))
@@ -7293,6 +7296,7 @@ poptag #qa-pushed
   await verifyProjectedDocuments();
   await verifyKnownLotErrors();
   await verifyKnownCommodityErrors();
+  await verifyDrainedAndCommodityAttrErrors();
   await verifyKnownPlacedErrors();
   await verifyEditErrorLines();
   await verifyProjectedEditLines();

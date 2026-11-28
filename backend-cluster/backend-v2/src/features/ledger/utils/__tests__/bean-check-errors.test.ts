@@ -84,6 +84,20 @@ describe("diffBeanCheckErrors with a balance assertion already failing", () => {
     ).toEqual([]);
   });
 
+  // w31/156: check_drained's zero balance on a close, in Beancount's words.
+  it("is not new for a drained close's accumulated figure either", () => {
+    const drained = (accumulated: string, account = "Assets:Cash") =>
+      error(
+        `Balance failed for '${account}': expected 0 USD != accumulated ${accumulated} USD (${accumulated} too much)`,
+        "main.bean:90",
+      );
+    expect(diffBeanCheckErrors([drained("49.75")], [drained("29.75")])).toEqual(
+      [],
+    );
+    const other = drained("29.75", "Assets:Bank");
+    expect(diffBeanCheckErrors([drained("49.75")], [other])).toEqual([other]);
+  });
+
   it("counts a second failing assertion on the same account as new", () => {
     const second = failed("44.75 USD");
     expect(
