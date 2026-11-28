@@ -1,0 +1,28 @@
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Expenses:Food USD
+
+2026-02-01 * "" "empty payee"
+  Assets:Cash    -1 USD
+  Expenses:Food   1 USD
+
+2026-02-02 * "Shop" ""
+  Assets:Cash    -1 USD
+  Expenses:Food   1 USD
+
+2026-02-03 * "" ""
+  Assets:Cash    -1 USD
+  Expenses:Food   1 USD
+
+2026-02-04 * "only narration"
+  Assets:Cash    -1 USD
+  Expenses:Food   1 USD
+
+2026-02-05 * "Both" "parts"
+  Assets:Cash    -1 USD
+  Expenses:Food   1 USD
+
+2026-02-06 *
+  Assets:Cash    -1 USD
+  Expenses:Food   1 USD

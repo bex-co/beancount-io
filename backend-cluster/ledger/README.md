@@ -235,6 +235,26 @@ from the ledger's own price map. `yarn verify:rustledger` fails its "hosted
 getprice and convert still chain" check once an engine bump stops chaining;
 then this section goes (w31/143).
 
+## BQL `description` with an empty payee or narration
+
+Stock beanquery joins the payee and narration that are not empty:
+`* "Shop" ""` has the description `Shop`, `* "" "Rent"` has `Rent`, and
+`* "" ""` has an empty one. The pinned engine joins every part that is not
+NULL, so the same three read `Shop | `, ` | Rent` and ` | `. The query cannot
+spell stock's column, because the engine has no `CASE` and no string `+`. So
+the shell strips one separator from each end of a selected `description` cell,
+bare or aliased (`description AS d`), in the structured and the text result.
+A payee or narration that itself starts or ends with ` | ` loses it as well.
+
+Everything else still reads the engine's text: a `WHERE`, `GROUP BY`,
+`ORDER BY` or `DISTINCT` on the column, and an expression over it
+(`upper(description)`). `WHERE description = 'Shop'` misses `* "Shop" ""`, and
+the groups `Shop | ` and `Shop` stay apart. Filter and group on `payee` and
+`narration` instead, which match stock exactly. The oracle query
+`description-filter` is allowlisted for this, so `yarn verify:rustledger`
+fails once an engine bump joins the parts as stock does. The stripping can go
+then (w31/161).
+
 ## Validation: stock errors the engine does not raise
 
 These things stock `bean-check` refuses load without an error in the pinned

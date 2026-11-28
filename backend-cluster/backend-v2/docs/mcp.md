@@ -1862,6 +1862,15 @@ prints `3 VTI {110.00 USD}`. For costs, select `position` per posting (each
 lot with its cost and date, `3 VTI {110.00 USD, 2026-01-03}`), or
 `cost(sum(position))` for the total cost (`330.00 USD`).
 
+A selected `description` cell joins the payee and narration with ` | ` and
+leaves out an empty one, as stock does: `* "Shop" ""` reads `Shop`,
+`* "" "Rent"` reads `Rent`, and `* "" ""` reads `""`. A filter, grouping or
+expression on `description` still sees the engine's text, which keeps the
+separator (`Shop | `), so `WHERE description = 'Shop'` misses that
+transaction. Filter on `payee` and `narration`, which match exactly
+(`WHERE payee = 'Shop'`). See the
+[ledger notes](../../ledger/README.md#bql-description-with-an-empty-payee-or-narration).
+
 ```json
 { "ok": true, "result": "tool-specific payload" }
 ```

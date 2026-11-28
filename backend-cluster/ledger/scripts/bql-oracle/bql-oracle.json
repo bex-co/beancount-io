@@ -575,6 +575,153 @@
       ],
       "source": "w23/160"
     },
+    "description-aliased": {
+      "columns": [
+        {
+          "dtype": "date",
+          "name": "date"
+        },
+        {
+          "dtype": "str",
+          "name": "d"
+        }
+      ],
+      "ledger": "description.bean",
+      "query": "SELECT date, description AS d WHERE account = 'Assets:Cash'",
+      "rows": [
+        [
+          "2026-02-01",
+          "empty payee"
+        ],
+        [
+          "2026-02-02",
+          "Shop"
+        ],
+        [
+          "2026-02-03",
+          ""
+        ],
+        [
+          "2026-02-04",
+          "only narration"
+        ],
+        [
+          "2026-02-05",
+          "Both | parts"
+        ],
+        [
+          "2026-02-06",
+          ""
+        ]
+      ],
+      "source": "w31/161"
+    },
+    "description-empty-part": {
+      "columns": [
+        {
+          "dtype": "date",
+          "name": "date"
+        },
+        {
+          "dtype": "str",
+          "name": "description"
+        }
+      ],
+      "ledger": "description.bean",
+      "query": "SELECT date, description WHERE account = 'Assets:Cash'",
+      "rows": [
+        [
+          "2026-02-01",
+          "empty payee"
+        ],
+        [
+          "2026-02-02",
+          "Shop"
+        ],
+        [
+          "2026-02-03",
+          ""
+        ],
+        [
+          "2026-02-04",
+          "only narration"
+        ],
+        [
+          "2026-02-05",
+          "Both | parts"
+        ],
+        [
+          "2026-02-06",
+          ""
+        ]
+      ],
+      "source": "w31/161"
+    },
+    "description-filter": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        }
+      ],
+      "ledger": "description.bean",
+      "query": "SELECT count(*) WHERE description = 'Shop'",
+      "rows": [
+        [
+          2
+        ]
+      ],
+      "source": "w31/161"
+    },
+    "description-from-entries": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "type"
+        },
+        {
+          "dtype": "str",
+          "name": "description"
+        }
+      ],
+      "ledger": "description.bean",
+      "query": "SELECT type, description FROM entries",
+      "rows": [
+        [
+          "open",
+          null
+        ],
+        [
+          "open",
+          null
+        ],
+        [
+          "transaction",
+          "empty payee"
+        ],
+        [
+          "transaction",
+          "Shop"
+        ],
+        [
+          "transaction",
+          ""
+        ],
+        [
+          "transaction",
+          "only narration"
+        ],
+        [
+          "transaction",
+          "Both | parts"
+        ],
+        [
+          "transaction",
+          ""
+        ]
+      ],
+      "source": "w31/161"
+    },
     "double-semicolon-bare": {
       "columns": [
         {
@@ -3504,5 +3651,5 @@
       "source": "w23/169"
     }
   },
-  "sourceHash": "b317d72e4dfa8234d552f639ce29348d1b518bdac761adb979a6d244e2444d59"
+  "sourceHash": "5a1e92442a3cc763c3067ee9df60aff3bc830f79d7152c9b86da11d3b7d2eea7"
 }

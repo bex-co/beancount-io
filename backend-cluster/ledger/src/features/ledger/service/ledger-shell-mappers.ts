@@ -235,6 +235,7 @@ const STRING_COLUMNS = new Set([
   "flag",
   "payee",
   "narration",
+  "description",
   "type",
 ]);
 
@@ -357,15 +358,85 @@ function toShellCell(cell: CellValue): ShellCell {
   return formatCellValue(cell);
 }
 
+const DESCRIPTION_SEPARATOR = " | ";
+
+/**
+ * Stock beanquery's `description` is `' | '.join(filter(None, [payee,
+ * narration]))`, so an empty payee or narration drops out: `"Shop" ""` reads
+ * `Shop`, `"" "Rent"` reads `Rent`, `"" ""` reads nothing. The pinned engine
+ * joins every non-NULL part, so the separator an empty part leaves sits at
+ * the end (`Shop | `), at the start (` | Rent`) or alone (` | `) (w31/161).
+ * The query cannot spell stock's column (the engine has no CASE and no string
+ * `+`), so the cell drops one separator at each end instead. A payee or
+ * narration that itself begins or ends with ` | ` loses it too: the cell no
+ * longer says which part it came from.
+ */
+function stockDescription(cell: CellValue): CellValue {
+  if (typeof cell !== "string") return cell;
+  let text = cell;
+  if (text.startsWith(DESCRIPTION_SEPARATOR)) {
+    text = text.slice(DESCRIPTION_SEPARATOR.length);
+  }
+  if (text.endsWith(DESCRIPTION_SEPARATOR)) {
+    text = text.slice(0, -DESCRIPTION_SEPARATOR.length);
+  }
+  return text;
+}
+
+/**
+ * Whether a result column is the bare `description` column: unaliased, or an
+ * alias whose SELECT item is that column alone (`description AS d`). An alias
+ * named `description` over anything else (`payee AS description`) is not, and
+ * neither is an expression over the column (`upper(description)`), whose
+ * value the engine computed from its own text.
+ */
+function isDescriptionColumn(
+  name: string,
+  heads: ReadonlyMap<string, string>,
+): boolean {
+  const normalized = name.toLowerCase();
+  const head = heads.get(normalized);
+  const source =
+    head === undefined
+      ? normalized
+      : head
+          .replace(/^(?:distinct|all)\s+/iu, "")
+          .trim()
+          .toLowerCase();
+  return source === "description";
+}
+
+/** The result with each bare `description` cell as stock prints it. */
+function withStockDescriptions(
+  result: QueryResult,
+  heads: ReadonlyMap<string, string>,
+): QueryResult {
+  const columns = new Set(
+    result.columns.flatMap((name, index) =>
+      isDescriptionColumn(name, heads) ? [index] : [],
+    ),
+  );
+  if (columns.size === 0) return result;
+  return {
+    ...result,
+    rows: result.rows.map((row) =>
+      row.map((cell, index) =>
+        columns.has(index) ? stockDescription(cell) : cell,
+      ),
+    ),
+  };
+}
+
 /**
  * Map a rustledger BQL {@link QueryResult} into the `ShellQueryResult` table
  * shape the dashboard expects (columns → `types`, positional rows → `rows`).
  */
 export function queryResultToShellResult(
-  result: QueryResult,
+  engineResult: QueryResult,
   aliases: ReadonlyMap<string, string> = EMPTY_ALIASES,
   heads: ReadonlyMap<string, string> = EMPTY_ALIASES,
 ): ShellQueryResult {
+  const result = withStockDescriptions(engineResult, heads);
   const types = result.columns.map((name, index) => ({
     name,
     dtype: classifyColumnDtype(result.rows, index, name, aliases, heads),
@@ -484,10 +555,11 @@ function center(value: string, width: number): string {
  * lines, but a header must stay on one.
  */
 export function queryResultToText(
-  result: QueryResult,
+  engineResult: QueryResult,
   aliases: ReadonlyMap<string, string> = EMPTY_ALIASES,
   heads: ReadonlyMap<string, string> = EMPTY_ALIASES,
 ): string {
+  const result = withStockDescriptions(engineResult, heads);
   if (result.columns.length === 0 || result.rows.length === 0) return "";
 
   const headers = result.columns.map((name) =>

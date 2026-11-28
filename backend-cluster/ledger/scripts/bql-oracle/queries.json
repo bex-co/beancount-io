@@ -711,5 +711,29 @@
     "ledger": "main.bean",
     "source": "w31/159",
     "query": "SELECT account, month(date), sum(number) WHERE account = 'Expenses:Food' AND year = 2026 GROUP BY 1, 2 PIVOT BY 1, 2"
+  },
+  {
+    "id": "description-empty-part",
+    "ledger": "description.bean",
+    "source": "w31/161",
+    "query": "SELECT date, description WHERE account = 'Assets:Cash'"
+  },
+  {
+    "id": "description-aliased",
+    "ledger": "description.bean",
+    "source": "w31/161",
+    "query": "SELECT date, description AS d WHERE account = 'Assets:Cash'"
+  },
+  {
+    "id": "description-from-entries",
+    "ledger": "description.bean",
+    "source": "w31/161",
+    "query": "SELECT type, description FROM entries"
+  },
+  {
+    "id": "description-filter",
+    "ledger": "description.bean",
+    "source": "w31/161",
+    "query": "SELECT count(*) WHERE description = 'Shop'"
   }
 ]

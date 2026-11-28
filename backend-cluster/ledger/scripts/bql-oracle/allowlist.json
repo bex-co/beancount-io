@@ -440,5 +440,15 @@
       ".pm/w31/done/117.md"
     ],
     "note": "The engine rounds the exact product 37.66666666666666666666666666516 to its own 29 digits (…665) before the shell rounds to 28, so a false tie rounds half-even to …666 where stock, rounding the exact value once, reads …667. Only the engine can round once (upstream)."
+  },
+  {
+    "id": "description-filter",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      ".pm/w31/done/161.md"
+    ],
+    "note": "The engine's description joins an empty payee or narration with ' | ', so the filter compares 'Shop | ' with 'Shop' and counts no row, where stock drops the empty part and counts 2. The shell strips the separator from a selected description cell only; a WHERE, GROUP BY or expression over the column still sees the engine's text until the engine joins as stock does (upstream)."
   }
 ]
