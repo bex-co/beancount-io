@@ -65,20 +65,30 @@ const DEVICE_NAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
  */
 export function assertPortableRepoPath(path: unknown, field = "path"): void {
   assertSafeRepoPath(path, field);
-  const refuse = (rule: string) => refusePath(path, field, rule);
-  if (/[\p{Cc}\u2028\u2029]/u.test(path))
-    refuse("contains a control character");
+  const rule = unportableRepoPathRule(path);
+  if (rule) refusePath(path, field, rule);
+}
+
+/**
+ * The portability rule a safe `path` breaks under
+ * {@link assertPortableRepoPath}, worded like {@link unsafeRepoPathRule}, or
+ * `undefined` when it breaks none. A receipt folder named by the ledger's
+ * option is refused with its own message (w31/153).
+ */
+export function unportableRepoPathRule(path: string): string | undefined {
+  if (/[\p{Cc}\u2028\u2029]/u.test(path)) return "contains a control character";
   if (/\p{Bidi_Control}/u.test(path))
-    refuse("contains a bidirectional text control");
+    return "contains a bidirectional text control";
   if (/[<>:"|?*]/.test(path))
-    refuse('contains one of <>:"|?*, which Windows cannot store');
+    return 'contains one of <>:"|?*, which Windows cannot store';
   for (const segment of path.split("/")) {
-    if (/[. ]$/.test(segment)) refuse("has a part ending in a dot or a space");
+    if (/[. ]$/.test(segment)) return "has a part ending in a dot or a space";
     if (DEVICE_NAME.test(segment))
-      refuse(`uses the Windows device name "${segment}"`);
+      return `uses the Windows device name "${segment}"`;
     if (Buffer.byteLength(segment, "utf8") > 255)
-      refuse("has a part longer than 255 bytes");
+      return "has a part longer than 255 bytes";
   }
+  return undefined;
 }
 
 /**

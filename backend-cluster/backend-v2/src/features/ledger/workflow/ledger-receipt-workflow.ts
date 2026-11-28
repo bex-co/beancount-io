@@ -1,6 +1,9 @@
 import { posix } from "node:path";
 import { runIdempotentEntryWrite } from "@/features/ledger/utils/entry-write-idempotency";
-import { resolveEntryFile } from "@/features/ledger/utils/entry-file-resolver";
+import {
+  resolveEntryFile,
+  resolveReceiptFolder,
+} from "@/features/ledger/utils/entry-file-resolver";
 import { parseDirectiveDate } from "@/features/ledger/utils/directive-date";
 import { assertValidReceiptInsertInput } from "@/features/ledger/utils/receipt-insert-validation";
 import { assertTempAssetKey } from "@/features/s3/temp-asset-key";
@@ -91,15 +94,17 @@ function slugify(text: string): string {
     .slice(0, 40);
 }
 
+/** The receipt's repository path in `folder`, where `""` is the ledger root. */
 function buildReceiptPath(
   date: string,
   payee: string,
   ext: string,
   id: string,
-  baseFolder: string = "documents",
+  folder: string,
 ): string {
   const slug = slugify(payee) || "receipt";
-  return `${baseFolder}/${date}-${slug}-${id}${ext}`;
+  const name = `${date}-${slug}-${id}${ext}`;
+  return folder ? `${folder}/${name}` : name;
 }
 
 /**
@@ -241,6 +246,9 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
       favaApiClient,
     } = params;
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    // A folder the ledger can't store the receipt in is refused before
+    // anything is checked or stored (w31/153).
+    const receiptFolder = resolveReceiptFolder(bcioData);
 
     const linkId = nanoidBase58(8);
     const linkTag = `rcpt_${linkId}`;
@@ -261,13 +269,12 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     );
 
     const ext = extractExt(receiptObjectKey);
-    const receiptBaseFolder = bcioData.receipt_base_folder || "documents";
     const receiptPath = buildReceiptPath(
       input.date,
       input.payee,
       ext,
       linkId,
-      receiptBaseFolder,
+      receiptFolder,
     );
     // The directive lands where the bulk write routes a document; its path
     // must resolve from there. The date passed the check above.

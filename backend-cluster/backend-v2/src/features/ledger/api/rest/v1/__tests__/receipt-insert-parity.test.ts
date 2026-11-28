@@ -400,6 +400,141 @@ it.each<[Record<string, string>, string]>([
   },
 );
 
+// w31/153: `receipt_base_folder` is a folder from the ledger root, read the
+// way a routing option is (w31/152). Used as written, `./receipts` and
+// `receipts/` built `./receipts/…` and `receipts//…`, which the ledger
+// refuses to store, so every insert failed as an outage after its check.
+describe("receipt_base_folder written with ./ or a trailing /", () => {
+  it.each<[Record<string, string>, string, string]>([
+    [{ receipt_base_folder: "./receipts" }, "receipts/", "receipts/"],
+    [{ receipt_base_folder: "receipts/" }, "receipts/", "receipts/"],
+    [
+      { receipt_base_folder: ".//receipts/2026/" },
+      "receipts/2026/",
+      "receipts/2026/",
+    ],
+    [
+      { receipt_base_folder: "./receipts", document_file: "books/docs.bean" },
+      "receipts/",
+      "../receipts/",
+    ],
+    [{ receipt_base_folder: "./" }, "", ""],
+  ])(
+    "stores the receipt in the folder Beancount reads (%j)",
+    async (routing, folder, documentPrefix) => {
+      const f = await fixture();
+      f.state.bcio = { receipt_storage: "git", ...routing };
+      try {
+        expect((await f.rest()).status).toBe(200);
+        expect((await f.gql()).errors).toBeUndefined();
+        expect((await f.mcp()).isError).not.toBe(true);
+        const writes = f.write.mock.calls.filter(
+          (call) => (call as unknown[])[6] !== true,
+        );
+        expect(f.createFile).toHaveBeenCalledTimes(3);
+        expect(writes).toHaveLength(3);
+        for (let call = 0; call < 3; call += 1) {
+          const [, , stored] = f.createFile.mock.calls[call] as unknown as [
+            string,
+            string,
+            { path: string; message: string },
+          ];
+          expect(stored.path).toMatch(
+            new RegExp(`^${folder}2026-09-01-caf-fixture-[^./]+\\.pdf$`),
+          );
+          expect(stored.message).toBe(`docs: add receipt ${stored.path}`);
+          const [document] = (writes[call] as unknown[])[3] as {
+            type: string;
+            entry: { filename: string };
+          }[];
+          expect(document.type).toBe("document");
+          expect(document.entry.filename).toBe(
+            documentPrefix + stored.path.slice(folder.length),
+          );
+        }
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each([
+    ["../x", '"../x", which is outside the ledger'],
+    ["./receipts/../../x", '("./receipts/../../x") stores receipts in "../x"'],
+    ["/receipts", '"/receipts", which is outside the ledger'],
+    ["receipts/.git", "is inside .git"],
+    ["receipts:2026", "which Windows cannot store"],
+  ])(
+    "refuses %j on REST, GraphQL and MCP, naming the option, before any effect",
+    async (folder, quoted) => {
+      const f = await fixture();
+      f.state.bcio = { receipt_storage: "git", receipt_base_folder: folder };
+      try {
+        const r = await f.rest();
+        expect(r.status).toBe(400);
+        const rest = (await r.json()) as {
+          error: {
+            code: string;
+            message: string;
+            metadata?: { field?: string; hint?: string };
+          };
+        };
+        const g = await f.gql();
+        expect(g.errors).toHaveLength(1);
+        const gql = formatError(g.errors![0].toJSON(), g.errors![0]) as {
+          message: string;
+          extensions: { code: string; field?: string; hint?: string };
+        };
+        const m = await f.mcp();
+        expect(m.isError).toBe(true);
+        const mcp = (
+          m.structuredContent as {
+            error: {
+              code: string;
+              message: string;
+              field?: string;
+              hint?: string;
+            };
+          }
+        ).error;
+        for (const refused of [
+          {
+            code: rest.error.code,
+            message: rest.error.message,
+            field: rest.error.metadata?.field,
+            hint: rest.error.metadata?.hint,
+          },
+          {
+            code: gql.extensions.code,
+            message: gql.message,
+            field: gql.extensions.field,
+            hint: gql.extensions.hint,
+          },
+          mcp,
+        ]) {
+          expect(refused.code).toBe("BAD_USER_INPUT");
+          expect(refused.message).toContain(
+            "The ledger's `receipt_base_folder` option",
+          );
+          expect(refused.message).toContain(quoted);
+          expect(refused.field).toBeUndefined();
+          expect(refused.hint).toContain(
+            'custom "beancountio-option" "receipt_base_folder"',
+          );
+          expect(refused.hint).not.toContain("named argument");
+        }
+        expect(f.write).not.toHaveBeenCalled();
+        expect(f.download).not.toHaveBeenCalled();
+        expect(f.createFile).not.toHaveBeenCalled();
+        expect(f.copy).not.toHaveBeenCalled();
+        expect(f.deleteTemp).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+});
+
 // w23/083: the result named neither the file nor the hash, so an agent had
 // to list-and-guess its own entry. The bulk write already resolves both;
 // the surfaces below must carry them.

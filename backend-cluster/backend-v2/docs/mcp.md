@@ -2391,8 +2391,12 @@ The ledger's `receipt_storage` beancountio-option decides the strategy: S3
 storage promotes the object and writes one transaction with a receipt URL in
 its metadata; git storage commits the receipt bytes into the repository and
 writes a link-tagged document plus transaction pair. The receipt is stored at
-`<receipt_base_folder>/<date>-<payee>-<id><ext>` (`documents/` by default). The
-document directive is routed like any other (`document_file`, else
+`<receipt_base_folder>/<date>-<payee>-<id><ext>` (`documents/` by default).
+The folder is a path from the ledger root, read like a routing option's file,
+so `./receipts` and `receipts/` both store in `receipts/`. One that leads
+outside the ledger (`../x`, `/x`) or that a new file can't be stored under is
+refused as `BAD_USER_INPUT` naming the option, before anything is stored
+(w31/153). The document directive is routed like any other (`document_file`, else
 `default_file`) and names the receipt relative to that file's directory, the
 way Beancount resolves it, so a document routed to `books/docs.bean` reads
 `../documents/…`. Requires write capability

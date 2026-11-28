@@ -1,5 +1,5 @@
 import type { BcioOptionsPublic } from "@/foundation/fava/Api";
-import { resolveEntryFile } from "../entry-file-resolver";
+import { resolveEntryFile, resolveReceiptFolder } from "../entry-file-resolver";
 
 function opts(overrides: Partial<BcioOptionsPublic> = {}): BcioOptionsPublic {
   return {
@@ -145,6 +145,65 @@ describe("resolveEntryFile path normalization", () => {
     expect(error.message).toContain("The ledger's `default_file` option");
     expect(error.metadata?.hint).toContain(
       'custom "beancountio-option" "default_file"',
+    );
+  });
+});
+
+// w31/153: `receipt_base_folder` is a folder from the ledger root, read like
+// a routing option. Used as written, `./receipts` and `receipts/` stored the
+// receipt as `./receipts/…` and `receipts//…`, which the ledger refuses.
+describe("resolveReceiptFolder", () => {
+  it.each([
+    [null, "documents"],
+    ["", "documents"],
+    ["receipts", "receipts"],
+    ["./receipts", "receipts"],
+    ["receipts/", "receipts"],
+    ["receipts//", "receipts"],
+    [".//receipts//2026/./", "receipts/2026"],
+    ["old/../receipts", "receipts"],
+    [".", ""],
+    ["./", ""],
+  ])("reads %j as %j", (folder, path) => {
+    expect(resolveReceiptFolder(opts({ receipt_base_folder: folder }))).toBe(
+      path,
+    );
+  });
+
+  function refusal(folder: string) {
+    try {
+      resolveReceiptFolder(opts({ receipt_base_folder: folder }));
+    } catch (error) {
+      return error as {
+        category: string;
+        message: string;
+        metadata?: { field?: string; hint?: string };
+      };
+    }
+    throw new Error("expected a refusal");
+  }
+
+  it.each([
+    ["..", '"..", which is outside the ledger'],
+    ["../x", '"../x", which is outside the ledger'],
+    ["./receipts/../../x", '("./receipts/../../x") stores receipts in "../x"'],
+    ["/receipts", '"/receipts", which is outside the ledger'],
+    ["/", '"/", which is outside the ledger'],
+    ["receipts\\2026", 'uses "\\"'],
+    ["receipts/.git", "is inside .git"],
+    ["receipts:2026", "which Windows cannot store"],
+    ["receipts.", "has a part ending in a dot or a space"],
+    ["con", 'uses the Windows device name "con"'],
+  ])("refuses %j, naming the option and no argument", (folder, quoted) => {
+    const error = refusal(folder);
+    expect(error.category).toBe("BAD_USER_INPUT");
+    expect(error.message).toContain(
+      "The ledger's `receipt_base_folder` option",
+    );
+    expect(error.message).toContain(quoted);
+    expect(error.metadata?.field).toBeUndefined();
+    expect(error.metadata?.hint).toContain(
+      'custom "beancountio-option" "receipt_base_folder"',
     );
   });
 });
