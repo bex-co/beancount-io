@@ -1180,10 +1180,6 @@ describe("a currency that runs into a minus", () => {
     posting("1 2 QAB-"),
     posting("1 HOO {2026-01-01 1 QAB-}"),
     '2026-08-30 custom "qa" 2026-01-01 QAB-',
-    // Keywords where a currency goes are stock's other error.
-    "2026-08-30 commodity TRUE-",
-    "2026-08-30 commodity QAZ\n  ref: 1 TRUE-",
-    posting("1 TRUE-"),
     // A minus apart from the currency is no part of it, and the engine
     // refuses the posting itself.
     posting("1 QAB -1 USD ; was QAB-"),
@@ -1301,4 +1297,424 @@ describe("what stock drops after a currency's bad last character", () => {
       FLAGLESS(6),
     ]);
   });
+});
+
+/**
+ * w31/157: three more spellings stock 3.2.3 refuses and the engine loads
+ * clean. A keyword where a currency goes is `unexpected BOOL` (`NONE`), a lone
+ * capital before anything but whitespace is an invalid token, and a token
+ * after a line's last field is `unexpected <TOKEN>`. Every expectation below
+ * is what stock's parser prints for the same text, at the same line; the
+ * syntax errors add what is wrong.
+ */
+const keywordError = (
+  line: number,
+  unexpected: string,
+  expecting: string | null,
+  written: string,
+) =>
+  `main.bean:${line} P0012 syntax error, unexpected ${unexpected}${expecting === null ? "" : `, expecting ${expecting}`}: "${written}" is not a currency; TRUE, FALSE and NULL are keywords`;
+const LIST_ITEM = "CAPITAL or CURRENCY";
+const TAG_LINK = "end of file or EOL or TAG or LINK";
+const strayError = (
+  line: number,
+  unexpected: string,
+  expecting: string | null,
+  ends: string,
+) =>
+  `main.bean:${line} P0012 syntax error, unexpected ${unexpected}${expecting === null ? "" : `, expecting ${expecting}`}: ${ends}`;
+const ENDS = {
+  close: "nothing may follow a close directive's account",
+  commodity: "nothing may follow a commodity directive's currency",
+  pad: "nothing may follow a pad directive's two accounts",
+  event: "nothing may follow an event directive's type and description",
+  query: "nothing may follow a query directive's name and query",
+  note: "only tags and links may follow a note directive's comment",
+  document: "only tags and links may follow a document directive's path",
+  price: "nothing may follow a price directive's amount",
+  balance: "nothing may follow a balance directive's amount",
+  open: "nothing may follow an open directive's currencies and booking method",
+  custom:
+    "a custom directive's values are strings, dates, bools, accounts and amounts",
+  value: "nothing may follow a metadata value",
+  posting: "nothing may follow a posting's amount, cost and price",
+};
+/** `value` as a metadata value on a commodity, on line 2. */
+const keyValue = (value: string) =>
+  `2026-08-30 commodity QAZ\n  ref: ${value}\n`;
+
+describe("a keyword where a currency goes", () => {
+  it.each([
+    [posting("1 TRUE-"), keywordError(2, "BOOL", AFTER_UNITS, "TRUE-")],
+    [posting("1 FALSE-"), keywordError(2, "BOOL", AFTER_UNITS, "FALSE-")],
+    [posting("1 NULL-"), keywordError(2, "NONE", AFTER_UNITS, "NULL-")],
+    // The engine drops a bare keyword after a posting's number.
+    [posting("1 TRUE"), keywordError(2, "BOOL", AFTER_UNITS, "TRUE")],
+    [posting("1 TRUE ; c"), keywordError(2, "BOOL", AFTER_UNITS, "TRUE")],
+    // Where a posting's units go.
+    [posting("TRUE-"), keywordError(2, "BOOL", AFTER_UNITS, "TRUE-")],
+    [posting("1 HOO {1 TRUE-}"), keywordError(2, "BOOL", COST, "TRUE-")],
+    [
+      posting("1 HOO {{1 NULL-}}"),
+      keywordError(2, "NONE", TOTAL_COST, "NULL-"),
+    ],
+    [posting("1 HOO @ 1 TRUE-"), keywordError(2, "BOOL", AT_EOL, "TRUE-")],
+    [
+      "2026-08-30 open Assets:QaX TRUE\n",
+      keywordError(1, "BOOL", AT_EOL, "TRUE"),
+    ],
+    [
+      "2026-08-30 open Assets:QaX USD,NULL\n",
+      keywordError(1, "NONE", LIST_ITEM, "NULL"),
+    ],
+    [
+      "2026-08-30 commodity TRUE-\n",
+      keywordError(1, "BOOL", LIST_ITEM, "TRUE-"),
+    ],
+    [
+      "2026-08-30 price TRUE- 1.00 USD\n",
+      keywordError(1, "BOOL", LIST_ITEM, "TRUE-"),
+    ],
+    [
+      "2026-08-30 price USD 1.00 FALSE-\n",
+      keywordError(1, "BOOL", null, "FALSE-"),
+    ],
+    [
+      "2026-08-30 balance Assets:QaCur 0 TRUE-\n",
+      keywordError(1, "BOOL", null, "TRUE-"),
+    ],
+    [keyValue("1 TRUE-"), keywordError(2, "BOOL", AT_EOL, "TRUE-")],
+    [keyValue("1 TRUE"), keywordError(2, "BOOL", AT_EOL, "TRUE")],
+    [keyValue("1 NULL"), keywordError(2, "NONE", AT_EOL, "NULL")],
+    ['2026-08-30 custom "qa" 1 NULL\n', keywordError(1, "NONE", null, "NULL")],
+  ])("is stock's syntax error at the keyword: %j", (text, expected) => {
+    expect(check(text)).toEqual([expected]);
+  });
+
+  it("reports the keyword's column", () => {
+    const [found] = stockSyntaxErrors(
+      { "main.bean": keyValue("1 TRUE-") },
+      "main.bean",
+    );
+    expect(found?.column).toBe("  ref: 1 ".length + 1);
+  });
+
+  it("reports an invalid token after the keyword too, as stock does", () => {
+    expect(check("2026-08-30 commodity TRUE.\n")).toEqual([
+      keywordError(1, "BOOL", LIST_ITEM, "TRUE."),
+      invalid(1, "."),
+    ]);
+    expect(check(posting("(1+2) FALSE."))).toEqual([
+      keywordError(2, "BOOL", AFTER_UNITS, "FALSE."),
+      invalid(2, "."),
+    ]);
+  });
+
+  it.each([
+    // A bool is a metadata or custom value of its own.
+    keyValue("TRUE"),
+    '2026-08-30 custom "qa" 1 TRUE\n',
+    // Currencies and accounts that start with a keyword.
+    "2026-08-30 open Assets:QaX TRUEX,NULLA\n",
+    posting("1 TRUE-1"),
+    "2026-08-30 commodity TRUE1\n",
+    // The engine refuses a bare keyword there itself.
+    "2026-08-30 commodity TRUE\n",
+    "2026-08-30 balance Assets:QaCur 0 NULL\n",
+  ])("leaves alone what is not a keyword where a currency goes: %j", (text) => {
+    expect(check(text)).toEqual([]);
+  });
+});
+
+describe("a lone capital before anything but whitespace", () => {
+  it.each([
+    [posting("1 HOO {1 X}"), invalid(2, "X}")],
+    [posting("1 HOO {1 X, 2026-01-01}"), invalid(2, "X,")],
+    [posting("1 HOO {{1 Y}}"), invalid(2, "Y}}")],
+    ["2026-08-30 open Assets:QaX X,USD\n", invalid(1, "X,USD")],
+    ["2026-08-30 open Assets:QaX X, Y\n", invalid(1, "X,")],
+    [posting("1 X;note"), invalid(2, "X;note")],
+    [posting("1 X@ 2 USD"), invalid(2, "X@")],
+    ["2026-08-30 open Assets:QaX X:\n", invalid(1, "X:")],
+    [keyValue("X)"), invalid(2, "X)")],
+    // A file that ends with no line break, and a CRLF line's `\r`.
+    ["2026-08-30 balance Assets:QaCur 0 X", invalid(1, "X")],
+    [
+      '2026-08-30 * "qa"\r\n  Assets:QaCur  1 X\r\n  Equity:Open\r\n',
+      invalid(2, "X"),
+    ],
+  ])("is stock's invalid token: %j", (text, expected) => {
+    expect(check(text)).toEqual([expected]);
+  });
+
+  it("reports the capital's column", () => {
+    const [found] = stockSyntaxErrors(
+      { "main.bean": posting("1 HOO {1 X}") },
+      "main.bean",
+    );
+    expect(found?.column).toBe("  Assets:QaCur  1 HOO {1 ".length + 1);
+  });
+
+  it("leaves every capital stock reads as a token alone", () => {
+    expect(
+      check(
+        [
+          '2026-08-30 P "X}" #X ^X',
+          "  Assets:QaCur  1 X ; X}",
+          "  Assets:QaCur  1 HOO {1 /X}",
+          "  Equity:Open",
+          "* X} an org-mode heading Beancount skips",
+          "2026-08-30 open X:Cash",
+          "2026-08-30 open Assets:QaX X ",
+        ].join("\n"),
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("a token after a line's last field", () => {
+  it.each([
+    // The constructs that w31/157 names: a currency after a close or an
+    // event, and a minus apart from a posting's units.
+    [
+      "2026-08-30 close Assets:Cash USD\n",
+      strayError(1, "CURRENCY", AT_EOL, ENDS.close),
+    ],
+    [
+      '2026-08-30 event "location" "home" USD\n',
+      strayError(1, "CURRENCY", AT_EOL, ENDS.event),
+    ],
+    [posting("1 QAB - "), strayError(2, "MINUS", AFTER_UNITS, ENDS.posting)],
+    [posting("1 QAB -"), strayError(2, "MINUS", AFTER_UNITS, ENDS.posting)],
+    // Each kind of token, as stock's lexer names it.
+    [
+      "2026-08-30 close Assets:Cash 1\n",
+      strayError(1, "NUMBER", AT_EOL, ENDS.close),
+    ],
+    [
+      '2026-08-30 close Assets:Cash "x"\n',
+      strayError(1, "STRING", AT_EOL, ENDS.close),
+    ],
+    [
+      "2026-08-30 close Assets:Cash Assets:Other\n",
+      strayError(1, "ACCOUNT", AT_EOL, ENDS.close),
+    ],
+    [
+      "2026-08-30 close Assets:Cash 2026-01-01\n",
+      strayError(1, "DATE", AT_EOL, ENDS.close),
+    ],
+    [
+      "2026-08-30 close Assets:Cash TRUE\n",
+      strayError(1, "BOOL", AT_EOL, ENDS.close),
+    ],
+    [
+      "2026-08-30 close Assets:Cash X\n",
+      strayError(1, "CAPITAL", AT_EOL, ENDS.close),
+    ],
+    [
+      "2026-08-30 close Assets:Cash -\n",
+      strayError(1, "MINUS", AT_EOL, ENDS.close),
+    ],
+    [
+      "2026-08-30 close Assets:Cash,\n",
+      strayError(1, "COMMA", AT_EOL, ENDS.close),
+    ],
+    [
+      "2026-08-30 close Assets:Cash ab:\n",
+      strayError(1, "KEY", AT_EOL, ENDS.close),
+    ],
+    [
+      "2026-08-30 close Assets:Cash txn\n",
+      strayError(1, "TXN", AT_EOL, ENDS.close),
+    ],
+    [
+      "2026-08-30 close Assets:Cash USD\r\n",
+      strayError(1, "CURRENCY", AT_EOL, ENDS.close),
+    ],
+    // Each directive.
+    [
+      "2026-08-30 commodity QAB USD\n",
+      strayError(1, "CURRENCY", AT_EOL, ENDS.commodity),
+    ],
+    [
+      "2026-08-30 commodity QAB,\n",
+      strayError(1, "COMMA", AT_EOL, ENDS.commodity),
+    ],
+    [
+      "2026-08-30 pad Assets:A Assets:B Assets:C\n",
+      strayError(1, "ACCOUNT", AT_EOL, ENDS.pad),
+    ],
+    [
+      '2026-08-30 event "a" "b"USD\n',
+      strayError(1, "CURRENCY", AT_EOL, ENDS.event),
+    ],
+    [
+      '2026-08-30 query "q" "SELECT 1" 1\n',
+      strayError(1, "NUMBER", AT_EOL, ENDS.query),
+    ],
+    [
+      '2026-08-30 note Assets:A "x" #t ^l USD\n',
+      strayError(1, "CURRENCY", TAG_LINK, ENDS.note),
+    ],
+    [
+      '2026-08-30 document Assets:A "x.pdf" -\n',
+      strayError(1, "MINUS", TAG_LINK, ENDS.document),
+    ],
+    [
+      "2026-08-30 price QAB 1 USD -\n",
+      strayError(1, "MINUS", AT_EOL, ENDS.price),
+    ],
+    [
+      "2026-08-30 price QAB (1+2) USD ,\n",
+      strayError(1, "COMMA", AT_EOL, ENDS.price),
+    ],
+    [
+      "2026-08-30 balance Assets:A 1 USD |\n",
+      strayError(1, "PIPE", AT_EOL, ENDS.balance),
+    ],
+    [
+      "2026-08-30 balance Assets:A 1 ~ 0.01 USD *\n",
+      strayError(1, "ASTERISK", AT_EOL, ENDS.balance),
+    ],
+    [
+      "2026-08-30 open Assets:A USD EUR\n",
+      strayError(1, "CURRENCY", AT_EOL, ENDS.open),
+    ],
+    [
+      '2026-08-30 open Assets:A USD "STRICT" "x"\n',
+      strayError(1, "STRING", AT_EOL, ENDS.open),
+    ],
+    [
+      '2026-08-30 open Assets:A USD "FIFO" ,\n',
+      strayError(1, "COMMA", AT_EOL, ENDS.open),
+    ],
+    [
+      '2026-08-30 custom "qa" 1 QAB ,\n',
+      strayError(1, "COMMA", null, ENDS.custom),
+    ],
+    [
+      '2026-08-30 custom "qa" "s" 1 USD /\n',
+      strayError(1, "SLASH", null, ENDS.custom),
+    ],
+    // A metadata value, a value of none, and one written against its colon.
+    [keyValue('"x" ,'), strayError(2, "COMMA", AT_EOL, ENDS.value)],
+    [keyValue("1 USD -"), strayError(2, "MINUS", AT_EOL, ENDS.value)],
+    [keyValue("TRUE 1"), strayError(2, "NUMBER", AT_EOL, ENDS.value)],
+    [keyValue("1 1"), strayError(2, "NUMBER", AT_EOL, ENDS.value)],
+    [keyValue(","), strayError(2, "COMMA", AT_EOL, ENDS.value)],
+    [
+      "2026-08-30 commodity QAZ\n  ref:~\n",
+      strayError(2, "TILDE", AT_EOL, ENDS.value),
+    ],
+    // A posting's amount, cost or price, and a posting with no amount.
+    [
+      posting("1 QAB {1 USD} ,"),
+      strayError(2, "COMMA", AFTER_UNITS, ENDS.posting),
+    ],
+    [posting("1 QAB @ 1 USD ~"), strayError(2, "TILDE", AT_EOL, ENDS.posting)],
+    [posting("1 QAB @@ 2 USD !"), strayError(2, "FLAG", AT_EOL, ENDS.posting)],
+    [posting("1 QAB #tag"), strayError(2, "TAG", AFTER_UNITS, ENDS.posting)],
+    [posting("1 QAB {1 USD}}"), strayError(2, "RCURLCURL", COST, ENDS.posting)],
+    [
+      posting("1 QAB {{1 USD}"),
+      strayError(2, "RCURL", TOTAL_COST, ENDS.posting),
+    ],
+    [
+      '2026-08-30 * "qa"\n  Assets:QaCur  1 QAB\n  Equity:Open ~\n',
+      strayError(3, "TILDE", AFTER_UNITS, ENDS.posting),
+    ],
+  ])("is stock's syntax error at the token: %j", (text, expected) => {
+    expect(check(text)).toEqual([expected]);
+  });
+
+  it("reports the token's column", () => {
+    const [found] = stockSyntaxErrors(
+      { "main.bean": "2026-08-30 close Assets:Cash USD\n" },
+      "main.bean",
+    );
+    expect(found?.column).toBe("2026-08-30 close Assets:Cash ".length + 1);
+    const [onPosting] = stockSyntaxErrors(
+      { "main.bean": posting("1 QAB - ") },
+      "main.bean",
+    );
+    expect(onPosting?.column).toBe("  Assets:QaCur  1 QAB ".length + 1);
+  });
+
+  it.each([
+    // What stock reads as the line's fields.
+    "2026-08-30 close Assets:A ; USD",
+    '2026-08-30 note Assets:A "x" #t ^l',
+    '2026-08-30 open Assets:A USD, EUR "STRICT"',
+    "2026-08-30 balance Assets:A 1 ~ 0.01 USD",
+    "2026-08-30 price QAB -1 USD",
+    '2026-08-30 custom "qa" "s" 1 USD 2026-01-01 TRUE Assets:A 2 (3)',
+    '2026-08-30 custom "qa" 1,000.00 USD "s"',
+    keyValue("1"),
+    keyValue("1,000.00 USD"),
+    posting("1 QAB @"),
+    posting("1 QAB {}"),
+    // A string that goes on past the line, which stock places where it ends.
+    '2026-08-30 event "a" "multi\nline"',
+    '2026-08-30 note Assets:A "x\n  USD"',
+    // The engine refuses these itself: a tag on a close, a number, a
+    // currency or a signed number after a posting's amount, a tolerance
+    // after a balance's currency, which the tolerance scan reports.
+    "2026-08-30 close Assets:A #tag",
+    posting("1 QAB - 1"),
+    posting("1 QAB USD"),
+    posting("1 QAB 2"),
+    // Stock refuses these at the next line's start, which is left alone: a
+    // comma or an operator that ends the line.
+    "2026-08-30 open Assets:A USD,",
+    keyValue("1 -"),
+  ])("leaves alone what is no token after a line's last field: %j", (text) => {
+    expect(check(`${text}\n`)).toEqual([]);
+  });
+
+  it("reports one error per directive, and nothing stock drops after it", () => {
+    expect(check("2026-08-30 close Assets:A USD EUR\n")).toEqual([
+      strayError(1, "CURRENCY", AT_EOL, ENDS.close),
+    ]);
+    expect(check(posting("1 QAB -\n  Assets:QaCur  -1 QAB ,"))).toEqual([
+      strayError(2, "MINUS", AFTER_UNITS, ENDS.posting),
+    ]);
+    // A posting's price error above the bad line is kept, as stock keeps it.
+    expect(
+      check(
+        [
+          '2026-08-30 * "qa"',
+          "  Assets:Cash  10 EUR @ -1.10 USD",
+          "  Assets:QaCur  1 QAB ,",
+          "  Assets:Cash  10 EUR @ -1.10 USD",
+          "",
+        ].join("\n"),
+      ),
+    ).toEqual([
+      "main.bean:2 NEGATIVE_PRICE Negative prices are not allowed: -1.10 USD (see http://furius.ca/beancount/doc/bug-negative-prices for workaround)",
+      strayError(3, "COMMA", AFTER_UNITS, ENDS.posting),
+    ]);
+    // A dropped commodity directive is no duplicate.
+    expect(
+      check("2026-08-30 commodity QAB USD\n2026-08-31 commodity QAB\n"),
+    ).toEqual([strayError(1, "CURRENCY", AT_EOL, ENDS.commodity)]);
+    expect(check('2026-08-30 close Assets:A USD\n2026-09-02 "x"\n')).toEqual([
+      strayError(1, "CURRENCY", AT_EOL, ENDS.close),
+    ]);
+  });
+
+  it.each([
+    // A token the engine refuses itself (`2`), a cost the line never closes,
+    // an invalid token (`^`) and an operator that ends the line each end
+    // what stock reads of the transaction, so nothing below is reported.
+    '2026-08-30 * "qa"\n  Assets:QaCur  1 QAB 2\n  Assets:Cash  10 EUR @ -1.10 USD\n',
+    '2026-08-30 * "qa"\n  Assets:QaCur  1 QAB {1 USD\n  Assets:Cash  10 EUR @ -1.10 USD\n',
+    '2026-08-30 * "qa"\n  ref: 1^\n  Assets:QaCur  1 QAB -\n',
+    '2026-08-30 * "qa"\n  ref: 1 +\n  Assets:QaCur  1 QAB -\n',
+    '2026-08-30 custom "qa" 1 QAB +\n  ref: 1 QAB -\n',
+  ])(
+    "stops at the first error stock meets, even one it does not report: %j",
+    (text) => {
+      expect(check(text)).toEqual([]);
+    },
+  );
 });

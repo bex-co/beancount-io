@@ -3135,6 +3135,138 @@ async function main(): Promise<void> {
     currencyAccepted.valid,
     `what stock accepts stays clean: QA.B, QA..B, /QAB, a 24- or 25-character currency, X, and price QAB- 1.00 USD, which stock reads as price QAB -1.00 USD (got ${JSON.stringify(currencyAccepted.errors.map((e) => `${e.line} ${e.message}`))})`,
   );
+  // w31/157: stock refuses a keyword where a currency goes (`1 TRUE-`), a
+  // lone capital before anything but whitespace (`{1 X}`, `X` ending a file or
+  // before a CRLF's `\r`), and a token after a line's last field (`close
+  // Assets:Broker USD`, `1 QAB -`). The engine (0.24.0) books `TRUE-` as a
+  // currency, reads `X}` as `X` and a `}`, and skips the stray token, all
+  // clean. The raw-engine assertion says when it catches up: delete those
+  // rules from `stock-syntax-errors.ts`.
+  const strayMessage = (unexpected: string, expecting: string, ends: string) =>
+    `syntax error, unexpected ${unexpected}, expecting ${expecting}: ${ends}`;
+  const strayRefused: Array<[string, Record<string, string>, number, string]> =
+    [
+      [
+        "a metadata value's keyword where its currency goes",
+        currencyLedger(
+          '2026-08-30 * "qa"',
+          "  ref: 1 TRUE-",
+          "  Assets:QaCur  1 QAB",
+          "  Assets:QaCur  -1 QAB",
+        ),
+        5,
+        'syntax error, unexpected BOOL, expecting end of file or EOL: "TRUE-" is not a currency; TRUE, FALSE and NULL are keywords',
+      ],
+      [
+        "a posting's keyword where its currency goes",
+        currencyLedger(...twoPostings("TRUE-")),
+        5,
+        'syntax error, unexpected BOOL, expecting end of file or EOL or ATAT or AT: "TRUE-" is not a currency; TRUE, FALSE and NULL are keywords',
+      ],
+      [
+        "a lone capital before a cost's close",
+        currencyLedger(
+          '2026-08-30 * "qa"',
+          "  Assets:QaCur  1 HOO {1 X}",
+          "  Assets:QaCur  -1 X",
+        ),
+        5,
+        "Invalid token: 'X}'",
+      ],
+      [
+        "a lone capital that ends the file",
+        {
+          "main.beancount":
+            "2026-01-01 open Assets:QaCur\n\n2026-08-30 balance Assets:QaCur 0 X",
+        },
+        3,
+        "Invalid token: 'X'",
+      ],
+      [
+        "a lone capital before a CRLF line's \\r",
+        {
+          "main.beancount":
+            "2026-01-01 open Assets:QaCur\r\n2026-08-30 commodity X\r\n",
+        },
+        2,
+        "Invalid token: 'X'",
+      ],
+      [
+        "a currency after a close",
+        currencyLedger("2026-08-31 close Assets:Broker USD"),
+        4,
+        strayMessage(
+          "CURRENCY",
+          "end of file or EOL",
+          "nothing may follow a close directive's account",
+        ),
+      ],
+      [
+        "a currency after an event",
+        currencyLedger('2026-08-30 event "location" "home" USD'),
+        4,
+        strayMessage(
+          "CURRENCY",
+          "end of file or EOL",
+          "nothing may follow an event directive's type and description",
+        ),
+      ],
+      [
+        "a minus apart from a posting's units",
+        currencyLedger(
+          '2026-08-30 * "qa"',
+          "  Assets:QaCur  1 QAB - ",
+          "  Assets:QaCur  -1 QAB",
+        ),
+        5,
+        strayMessage(
+          "MINUS",
+          "end of file or EOL or ATAT or AT",
+          "nothing may follow a posting's amount, cost and price",
+        ),
+      ],
+    ];
+  for (const [label, files, line, message] of strayRefused) {
+    const raw = await rawValidate(files, "main.beancount");
+    assert(
+      raw.valid,
+      `the raw engine still loads ${label}, so its rule is load-bearing (got ${JSON.stringify(raw.errors.map((e) => e.message))})`,
+    );
+    const reported = await parseLedgerFiles(files, "main.beancount");
+    assert(
+      !reported.valid &&
+        reported.errors.some(
+          (e) =>
+            e.code === "P0012" &&
+            e.line === line &&
+            e.message === message &&
+            e.severity === "error",
+        ),
+      `${label} is reported at line ${line}, as stock refuses it (got ${JSON.stringify(reported.errors.map((e) => `${e.line} ${e.message}`))})`,
+    );
+  }
+  const strayAccepted = await parseLedgerFiles(
+    currencyLedger(
+      '2026-08-30 * "controls" #t',
+      "  ref: TRUE",
+      "  amt: 1,000.00 USD",
+      "  Assets:QaCur  1 X ; X}",
+      "  Assets:QaCur  1 TRUE-1",
+      "  Assets:QaCur  -1 X",
+      "  Assets:QaCur  -1 TRUE-1",
+      '2026-08-30 custom "qa" "s" 1 USD 2026-01-01 TRUE Assets:QaCur 2',
+      '2026-08-30 note Assets:QaCur "x" #t ^l',
+      "2026-08-30 open Assets:QaX TRUEX, X",
+      "2026-08-30 balance Assets:QaCur 0 ~ 0.01 QAB",
+      "2026-08-30 price QAB (1+2) USD",
+      "2026-08-31 close Assets:Broker ; USD",
+    ),
+    "main.beancount",
+  );
+  assert(
+    strayAccepted.valid,
+    `what stock accepts stays clean: a bool value, a grouped number, a lone capital before a comment, TRUE-1, custom values, a note's tags, a capital in an open list, a tolerance, a price expression, a comment after a close (got ${JSON.stringify(strayAccepted.errors.map((e) => `${e.line} ${e.message}`))})`,
+  );
   // w23/199: a run of trailing terminators is empty statements stock
   // tolerates; every `;` has to go or the bare `FROM postings` tail resolves
   // as a column.

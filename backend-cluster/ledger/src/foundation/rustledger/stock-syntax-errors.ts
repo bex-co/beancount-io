@@ -3,9 +3,12 @@ import { indexBlocks } from "./block-index";
 import { commentSkippedLines, leadingDotOffsets } from "./parseable-files";
 import {
   postingCurrencyMinus,
+  postingKeywordCurrency,
+  postingStrayToken,
   postingSyntaxErrors,
   STOCK_ACCOUNT,
   STOCK_CURRENCY,
+  stockTokenAt,
 } from "./posting-syntax-errors";
 import { SOURCE_DATE, sourceDateOf } from "./source-date";
 import { endsInsideString, loadedFiles } from "./source-slice";
@@ -58,7 +61,22 @@ import { endsInsideString, loadedFiles } from "./source-slice";
  *    error is at the token after it, and `price QAB- 1.00 USD` is `price QAB
  *    -1.00 USD`, clean. A lone capital is a currency only before whitespace:
  *    `X.` and `X-` are one invalid token each. The engine reads one currency
- *    named `QAB.` and books it.
+ *    named `QAB.` and books it;
+ *  - three more spellings stock refuses (w31/157). A keyword where a currency
+ *    goes (`1 TRUE-`, `ref: 1 TRUE`, `open Assets:Cash NULL`) is `syntax
+ *    error, unexpected BOOL` (`NONE` for `NULL`), since stock's lexer reads
+ *    the keyword before a currency; the engine books a currency named
+ *    `TRUE-`. A lone capital before anything but whitespace (`{1 X}`, `1 X,`,
+ *    `X` ending a file, `X` before a CRLF's `\r`) is `Invalid token: 'X}'`;
+ *    the engine reads currency `X`. A token after a line's last field (`close
+ *    Assets:Cash USD`, `event "a" "b" 1`, `1 QAB -`, `ref: "x" ,`) is `syntax
+ *    error, unexpected <TOKEN>`, with the tokens stock expected there, on a
+ *    `close`, `commodity`, `pad`, `event`, `query`, `note`, `document`,
+ *    `price`, `balance` or `open` line, a metadata value or a posting's
+ *    amount, cost or price; the engine skips the token. These lines are read
+ *    as stock's lexer reads them, token by token (`stockTokenAt`), and a token
+ *    the engine refuses itself there (a tag on a `close`, a number after a
+ *    posting's amount) is left alone.
  *
  * Stock drops a directive at its first syntax error and reports nothing more
  * from it: no later syntax error in it, no repeated key on it, no posting
@@ -258,17 +276,29 @@ const INVALID_TOKEN = /[^ \t\r\n]+/uy;
  */
 const CURRENCY_START = String.raw`(?=[A-Z/])(?<=^|[ \t\r\n{,@~)]|(?:^|[ \t\r\n{,@~])${NUMBER_EXPR})`;
 /**
+ * What may follow a lone capital that stock's lexer reads as a token: only
+ * whitespace or a line break makes it a capital (`[A-Z]/[ \t\n]`, so not a
+ * CRLF's `\r` or the end of the file). A capital, a digit or `-'._` goes on
+ * into a currency, a letter, a non-ASCII character or a `:` before an account
+ * name into an account, and a `"` the engine refuses itself; anything else,
+ * or nothing, makes the capital an invalid token (`X}`, `X,USD`, `X:`, `X\r`).
+ */
+const LONE_CAPITAL = String.raw`[A-Z](?![ \t\nA-Za-z0-9'._"-]|[^\x00-\x7f]|:(?:[A-Z0-9]|[^\x00-\x7f]))`;
+/**
  * A currency as the engine reads it (`/?[A-Z][A-Z0-9'._-]*`, a futures one
  * with a digit or `'._-` before its first capital too) that ends in one of
- * `-'._`, after strings and `;` comments, which are matched first and skipped.
+ * `-'._`, or a lone capital that is no token (w31/157), after strings and `;`
+ * comments, which are matched first and skipped.
  */
 const CURRENCY_RUN_OR_TOKEN_RE = new RegExp(
-  String.raw`"(?:[^"\\]|\\.)*"|;[^\n]*|${CURRENCY_START}(?:\/[A-Z0-9'._-]*[A-Z]|[A-Z])[A-Z0-9'._-]*(?<=[-'._])(?![A-Z0-9'._-])`,
+  String.raw`"(?:[^"\\]|\\.)*"|;[^\n]*|${CURRENCY_START}(?:(?:\/[A-Z0-9'._-]*[A-Z]|[A-Z])[A-Z0-9'._-]*(?<=[-'._])(?![A-Z0-9'._-])|${LONE_CAPITAL})`,
   "gu",
 );
-/** A capital or a digit that a currency's `.`, `_` or `'` follows, after any `-`: the cheap test before a file is read. */
-const MAYBE_CURRENCY_TAIL =
-  /[A-Z0-9]-*['._][-'._]*(?![A-Z0-9])|(?<![A-Z0-9'._-])[A-Z]-+(?![A-Z0-9'._-])/u;
+/** A capital or a digit that a currency's `.`, `_` or `'` follows, after any `-`, or a lone capital that is no token: the cheap test before a file is read. */
+const MAYBE_CURRENCY_TAIL = new RegExp(
+  String.raw`[A-Z0-9]-*['._][-'._]*(?![A-Z0-9])|(?<![A-Z0-9'._-])[A-Z]-+(?![A-Z0-9'._-])|(?<![A-Za-z0-9'._/:#^-]|[^\x00-\x7f])${LONE_CAPITAL}`,
+  "u",
+);
 /** What continues an account after a run of `-` (`X-:Cash`, `X-y:Cash`). */
 const ACCOUNT_CHARACTER = /[\p{L}\p{N}:]/u;
 const ACCOUNT = /^\p{Lu}[\p{L}\p{N}-]*(?::[\p{L}\p{N}][\p{L}\p{N}-]*)+$/u;
@@ -516,6 +546,13 @@ interface StockSyntaxError extends Place {
   message: string;
   /** A flagless header, which stock leaves unreported right after an error. */
   flagless: boolean;
+  /**
+   * One the engine raises itself, so it is not reported here; it still ends
+   * what stock reads of the directive.
+   */
+  silent?: boolean;
+  /** An unexpected end of the line, which stock places on the next line. */
+  nextLine?: boolean;
 }
 
 /** `line` as tokens: each string's content blanked, the comment cut, columns kept. */
@@ -632,19 +669,479 @@ function customCurrencyMinus(
   return token && refused({ index: 0, column }, token[1]);
 }
 
+/** A token as stock's lexer reads it, by its grammar name, and where it stands on its line. */
+interface LexedToken {
+  name: string;
+  start: number;
+  end: number;
+}
+
+/** A keyword a reading met where its currency goes, and the tokens stock expected there. */
+interface KeywordAt {
+  token: LexedToken;
+  expecting: string | null;
+  /** Whether the engine reads the keyword alone there as a currency, not only `TRUE-`. */
+  bare: boolean;
+}
+
+/** A reader over one line's tokens, for the fields of a directive or a metadata value. */
+class TokenWalk {
+  at = 0;
+  keyword: KeywordAt | undefined;
+
+  constructor(
+    readonly tokens: readonly LexedToken[],
+    /** Where the tokens stop: at an invalid token, or (`end`) the line's end. */
+    readonly stop?: { at: number; end: boolean },
+  ) {}
+
+  /** Whether the next token is one of `names`. */
+  sees(...names: string[]): boolean {
+    const token = this.tokens[this.at];
+    return token !== undefined && names.includes(token.name);
+  }
+
+  take(...names: string[]): boolean {
+    if (!this.sees(...names)) return false;
+    this.at += 1;
+    return true;
+  }
+
+  /** A currency or a lone capital; a keyword there (only `NULL`: `nullOnly`) is kept as stock's error. */
+  currency(expecting: string | null, bare = false, nullOnly = false): boolean {
+    if (this.take("CURRENCY", "CAPITAL")) return true;
+    const token = this.tokens[this.at];
+    if (token?.name === "NONE" || (token?.name === "BOOL" && !nullOnly)) {
+      this.keyword = { token, expecting, bare };
+    }
+    return false;
+  }
+
+  /** A number expression, as stock's grammar reads one. */
+  expression(): boolean {
+    if (!this.product()) return false;
+    while (this.take("PLUS", "MINUS")) if (!this.product()) return false;
+    return true;
+  }
+
+  /** Whether an operator goes on with the expression before. */
+  seesOperator(): boolean {
+    return this.sees("PLUS", "MINUS", "ASTERISK", "SLASH", "LPAREN");
+  }
+
+  private product(): boolean {
+    if (!this.unary()) return false;
+    while (this.take("ASTERISK", "SLASH")) if (!this.unary()) return false;
+    return true;
+  }
+
+  private unary(): boolean {
+    if (this.take("PLUS", "MINUS")) return this.unary();
+    if (this.take("LPAREN")) return this.expression() && this.take("RPAREN");
+    return this.take("NUMBER");
+  }
+}
+
+const SPACE = /[ \t\r]*/y;
+
+/**
+ * `line`'s tokens as stock's lexer reads them, up to a comment, in a walk. They
+ * stop short at a string that goes on past the line, or at an invalid token,
+ * which the walk's `stop` then holds, as it holds the line's end when they
+ * reach it.
+ */
+function stockTokens(line: string, endsFile: boolean): TokenWalk {
+  const tokens: LexedToken[] = [];
+  for (let at = 0; ;) {
+    SPACE.lastIndex = at;
+    at += SPACE.exec(line)![0].length;
+    if (at >= line.length || line[at] === ";") {
+      return new TokenWalk(tokens, { at, end: true });
+    }
+    const token = stockTokenAt(line, at, endsFile);
+    if (token === undefined) {
+      return new TokenWalk(
+        tokens,
+        line[at] === '"' ? undefined : { at, end: false },
+      );
+    }
+    tokens.push({ name: token.name, start: at, end: token.end });
+    at = token.end;
+  }
+}
+
+/**
+ * A line's fields as stock's grammar reads them, what it expects after the
+ * last (`null`: too many to list), what the message says ends there, and the
+ * tokens after it that the engine refuses itself, so they are left alone.
+ */
+interface LineReading {
+  read: (walk: TokenWalk) => boolean;
+  expecting: string | null;
+  ends: string;
+  refused?: readonly string[];
+}
+const END_OF_LINE = "end of file or EOL";
+const CURRENCY_LIST_ITEM = "CAPITAL or CURRENCY";
+const END_OF_LINE_OR_TAG_LINK = "end of file or EOL or TAG or LINK";
+const tagsAndLinks = (walk: TokenWalk) => {
+  while (walk.take("TAG", "LINK"));
+  return true;
+};
+/** What starts a metadata value: a value, or an expression's first token. */
+const KEY_VALUE_STARTS = [
+  "STRING",
+  "ACCOUNT",
+  "TAG",
+  "DATE",
+  "BOOL",
+  "NONE",
+  "CURRENCY",
+  "CAPITAL",
+  "NUMBER",
+  "PLUS",
+  "MINUS",
+  "LPAREN",
+];
+/**
+ * Each dated directive with fixed fields, by the keyword's token, and a
+ * `custom` directive's values. Stock's `currency` is a currency or a lone
+ * capital.
+ */
+const DIRECTIVE_READINGS: Readonly<Record<string, LineReading>> = {
+  CLOSE: {
+    read: (walk) => walk.take("ACCOUNT"),
+    expecting: END_OF_LINE,
+    ends: "nothing may follow a close directive's account",
+  },
+  COMMODITY: {
+    read: (walk) => walk.currency(CURRENCY_LIST_ITEM),
+    expecting: END_OF_LINE,
+    ends: "nothing may follow a commodity directive's currency",
+  },
+  PAD: {
+    read: (walk) => walk.take("ACCOUNT") && walk.take("ACCOUNT"),
+    expecting: END_OF_LINE,
+    ends: "nothing may follow a pad directive's two accounts",
+  },
+  EVENT: {
+    read: (walk) => walk.take("STRING") && walk.take("STRING"),
+    expecting: END_OF_LINE,
+    ends: "nothing may follow an event directive's type and description",
+  },
+  QUERY: {
+    read: (walk) => walk.take("STRING") && walk.take("STRING"),
+    expecting: END_OF_LINE,
+    ends: "nothing may follow a query directive's name and query",
+  },
+  NOTE: {
+    read: (walk) =>
+      walk.take("ACCOUNT") && walk.take("STRING") && tagsAndLinks(walk),
+    expecting: END_OF_LINE_OR_TAG_LINK,
+    ends: "only tags and links may follow a note directive's comment",
+  },
+  DOCUMENT: {
+    read: (walk) =>
+      walk.take("ACCOUNT") && walk.take("STRING") && tagsAndLinks(walk),
+    expecting: END_OF_LINE_OR_TAG_LINK,
+    ends: "only tags and links may follow a document directive's path",
+  },
+  // A `~` after the amount is the engine's error, and the tolerance scan's.
+  PRICE: {
+    read: (walk) =>
+      walk.currency(CURRENCY_LIST_ITEM) &&
+      walk.expression() &&
+      walk.currency(null),
+    expecting: END_OF_LINE,
+    ends: "nothing may follow a price directive's amount",
+    refused: ["TILDE"],
+  },
+  BALANCE: {
+    read: (walk) =>
+      walk.take("ACCOUNT") &&
+      walk.expression() &&
+      (!walk.take("TILDE") || walk.expression()) &&
+      walk.currency(null),
+    expecting: END_OF_LINE,
+    ends: "nothing may follow a balance directive's amount",
+    refused: ["TILDE"],
+  },
+  // Before the booking method, a `,` with no currency after it is refused on
+  // the next line.
+  OPEN: {
+    read: (walk) => {
+      if (!walk.take("ACCOUNT")) return false;
+      if (walk.currency(END_OF_LINE, true)) {
+        while (walk.take("COMMA")) {
+          if (!walk.currency(CURRENCY_LIST_ITEM, true)) return false;
+        }
+      } else if (walk.keyword !== undefined) {
+        return false;
+      }
+      return walk.take("STRING") || !walk.sees("COMMA");
+    },
+    expecting: END_OF_LINE,
+    ends: "nothing may follow an open directive's currencies and booking method",
+  },
+  // A custom value is a string, a date, a bool, an account, or a number
+  // expression with an optional currency; after the number, `NULL` is the
+  // error where its currency goes. The engine refuses a bare currency or
+  // capital itself.
+  CUSTOM: {
+    read: (walk) => {
+      if (!walk.take("STRING")) return false;
+      for (;;) {
+        if (walk.take("STRING", "DATE", "BOOL", "ACCOUNT")) continue;
+        if (!walk.sees("NUMBER", "PLUS", "MINUS", "LPAREN")) return true;
+        if (!walk.expression()) return false;
+        if (!walk.currency(null, true, true) && walk.keyword !== undefined) {
+          return false;
+        }
+      }
+    },
+    expecting: null,
+    ends: "a custom directive's values are strings, dates, bools, accounts and amounts",
+    refused: ["CURRENCY", "CAPITAL", "NONE"],
+  },
+};
+/**
+ * A metadata value, after its key and colon. A number may stand alone, unless
+ * an operator goes on with it; with no value, what starts none follows.
+ */
+const KEY_VALUE_READING: LineReading = {
+  read: (walk) => {
+    if (!walk.take("KEY") || !walk.take("COLON")) return false;
+    if (!walk.sees(...KEY_VALUE_STARTS)) return true;
+    if (walk.take("STRING", "ACCOUNT", "TAG", "DATE", "BOOL", "NONE")) {
+      return true;
+    }
+    if (walk.take("CURRENCY", "CAPITAL")) return true;
+    if (!walk.expression()) return false;
+    if (walk.currency(END_OF_LINE, true)) return true;
+    return walk.keyword === undefined && !walk.seesOperator();
+  },
+  expecting: END_OF_LINE,
+  ends: "nothing may follow a metadata value",
+};
+/** A tag or a link after a directive's fields or a metadata value, which the engine refuses itself. */
+const ENGINE_REFUSES_AFTER_FIELDS: ReadonlySet<string> = new Set([
+  "TAG",
+  "LINK",
+]);
+const KEYWORD_WRITTEN = /^[A-Z]+[-'._]*/u;
+const keywordMessage = (
+  unexpected: string,
+  expecting: string | null,
+  written: string,
+) =>
+  `syntax error, unexpected ${unexpected}${expecting === null ? "" : `, expecting ${expecting}`}: "${written}" is not a currency; TRUE, FALSE and NULL are keywords`;
+const strayMessage = (
+  unexpected: string,
+  expecting: string | null,
+  ends: string,
+) =>
+  `syntax error, unexpected ${unexpected}${expecting === null ? "" : `, expecting ${expecting}`}: ${ends}`;
+
+/**
+ * An account the engine refuses itself for a colon written against it: the
+ * stray token is that colon (`Assets:Cash:lower`, which is the colon scan's
+ * when nothing goes on from it), or an account with a colon after it.
+ */
+const accountColon = (
+  line: string,
+  before: LexedToken | undefined,
+  next: LexedToken,
+) =>
+  (next.name === "COLON" &&
+    before?.name === "ACCOUNT" &&
+    before.end === next.start) ||
+  (next.name === "ACCOUNT" && line[next.end] === ":");
+
+/**
+ * The syntax error stock's grammar meets in `line` read as `reading`: a
+ * keyword where a currency goes, or a token after the last field. One the
+ * engine refuses itself is `silent`: a keyword alone where the engine reads no
+ * currency, or a token after the fields it refuses (a tag on a `close`). So is
+ * an invalid token before the reading meets anything else, since stock drops
+ * the directive at its lexer's error too, and the end of a line the reading
+ * needs more of (`ref: 1 +`), which stock refuses on the next line. A line
+ * that does not read as `reading` up to there is left alone.
+ */
+function readingSyntaxError(
+  line: string,
+  reading: LineReading,
+  walk: TokenWalk,
+): Omit<StockSyntaxError, "index"> | undefined {
+  const stopped = (
+    read: boolean,
+  ): Omit<StockSyntaxError, "index"> | undefined =>
+    walk.stop === undefined ||
+    walk.at < walk.tokens.length ||
+    (read && walk.stop.end)
+      ? undefined
+      : {
+          column: walk.stop.end ? 0 : walk.stop.at,
+          code: "P0012",
+          message: "syntax error",
+          flagless: false,
+          silent: true,
+          nextLine: walk.stop.end,
+        };
+  if (!reading.read(walk)) {
+    const keyword = walk.keyword;
+    if (keyword === undefined) return stopped(false);
+    const written = KEYWORD_WRITTEN.exec(line.slice(keyword.token.start))![0];
+    const bare = written.length === keyword.token.end - keyword.token.start;
+    return {
+      column: keyword.token.start,
+      code: "P0012",
+      message: keywordMessage(keyword.token.name, keyword.expecting, written),
+      flagless: false,
+      silent: bare && !keyword.bare,
+    };
+  }
+  const next = walk.tokens[walk.at];
+  if (next === undefined) return stopped(true);
+  return {
+    column: next.start,
+    code: "P0012",
+    message: strayMessage(next.name, reading.expecting, reading.ends),
+    flagless: false,
+    silent:
+      ENGINE_REFUSES_AFTER_FIELDS.has(next.name) ||
+      reading.refused?.includes(next.name) === true ||
+      accountColon(line, walk.tokens[walk.at - 1], next),
+  };
+}
+
+/** The keyword of a dated directive read by {@link DIRECTIVE_READINGS}. */
+const DIRECTIVE_KEYWORD = new RegExp(
+  String.raw`^${SOURCE_DATE}[ \t]+(close|commodity|pad|event|query|note|document|price|balance|open|custom)(?=[ \t])`,
+  "u",
+);
+
+/** A dated directive's header, read as stock does: see {@link readingSyntaxError}. */
+function directiveSyntaxError(
+  header: string,
+  endsFile: () => boolean,
+): Omit<StockSyntaxError, "index"> | undefined {
+  if (SIMPLE_HEADER.test(header) && !MAYBE_KEYWORD.test(header)) {
+    return undefined;
+  }
+  const keyword = DIRECTIVE_KEYWORD.exec(header)?.[1]?.toUpperCase();
+  if (keyword === undefined) return undefined;
+  const walk = stockTokens(header, endsFile());
+  if (!walk.take("DATE") || !walk.take(keyword)) return undefined;
+  return readingSyntaxError(header, DIRECTIVE_READINGS[keyword]!, walk);
+}
+
+/**
+ * Plain spellings no reading here finds an error in: a string, an account, a
+ * currency, a tag, a date or a number, or an amount.
+ */
+const PLAIN_CURRENCY = String.raw`\/?[A-Z](?:[A-Z0-9'._-]*[A-Z0-9])?(?![A-Z0-9'._-])`;
+const PLAIN_VALUE = String.raw`"(?:[^"\\]|\\.)*"|[A-Z][A-Za-z0-9-]*(?::[A-Z0-9][A-Za-z0-9-]*)+|${PLAIN_CURRENCY}|#[A-Za-z0-9_/.-]+|\d{4}[-/]\d{1,2}[-/]\d{1,2}|-?\d+(?:,\d{3})*(?:\.\d*)?(?:[ \t]+${PLAIN_CURRENCY})?`;
+/** A metadata value that is one plain value: the cheap test before the line is read. */
+const SIMPLE_KEY_VALUE = new RegExp(
+  String.raw`^[ \t]+[a-z][A-Za-z0-9_-]*:[ \t]*(?:${PLAIN_VALUE})?[ \t\r]*(?:;.*)?$`,
+  "u",
+);
+/** A plain amount, as most are written. */
+const PLAIN_AMOUNT = String.raw`-?\d+(?:,\d{3})*(?:\.\d*)?[ \t]+${PLAIN_CURRENCY}`;
+/** An account, as most are written. */
+const PLAIN_ACCOUNT = String.raw`[A-Z][A-Za-z0-9-]*(?::[A-Z0-9][A-Za-z0-9-]*)+(?![A-Za-z0-9:-]|[^\x00-\x7f])`;
+/**
+ * A posting of an account, an optional plain amount, a cost whose braces match
+ * and a plain price: the cheap test before the line is read.
+ */
+const SIMPLE_POSTING = new RegExp(
+  String.raw`^[ \t]+(?:[*!&#?%][ \t]*|[A-Z][ \t]+)?${PLAIN_ACCOUNT}(?:[ \t]+-?\d[\d.,]*)?(?:[ \t]*${PLAIN_CURRENCY})?(?:[ \t]*\{[^{}]*\}|[ \t]*\{\{[^{}]*\}\})?(?:[ \t]*@@?[ \t]*${PLAIN_AMOUNT})?[ \t\r]*(?:;.*)?$`,
+  "u",
+);
+/** A `close`, `commodity`, `price`, `balance`, `note` or `open` line as most are written: the cheap test before the header is read. */
+const SIMPLE_HEADER = new RegExp(
+  String.raw`^${SOURCE_DATE}[ \t]+(?:close[ \t]+${PLAIN_ACCOUNT}|commodity[ \t]+${PLAIN_CURRENCY}|price[ \t]+${PLAIN_CURRENCY}[ \t]+${PLAIN_AMOUNT}|balance[ \t]+${PLAIN_ACCOUNT}[ \t]+${PLAIN_AMOUNT}|note[ \t]+${PLAIN_ACCOUNT}[ \t]+"(?:[^"\\]|\\.)*"|open[ \t]+${PLAIN_ACCOUNT}(?:[ \t]+${PLAIN_CURRENCY}(?:[ \t]*,[ \t]*${PLAIN_CURRENCY})*)?)[ \t\r]*(?:;.*)?$`,
+  "u",
+);
+/** A line stock's lexer starts with a key and its colon, whatever follows (`key:~`). */
+const STOCK_KEY_LINE = /^[ \t]+[a-z][A-Za-z0-9_-]+:/u;
+/** A keyword where a currency could go: the cheap test before a line is read for one. */
+const MAYBE_KEYWORD = /TRUE|FALSE|NULL/u;
+
+/** A metadata line's syntax error after its value, or a keyword where its amount's currency goes. */
+function keyValueSyntaxError(
+  line: string,
+  endsFile: boolean,
+): Omit<StockSyntaxError, "index"> | undefined {
+  if (SIMPLE_KEY_VALUE.test(line) && !MAYBE_KEYWORD.test(line)) {
+    return undefined;
+  }
+  return readingSyntaxError(
+    line,
+    KEY_VALUE_READING,
+    stockTokens(line, endsFile),
+  );
+}
+
+/** A posting's keyword where a currency goes, or a token after its amount, cost or price. */
+function postingStray(
+  line: string,
+): Omit<StockSyntaxError, "index"> | undefined {
+  const keyword = MAYBE_KEYWORD.test(line)
+    ? postingKeywordCurrency(line)
+    : undefined;
+  if (keyword !== undefined) {
+    return {
+      column: keyword.column,
+      code: "P0012",
+      message: keywordMessage(
+        keyword.unexpected,
+        keyword.expecting,
+        keyword.written,
+      ),
+      flagless: false,
+    };
+  }
+  if (SIMPLE_POSTING.test(line) && !MAYBE_KEYWORD.test(line)) return undefined;
+  const stray = postingStrayToken(line);
+  if (stray === undefined) return undefined;
+  // A keyword where the units go, which the engine reads as a currency.
+  const keywordUnits =
+    stray.noAmount === true &&
+    (stray.unexpected === "BOOL" || stray.unexpected === "NONE");
+  return {
+    column: stray.column,
+    code: "P0012",
+    message: keywordUnits
+      ? keywordMessage(
+          stray.unexpected,
+          stray.expecting,
+          KEYWORD_WRITTEN.exec(line.slice(stray.column))![0],
+        )
+      : strayMessage(
+          stray.unexpected,
+          stray.expecting,
+          "nothing may follow a posting's amount, cost and price",
+        ),
+    flagless: false,
+    silent: stray.engineRefuses,
+  };
+}
+
 /**
  * The first syntax error stock's parser meets in a dated block's own lines,
  * the one that drops the directive: a bare booking method, a string where the
- * flag goes, an account with a colon after it, or a currency that runs into a
- * `-`. `endsFile` says whether the header is the file's last line with no line
- * break after it.
+ * flag goes, an account with a colon after it, a currency that runs into a
+ * `-`, a keyword where a currency goes, or a token after a line's last field.
+ * `endsFile` says whether the block's line at that index is the file's last,
+ * with no line break after it.
  */
 function firstSyntaxError(
   text: string,
   lines: readonly string[],
   firstBodyLine: number,
   transaction: boolean,
-  endsFile: () => boolean,
+  endsFile: (index: number) => boolean,
 ): StockSyntaxError | undefined {
   const header = lines[0]!;
   const maybeColon = MAYBE_TRAILING_COLON.test(text);
@@ -678,13 +1175,17 @@ function firstSyntaxError(
   if (maybeMinus) {
     const minus = currencyMinus(header, HEADER_MINUS_RULES);
     if (minus !== undefined) onHeader.push({ index: 0, ...minus });
-    const custom = customCurrencyMinus(header, endsFile);
+    const custom = customCurrencyMinus(header, () => endsFile(0));
     if (custom !== undefined) onHeader.push(custom);
+  }
+  // On a tie the rules above keep their own words.
+  const directive = directiveSyntaxError(header, () => endsFile(0));
+  if (directive !== undefined) {
+    onHeader.push({ index: directive.nextLine === true ? 1 : 0, ...directive });
   }
   if (onHeader.length > 0) {
     return onHeader.reduce((a, b) => earlier(a, b)!);
   }
-  if (!maybeColon && !maybeMinus) return undefined;
   for (const { index, line, key } of bodyLines(lines, firstBodyLine)) {
     const colon = maybeColon
       ? trailingColon(
@@ -703,9 +1204,15 @@ function firstSyntaxError(
         : transaction
           ? postingMinus(line)
           : undefined;
+    const stray =
+      key !== null || STOCK_KEY_LINE.test(line)
+        ? keyValueSyntaxError(line, endsFile(index))
+        : transaction
+          ? postingStray(line)
+          : undefined;
     const found = earlier(
-      colon && { index, ...colon },
-      minus && { index, ...minus },
+      earlier(colon && { index, ...colon }, minus && { index, ...minus }),
+      stray && { index: stray.nextLine === true ? index + 1 : index, ...stray },
     );
     if (found !== undefined) return found;
   }
@@ -719,7 +1226,8 @@ function firstSyntaxError(
  * (`X.`, `X-`), since a lone capital is a currency only before whitespace. A
  * `-` alone after the currency is a token of its own, refused by the grammar
  * instead (see `currencyMinus`), and a lone capital's `-` that an account goes
- * on from (`X-:Cash`) is left alone.
+ * on from (`X-:Cash`) is left alone. A lone capital before anything but
+ * whitespace starts one too (`X}`, `X` ending the file).
  */
 function currencyTailOffsets(text: string): number[] {
   if (!MAYBE_CURRENCY_TAIL.test(text)) return [];
@@ -727,6 +1235,10 @@ function currencyTailOffsets(text: string): number[] {
   for (const match of text.matchAll(CURRENCY_RUN_OR_TOKEN_RE)) {
     const run = match[0];
     if (run.startsWith('"') || run.startsWith(";")) continue;
+    if (run.length === 1) {
+      offsets.push(match.index);
+      continue;
+    }
     let last = run.length - 1;
     while (last > 0 && !/[A-Z0-9]/u.test(run[last]!)) last -= 1;
     if (last === run.length - 1) continue;
@@ -749,8 +1261,8 @@ function currencyTailOffsets(text: string): number[] {
 /**
  * Each invalid token stock's lexer reads in `source`: a number with no leading
  * digit (`.50`, `-.5`), at the dots `withLeadingZeros` gives a zero so none is
- * read clean, and a currency that ends in `.`, `_` or `'` (`QAB.`), or a lone
- * capital before one of `-'._` (`X.`). The token runs to the next whitespace
+ * read clean, a currency that ends in `.`, `_` or `'` (`QAB.`), and a lone
+ * capital before anything but whitespace (`X.`, `X}`). The token runs to the next whitespace
  * (`(.5+1)` is `.5+1)`, `{1 QAB.}` is `.}`), and the lexer skips all of it, so
  * a dot or a currency inside one starts no other. Lines are counted from 0.
  */
@@ -860,7 +1372,7 @@ export function stockSyntaxErrors(
         lines,
         firstBodyLine,
         transaction,
-        () => block.startLine === lastLineIndex(),
+        (at) => block.startLine + at === lastLineIndex(),
       );
       const read =
         flag === null
@@ -895,7 +1407,12 @@ export function stockSyntaxErrors(
         syntax?.flagless === true &&
         previous?.failed === true &&
         previous.endLine === block.startLine;
-      if (syntax !== undefined && failed === syntax && !quiet) {
+      if (
+        syntax !== undefined &&
+        failed === syntax &&
+        !quiet &&
+        syntax.silent !== true
+      ) {
         fileErrors.push(
           error(
             syntax.message,
