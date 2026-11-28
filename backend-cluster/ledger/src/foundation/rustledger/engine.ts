@@ -67,7 +67,7 @@ import {
   withoutGeneratedCloseErrors,
 } from "./generated-closes";
 import { reconcileCheckCommodityErrors } from "./check-commodity";
-import { locateCheckDrainedErrors } from "./check-drained";
+import { reconcileCheckDrainedErrors } from "./check-drained";
 import { reconcileCommodityAttrErrors } from "./commodity-attr";
 import { reconcileCoherentCostErrors } from "./coherent-cost";
 import { sellGainsErrors } from "./sell-gains";
@@ -968,7 +968,7 @@ async function parseLedgerFilesUncached(
     padding.paddingTransactions,
   );
   // After the pad recheck, whose second run reports the engine's words again.
-  errors = locateCheckDrainedErrors(errors, directives, files, entryPoint);
+  errors = reconcileCheckDrainedErrors(errors, directives, files, entryPoint);
 
   errors = withBalanceErrorDates(errors, engineFiles);
   // The engine's meta is a hash map; show it as written (w21/778).

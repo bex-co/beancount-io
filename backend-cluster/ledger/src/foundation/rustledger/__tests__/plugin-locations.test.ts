@@ -1,5 +1,5 @@
 import type { BeancountError, DirectiveJson } from "@rustledger/wasm";
-import { locateCheckDrainedErrors } from "../check-drained";
+import { reconcileCheckDrainedErrors } from "../check-drained";
 import { reconcileCoherentCostErrors } from "../coherent-cost";
 import { reconcileCommodityAttrErrors } from "../commodity-attr";
 import { reconcileLeafOnlyErrors } from "../leafonly";
@@ -237,7 +237,7 @@ describe("reconcileCoherentCostErrors", () => {
 
 // w31/156: check_drained's and commodity_attr's errors were unlocated, in the
 // engine's words; bean-check 3.2.3 puts them on the close or commodity line.
-describe("locateCheckDrainedErrors", () => {
+describe("reconcileCheckDrainedErrors", () => {
   const source = [
     'plugin "beancount.plugins.check_drained"',
     'include "other.bean"',
@@ -250,9 +250,13 @@ describe("locateCheckDrainedErrors", () => {
     date: "2024-08-30",
     account: "Assets:Cash",
   };
-  const engine = (got: string, account = "Assets:Cash"): BeancountError => ({
+  const engine = (
+    got: string,
+    account = "Assets:Cash",
+    currency = "USD",
+  ): BeancountError => ({
     ...pluginError(
-      `Balance failed for ${account}: expected 0 USD, got ${got} USD\n  note: directive was synthesized by a plugin (no source location in your files)`,
+      `Balance failed for ${account}: expected 0 ${currency}, got ${got} ${currency}\n  note: directive was synthesized by a plugin (no source location in your files)`,
     ),
     code: "E2001",
     phase: "validate",
@@ -260,10 +264,10 @@ describe("locateCheckDrainedErrors", () => {
   const locate = (
     errors: BeancountError[],
     text = source,
-    directives = [close],
+    directives: DirectiveJson[] = [close],
   ) =>
     placed(
-      locateCheckDrainedErrors(
+      reconcileCheckDrainedErrors(
         errors,
         directives,
         { ...files, "main.bean": text },
@@ -293,7 +297,7 @@ describe("locateCheckDrainedErrors", () => {
       ],
     ]);
     const moved = source.replace("2024-08-30 close Assets:Cash", "");
-    const errors = locateCheckDrainedErrors(
+    const errors = reconcileCheckDrainedErrors(
       [engine("1")],
       [close],
       { "main.bean": moved, "other.bean": "\n2024-08-30 close Assets:Cash" },
@@ -316,11 +320,66 @@ describe("locateCheckDrainedErrors", () => {
     ]);
   });
 
+  // w31/158: stock skips its zero balance for a currency that a balance on
+  // the close date already checks; the engine still checked it.
+  const balance = (
+    date: string,
+    currency = "USD",
+    account = "Assets:Cash",
+  ): DirectiveJson => ({
+    type: "balance",
+    date,
+    account,
+    amount: { number: "49.75", currency },
+  });
+
+  it("drops the failure a balance on the close date checks, in its currency only", () => {
+    const errors = [engine("49.75"), engine("12.00", "Assets:Cash", "CAD")];
+    expect(locate(errors, source, [balance("2024-08-30"), close])).toEqual([
+      [
+        4,
+        "Balance failed for 'Assets:Cash': expected 0 CAD != accumulated 12.00 CAD (12.00 too much)",
+      ],
+    ]);
+    // Wherever the balance sits in the stream, and under pedantic too.
+    const pedantic = source.replace("check_drained", "pedantic");
+    expect(
+      locate([engine("49.75")], pedantic, [close, balance("2024-08-30")]),
+    ).toEqual([]);
+  });
+
+  it("keeps the failure when the balance is on another day or account", () => {
+    const funded = [
+      4,
+      "Balance failed for 'Assets:Cash': expected 0 USD != accumulated 49.75 USD (49.75 too much)",
+    ];
+    for (const other of [
+      balance("2024-08-29"),
+      balance("2024-08-31"),
+      balance("2024-08-30", "USD", "Assets:Bank"),
+    ]) {
+      expect(locate([engine("49.75")], source, [other, close])).toEqual([
+        funded,
+      ]);
+    }
+  });
+
+  it("drops one failure per close date with such a balance", () => {
+    const again: DirectiveJson = { ...close, date: "2024-09-30" };
+    const twice = [balance("2024-08-30"), balance("2024-08-30"), close, again];
+    expect(locate([engine("49.75"), engine("49.75")], source, twice)).toEqual([
+      [
+        4,
+        "Balance failed for 'Assets:Cash': expected 0 USD != accumulated 49.75 USD (49.75 too much)",
+      ],
+    ]);
+  });
+
   it("leaves a written balance, an open account and an undeclared plugin alone", () => {
     const written = { ...engine("49.75"), file: "main.bean", line: 3 };
     const open = engine("49.75", "Assets:Bank");
     expect(
-      locateCheckDrainedErrors([written, open], [close], files, "main.bean"),
+      reconcileCheckDrainedErrors([written, open], [close], files, "main.bean"),
     ).toEqual([written, open]);
     const undeclared = source.split("\n").slice(1).join("\n");
     expect(locate([engine("49.75")], undeclared)).toEqual([

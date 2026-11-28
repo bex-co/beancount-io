@@ -86,6 +86,58 @@ async function verifyStockPlacement(): Promise<void> {
       ],
       [],
     ],
+    // w31/158: a balance on the close date makes stock skip its zero
+    // balance in that currency; the engine still checked it.
+    [
+      "check_drained on a close whose own date's balance holds the money",
+      [
+        'plugin "beancount.plugins.check_drained"',
+        ...BODY,
+        "2026-08-30 balance Assets:Cash 49.75 USD",
+        "2026-08-30 close Assets:Cash",
+      ],
+      [],
+    ],
+    [
+      "pedantic on a close whose own date's balance, written after it, holds the money",
+      [
+        'plugin "beancount.plugins.pedantic"',
+        "2026-01-01 commodity USD",
+        ...BODY,
+        "2026-08-30 close Assets:Cash",
+        "2026-08-30 balance Assets:Cash 49.75 USD",
+      ],
+      [],
+    ],
+    [
+      "check_drained on a close whose own date's balance checks one of two currencies",
+      [
+        'plugin "beancount.plugins.check_drained"',
+        "2026-01-01 open Assets:Cash",
+        "2026-01-01 open Equity:Opening",
+        '2026-01-02 * "Open"',
+        "  Assets:Cash  49.75 USD",
+        "  Assets:Cash  12.00 CAD",
+        "  Equity:Opening",
+        "2026-08-30 balance Assets:Cash 49.75 USD",
+        "2026-08-30 close Assets:Cash",
+      ],
+      [
+        "9 Balance failed for 'Assets:Cash': expected 0 CAD != accumulated 12.00 CAD (12.00 too much)",
+      ],
+    ],
+    [
+      "check_drained on a close with a balance the day before",
+      [
+        'plugin "beancount.plugins.check_drained"',
+        ...BODY,
+        "2026-08-29 balance Assets:Cash 49.75 USD",
+        "2026-08-30 close Assets:Cash",
+      ],
+      [
+        "8 Balance failed for 'Assets:Cash': expected 0 USD != accumulated 49.75 USD (49.75 too much)",
+      ],
+    ],
     [
       "a missing attribute",
       [attr("{'name': None}"), "2026-08-30 commodity QAX"],
@@ -139,7 +191,7 @@ async function verifyStockPlacement(): Promise<void> {
     }
   }
   console.log(
-    "✓ check_drained and commodity_attr errors sit on the close or commodity line in bean-check's words, and a config that is not a dict is reported (w31/156)",
+    "✓ check_drained and commodity_attr errors sit on the close or commodity line in bean-check's words, and a config that is not a dict is reported (w31/156); a balance on the close date skips the zero balance in its currency (w31/158)",
   );
 }
 
