@@ -77,6 +77,39 @@ describe("sourceSelectHeaders (w23/216)", () => {
     expect(sourceSelectHeaders("SELECT count( * )")).toEqual(["count( * )"]);
   });
 
+  // w31/159: a pivot's columns are a row key plus one per pivot value. With
+  // one value fewer than SELECT items the counts match, so the positional
+  // rename has to give up on the clause itself, not on a count mismatch.
+  it("gives up on a top-level PIVOT BY, aliased or not", () => {
+    const where = "WHERE account ~ '^Expenses:Food' GROUP BY 1, 2";
+    expect(
+      sourceSelectHeaders(
+        `SELECT account, month(date), sum(number) ${where} PIVOT BY 1, 2`,
+      ),
+    ).toBeUndefined();
+    expect(
+      sourceSelectHeaders(
+        `SELECT account, month(date), sum(number) AS total ${where} PIVOT BY 1, 2`,
+      ),
+    ).toBeUndefined();
+    expect(
+      sourceSelectHeaders(
+        "select account, month, sum(number) group by 1, 2 pivot by 1, 2",
+      ),
+    ).toBeUndefined();
+  });
+
+  it("does not take a pivot word in a string or a nested query for the clause", () => {
+    expect(
+      sourceSelectHeaders("SELECT UPPER( payee ) WHERE narration ~ 'pivot by'"),
+    ).toEqual(["UPPER( payee )"]);
+    expect(
+      sourceSelectHeaders(
+        "SELECT 1+1 FROM (SELECT account, year, count(*) GROUP BY 1, 2 PIVOT BY 1, 2)",
+      ),
+    ).toEqual(["1+1"]);
+  });
+
   it("gives up on a statement with no SELECT list", () => {
     expect(sourceSelectHeaders("JOURNAL 'Assets:Cash'")).toBeUndefined();
     expect(sourceSelectHeaders("")).toBeUndefined();

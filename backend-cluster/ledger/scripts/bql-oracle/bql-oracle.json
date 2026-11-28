@@ -1676,6 +1676,130 @@
       ],
       "source": "w23/166"
     },
+    "pivot-three-values": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account/month(date)"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "1"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "7"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "8"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT account, month(date), sum(number) WHERE account = 'Expenses:Food' AND year = 2026 GROUP BY 1, 2 PIVOT BY 1, 2",
+      "rows": [
+        [
+          "Expenses:Food",
+          "45.20",
+          "8.00",
+          "3.00"
+        ]
+      ],
+      "source": "w31/159"
+    },
+    "pivot-two-values": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account/year(date)"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "2025"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "2026"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT account, year(date), sum(number) WHERE account ~ '^Expenses' GROUP BY 1, 2 PIVOT BY 1, 2",
+      "rows": [
+        [
+          "Expenses:Food",
+          "12.40",
+          "56.20"
+        ],
+        [
+          "Expenses:Rent",
+          "800.00",
+          "800.00"
+        ]
+      ],
+      "source": "w31/159"
+    },
+    "pivot-two-values-aliased-sum": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account/year(date)"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "2025"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "2026"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT account, year(date), sum(number) AS total WHERE account ~ '^Expenses' GROUP BY 1, 2 PIVOT BY 1, 2",
+      "rows": [
+        [
+          "Expenses:Food",
+          "12.40",
+          "56.20"
+        ],
+        [
+          "Expenses:Rent",
+          "800.00",
+          "800.00"
+        ]
+      ],
+      "source": "w31/159"
+    },
+    "pivot-two-values-bare-column": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account/year"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "2025"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "2026"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT account, year, sum(number) WHERE account ~ '^Expenses' GROUP BY 1, 2 PIVOT BY 1, 2",
+      "rows": [
+        [
+          "Expenses:Food",
+          "12.40",
+          "56.20"
+        ],
+        [
+          "Expenses:Rent",
+          "800.00",
+          "800.00"
+        ]
+      ],
+      "source": "w31/159"
+    },
     "price-and-cost": {
       "columns": [
         {
@@ -3380,5 +3504,5 @@
       "source": "w23/169"
     }
   },
-  "sourceHash": "a66d8cfd57946ee147bd0457a0d9c38ecf206ea9d603275979abe2d2ef090013"
+  "sourceHash": "b317d72e4dfa8234d552f639ce29348d1b518bdac761adb979a6d244e2444d59"
 }

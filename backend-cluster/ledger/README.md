@@ -65,8 +65,10 @@ as stock beanquery does: `SELECT 1+1` answers a column named `1+1`,
 `UPPER( payee )` is `UPPER( payee )`, `TRUE` stays `TRUE` and `null` stays
 `null`, where the engine alone would print `1 + 1`, `UPPER(payee)`, `true` and
 `NULL`. An alias names its column, and a bare column keeps its canonical name
-(`Year` answers `year`). A wildcard, or a SELECT list the service cannot line up
-with the engine's columns one for one, keeps the engine's own names.
+(`Year` answers `year`). A wildcard, a `PIVOT BY` (its columns are a row key
+and one per pivot value, such as `account/month(date)`, `7`, `8`), or a SELECT
+list the service cannot line up with the engine's columns one for one, keeps
+the engine's own names.
 
 For example, `'00123' AS reference` can be labelled `Decimal` while
 `'00123' AS account` is labelled `str`; both preserve the string `"00123"`.

@@ -76,13 +76,22 @@ export function extractSelectAliasInfo(query: string): SelectAliasInfo {
  * the engine both name it canonically, `Year` → `year`; `TRUE`, `FALSE` and
  * `NULL` are literals, not columns, and keep their spelling). A wildcard changes the
  * column count, so any `*` item makes the whole answer `undefined`, and so
- * does a query with no top-level SELECT list.
+ * does a query with no top-level SELECT list. So does a top-level PIVOT BY
+ * (w31/159): its columns are one row key plus one per pivot value, not the
+ * SELECT items, and with one value fewer than items the counts would match.
  */
 export function sourceSelectHeaders(
   query: string,
 ): (string | undefined)[] | undefined {
   const clauses = selectClauses(query);
   if (clauses === undefined) return undefined;
+  const pivots = clauses.words.some(
+    (word) =>
+      word.depth === 0 &&
+      word.start >= clauses.end &&
+      word.text.toLowerCase() === "pivot",
+  );
+  if (pivots) return undefined;
   const headers = clauses.items.map((raw) => {
     const item = stripLeadingComments(raw);
     return item.replace(/^(?:distinct|all)\s+/iu, "").trim();

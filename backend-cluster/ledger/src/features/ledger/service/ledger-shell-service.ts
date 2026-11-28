@@ -83,7 +83,8 @@ export function normalizeBqlQueryForEngine(query: string): string {
  * Names each unaliased expression column with its source text, as stock
  * beanquery does (w23/216), instead of the engine's re-rendering of it. Only
  * when the SELECT list lines up with the engine's columns one for one: a
- * wildcard, a PIVOT, or anything the scan cannot place keeps the engine's names.
+ * wildcard, a PIVOT (`sourceSelectHeaders` gives up on both, w31/159), or
+ * anything the scan cannot place keeps the engine's names.
  */
 function withSourceHeaders(result: QueryResult, folded: string): QueryResult {
   const headers = sourceSelectHeaders(
