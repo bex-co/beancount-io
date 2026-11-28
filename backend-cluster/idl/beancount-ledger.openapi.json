@@ -7799,6 +7799,9 @@
               },
               {
                 "$ref": "#/components/schemas/JournalPricePublic"
+              },
+              {
+                "$ref": "#/components/schemas/JournalQueryPublic"
               }
             ],
             "title": "Entry",
@@ -9020,6 +9023,9 @@
               },
               {
                 "$ref": "#/components/schemas/JournalPricePublic"
+              },
+              {
+                "$ref": "#/components/schemas/JournalQueryPublic"
               }
             ],
             "title": "Entry",
@@ -9705,7 +9711,8 @@
           "Note",
           "Open",
           "Pad",
-          "Price"
+          "Price",
+          "Query"
         ],
         "title": "DirectiveType",
         "description": "Enum for Beancount directive types."
@@ -11636,6 +11643,90 @@
         "title": "JournalPricePublic",
         "description": "A Beancount Price directive."
       },
+      "JournalQueryPublic": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date",
+            "description": "Date of the directive"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {},
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta",
+            "description": "Metadata of the directive"
+          },
+          "entry_hash": {
+            "type": "string",
+            "title": "Entry Hash",
+            "description": "Hash of the entry"
+          },
+          "directive_type": {
+            "$ref": "#/components/schemas/DirectiveType",
+            "description": "Type of the directive"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Name of the stored query"
+          },
+          "query_string": {
+            "type": "string",
+            "title": "Query String",
+            "description": "The query's BQL text"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalEntrySourcePublic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise."
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "entry_hash",
+          "directive_type",
+          "name",
+          "query_string"
+        ],
+        "title": "JournalQueryPublic",
+        "description": "A Beancount Query directive: a named BQL query stored in the ledger."
+      },
       "JournalQueryResponsePublic": {
         "properties": {
           "items": {
@@ -11673,6 +11764,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/JournalPricePublic"
+                },
+                {
+                  "$ref": "#/components/schemas/JournalQueryPublic"
                 }
               ]
             },

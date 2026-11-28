@@ -14,12 +14,19 @@ import { IContext } from "@/server/graphql/context";
 import { GraphQLJSONObject } from "graphql-scalars";
 import type { ILedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { JOURNAL_FILTER_DESCRIPTION } from "@/features/ledger/utils/journal-filter-description";
+import { JOURNAL_KINDS } from "@/features/ledger/utils/journal-kinds";
 import { PLAINTEXT_JOURNAL_SCOPE } from "@/features/ledger/utils/plaintext-journal-scope";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
 import {
   resolveFilterAccount,
   resolveWithChildren,
 } from "@/features/ledger/utils/query-param-alias";
+
+// The kinds come from the one list every surface validates against, so a
+// kind the service accepts is never missing here (w31/145).
+const DIRECTIVE_TYPES_DESCRIPTION =
+  `Directive kinds to include, e.g. ["Transaction"]: any of ` +
+  `${JOURNAL_KINDS.directiveTypes.join(", ")}, in any case. Omitted, every kind is returned.`;
 
 @ObjectType()
 class JournalResponse {
@@ -101,7 +108,10 @@ class JournalQueryInput {
   })
   include_source?: boolean;
 
-  @Field(() => [String], { nullable: true })
+  @Field(() => [String], {
+    nullable: true,
+    description: DIRECTIVE_TYPES_DESCRIPTION,
+  })
   directiveTypes?: string[];
 
   // w23/150: narrows transactions only — other families pass through.
@@ -250,7 +260,10 @@ class AccountJournalQueryInput {
   @Field(() => String, { nullable: true, defaultValue: "at_cost" })
   conversion?: string;
 
-  @Field(() => [String], { nullable: true })
+  @Field(() => [String], {
+    nullable: true,
+    description: DIRECTIVE_TYPES_DESCRIPTION,
+  })
   directiveTypes?: string[];
 
   // w23/150: narrows transactions only — other families pass through.

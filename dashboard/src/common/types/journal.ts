@@ -15,6 +15,7 @@ export enum DirectiveType {
   OPEN = "Open",
   PAD = "Pad",
   PRICE = "Price",
+  QUERY = "Query",
 }
 
 export interface JournalAmount {
@@ -116,6 +117,12 @@ export interface JournalPrice extends JournalDirective {
   amount: JournalAmount;
 }
 
+/** A stored BQL query (`query "<name>" "<BQL>"`). */
+export interface JournalQuery extends JournalDirective {
+  name: string;
+  query_string: string;
+}
+
 // Union type for all directive types
 export type JournalDirectiveType =
   | JournalTransaction
@@ -128,7 +135,8 @@ export type JournalDirectiveType =
   | JournalNote
   | JournalOpen
   | JournalPad
-  | JournalPrice;
+  | JournalPrice
+  | JournalQuery;
 
 // Type guards for runtime type checking
 export function isJournalTransaction(
@@ -189,4 +197,10 @@ export function isJournalPrice(
   directive: JournalDirectiveType,
 ): directive is JournalPrice {
   return directive.directive_type === DirectiveType.PRICE;
+}
+
+export function isJournalQuery(
+  directive: JournalDirectiveType,
+): directive is JournalQuery {
+  return directive.directive_type === DirectiveType.QUERY;
 }

@@ -140,7 +140,7 @@ export const listLedgerEntriesInput = z.object({
     .array(z.string().meta({ enum: [...JOURNAL_KINDS.directiveTypes] }))
     .optional()
     .describe(
-      'Directive types to include, e.g. ["Transaction"]; case does not matter.',
+      'Directive types to include, e.g. ["Transaction"], or ["Query"] for stored queries; case does not matter.',
     ),
   // Subtype filters, as on the journal resource and REST (w23/202): each
   // narrows only its own directive family and passes the others through, so

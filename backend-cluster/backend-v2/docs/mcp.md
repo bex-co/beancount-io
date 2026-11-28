@@ -1298,10 +1298,12 @@ parameters, for example `directiveTypes=%5B%22Transaction%22%5D`. Empty arrays
 are preserved. Values match case-insensitively, so `"transaction"` (the
 spelling `addLedgerEntries` takes) selects the same entries as `"Transaction"`.
 `directiveTypes` takes `Transaction`, `Balance`, `Commodity`, `Close`, `Custom`,
-`Document`, `Event`, `Note`, `Open`, `Pad`, and `Price`; `transactionSubtypes`
+`Document`, `Event`, `Note`, `Open`, `Pad`, `Price`, and `Query`; `transactionSubtypes`
 takes `cleared`, `pending`, and `other`; `documentSubtypes` takes `discovered`
 and `linked`; `customSubtypes` takes `budget`. Any other value is refused with
 `BAD_USER_INPUT` on every surface, rather than matching nothing.
+A stored query (`2026-01-05 query "<name>" "<BQL>"`) is a `Query` entry carrying
+`name` and `query_string`, as Fava's journal lists it, never a `Custom`.
 The `filter` argument is a Fava advanced-filter expression, identical on REST,
 GraphQL, MCP tools, and MCP resources. `#tag` and `^link` match exactly; bare
 or `"quoted"` words match narration/payee (transactions) or comment (notes);

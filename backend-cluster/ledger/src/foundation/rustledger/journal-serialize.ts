@@ -21,6 +21,7 @@ import type {
   JournalPadPublic,
   JournalPostingPublic,
   JournalPricePublic,
+  JournalQueryPublic,
   JournalTransactionPublic,
 } from "@/foundation/ledger-api-types";
 import {
@@ -81,7 +82,8 @@ export type JournalItem =
   | JournalNotePublic
   | JournalOpenPublic
   | JournalPadPublic
-  | JournalPricePublic;
+  | JournalPricePublic
+  | JournalQueryPublic;
 
 const DIRECTIVE_TYPE_BY_TAG: Record<DirectiveJson["type"], DirectiveType> = {
   transaction: "Transaction" as DirectiveType,
@@ -95,7 +97,7 @@ const DIRECTIVE_TYPE_BY_TAG: Record<DirectiveJson["type"], DirectiveType> = {
   open: "Open" as DirectiveType,
   pad: "Pad" as DirectiveType,
   price: "Price" as DirectiveType,
-  query: "Custom" as DirectiveType,
+  query: "Query" as DirectiveType,
 };
 
 // --- meta / value serialization ------------------------------------------
@@ -345,9 +347,10 @@ export function failedBalanceDiffs(
 
 /**
  * Serialize a rustledger `DirectiveJson` into a journal item — parity for
- * `serialize_directive`. A `query` directive (which fava-slim has no dedicated
- * schema for) is not emitted by `getJournal`; if one is passed we serialize it
- * as a `Custom`-typed item so the union stays exhaustive.
+ * `serialize_directive`. A `query` directive is a `Query` item carrying its
+ * `name` and `query_string`, as Fava's journal lists it (w31/145): fava-slim
+ * had no schema for one, and labeling it `Custom` made the journal disagree
+ * with the entries count and refuse `directiveTypes: ["Query"]`.
  */
 export function serializeDirective(
   directive: DirectiveJson,
@@ -479,8 +482,8 @@ export function serializeDirective(
         directive_type,
         date,
         meta,
-        type: directive.name,
-        values: [directive.query_string],
+        name: directive.name,
+        query_string: directive.query_string,
       };
     default:
       throw new Error(

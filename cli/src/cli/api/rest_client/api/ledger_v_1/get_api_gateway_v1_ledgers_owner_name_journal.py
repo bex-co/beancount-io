@@ -183,8 +183,8 @@ def sync_detailed(
             include_source.
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
-            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-
-            window `open` directives, which the time clamp preserves as context in every window.
+            Note, Open, Pad, Price, Query, in any case. Omitted, every kind is returned — including
+            pre-window `open` directives, which the time clamp preserves as context in every window.
         transaction_subtypes (str | Unset): JSON-encoded transaction flag filter, e.g.
             ["cleared"]: narrows transactions only — other directive families pass through. Combine
             with directiveTypes to restrict the families returned.
@@ -268,8 +268,8 @@ def sync(
             include_source.
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
-            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-
-            window `open` directives, which the time clamp preserves as context in every window.
+            Note, Open, Pad, Price, Query, in any case. Omitted, every kind is returned — including
+            pre-window `open` directives, which the time clamp preserves as context in every window.
         transaction_subtypes (str | Unset): JSON-encoded transaction flag filter, e.g.
             ["cleared"]: narrows transactions only — other directive families pass through. Combine
             with directiveTypes to restrict the families returned.
@@ -348,8 +348,8 @@ async def asyncio_detailed(
             include_source.
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
-            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-
-            window `open` directives, which the time clamp preserves as context in every window.
+            Note, Open, Pad, Price, Query, in any case. Omitted, every kind is returned — including
+            pre-window `open` directives, which the time clamp preserves as context in every window.
         transaction_subtypes (str | Unset): JSON-encoded transaction flag filter, e.g.
             ["cleared"]: narrows transactions only — other directive families pass through. Combine
             with directiveTypes to restrict the families returned.
@@ -431,8 +431,8 @@ async def asyncio(
             include_source.
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
-            Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-
-            window `open` directives, which the time clamp preserves as context in every window.
+            Note, Open, Pad, Price, Query, in any case. Omitted, every kind is returned — including
+            pre-window `open` directives, which the time clamp preserves as context in every window.
         transaction_subtypes (str | Unset): JSON-encoded transaction flag filter, e.g.
             ["cleared"]: narrows transactions only — other directive families pass through. Combine
             with directiveTypes to restrict the families returned.

@@ -66,6 +66,12 @@ export const filterButtons: FilterButton[] = [
     value: DirectiveType.PRICE,
   },
   {
+    id: "query",
+    labelKey: "journal.query",
+    type: "directive",
+    value: DirectiveType.QUERY,
+  },
+  {
     id: "custom",
     labelKey: "journal.custom",
     type: "directive",

@@ -98,6 +98,7 @@ export enum DirectiveType {
   Open = "Open",
   Pad = "Pad",
   Price = "Price",
+  Query = "Query",
 }
 
 /**
@@ -144,7 +145,8 @@ export interface AccountJournalEntryPublic {
     | JournalNotePublic
     | JournalOpenPublic
     | JournalPadPublic
-    | JournalPricePublic;
+    | JournalPricePublic
+    | JournalQueryPublic;
   /**
    * Change
    * Change amounts for this entry
@@ -689,7 +691,8 @@ export interface ContextPublic {
     | JournalNotePublic
     | JournalOpenPublic
     | JournalPadPublic
-    | JournalPricePublic;
+    | JournalPricePublic
+    | JournalQueryPublic;
   /**
    * Balances Before
    * Account balances before the entry
@@ -1754,6 +1757,41 @@ export interface JournalPricePublic {
 }
 
 /**
+ * JournalQueryPublic
+ * A Beancount Query directive: a named BQL query stored in the ledger.
+ */
+export interface JournalQueryPublic {
+  /**
+   * Date
+   * Date of the directive
+   * @format date
+   */
+  date: string;
+  /**
+   * Meta
+   * Metadata of the directive
+   */
+  meta?: Record<string, string | number | boolean | null> | null;
+  /**
+   * Entry Hash
+   * Hash of the entry
+   */
+  entry_hash: string;
+  /** Type of the directive */
+  directive_type: DirectiveType;
+  /**
+   * Name
+   * Name of the stored query
+   */
+  name: string;
+  /**
+   * Query String
+   * The query's BQL text
+   */
+  query_string: string;
+}
+
+/**
  * JournalQueryResponsePublic
  * Response schema for exporting journal entries.
  */
@@ -1774,6 +1812,7 @@ export interface JournalQueryResponsePublic {
     | JournalOpenPublic
     | JournalPadPublic
     | JournalPricePublic
+    | JournalQueryPublic
   )[];
   /**
    * Total

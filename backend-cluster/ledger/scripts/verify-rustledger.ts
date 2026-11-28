@@ -101,7 +101,10 @@ import { verifyProjectedDocuments } from "./projected-documents";
 import { verifyProjectedIncludes } from "./projected-includes";
 import { verifySlashDatedEntries } from "./slash-dated-entries";
 import { BadUserInputError } from "@/shared/errors";
-import type { SerializableTreeNodePublic } from "@/foundation/ledger-api-types";
+import {
+  DirectiveType,
+  type SerializableTreeNodePublic,
+} from "@/foundation/ledger-api-types";
 import {
   accountBalanceSeries,
   accountHierarchy,
@@ -1228,6 +1231,75 @@ async function verifyWrittenReservedFlags(): Promise<void> {
   );
   console.log(
     "✓ entries written with reserved flags are listed and exported (w21/745)",
+  );
+}
+
+/**
+ * w31/145: the journal lists a stored query as a `Query` with its name and
+ * BQL, as Fava 1.31's journal does and as the entries count counts it. It was
+ * a `Custom` named after the query, and `directiveTypes: ["Query"]` matched
+ * nothing.
+ */
+async function verifyQueryDirectiveJournal(): Promise<void> {
+  const source = [
+    "2026-01-01 open Assets:Cash USD",
+    `2026-01-05 query "qa-q" "SELECT account WHERE account ~ 'Cash'"`,
+    "",
+  ].join("\n");
+  const factory = singleFileRepoFactory(source);
+  const journal = new LedgerJournalService(factory as never, {} as never);
+  const params = { ledgerId: "synthetic/query", userId: undefined };
+  const listed = await journal.getJournal({
+    ...params,
+    query: { time: "2026-01-05" },
+  });
+  const row = (listed.data as Array<Record<string, unknown>>).find(
+    (item) => item.date === "2026-01-05",
+  );
+  const { entry_hash: entryHash, ...fields } = row ?? {};
+  deepStrictEqual(fields, {
+    directive_type: "Query",
+    date: "2026-01-05",
+    meta: null,
+    name: "qa-q",
+    query_string: "SELECT account WHERE account ~ 'Cash'",
+  });
+  assert(
+    typeof entryHash === "string",
+    "the journal lists a query directive as a Query with its name and query_string",
+  );
+  const totalOf = async (directiveType: DirectiveType) =>
+    (
+      await journal.getJournal({
+        ...params,
+        query: { directiveTypes: [directiveType] },
+      })
+    ).total;
+  const queries = await totalOf(DirectiveType.Query);
+  const customs = await totalOf(DirectiveType.Custom);
+  assert(
+    queries === 1 && customs === 0,
+    `directiveTypes Query selects it and Custom does not (got Query ${queries}, Custom ${customs})`,
+  );
+  const counts = await new LedgerDataService(
+    factory as never,
+    {} as never,
+  ).getEntriesCountPerType(params);
+  const countOf = (type: string) =>
+    counts.find((count) => count.type === type)?.number;
+  assert(
+    countOf("Query") === queries && countOf("Custom") === customs,
+    `the entries count agrees with the journal (got Query ${countOf("Query")}, Custom ${countOf("Custom")})`,
+  );
+  const context = await journal.getContext({
+    ...params,
+    entryHash: entryHash as string,
+  });
+  assert(
+    context.entry.directive_type === "Query" &&
+      context.entry.name === "qa-q" &&
+      context.slice.startsWith('2026-01-05 query "qa-q"'),
+    `Entry Context reads the same Query entry (got ${JSON.stringify(context.entry)})`,
   );
 }
 
@@ -5997,6 +6069,7 @@ async function main(): Promise<void> {
   await verifyDocumentSourcePaths();
   await verifyDocumentDiscovery();
   await verifyWrittenReservedFlags();
+  await verifyQueryDirectiveJournal();
   await verifyLoneElidedPosting();
   await verifyStockOptionSpellings();
   await verifyZeroUnitsAtCost();

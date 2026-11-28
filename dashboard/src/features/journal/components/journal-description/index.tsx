@@ -11,6 +11,7 @@ import {
   isJournalCustom,
   isJournalEvent,
   isJournalPrice,
+  isJournalQuery,
 } from "@/common/types/journal";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { TransactionDescription } from "./transaction-description";
@@ -23,6 +24,7 @@ import { PadDescription } from "./pad-description";
 import { CustomDescription } from "./custom-description";
 import { EventDescription } from "./event-description";
 import { PriceDescription } from "./price-description";
+import { QueryDescription } from "./query-description";
 import { DescriptionParts } from "./description-parts";
 
 interface JournalDescriptionProps {
@@ -66,6 +68,8 @@ export function JournalDescription({
     return <EventDescription directive={directive} compact={compact} />;
   if (isJournalPrice(directive))
     return <PriceDescription directive={directive} compact={compact} />;
+  if (isJournalQuery(directive))
+    return <QueryDescription directive={directive} compact={compact} />;
   if (directive.directive_type === DirectiveType.COMMODITY) {
     const name = directive.meta?.name;
     return (

@@ -4,6 +4,7 @@ import {
   isJournalBalance,
   isJournalCustom,
   isJournalDocument,
+  isJournalQuery,
   isJournalTransaction,
 } from "@/common/types/journal";
 import { useFormatLedgerNumber } from "@/common/hooks/use-format-ledger-number";
@@ -76,6 +77,8 @@ export function useJournalEntryLabel(
           );
         }
       }
+    } else if (isJournalQuery(directive)) {
+      parts.push(directive.name, directive.query_string);
     } else if ("comment" in directive) {
       parts.push(directive.comment);
     } else if ("description" in directive) {

@@ -922,6 +922,50 @@ describe("journal directive kinds", () => {
     }
   });
 
+  // w31/145: a stored query is its own kind, as the entries count counts it;
+  // `["Query"]` was refused and `["Custom"]` returned the query.
+  it("selects stored queries as Query on every surface, as the ledger lists them", async () => {
+    const f = await fixture();
+    const stored = {
+      entry_hash: "1cae7d05cef116802e983623232a401d",
+      directive_type: "Query",
+      date: "2026-01-05",
+      meta: null,
+      name: "qa-q",
+      query_string: "SELECT account WHERE account ~ 'Cash'",
+    };
+    f.journal.getJournal.mockResolvedValue(
+      envelope({ total: 1, items: [stored], is_empty: false }),
+    );
+    try {
+      const selection = { directiveTypes: ["query"] };
+      const expected = { total: 1, data: [stored], is_empty: false };
+      const path = `journal?${encode(selection)}`;
+      const rest = await f.rest(path);
+      expect(rest.status).toBe(200);
+      expect(await rest.json()).toEqual(expected);
+      expect(await f.mcp(path)).toEqual(expected);
+      const tool = await f.tool(selection);
+      expect(tool.isError).toBeFalsy();
+      expect((tool.structuredContent as { result: unknown }).result).toEqual(
+        expected,
+      );
+      const gql = await f.gql(
+        `getLedgerJournal(ledgerId: "alice/main", query: { ${gqlInput(selection)} }) { total data is_empty }`,
+      );
+      expect(gql.errors).toBeUndefined();
+      expect(gql.data?.getLedgerJournal).toEqual(expected);
+      const forwarded = f.journal.getJournal.mock.calls.map(
+        ([, , params]) => params,
+      );
+      expect(forwarded).toHaveLength(4);
+      for (const params of forwarded)
+        expect(params).toMatchObject({ directive_types: ["Query"] });
+    } finally {
+      await f.close();
+    }
+  });
+
   it.each([
     { directiveTypes: ["Txn"], field: "directiveTypes" },
     { directiveTypes: ["Transaction", "Nope"], field: "directiveTypes" },
@@ -1024,6 +1068,7 @@ describe("journal directive kinds", () => {
         "Open",
         "Pad",
         "Price",
+        "Query",
       ]);
       await client.close();
       await server.close();
