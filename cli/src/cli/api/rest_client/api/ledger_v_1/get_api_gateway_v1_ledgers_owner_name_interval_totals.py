@@ -144,7 +144,9 @@ def sync_detailed(
 
      Balances grouped by period — the series behind a spending-over-time view, without the view.
     `shape=summary` (the default) states one currency and drops zero accounts; `shape=fava` returns the
-    raw per-currency balances.
+    raw per-currency balances. Summary amounts are JSON numbers, exact to 15 significant digits; a
+    longer amount, such as an 18-decimal token, reads as the nearest double. `shape=fava`, holdings, and
+    BQL give the exact decimal strings.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -169,7 +171,8 @@ def sync_detailed(
             without a cost). Default: the ledger's operating currency. Example: USD.
         account_name (str | Unset): Restrict the totals to one account
         shape (GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape | Unset): summary returns totals
-            and non-zero accounts in one currency; fava returns the full chart payload. Default:
+            and non-zero accounts in one currency, as JSON numbers exact to 15 significant digits;
+            fava returns the full chart payload, with exact decimal strings. Default:
             GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape.SUMMARY. Example: summary.
 
     Raises:
@@ -217,7 +220,9 @@ def sync(
 
      Balances grouped by period — the series behind a spending-over-time view, without the view.
     `shape=summary` (the default) states one currency and drops zero accounts; `shape=fava` returns the
-    raw per-currency balances.
+    raw per-currency balances. Summary amounts are JSON numbers, exact to 15 significant digits; a
+    longer amount, such as an 18-decimal token, reads as the nearest double. `shape=fava`, holdings, and
+    BQL give the exact decimal strings.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -242,7 +247,8 @@ def sync(
             without a cost). Default: the ledger's operating currency. Example: USD.
         account_name (str | Unset): Restrict the totals to one account
         shape (GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape | Unset): summary returns totals
-            and non-zero accounts in one currency; fava returns the full chart payload. Default:
+            and non-zero accounts in one currency, as JSON numbers exact to 15 significant digits;
+            fava returns the full chart payload, with exact decimal strings. Default:
             GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape.SUMMARY. Example: summary.
 
     Raises:
@@ -285,7 +291,9 @@ async def asyncio_detailed(
 
      Balances grouped by period — the series behind a spending-over-time view, without the view.
     `shape=summary` (the default) states one currency and drops zero accounts; `shape=fava` returns the
-    raw per-currency balances.
+    raw per-currency balances. Summary amounts are JSON numbers, exact to 15 significant digits; a
+    longer amount, such as an 18-decimal token, reads as the nearest double. `shape=fava`, holdings, and
+    BQL give the exact decimal strings.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -310,7 +318,8 @@ async def asyncio_detailed(
             without a cost). Default: the ledger's operating currency. Example: USD.
         account_name (str | Unset): Restrict the totals to one account
         shape (GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape | Unset): summary returns totals
-            and non-zero accounts in one currency; fava returns the full chart payload. Default:
+            and non-zero accounts in one currency, as JSON numbers exact to 15 significant digits;
+            fava returns the full chart payload, with exact decimal strings. Default:
             GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape.SUMMARY. Example: summary.
 
     Raises:
@@ -356,7 +365,9 @@ async def asyncio(
 
      Balances grouped by period — the series behind a spending-over-time view, without the view.
     `shape=summary` (the default) states one currency and drops zero accounts; `shape=fava` returns the
-    raw per-currency balances.
+    raw per-currency balances. Summary amounts are JSON numbers, exact to 15 significant digits; a
+    longer amount, such as an 18-decimal token, reads as the nearest double. `shape=fava`, holdings, and
+    BQL give the exact decimal strings.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -381,7 +392,8 @@ async def asyncio(
             without a cost). Default: the ledger's operating currency. Example: USD.
         account_name (str | Unset): Restrict the totals to one account
         shape (GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape | Unset): summary returns totals
-            and non-zero accounts in one currency; fava returns the full chart payload. Default:
+            and non-zero accounts in one currency, as JSON numbers exact to 15 significant digits;
+            fava returns the full chart payload, with exact decimal strings. Default:
             GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape.SUMMARY. Example: summary.
 
     Raises:

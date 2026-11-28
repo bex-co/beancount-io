@@ -987,3 +987,89 @@ describe("the headline currency", () => {
     ).toMatchObject({ currency: "USD", intervals: [{ total: -2500 }] });
   });
 });
+
+/**
+ * w31/147. The design comment bounded a summary's rounding by magnitude, "past
+ * 2^53", but a double holds about 15 significant digits at any size: an
+ * 18-decimal token and a tens-of-trillions USD balance both rounded with no
+ * sign. The summaries stay JSON numbers, and the descriptions and
+ * `docs/mcp.md` state this limit; these cases pin the behavior they describe.
+ */
+describe("summary amounts are doubles, exact to 15 significant digits", () => {
+  // The repro ledger: a USD ledger holding 0.123456789012345678 QAETH.
+  const wallet = (usd: string) => ({
+    net_worth_data: [
+      {
+        date: "2026-01-03",
+        balance: { USD: usd, QAETH: "0.123456789012345678" },
+      },
+    ],
+    assets_data: [],
+    liabilities_data: [],
+    equity_data: [],
+    assets_hierarchy_data: node(
+      "Assets",
+      {},
+      [
+        node("Assets:Qa:Bank", { USD: usd }),
+        node("Assets:Qa:Wallet", { QAETH: "0.123456789012345678" }),
+      ],
+      { USD: usd, QAETH: "0.123456789012345678" },
+    ),
+    liabilities_hierarchy_data: node("Liabilities", {}),
+    equity_hierarchy_data: node("Equity", {}),
+  });
+
+  it("reads an 18-decimal token as the nearest double in otherCurrencies", () => {
+    const summary = summarizeBalanceSheet(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      wallet("1234567890123.45") as any,
+      "units",
+      ["USD"],
+    );
+    expect(summary.otherCurrencies).toEqual({ QAETH: 0.12345678901234568 });
+    expect(String(summary.otherCurrencies!.QAETH)).not.toBe(
+      "0.123456789012345678",
+    );
+    // Fifteen significant digits come back exactly, headline and account.
+    expect(String(summary.netWorth)).toBe("1234567890123.45");
+    expect(summary.byAccount).toContainEqual({
+      account: "Assets:Qa:Bank",
+      balance: 1234567890123.45,
+    });
+  });
+
+  it("rounds a long amount far below 2^53", () => {
+    const summary = summarizeBalanceSheet(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      wallet("90071992547409.93") as any,
+      undefined,
+      ["USD"],
+    );
+    expect(Number("90071992547409.93")).toBeLessThan(2 ** 53);
+    expect(String(summary.netWorth)).toBe("90071992547409.94");
+  });
+
+  it("rounds the same way on the overview and the interval totals", () => {
+    const overview = summarizeOverview(
+      wallet("5") as unknown as OverviewPublic,
+      "units",
+      ["USD"],
+    );
+    expect(overview.otherCurrencies).toEqual({ QAETH: 0.12345678901234568 });
+    const intervals = summarizeIntervalTotals(
+      [
+        {
+          date: "2026-12-31",
+          balance: { USD: "5", QAETH: "0.123456789012345678" },
+          account_balances: {},
+        },
+      ] as DateAndBalanceWithAccountBalancePublic[],
+      "units",
+      ["USD"],
+    );
+    expect(intervals.intervals[0]!.otherCurrencies).toEqual({
+      QAETH: 0.12345678901234568,
+    });
+  });
+});

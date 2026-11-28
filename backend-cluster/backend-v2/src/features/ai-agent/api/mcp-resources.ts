@@ -4,6 +4,7 @@ import { suggestCategoriesQuery } from "@/features/llm/api/suggest-categories-ro
 import { MAX_SUGGEST_TRANSACTIONS } from "@/features/llm/utils/suggest-categories-cap";
 import { tempAssetDownloadQuery } from "@/features/s3/api/temp-asset-routes";
 import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
+import { SUMMARY_PRECISION_DESCRIPTION } from "@/features/ledger/utils/report-summaries";
 import {
   bankAccountQuery,
   unsyncedTransactionsQuery,
@@ -740,10 +741,11 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
           : "ledgerIncomeStatement",
       title:
         statement === "balance-sheet" ? "Balance Sheet" : "Income Statement",
-      description:
+      description: `${
         statement === "balance-sheet"
           ? "Balance sheet with report-only current earnings in equity and its interval series under the configured account names. Accepts account, filter, time, conversion, interval, and shape; returns the same structured data as REST."
-          : "Financial statement with account, filter, time, conversion, and interval parameters. Returns the same structured data as REST.",
+          : "Financial statement with account, filter, time, conversion, interval, and shape parameters. Returns the same structured data as REST."
+      } ${SUMMARY_PRECISION_DESCRIPTION}`,
       mimeType: "application/json",
       uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/statements/${statement}`,
       listSegment: `statements/${statement}`,

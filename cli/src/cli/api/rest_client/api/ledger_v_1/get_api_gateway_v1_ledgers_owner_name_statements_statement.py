@@ -147,7 +147,9 @@ def sync_detailed(
      Renders the balance sheet or the income statement for the period, with optional currency conversion
     and interval bucketing. `shape=summary` (the default) returns totals and non-zero accounts;
     `shape=fava` returns the full chart payload. Balance-sheet equity and its series include current
-    earnings under the configured account names without writing closing transactions.
+    earnings under the configured account names without writing closing transactions. Summary amounts
+    are JSON numbers, exact to 15 significant digits; a longer amount, such as an 18-decimal token,
+    reads as the nearest double. `shape=fava`, holdings, and BQL give the exact decimal strings.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -165,9 +167,9 @@ def sync_detailed(
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
-            totals and non-zero accounts in one currency; fava returns the full chart payload.
-            Default: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY. Example:
-            summary.
+            totals and non-zero accounts in one currency, as JSON numbers exact to 15 significant
+            digits; fava returns the full chart payload, with exact decimal strings. Default:
+            GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY. Example: summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -215,7 +217,9 @@ def sync(
      Renders the balance sheet or the income statement for the period, with optional currency conversion
     and interval bucketing. `shape=summary` (the default) returns totals and non-zero accounts;
     `shape=fava` returns the full chart payload. Balance-sheet equity and its series include current
-    earnings under the configured account names without writing closing transactions.
+    earnings under the configured account names without writing closing transactions. Summary amounts
+    are JSON numbers, exact to 15 significant digits; a longer amount, such as an 18-decimal token,
+    reads as the nearest double. `shape=fava`, holdings, and BQL give the exact decimal strings.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -233,9 +237,9 @@ def sync(
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
-            totals and non-zero accounts in one currency; fava returns the full chart payload.
-            Default: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY. Example:
-            summary.
+            totals and non-zero accounts in one currency, as JSON numbers exact to 15 significant
+            digits; fava returns the full chart payload, with exact decimal strings. Default:
+            GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY. Example: summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -278,7 +282,9 @@ async def asyncio_detailed(
      Renders the balance sheet or the income statement for the period, with optional currency conversion
     and interval bucketing. `shape=summary` (the default) returns totals and non-zero accounts;
     `shape=fava` returns the full chart payload. Balance-sheet equity and its series include current
-    earnings under the configured account names without writing closing transactions.
+    earnings under the configured account names without writing closing transactions. Summary amounts
+    are JSON numbers, exact to 15 significant digits; a longer amount, such as an 18-decimal token,
+    reads as the nearest double. `shape=fava`, holdings, and BQL give the exact decimal strings.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -296,9 +302,9 @@ async def asyncio_detailed(
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
-            totals and non-zero accounts in one currency; fava returns the full chart payload.
-            Default: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY. Example:
-            summary.
+            totals and non-zero accounts in one currency, as JSON numbers exact to 15 significant
+            digits; fava returns the full chart payload, with exact decimal strings. Default:
+            GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY. Example: summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -344,7 +350,9 @@ async def asyncio(
      Renders the balance sheet or the income statement for the period, with optional currency conversion
     and interval bucketing. `shape=summary` (the default) returns totals and non-zero accounts;
     `shape=fava` returns the full chart payload. Balance-sheet equity and its series include current
-    earnings under the configured account names without writing closing transactions.
+    earnings under the configured account names without writing closing transactions. Summary amounts
+    are JSON numbers, exact to 15 significant digits; a longer amount, such as an 18-decimal token,
+    reads as the nearest double. `shape=fava`, holdings, and BQL give the exact decimal strings.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -362,9 +370,9 @@ async def asyncio(
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
-            totals and non-zero accounts in one currency; fava returns the full chart payload.
-            Default: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY. Example:
-            summary.
+            totals and non-zero accounts in one currency, as JSON numbers exact to 15 significant
+            digits; fava returns the full chart payload, with exact decimal strings. Default:
+            GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY. Example: summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

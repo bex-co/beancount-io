@@ -136,7 +136,9 @@ def sync_detailed(
 
      Net worth now and over time. `shape=summary` (the default) returns the net-worth series in one
     currency; `shape=fava` returns the account hierarchies and income/expense series the dashboard
-    charts.
+    charts. Summary amounts are JSON numbers, exact to 15 significant digits; a longer amount, such as
+    an 18-decimal token, reads as the nearest double. `shape=fava`, holdings, and BQL give the exact
+    decimal strings.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -152,7 +154,8 @@ def sync_detailed(
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameOverviewShape | Unset): summary returns totals and
-            non-zero accounts in one currency; fava returns the full chart payload. Default:
+            non-zero accounts in one currency, as JSON numbers exact to 15 significant digits; fava
+            returns the full chart payload, with exact decimal strings. Default:
             GetApiGatewayV1LedgersOwnerNameOverviewShape.SUMMARY. Example: summary.
 
     Raises:
@@ -197,7 +200,9 @@ def sync(
 
      Net worth now and over time. `shape=summary` (the default) returns the net-worth series in one
     currency; `shape=fava` returns the account hierarchies and income/expense series the dashboard
-    charts.
+    charts. Summary amounts are JSON numbers, exact to 15 significant digits; a longer amount, such as
+    an 18-decimal token, reads as the nearest double. `shape=fava`, holdings, and BQL give the exact
+    decimal strings.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -213,7 +218,8 @@ def sync(
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameOverviewShape | Unset): summary returns totals and
-            non-zero accounts in one currency; fava returns the full chart payload. Default:
+            non-zero accounts in one currency, as JSON numbers exact to 15 significant digits; fava
+            returns the full chart payload, with exact decimal strings. Default:
             GetApiGatewayV1LedgersOwnerNameOverviewShape.SUMMARY. Example: summary.
 
     Raises:
@@ -253,7 +259,9 @@ async def asyncio_detailed(
 
      Net worth now and over time. `shape=summary` (the default) returns the net-worth series in one
     currency; `shape=fava` returns the account hierarchies and income/expense series the dashboard
-    charts.
+    charts. Summary amounts are JSON numbers, exact to 15 significant digits; a longer amount, such as
+    an 18-decimal token, reads as the nearest double. `shape=fava`, holdings, and BQL give the exact
+    decimal strings.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -269,7 +277,8 @@ async def asyncio_detailed(
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameOverviewShape | Unset): summary returns totals and
-            non-zero accounts in one currency; fava returns the full chart payload. Default:
+            non-zero accounts in one currency, as JSON numbers exact to 15 significant digits; fava
+            returns the full chart payload, with exact decimal strings. Default:
             GetApiGatewayV1LedgersOwnerNameOverviewShape.SUMMARY. Example: summary.
 
     Raises:
@@ -312,7 +321,9 @@ async def asyncio(
 
      Net worth now and over time. `shape=summary` (the default) returns the net-worth series in one
     currency; `shape=fava` returns the account hierarchies and income/expense series the dashboard
-    charts.
+    charts. Summary amounts are JSON numbers, exact to 15 significant digits; a longer amount, such as
+    an 18-decimal token, reads as the nearest double. `shape=fava`, holdings, and BQL give the exact
+    decimal strings.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -328,7 +339,8 @@ async def asyncio(
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
         shape (GetApiGatewayV1LedgersOwnerNameOverviewShape | Unset): summary returns totals and
-            non-zero accounts in one currency; fava returns the full chart payload. Default:
+            non-zero accounts in one currency, as JSON numbers exact to 15 significant digits; fava
+            returns the full chart payload, with exact decimal strings. Default:
             GetApiGatewayV1LedgersOwnerNameOverviewShape.SUMMARY. Example: summary.
 
     Raises:

@@ -1,5 +1,6 @@
 import { shapeQuery, statementQuerySchema } from "./reports-handler";
 import {
+  SUMMARY_PRECISION_DESCRIPTION,
   summarizeIntervalTotals,
   summarizeOverview,
 } from "@/features/ledger/utils/report-summaries";
@@ -105,7 +106,8 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     segment: "overview",
     summary: "Get the ledger overview",
     description:
-      "Net worth now and over time. `shape=summary` (the default) returns the net-worth series in one currency; `shape=fava` returns the account hierarchies and income/expense series the dashboard charts.",
+      "Net worth now and over time. `shape=summary` (the default) returns the net-worth series in one currency; `shape=fava` returns the account hierarchies and income/expense series the dashboard charts. " +
+      SUMMARY_PRECISION_DESCRIPTION,
     query: statementQuerySchema.extend(shapeQuery.shape),
     uriPath: "",
     fetch: async (s, { ledgerId, identity, query }) => {
@@ -248,7 +250,8 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     segment: "interval-totals",
     summary: "Get totals per interval",
     description:
-      "Balances grouped by period — the series behind a spending-over-time view, without the view. `shape=summary` (the default) states one currency and drops zero accounts; `shape=fava` returns the raw per-currency balances.",
+      "Balances grouped by period — the series behind a spending-over-time view, without the view. `shape=summary` (the default) states one currency and drops zero accounts; `shape=fava` returns the raw per-currency balances. " +
+      SUMMARY_PRECISION_DESCRIPTION,
     query: conversionQuery.extend({
       accountName: z.string().optional().openapi({
         description: "Restrict the totals to one account",

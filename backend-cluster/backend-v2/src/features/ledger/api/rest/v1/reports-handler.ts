@@ -6,6 +6,7 @@ import { v1Route } from "@/server/rest/v1-route";
 import type { ServiceLayer } from "@/foundation/composition";
 import type { Identity } from "@/server/api/identity";
 import {
+  SUMMARY_PRECISION_DESCRIPTION,
   summarizeBalanceSheet,
   summarizeIncomeStatement,
 } from "@/features/ledger/utils/report-summaries";
@@ -42,7 +43,7 @@ export const shapeQuery = z
   .object({
     shape: z.enum(["summary", "fava"]).default("summary").openapi({
       description:
-        "summary returns totals and non-zero accounts in one currency; fava returns the full chart payload.",
+        "summary returns totals and non-zero accounts in one currency, as JSON numbers exact to 15 significant digits; fava returns the full chart payload, with exact decimal strings.",
       example: "summary",
     }),
   })
@@ -169,7 +170,8 @@ export const REPORT_ROUTES = [
     path: "/api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
     summary: "Get a financial statement",
     description:
-      "Renders the balance sheet or the income statement for the period, with optional currency conversion and interval bucketing. `shape=summary` (the default) returns totals and non-zero accounts; `shape=fava` returns the full chart payload. Balance-sheet equity and its series include current earnings under the configured account names without writing closing transactions.",
+      "Renders the balance sheet or the income statement for the period, with optional currency conversion and interval bucketing. `shape=summary` (the default) returns totals and non-zero accounts; `shape=fava` returns the full chart payload. Balance-sheet equity and its series include current earnings under the configured account names without writing closing transactions. " +
+      SUMMARY_PRECISION_DESCRIPTION,
     params: statementParamsSchema,
     query: statementReadQuery,
     responses: {

@@ -30,9 +30,23 @@ import type {
  *
  * Those numbers are JSON numbers, not the decimal strings Fava sends, because
  * an agent asked for a total wants something it can compare and add without
- * parsing. The cost is real and bounded: a magnitude past 2^53 rounds. Any
- * caller that needs the exact decimal has `shape=fava`, which never converts.
+ * parsing. The cost is real, and it is set by significant digits, not by
+ * magnitude: a double holds about 15 of them at any size. An amount of up to
+ * 15 significant digits is exact; a longer one reads as the nearest double,
+ * unmarked. So `0.123456789012345678` of an 18-decimal token reads
+ * `0.12345678901234568`, and `90071992547409.93` reads `90071992547409.94`,
+ * far below 2^53 (w31/147). Any caller that needs the exact decimal has
+ * `shape=fava`, which never converts, and holdings and BQL, which send decimal
+ * strings. `SUMMARY_PRECISION_DESCRIPTION` tells callers so on every surface
+ * that serves a summary.
  */
+
+/**
+ * How precise a summary's amounts are, as every statement, overview and
+ * interval-totals description states it on REST and MCP (w31/147).
+ */
+export const SUMMARY_PRECISION_DESCRIPTION =
+  "Summary amounts are JSON numbers, exact to 15 significant digits; a longer amount, such as an 18-decimal token, reads as the nearest double. `shape=fava`, holdings, and BQL give the exact decimal strings.";
 
 /**
  * Per currency other than the summary's, the amount its headline number
@@ -332,10 +346,12 @@ export function flattenHierarchy(
 /**
  * The exact decimal sum of amounts, as a JSON number.
  *
- * Each amount is the ledger's decimal string read as a number, and
- * `String(n)` gives that decimal back exactly, so summing those strings
- * loses nothing: `3609.87 + -2703.29` is `906.58`, where float addition
- * printed `906.5799999999999` (w23/013).
+ * Each amount is the ledger's decimal string read as a number. Up to 15
+ * significant digits, `String(n)` gives that decimal back exactly, so summing
+ * those strings adds no float noise: `3609.87 + -2703.29` is `906.58`, where
+ * float addition printed `906.5799999999999` (w23/013). A longer amount was
+ * already rounded when it was read, and the sum carries that rounding
+ * (w31/147).
  */
 function sum(...values: number[]): number {
   return values

@@ -1397,6 +1397,19 @@ statement's `period` gives `to`, the statement's last day, and `time`, the
 selection as requested. `from` is `null` because chart buckets carry only
 their end dates.
 
+Summary amounts are JSON numbers, so a client can compare and add them without
+parsing: `assets`, `liabilities`, `equity`, `netWorth`, `income`, `expenses`,
+`net`, every `byAccount` balance, the overview's `series`, each interval's
+`total`, and every `otherCurrencies` value. A JSON number is a double, which
+holds about 15 significant digits whatever the magnitude, so a small amount
+with many decimals runs out of digits long before 2^53. An amount of up to
+15 significant digits is exact; a longer one reads as the
+nearest double, and nothing marks it. `0.123456789012345678` of an 18-decimal
+token reads `0.12345678901234568`, and `90071992547409.93 USD` reads
+`90071992547409.94`. For the exact decimal, read the statement or overview
+with `shape=fava`, read holdings, or query with `runBqlQueryStructured`: each
+returns decimal strings (w31/147).
+
 Prices come from the ledger's `price` directives alone, on the statements, the
 overview and holdings alike, as in stock beancount without the `implicit_prices`
 plugin: an `@` annotation on a posting is not a price (w1/229). A holding with no

@@ -110,3 +110,19 @@ it("says making a ledger public exposes its commit history", () => {
     expect(tool).not.toContain("readable by anyone.");
   }
 });
+
+// w31/147. Summary amounts are doubles, so an 18-decimal token reads
+// `0.12345678901234568`. The resources an agent reads totals from say so, and
+// say where the exact decimal is, instead of leaving it to find the rounding.
+it("says summary amounts are exact only to 15 significant digits", () => {
+  for (const name of [
+    "ledgerBalanceSheet",
+    "ledgerIncomeStatement",
+    "ledgerOverview",
+    "ledgerIntervalTotals",
+  ]) {
+    const template = served.templates.get(name)!;
+    expect(template).toContain("exact to 15 significant digits");
+    expect(template).toContain("`shape=fava`, holdings, and BQL");
+  }
+});
